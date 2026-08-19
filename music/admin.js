@@ -2944,16 +2944,22 @@ function guideRestorePending() {
 }
 
 function guideInit() {
-    guideRestorePending();
+    // 先取管理员自身信息（myUserId 用于区分"我/对方"消息），再恢复待处理会话与渲染，
+    // 否则刷新后自己发送的消息会被误判为对方消息
     ZIYIT_API.adminMe().then(function (me) {
         guideConsole.myUserId = (me && (me.userId || me.user_id)) || null;
+        guideRestorePending();
+        if (guideConsole.activeSession) guideRenderSessionMessages(guideConsole.activeSession);
         // 客服名单管理：仅超级管理员（level 4）可见
         if (me && Number(me.level) === 4) {
             const panel = document.getElementById('guide-agents-panel');
             if (panel) panel.style.display = '';
             guideLoadAgents();
         }
-    }).catch(function () { /* 非管理员打开时由菜单权限拦截 */ });
+    }).catch(function () {
+        // adminMe 失败时仍恢复待处理会话（消息归属判断退化为全部按"对方"显示）
+        guideRestorePending();
+    });
 }
 
 // 轮询待接入会话（每 3 秒；离开区块自动停止）
@@ -3109,6 +3115,11 @@ function guideLoadHumanSession(sid) {
         });
         guideConsole.sessions[sid] = s;
         guideRenderSessionMessages(sid);
+        // 申诉会话（banInfo 存在）：被分配客服/超管可直接结束对话
+        if (s.banInfo) {
+            const endBtn = document.getElementById('guide-console-end');
+            if (endBtn) endBtn.disabled = false;
+        }
     }).catch(function (err) { guideHandleErr(err); });
 }
 
@@ -3178,12 +3189,12 @@ function guideSendReply() {
     });
 }
 
-// 客服结束已接管的人工会话：POST /guide/human/close
+// 客服结束已接管的人工会话：POST /guide/human/close（申诉会话同样适用，被分配客服/超管可结束）
 function guideEndSession() {
     const sid = guideConsole.activeSession;
     const s = sid && guideConsole.sessions[sid];
     if (!s) { showToast('请先选择一个会话', 'error'); return; }
-    if (!s.accepted) { showToast('请先接受会话，才能结束对话', 'error'); return; }
+    if (!s.accepted && !s.banInfo) { showToast('请先接受会话，才能结束对话', 'error'); return; }
     if (!window.confirm('确定结束该会话吗？结束后将无法继续回复。')) return;
     const btn = document.getElementById('guide-console-end');
     if (btn) { btn.disabled = true; btn.textContent = '结束中…'; }

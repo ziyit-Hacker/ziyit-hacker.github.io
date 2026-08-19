@@ -483,11 +483,13 @@
             }
 
             // 按后端消息结构渲染（role: user 自己 / system 系统 / 其余为客服）
-            function renderMsg(m) {
+            // skipMine=true 用于轮询：自己发送的消息已本地实时渲染，跳过避免复读
+            function renderMsg(m, skipMine) {
                 var id = m.id || (m.ts || m.sentAt || '') + '|' + (m.content || '');
                 if (A.rendered[id]) return;
                 A.rendered[id] = true;
                 var role = String(m.role || m.type || '').toLowerCase();
+                if (skipMine && role === 'user') return;
                 var content = m.content || '';
                 var time = nowTime(m.ts || m.sentAt);
                 if (role === 'system' || role === 'sys' || role === 'handoff' || role === 'transfer') {
@@ -499,8 +501,8 @@
                 }
             }
 
-            function renderAll(msgs) {
-                (msgs || []).forEach(renderMsg);
+            function renderAll(msgs, skipMine) {
+                (msgs || []).forEach(function (m) { renderMsg(m, skipMine); });
             }
 
             // ---------- 轮询申诉会话 ----------
@@ -522,7 +524,8 @@
                         finishClosed();
                         return;
                     }
-                    renderAll(d.messages);
+                    // skipMine：跳过自己已乐观渲染的消息，避免同一消息显示两条
+                    renderAll(d.messages, true);
                 }).catch(function (err) {
                     if (err && err.status === 401) {
                         // 申诉令牌失效：停止轮询，回到表单视图
