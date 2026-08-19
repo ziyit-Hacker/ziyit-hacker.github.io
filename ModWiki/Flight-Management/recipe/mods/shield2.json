@@ -1,0 +1,19 @@
+{
+  "type": "crafting_shaped",
+  "category": "redstone",
+  "group": "shield",
+  "show_notification": true,
+  "key": {
+    "#": "minecraft:iron_ingot",
+    "&": "minecraft:oak_planks"
+  },
+  "pattern": [
+    " # ",
+    "& &",
+    "&&&"
+  ],
+  "result": {
+    "id": "minecraft:shield",
+    "count": 1
+  }
+}

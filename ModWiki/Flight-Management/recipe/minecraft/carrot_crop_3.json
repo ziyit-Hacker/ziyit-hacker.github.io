@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "carrot crop 3",
+    "ingredients": [
+        "flyconfig:nuclear_disarm_tool",
+        "flyconfig:uranium_ingot",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:carrot_crop_3",
+        "count": 1
+    },
+    "show_notification": true
+}

@@ -1,0 +1,515 @@
+/* ============================================================
+   ZIYIT 设计体系（DESIGN.md §2 / §4.14）
+   明暗双主题 Token + 基础组件覆盖 + 主题切换按钮
+   全站界面共享：替换历史失效背景图，统一使用纯色背景
+   ============================================================ */
+
+/* ---------- 设计 Token：浅色（默认） ---------- */
+:root {
+    --ziyit-primary: #0078d4;
+    --ziyit-primary-dark: #005a9e;
+    --ziyit-primary-light: #e8f3fb;
+    --ziyit-accent: #66e656;
+    --ziyit-accent-dark: #28a745;
+    --ziyit-info: #12b7f5;
+    --ziyit-warning: #f3a707;
+    --ziyit-danger: #f25767;
+    --ziyit-success: #28a745;
+    --ziyit-text-primary: #333333;
+    --ziyit-text-secondary: #666666;
+    --ziyit-text-disabled: #999999;
+    --ziyit-text-inverse: #ffffff;
+    --ziyit-border: #dddddd;
+    --ziyit-border-light: #eeeeee;
+    --ziyit-bg: #f5f5f5;
+    --ziyit-bg-card: #ffffff;
+    --ziyit-bg-hover: #f0f7fc;
+    color-scheme: light;
+}
+
+/* ---------- 深色 Token（仅交换中性色，品牌主色不变） ---------- */
+[data-theme="dark"] {
+    --ziyit-bg: #16181d;
+    --ziyit-bg-card: #1f2229;
+    --ziyit-bg-hover: #262a33;
+    --ziyit-text-primary: #e6e6e6;
+    --ziyit-text-secondary: #a8adb8;
+    --ziyit-text-disabled: #6b7078;
+    --ziyit-border: #3a3f48;
+    --ziyit-border-light: #2c3038;
+    --ziyit-primary-light: rgba(0, 120, 212, .18);
+    color-scheme: dark;
+}
+
+/* ---------- 基础层 ---------- */
+html {
+    -webkit-text-size-adjust: 100%;
+}
+body {
+    margin: 0;
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ziyit-text-primary);
+    background-color: var(--ziyit-bg);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-attachment: fixed;
+    transition: background-color .25s, color .25s;
+}
+a {
+    color: var(--ziyit-primary);
+    transition: color .2s;
+}
+a:hover {
+    color: var(--ziyit-primary-dark);
+}
+h1, h2, h3, h4, h5, h6 {
+    color: var(--ziyit-text-primary);
+}
+hr {
+    border-color: var(--ziyit-border);
+}
+button, input, select, textarea {
+    font-family: inherit;
+    font-size: inherit;
+}
+code, pre {
+    font-family: Consolas, "Courier New", monospace;
+}
+
+/* ---------- 深色模式通用覆盖（修正页面遗留的硬编码浅色） ---------- */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    background-color: var(--ziyit-bg-card);
+    color: var(--ziyit-text-primary);
+    border-color: var(--ziyit-border);
+}
+[data-theme="dark"] input:disabled,
+[data-theme="dark"] select:disabled,
+[data-theme="dark"] textarea:disabled {
+    background-color: var(--ziyit-bg-hover);
+    color: var(--ziyit-text-disabled);
+}
+[data-theme="dark"] table,
+[data-theme="dark"] th,
+[data-theme="dark"] td {
+    border-color: var(--ziyit-border);
+}
+[data-theme="dark"] tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, .03);
+}
+[data-theme="dark"] code {
+    background: #2a2e36;
+    color: #c9d1d9;
+}
+[data-theme="dark"] pre {
+    background: #1a1d23;
+    color: #c9d1d9;
+}
+
+/* 常见内容容器深色化（避免深色模式下"白底浅字"的对比问题） */
+[data-theme="dark"] .container,
+[data-theme="dark"] .wrap,
+[data-theme="dark"] .box,
+[data-theme="dark"] .panel,
+[data-theme="dark"] .card,
+[data-theme="dark"] .content,
+[data-theme="dark"] .main,
+[data-theme="dark"] .form,
+[data-theme="dark"] .login,
+[data-theme="dark"] .dialog,
+[data-theme="dark"] .modal,
+[data-theme="dark"] .list,
+[data-theme="dark"] .item,
+[data-theme="dark"] .info,
+[data-theme="dark"] .notice {
+    background-color: var(--ziyit-bg-card);
+    border-color: var(--ziyit-border);
+    color: var(--ziyit-text-primary);
+}
+[data-theme="dark"] .muted,
+[data-theme="dark"] .hint,
+[data-theme="dark"] .desc,
+[data-theme="dark"] .subtitle,
+[data-theme="dark"] .tip {
+    color: var(--ziyit-text-secondary);
+}
+
+/* ---------- 主题切换按钮（悬浮右下角） ---------- */
+#ziyit-theme-toggle {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 2147483000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--ziyit-border);
+    border-radius: 50%;
+    cursor: pointer;
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    color: var(--ziyit-text-primary);
+    background: var(--ziyit-bg-card);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .2s, color .2s, border-color .2s, transform .2s;
+}
+#ziyit-theme-toggle:hover {
+    border-color: var(--ziyit-primary);
+    color: var(--ziyit-primary);
+    transform: scale(1.06);
+}
+#ziyit-theme-toggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--ziyit-primary-light);
+}
+#ziyit-theme-toggle svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+@media print {
+    #ziyit-theme-toggle {
+        display: none !important;
+    }
+}
+
+/* ============================================================
+   ZIYIT 导航栏组件（DESIGN.md §4.6，参照 ui-test.html site-nav）
+   明暗双主题自适应：浅色模式白底浅灰边 + 深色文字，
+   深色模式深底 + 浅色文字；下拉菜单与分隔线随主题切换
+   响应式：桌面 ≥769px 水平下拉；移动 ≤768px 汉堡菜单折叠
+   ============================================================ */
+.site-nav {
+    position: relative;
+    z-index: 1050;
+    background: var(--ziyit-bg-card);
+    border-bottom: 1px solid var(--ziyit-border);
+    transition: background-color .25s, border-color .25s;
+}
+.site-nav-inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 16px;
+    height: 52px;
+}
+.site-nav-menu {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.site-nav-menu > li {
+    position: relative;
+    margin: 0 6px;
+}
+.site-nav-menu > li > a,
+.site-nav-menu > .has-sub,
+.site-nav-menu > li > p {
+    display: block;
+    padding: 8px 14px;
+    border-radius: 6px;
+    color: var(--ziyit-text-primary);
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    margin: 0;
+    transition: color .2s, background .2s;
+}
+.site-nav-menu > li > a:hover,
+.site-nav-menu > .has-sub:hover,
+.site-nav-menu > li > p:hover {
+    color: var(--ziyit-primary);
+    background: var(--ziyit-bg-hover);
+}
+.site-nav-menu .line {
+    width: 1px;
+    height: 20px;
+    background: var(--ziyit-border);
+    margin: 0 10px;
+    flex-shrink: 0;
+}
+/* 二级下拉（hover 展开） */
+.site-nav-menu ul {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 6px;
+    min-width: 190px;
+    padding: 6px;
+    background: var(--ziyit-bg-card);
+    border: 1px solid var(--ziyit-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .18);
+    list-style: none;
+    z-index: 20;
+}
+.site-nav-menu > li:hover > ul {
+    display: block;
+}
+/* 桥接 li 与下拉面板之间 6px 空隙：鼠标移入时 hover 不中断 */
+.site-nav-menu ul::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 0;
+    right: 0;
+    height: 6px;
+}
+.site-nav-menu ul a {
+    display: block;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: var(--ziyit-text-primary);
+    font-size: 13px;
+    text-decoration: none;
+    transition: color .2s, background .2s;
+}
+.site-nav-menu ul a:hover {
+    color: var(--ziyit-primary);
+    background: var(--ziyit-bg-hover);
+}
+/* 修正页面内全局 ul li{display:inline-block;line-height:35px} 规则对导航菜单的干扰：
+   一级项在 flex 容器中保持 flex item，二级下拉每个按钮独占一行（垂直分行） */
+.site-nav-menu > li,
+.site-nav-menu ul li {
+    display: block;
+    line-height: 1.6;
+}
+/* 基础显隐控制类：权限脚本用 .hidden 隐藏无权限菜单项 */
+.hidden {
+    display: none !important;
+}
+/* 登录态下权限脚本会给 .nav-item 添加 .visible（display:inline-block !important），
+   会破坏二级下拉菜单的垂直分行布局，此处强制拉回 block */
+.site-nav-menu > li.visible,
+.site-nav-menu ul li.visible {
+    display: block !important;
+}
+/* 汉堡按钮（仅移动端显示） */
+.site-nav-toggle {
+    display: none;
+    background: none;
+    border: 0;
+    color: var(--ziyit-text-primary);
+    font-size: 22px;
+    line-height: 1;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+.site-nav-toggle:hover {
+    color: var(--ziyit-primary);
+    background: var(--ziyit-bg-hover);
+    border-radius: 6px;
+}
+@media (max-width: 768px) {
+    .site-nav-toggle {
+        display: block;
+    }
+    .site-nav-menu {
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        position: absolute;
+        top: 52px;
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        background: var(--ziyit-bg-card);
+        border-bottom: 1px solid var(--ziyit-border);
+        padding: 8px 16px 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, .18);
+    }
+    .site-nav-menu.open {
+        display: flex;
+    }
+    .site-nav-menu > li {
+        margin: 0;
+    }
+    .site-nav-menu .line {
+        display: none;
+    }
+    .site-nav-menu ul {
+        position: static;
+        margin: 4px 0 4px 14px;
+        box-shadow: none;
+        background: transparent;
+    }
+    .site-nav-menu ul::before {
+        display: none;
+    }
+    .site-nav-menu.open ul {
+        display: block;
+    }
+    .site-nav-menu > li > p {
+        padding: 8px 4px;
+    }
+}
+
+/* ============================================================
+   深色模式全面适配（DESIGN.md §4.14）
+   兜底覆盖：修正页面遗留的硬编码浅色背景、深色文字与链接
+   !important 用于压过页面内联样式（非 !important）
+   ============================================================ */
+
+/* 常见内容容器深色化（含登录/注册/管理后台等自定义容器） */
+[data-theme="dark"] :is(.container, .wrap, .box, .panel, .card, .content, .main,
+    .form, .login, .dialog, .list, .item, .info, .notice,
+    .form-container, .login-box, .auth-box, .signin-box, .register-box,
+    .search-box, .result-box, .stat-card, .admin-header, .admin-panel,
+    .sidebar, .table-wrapper, .card-container, .page-box, .popup,
+    .pop-box, .msg-box, .tip-box, .sign-box, .register, .signup,
+    .input-group, .card-body, .card-header, .panel-body, .panel-heading,
+    #form-container, #register-box) {
+    background-color: var(--ziyit-bg-card) !important;
+    border-color: var(--ziyit-border) !important;
+    color: var(--ziyit-text-primary) !important;
+}
+
+/* 表格深色化（含无类名 table） */
+[data-theme="dark"] table {
+    background-color: var(--ziyit-bg-card);
+    color: var(--ziyit-text-primary);
+}
+[data-theme="dark"] th,
+[data-theme="dark"] td {
+    background-color: transparent;
+}
+
+/* 深色模式下正文标题/段落/单元格文字兜底为浅色 */
+[data-theme="dark"] :is(h1, h2, h3, h4, h5, h6, p, li, td, th, label,
+    dt, dd, figcaption, legend) {
+    color: var(--ziyit-text-primary) !important;
+}
+
+/* 深色模式下链接统一为浅蓝（导航链接随 token 保持页面文字色） */
+[data-theme="dark"] a {
+    color: #8ab4f8 !important;
+}
+[data-theme="dark"] .site-nav a {
+    color: var(--ziyit-text-primary) !important;
+}
+[data-theme="dark"] .site-nav a:hover {
+    color: var(--ziyit-primary) !important;
+}
+
+/* 深色模式下次要文字兜底 */
+[data-theme="dark"] :is(.muted, .hint, .desc, .subtitle, .tip, .small,
+    .secondary, .text-muted, .caption, .remark, .notice-text, .sub-info) {
+    color: var(--ziyit-text-secondary) !important;
+}
+
+/* 管理系统（music/admin）深色适配：标题与用户信息卡 */
+[data-theme="dark"] .admin-title {
+    color: var(--ziyit-text-primary) !important;
+}
+[data-theme="dark"] .admin-title::before {
+    color: var(--ziyit-primary) !important;
+}
+[data-theme="dark"] .user-info {
+    background: var(--ziyit-bg-hover) !important;
+    color: var(--ziyit-text-primary) !important;
+}
+[data-theme="dark"] .user-role {
+    color: var(--ziyit-text-secondary) !important;
+}
+
+/* ============ 加载界面（DESIGN.md §4.12） ============ */
+/* 容器：按钮加载 + 品牌滑动进度条，居中纵向排列 */
+.ziyit-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 24px 20px;
+}
+/* 按钮内加载转圈（浅色按钮底上使用，白边） */
+.ziyit-loading .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, .4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: -2px;
+    margin-right: 6px;
+    animation: spin .7s linear infinite;
+}
+/* 按钮中加载：主色按钮 + 转圈 */
+.ziyit-loading-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--ziyit-primary);
+    color: #fff;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: default;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+/* 主加载进度条：ZIYIT 品牌标题 + Cloudflare 风格左右滑动加载条 */
+.ziyit-loader { text-align: center; }
+.ziyit-loader .loader-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: var(--ziyit-primary);
+    margin-bottom: 12px;
+}
+.ziyit-loader .loader-logo { width: 22px; height: 22px; object-fit: contain; }
+.ziyit-loader .loader-bar {
+    width: 300px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--ziyit-primary-light);
+    overflow: hidden;
+    position: relative;
+    margin: 0 auto;
+}
+.ziyit-loader .loader-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 35%;
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--ziyit-primary), var(--ziyit-primary-dark));
+    animation: loaderSlide 2s infinite;
+}
+@keyframes loaderSlide {
+    0%   { transform: translateX(-100%) scaleX(1);    animation-timing-function: cubic-bezier(0.33, 0.45, 0.67, 0); }
+    45%  { transform: translateX(260%)  scaleX(1.524); }
+    50%  { transform: translateX(260%)  scaleX(1);    animation-timing-function: cubic-bezier(0.33, 0.45, 0.67, 0); }
+    95%  { transform: translateX(-100%) scaleX(1.524); }
+    100% { transform: translateX(-100%) scaleX(1); }
+}
+/* 紧凑行内转圈：用于小字段加载（浅色/深色背景通用） */
+.spinner-inline {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--ziyit-border);
+    border-top-color: var(--ziyit-primary);
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: -2px;
+    animation: spin .7s linear infinite;
+}

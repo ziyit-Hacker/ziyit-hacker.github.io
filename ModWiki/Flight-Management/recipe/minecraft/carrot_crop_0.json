@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "carrot crop 0",
+    "ingredients": [
+        "flyconfig:music_disc_sieg_heil",
+        "flyconfig:music_disc_hitler",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:carrot_crop_0",
+        "count": 1
+    },
+    "show_notification": true
+}

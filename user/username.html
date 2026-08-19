@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修改用户名 - ZIYIT</title>
+    <meta name="description" content="修改 ZIYIT 账号用户名。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/username.html">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <style>
+        /* ===== 修改用户名页样式（DESIGN.md 设计体系，token 化） ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--ziyit-primary);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        body {
+            background: var(--ziyit-bg);
+        }
+
+        .form-container {
+            max-width: 400px;
+            margin: 32px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
+
+        input {
+            padding: 12px 15px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 4px;
+            background-color: var(--ziyit-bg-card);
+            font-size: 14px;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+            color: var(--ziyit-text-primary);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--ziyit-primary);
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.3);
+        }
+
+        button {
+            background-color: var(--ziyit-primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        button:disabled {
+            background-color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        #currentInfo {
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: var(--ziyit-text-secondary);
+        }
+
+        #result {
+            margin-top: 12px;
+            font-size: 14px;
+            display: none;
+        }
+
+        #result.error {
+            color: var(--ziyit-danger);
+        }
+
+        #result.success {
+            color: var(--ziyit-success);
+        }
+
+        .back-link {
+            display: block;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h1>修改用户名</h1>
+        <a href="javascript:history.back()" class="back-link">返回</a>
+        <div id="currentInfo">
+            <div class="ziyit-loading">
+                <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                <div class="ziyit-loader">
+                    <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                    <div class="loader-bar"><div class="loader-fill"></div></div>
+                </div>
+            </div>
+        </div>
+        <div style="margin-bottom: 16px;">
+            <label for="newUsername">新用户名</label>
+            <input type="text" id="newUsername" name="newUsername" maxlength="15" autocomplete="off" placeholder="输入新用户名">
+        </div>
+        <button id="submitBtn" type="button">修改用户名</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function getToken() {
+            return ZIYIT_API.getToken();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!getToken()) {
+                alert('请先登录');
+                window.location.href = './';
+                return;
+            }
+
+            const currentInfo = document.getElementById('currentInfo');
+            const newUsername = document.getElementById('newUsername');
+            const submitBtn = document.getElementById('submitBtn');
+            const result = document.getElementById('result');
+
+            ZIYIT_API.currentUser().then(function (user) {
+                currentInfo.textContent = '当前用户名：' + (user.username || user.name || '未知');
+            }).catch(function () {
+                currentInfo.textContent = '当前用户名：未知';
+            });
+
+            submitBtn.addEventListener('click', function () {
+                const name = newUsername.value.trim();
+                if (!name) {
+                    result.textContent = '请输入新用户名';
+                    result.className = 'error';
+                    result.style.display = 'block';
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                result.style.display = 'none';
+
+                ZIYIT_API.updateUsername(name).then(function () {
+                    result.textContent = '用户名修改成功';
+                    result.className = 'success';
+                    result.style.display = 'block';
+                    newUsername.value = '';
+                }).catch(function (error) {
+                    console.error('修改用户名失败:', error);
+                    let msg = '修改失败，请稍后再试';
+                    if (error.status === 401) {
+                        msg = '登录已过期，请重新登录';
+                    } else if (error.status === 409) {
+                        msg = '该用户名已被使用';
+                    } else if (error.data && error.data.detail) {
+                        msg = '修改失败: ' + error.data.detail;
+                    }
+                    result.textContent = msg;
+                    result.className = 'error';
+                    result.style.display = 'block';
+                }).finally(function () {
+                    submitBtn.disabled = false;
+                });
+            });
+        });
+    </script>
+
+    <script>
+        // 导航权限过滤（DESIGN.md §4.6.5，需登录页模式）：未登录全部隐藏，登录后按角色显示
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                const loginLink = document.getElementById('loginLink');
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

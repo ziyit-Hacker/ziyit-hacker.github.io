@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <title>登录ZIYIT(中国)</title>
+    <meta name="description" content="登录 ZIYIT 账号，进入用户中心。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/blacklist.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <style>
+        /* ===== 登录页样式（DESIGN.md 设计体系，token 化） ===== */
+        body {
+            background: var(--ziyit-bg);
+        }
+
+        .form-container {
+            max-width: 400px;
+            margin: 32px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-container h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--ziyit-text-primary);
+        }
+
+        .form-container a {
+            color: var(--ziyit-primary);
+            text-decoration: none;
+        }
+
+        .form-container a:hover {
+            color: var(--ziyit-primary-dark);
+        }
+
+        .bt {
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
+
+        input {
+            padding: 12px 15px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 4px;
+            background-color: var(--ziyit-bg-card);
+            font-size: 14px;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+            color: var(--ziyit-text-primary);
+        }
+
+        input:hover {
+            border-color: var(--ziyit-text-disabled);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--ziyit-primary);
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.3);
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            box-shadow: none;
+            margin-right: 8px;
+        }
+
+        input[type="submit"] {
+            background-color: var(--ziyit-primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            width: 100%;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                width: 90%;
+                padding: 15px;
+            }
+
+            input,
+            select,
+            button {
+                width: 90% !important;
+                font-size: 16px;
+            }
+
+            h1 {
+                font-size: 20px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        window.onerror = function (message, source, lineno, colno, error) {
+            console.log('fuck JavaScript ', { message, source, lineno, colno, error });
+            return true;
+        };
+    </script>
+
+    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification">人机验证</a></li>
+                        <li class="nav-item" data-role="all"><a href="../guide">在线客服</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()" id="backNavLink">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h1 class="bt">登录</h1>
+
+        <form autocomplete="off" onsubmit="event.preventDefault(); checkPassword();">
+            <div style="margin-bottom: 16px;">
+                <label for="username" class="bt">昵 称</label>
+                <input type="text" id="username" name="username" maxlength="15" placeholder="输入账号ID">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="password" class="bt">密 码</label>
+                <input type="password" id="password" name="password" placeholder="输入密码" required>
+            </div>
+
+            <div style="margin-bottom: 20px; display: flex; align-items: center;">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe" class="bt" style="margin-bottom: 0;">保持登录</label>
+            </div>
+
+            <input type="submit" id="login" value="登录">
+        </form>
+
+        <div class="form-footer">
+            <a href="register">没有账号？点这里注册！</a><br>
+            <a href="./gg">最新大更新公告</a>
+        </div>
+    </div>
+
+    <script src="../assets/ziyit_api.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <script>
+        let errorDiv = null;
+        let loginFailed = false;
+        let appealLink = null;
+
+        // 检查输入框焦点状态
+        function checkFocus() {
+            const activeElement = document.activeElement;
+            const isInputFocused = activeElement === document.getElementById('username') ||
+                activeElement === document.getElementById('password');
+
+            if (errorDiv) {
+                if (loginFailed && !isInputFocused) {
+                    // 显示动画
+                    errorDiv.style.opacity = '0';
+                    errorDiv.style.display = 'block';
+                    errorDiv.style.transition = 'opacity 0.3s ease';
+                    setTimeout(() => {
+                        errorDiv.style.opacity = '1';
+                    }, 10);
+                } else {
+                    // 隐藏动画
+                    errorDiv.style.opacity = '1';
+                    errorDiv.style.transition = 'opacity 0.3s ease';
+                    errorDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        errorDiv.style.display = 'none';
+                    }, 300);
+                }
+            }
+        }
+
+        // 添加焦点事件监听
+        const inputs = [document.getElementById('username'),
+        document.getElementById('password')];
+
+        inputs.forEach(input => {
+            input.addEventListener('focus', checkFocus);
+            input.addEventListener('blur', checkFocus);
+        });
+
+        function checkPassword() {
+            hideAppealLink();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+
+            if (!username.trim()) {
+                showError('用户名不能为空');
+                return;
+            }
+
+            if (!password.trim()) {
+                showError('密码不能为空');
+                return;
+            }
+
+            // 使用CryptoJS进行MD5加密
+            const md5Hash = CryptoJS.MD5(password).toString(CryptoJS.enc.Base64);
+
+            // 通过后端接口登录
+            ZIYIT_API.login(username, md5Hash)
+                .then(data => {
+                    const token = data.accessToken || data.access_token || data.token;
+                    if (!token) {
+                        showError('登录响应异常，请稍后再试');
+                        return;
+                    }
+                    ZIYIT_API.setToken(token, rememberMe);
+                    ZIYIT_API.setCredentials(username, md5Hash, rememberMe);
+                    window.location.href = '../';
+                })
+                .catch(error => {
+                    console.error('登录失败:', error);
+                    if (error.status === 401) {
+                        showError('用户名或密码错误');
+                    } else if (error.status === 422) {
+                        showError('输入格式有误');
+                    } else if (error.status === 403) {
+                        // 封禁：显示封禁原因/剩余天数/解封时间，并提供封禁申诉入口
+                        showError(isBanError(error) ? banErrorText(error) : (loginErrDetail(error) || '您当前的账号或 IP 已被封禁，无法登录'));
+                        showAppealLink();
+                    } else if (error.status === 429 || (error.data && error.data.detail && /Too many login attempts/i.test(String(error.data.detail)))) {
+                        // IP 限流（5 分钟内最多登录 1 次）：尝试用 Cookie 中已有的 Token 直接进入
+                        handleRateLimitedLogin();
+                    } else {
+                        showError(loginErrDetail(error) || '系统错误，请稍后再试');
+                        hideAppealLink();
+                    }
+                });
+        }
+
+        // 把后端错误信息规范为可读文本（detail 可能是字符串或对象，避免显示 [object Object]）
+        function loginErrDetail(err) {
+            const d = err && err.data && err.data.detail;
+            if (typeof d === 'string' && d) return d;
+            if (d && typeof d === 'object') {
+                if (typeof d.message === 'string' && d.message) return d.message;
+                if (typeof d.msg === 'string' && d.msg) return d.msg;
+                if (typeof d.error === 'string' && d.error) return d.error;
+            }
+            return '';
+        }
+
+        // 判断是否为封禁类错误（detail 可能是字符串或对象，含原因/剩余天数/解封时间等字段）
+        function isBanError(err) {
+            const d = err && err.data && err.data.detail;
+            if (typeof d === 'string') return /封禁|已封|ban/i.test(d);
+            if (d && typeof d === 'object') {
+                return d.banReason != null || d.bannedUntil != null || d.unbanAt != null || d.unbanTime != null ||
+                    d.remainingDays != null ||
+                    /封禁|ban/i.test(String(d.message || d.msg || d.error || ''));
+            }
+            return false;
+        }
+
+        // 组装封禁提示文案（detail.message 含原因/剩余天数/解封时间时直接展示）
+        function banErrorText(err) {
+            const d = err && err.data && err.data.detail;
+            if (typeof d === 'string' && d) return d;
+            const parts = [];
+            if (d && typeof d === 'object') {
+                if (typeof d.message === 'string' && d.message) parts.push(d.message);
+                if (d.banReason) parts.push('封禁理由：' + d.banReason);
+                if (d.remainingDays === 'inf') parts.push('永久封禁');
+                else if (d.remainingDays != null) parts.push('剩余 ' + d.remainingDays + ' 天');
+                const unban = d.unbanAt || d.unbanTime || d.bannedUntil;
+                if (unban) parts.push('解封时间：' + unban);
+            }
+            return parts.join('\n') || loginErrDetail(err) || '您当前的账号已被封禁，无法登录';
+        }
+
+        // 封禁时在错误提示下方显示「封禁申诉」链接（跳转申诉界面）
+        function showAppealLink() {
+            const host = document.querySelector('a[href="register"]');
+            if (!host || !host.parentNode) return;
+            if (!appealLink) {
+                appealLink = document.createElement('div');
+                appealLink.style.marginTop = '8px';
+                appealLink.innerHTML = '<a href="appeal" style="color:#e74c3c; font-size:14px; text-decoration:underline;">封禁申诉</a>';
+                host.parentNode.appendChild(appealLink);
+            }
+            appealLink.style.display = 'block';
+        }
+
+        function hideAppealLink() {
+            if (appealLink) appealLink.style.display = 'none';
+        }
+
+        // 登录被限流（429）时的兜底：先试 Cookie/本地存的 Token，有效则直接进入，无效则提示稍后再试
+        function handleRateLimitedLogin() {
+            const savedToken = ZIYIT_API.getToken();
+            if (!savedToken) {
+                showError('登录尝试过于频繁，请稍后再试');
+                return;
+            }
+            ZIYIT_API.me().then(function (user) {
+                if (user && (user.username || user.userId != null)) {
+                    showError('登录过于频繁，已使用本地会话直接进入');
+                    setTimeout(function () { window.location.href = '../'; }, 1200);
+                } else {
+                    showError('登录尝试过于频繁，请稍后再试');
+                }
+            }).catch(function () {
+                showError('登录尝试过于频繁，请稍后再试');
+            });
+        }
+
+        function showError(message) {
+            loginFailed = true;
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.style.color = 'red';
+                errorDiv.style.marginTop = '10px';
+                errorDiv.style.opacity = '0';
+                errorDiv.style.transition = 'opacity 0.3s ease';
+                errorDiv.textContent = message;
+                document.querySelector('a[href="register"]').parentNode.appendChild(errorDiv);
+
+                // 初始显示动画
+                setTimeout(() => {
+                    errorDiv.style.opacity = '1';
+                }, 10);
+            } else {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+                errorDiv.style.opacity = '1';
+            }
+            checkFocus();
+        }
+
+        // 修改表单提交事件
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            checkPassword();
+        });
+
+        // 修改登录按钮点击事件
+        document.getElementById('login').addEventListener('click', function(e) {
+            e.preventDefault();
+            checkPassword();
+        });
+    </script>
+
+    <script>
+        // 导航权限过滤（DESIGN.md §4.6.5，公开页模式）：未登录仅保留登录入口与返回，登录后按角色显示
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const loginLink = document.getElementById('loginLink');
+            const backNavLink = document.getElementById('backNavLink');
+            const isAuthPage = !ZIYIT_API.getToken();
+            if (isAuthPage) {
+                navItems.forEach(item => {
+                    // 登录/注册页未登录时：隐藏功能区、图书馆、用户中心等，只显示登录链接与返回
+                    const show = item.contains(loginLink) || item.contains(backNavLink);
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                if (loginLink) loginLink.style.display = 'inline-block';
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                // token 验证失败（已失效）：回到未登录状态，仅显示登录入口与返回
+                navItems.forEach(item => {
+                    const show = item.contains(loginLink) || item.contains(backNavLink);
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                if (loginLink) loginLink.style.display = 'inline-block';
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

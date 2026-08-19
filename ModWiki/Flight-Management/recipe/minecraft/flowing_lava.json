@@ -1,0 +1,14 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "flowing lava",
+    "ingredients": [
+        "flyconfig:music_disc_hitler",
+        "flyconfig:nuclear_spawn_egg"
+    ],
+    "result": {
+        "id": "flyconfig:flowing_lava",
+        "count": 1
+    },
+    "show_notification": true
+}

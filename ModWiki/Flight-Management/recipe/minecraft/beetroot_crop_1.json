@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "beetroot crop 1",
+    "ingredients": [
+        "flyconfig:synthetic_motoroil",
+        "flyconfig:flight_manager",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:beetroot_crop_1",
+        "count": 1
+    },
+    "show_notification": true
+}

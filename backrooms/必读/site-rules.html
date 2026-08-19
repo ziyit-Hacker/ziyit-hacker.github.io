@@ -1,0 +1,1279 @@
+﻿<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cn" lang="cn">
+
+<head>
+    <title>站点规则 - The Backrooms中文维基</title>
+    <link rel="icon" href="../../assets/ziyit.png">
+    <script src="../../assets/f12check.js"></script>
+
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/init.combined.js"></script>
+    <script type="text/javascript">
+        var URL_HOST = 'www.wikidot.com';
+        var URL_DOMAIN = 'wikidot.com';
+        var USE_SSL = true;
+        var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
+        // global request information
+
+        var WIKIREQUEST = {};
+        WIKIREQUEST.info = {};
+
+        WIKIREQUEST.info.domain = "backrooms-wiki-cn.wikidot.com";
+        WIKIREQUEST.info.siteId = 4716348;
+        WIKIREQUEST.info.siteUnixName = "backrooms-wiki-cn";
+        WIKIREQUEST.info.categoryId = 40786773;
+        WIKIREQUEST.info.themeId = 1;
+        WIKIREQUEST.info.requestPageName = "start";
+        OZONE.request.timestamp = 1767421974;
+        OZONE.request.date = new Date();
+        WIKIREQUEST.info.lang = 'cn';
+        WIKIREQUEST.info.pageUnixName = "start";
+        WIKIREQUEST.info.pageId = 1312481462;
+        WIKIREQUEST.info.lang = "cn";
+        OZONE.lang = "cn";
+        var isUAMobile = !!/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    </script>
+
+    <script type="text/javascript">
+
+        require.config({
+            baseUrl: URL_STATIC + '/common--javascript',
+            paths: {
+                'jquery.ui': 'jquery-ui.min',
+                'jquery.form': 'jquery.form'
+            }
+        });
+
+    </script>
+
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <meta name="baidu-site-verification" content="codeva-47Yi9iuOuV" />
+    <meta name="msvalidate.01" content="D54FA9739BC43B75C4E90F71B35F6C0E" />
+    <meta name="google-site-verification" content="KS6XqxX4GYHTFxxrHO_Dmz0xuyJJAU_ZoCJSgVC9FNo" />
+    <meta name="theme-color" content="#35B1A4" />
+    <meta name="og:type" content="article" />
+    <meta name="description" content="后室文档公共数据库——你曾经来过这里。" />
+    <meta name="og:site_name" content="The Backrooms 中文维基" />
+    <meta name="og:image" content="https://backrooms-oversight-cn.wdfiles.com/local--files/bml-emojis-1/bml_04.png" />
+    <meta name="og:locale" content="zh-cn" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta http-equiv="content-language" content="cn" />
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/WIKIDOT.combined.js"></script>
+
+    <style type="text/css" id="internal-style">
+        @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
+        @import url(https://github.backroomswiki.cn/Old_BHL/css/liminal-impact.css);
+    </style>
+
+    <meta name="msapplication-TileColor" content="#000000" />
+
+    <link rel="alternate" type="application/wiki" title="Edit this page"
+        href="javascript:WIKIDOT.page.listeners.editClick()" />
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-18234656-1']);
+        _gaq.push(['_setDomainName', 'none']);
+        _gaq.push(['_setAllowLinker', true]);
+        _gaq.push(['_trackPageview']);
+
+        _gaq.push(['old._setAccount', 'UA-68540-5']);
+        _gaq.push(['old._setDomainName', 'none']);
+        _gaq.push(['old._setAllowLinker', true]);
+        _gaq.push(['old._trackPageview']);
+
+        _gaq.push(['userTracker._setAccount', 'UA-290379544-1']);
+        _gaq.push(['userTracker._trackPageview']);
+    </script>
+
+    <script type="text/javascript">
+        window.google_analytics_uacct = 'UA-18234656-1';
+        window.google_analytics_domain_name = 'none';
+    </script>
+
+    <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" acync=""></script>
+    <script>
+        var OneSignal = window.OneSignal || [];
+        OneSignal.push(function () {
+            OneSignal.init({
+                appId: null,
+            });
+        });
+    </script>
+
+    <style>
+        /*
+    Backrooms CN Main Page CSS
+    by hoah2333, Eltrac, Ambersight &amp; Lambda Core
+*/
+        #page-title {
+            display: none;
+        }
+
+        #page-content .bannerContainer {
+            display: grid;
+            grid-template-areas: "welcome welcome welcome" "bilibili faq join";
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-column-gap: 3%;
+        }
+
+        #page-content .bannerContainer .welcome {
+            grid-area: welcome;
+            background-color: rgb(var(--gray-monochrome));
+            color: rgb(var(--white-monochrome));
+            font-style: italic;
+            padding: 1rem;
+        }
+
+        #page-content .bannerContainer .navigator {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            background-color: rgb(var(--gray-monochrome));
+            border-radius: 0 0 1rem 1rem;
+            height: -webkit-min-content;
+            height: -moz-min-content;
+            height: min-content;
+            margin: 0 0 4rem 0;
+            -webkit-transition: margin 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            transition: margin 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #page-content .bannerContainer .navigator:hover,
+        #page-content .bannerContainer .navigator:active {
+            margin: 0 0 1rem 0;
+        }
+
+        #page-content .bannerContainer .navigator a {
+            padding: 0.5rem 0;
+            width: 100%;
+            text-align: center;
+            color: rgb(var(--white-monochrome));
+            font-size: 1.25rem;
+            -webkit-transition: padding 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            transition: padding 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: bold;
+        }
+
+        #page-content .bannerContainer .navigator a:hover,
+        #page-content .bannerContainer .navigator a:active {
+            text-decoration: none;
+            text-decoration-color: transparent;
+            padding: 2rem 0;
+        }
+
+        @media (max-width: 767px) {
+            #page-content .bannerContainer .navigator {
+                margin: 0 0 2rem 0;
+            }
+
+            #page-content .bannerContainer .navigator:hover {
+                margin: 0;
+            }
+
+            #page-content .bannerContainer .navigator a {
+                font-size: 1.1rem;
+            }
+
+            #page-content .bannerContainer .navigator a:hover,
+            #page-content .bannerContainer .navigator a:active {
+                padding: 1.5rem 0;
+            }
+        }
+
+        #page-content .bannerContainer .bilibili {
+            grid-area: bilibili;
+        }
+
+        #page-content .bannerContainer .faq {
+            grid-area: faq;
+        }
+
+        #page-content .bannerContainer .join {
+            grid-area: join;
+        }
+
+        #page-content .announceContainer {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            border: 4px solid rgb(var(--gray-monochrome));
+            -ms-flex-line-pack: justify;
+            align-content: space-between;
+        }
+
+        #page-content .announceContainer .welcome {
+            background-color: rgb(var(--gray-monochrome));
+            color: rgb(var(--white-monochrome));
+            font-weight: bold;
+            width: 100%;
+            text-align: center;
+            font-size: 1.5rem;
+            padding: 0 0.75rem;
+            word-break: keep-all;
+        }
+
+        @media (max-width: 767px) {
+            #page-content .announceContainer .welcome {
+                font-size: 1.2rem;
+            }
+        }
+
+        #page-content .announceContainer .announcement,
+        #page-content .announceContainer .more {
+            background-color: rgb(var(--pale-gray-monochrome));
+            width: 100%;
+            padding: 0.75rem;
+            border-top: 4px solid rgb(var(--gray-monochrome));
+        }
+
+        #page-content .announceContainer .more {
+            padding: 0;
+        }
+
+        #page-content .announceContainer .more .collapsible-block-folded,
+        #page-content .announceContainer .more .collapsible-block-unfolded .collapsible-block-unfolded-link {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+        }
+
+        #page-content .announceContainer .more .collapsible-block-folded a.collapsible-block-link,
+        #page-content .announceContainer .more .collapsible-block-unfolded .collapsible-block-unfolded-link a.collapsible-block-link {
+            width: 100%;
+            padding: 1rem 0;
+            text-align: center;
+            background: rgba(var(--gray-monochrome), 0.2);
+            -webkit-transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #page-content .announceContainer .more .collapsible-block-folded a.collapsible-block-link:hover,
+        #page-content .announceContainer .more .collapsible-block-unfolded .collapsible-block-unfolded-link a.collapsible-block-link:hover {
+            text-decoration: none;
+            text-decoration-color: transparent;
+            background: rgba(var(--gray-monochrome), 0.4);
+        }
+
+        #page-content .announceContainer .more .collapsible-block-folded[style*=block],
+        #page-content .announceContainer .more .collapsible-block-unfolded[style*=block] .collapsible-block-unfolded-link {
+            display: -webkit-box !important;
+            display: -ms-flexbox !important;
+            display: flex !important;
+        }
+
+        #page-content .announceContainer .more .collapsible-block-unfolded .collapsible-block-unfolded-link a.collapsible-block-link {
+            border-bottom: 4px solid rgb(var(--gray-monochrome));
+        }
+
+        #page-content .announceContainer .more .collapsible-block-unfolded .collapsible-block-content {
+            background: rgb(var(--gray-monochrome));
+            color: rgb(var(--white-monochrome));
+            text-align: center;
+        }
+
+        #page-content .announceContainer .more .collapsible-block-unfolded .collapsible-block-content p {
+            margin: 0;
+        }
+
+        #page-content .announceContainer .archive {
+            background: rgb(var(--gray-monochrome));
+            color: rgb(var(--white-monochrome));
+            text-align: right;
+            width: 100%;
+        }
+
+        #page-content .announceContainer .archive a {
+            padding: 0 1rem;
+            color: rgb(var(--white-monochrome));
+        }
+
+        #page-content .recentPages {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-orient: horizontal;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: row;
+            flex-direction: row;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+            justify-content: space-between;
+            row-gap: 1rem;
+        }
+
+        #page-content .recentPages .pageContainer {
+            display: grid;
+            grid-template-areas: "title" "page" "recently";
+            grid-template-rows: 1.5rem minmax(auto, 11.81rem) 1.5rem;
+            -ms-flex-preferred-size: 50%;
+            flex-basis: 50%;
+        }
+
+        @media (max-width: 550px) {
+            #page-content .recentPages .pageContainer {
+                -ms-flex-preferred-size: 100%;
+                flex-basis: 100%;
+            }
+        }
+
+        #page-content .recentPages .pageContainer p {
+            margin: 0;
+        }
+
+        #page-content .recentPages .pageContainer .title {
+            grid-area: title;
+            background: rgb(var(--gray-monochrome));
+            color: rgb(var(--white-monochrome));
+            font-weight: bold;
+            padding: 0 1rem;
+        }
+
+        #page-content .recentPages .pageContainer .page {
+            grid-area: page;
+            border: solid rgb(var(--gray-monochrome));
+            border-width: 0 3px 0 4px;
+            padding: 0.5em calc(1rem - 4px);
+            max-height: 12rem;
+            background-color: rgb(var(--pale-gray-monochrome));
+            overflow-y: hidden;
+        }
+
+        #page-content .recentPages .pageContainer .page .list-pages-box p {
+            max-height: 12rem;
+            overflow-y: hidden;
+        }
+
+        #page-content .recentPages .pageContainer .page .list-pages-box p br {
+            display: none;
+        }
+
+        #page-content .recentPages .pageContainer .page .list-pages-box p a {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #page-content .recentPages .pageContainer .recently {
+            grid-area: recently;
+            background: rgb(var(--gray-monochrome));
+            text-align: right;
+            padding: 0 1rem;
+        }
+
+        #page-content .recentPages .pageContainer .recently a {
+            color: rgb(var(--white-monochrome));
+        }
+
+        #page-content .recentPages .featurePrize {
+            grid-template-rows: 1.5rem minmax(auto, 7.68rem) 1.5rem;
+            -ms-flex-preferred-size: 100%;
+            flex-basis: 100%;
+        }
+
+        @media (max-width: 550px) {
+            #page-content .recentPages .featurePrize {
+                grid-template-rows: 1.5rem minmax(auto, 11.81rem) 1.5rem;
+            }
+        }
+
+        #page-content .recentPages .featureLevelO .page p,
+        #page-content .recentPages .featureTaleO .page p,
+        #page-content .recentPages .featureLevelT .page p,
+        #page-content .recentPages .featureTaleT .page p,
+        #page-content .recentPages .featurePrize .page p {
+            font-size: 0.8rem;
+        }
+
+        #page-content .recentPages .featureLevelO .page p:nth-of-type(1),
+        #page-content .recentPages .featureTaleO .page p:nth-of-type(1),
+        #page-content .recentPages .featureLevelT .page p:nth-of-type(1),
+        #page-content .recentPages .featureTaleT .page p:nth-of-type(1),
+        #page-content .recentPages .featurePrize .page p:nth-of-type(1) {
+            font-size: 1rem;
+        }
+
+        #page-content .recentPages .featureLevelO .page p:nth-of-type(2),
+        #page-content .recentPages .featureTaleO .page p:nth-of-type(2),
+        #page-content .recentPages .featureLevelT .page p:nth-of-type(2),
+        #page-content .recentPages .featureTaleT .page p:nth-of-type(2),
+        #page-content .recentPages .featurePrize .page p:nth-of-type(2) {
+            font-size: 0.5rem;
+            margin: 0 0 0.5rem 0;
+        }
+
+        #page-content .flexContainer {
+            display: grid;
+            /* Ha-ha, Fat chance. */
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 7px;
+        }
+
+        #page-content .toolsContainer {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            grid-gap: 7px;
+        }
+
+        #page-content .toolsContainer .tools {
+            background: rgba(var(--gray-monochrome));
+            color: rgba(var(--white-monochrome));
+            padding: 1em;
+            display: grid;
+            grid-template-areas:
+                "icon content"
+                "title content";
+            grid-template-columns: max-content 1fr;
+            grid-template-rows: 0.6fr 0.4fr;
+            grid-gap: 2px 1em;
+        }
+
+        #page-content .toolsContainer .tools.tright {
+            grid-template-areas:
+                "content icon"
+                "content title";
+            grid-template-columns: 1fr max-content;
+        }
+
+        #page-content .toolsContainer .tools img {
+            grid-area: icon;
+            justify-self: center;
+            align-self: end;
+        }
+
+        #page-content .toolsContainer .tools a {
+            grid-area: title;
+            color: rgba(var(--white-monochrome));
+        }
+
+        #page-content .toolsContainer .tools .description {
+            grid-area: content;
+            align-self: center;
+        }
+
+        #page-content .toolsContainer .tools br {
+            display: none;
+        }
+
+        #page-content .artbox {
+            background: rgba(var(--gray-monochrome));
+            color: rgba(var(--white-monochrome));
+            padding: 0.00001px 1em;
+        }
+
+        #page-content .artbox .title {
+            font-weight: 700;
+            margin: 0.5em 0 0;
+        }
+
+        #page-content .artbox .artContent {
+            overflow-y: hidden;
+            max-height: 18rem;
+        }
+
+        #page-content .artbox .featuredLink {
+            text-align: right;
+            padding: 0.2em 0;
+            margin-right: calc(1rem - 1em);
+        }
+
+        #page-content .artbox .featuredLink a {
+            color: rgba(var(--white-monochrome));
+        }
+
+        @media (max-width: 600px) {
+            #page-content .flexContainer {
+                grid-template-columns: auto;
+                grid-template-rows: max-content max-content;
+            }
+        }
+
+        #page-content .international .announcement {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            position: relative;
+        }
+
+        #page-content .international .announcement img {
+            width: 50px;
+            -webkit-filter: drop-shadow(0 0 1px rgba(var(--gray-monochrome), 0.8));
+            filter: drop-shadow(0 0 1px rgba(var(--gray-monochrome), 0.8));
+        }
+
+        #page-content .international .announcement.es img,
+        #page-content .international .announcement.jp img {
+            -ms-flex-item-align: center;
+            align-self: center;
+        }
+
+        #page-content .international .announcement h3 {
+            margin: 0 0 0 1rem;
+            line-height: 50px;
+        }
+
+        #page-content .international .announcement a {
+            font-size: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            left: 0;
+            top: 0;
+            -webkit-transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #page-content .international .announcement a:hover {
+            background-color: rgba(var(--gray-monochrome), 0.2);
+        }
+
+        /*# sourceMappingURL=data:application/json;base64,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WUFBOUQsOERBQThEO0FBQ2xFO0FBQ0E7SUFDSSwyQkFBa0I7UUFBbEIsa0JBQWtCO0FBQ3RCO0FBQ0E7SUFDSSxrQkFBa0I7SUFDbEIsaUJBQWlCO0FBQ3JCO0FBQ0E7SUFDSSxZQUFZO0lBQ1osa0JBQWtCO0lBQ2xCLFdBQVc7SUFDWCxZQUFZO0lBQ1osT0FBTztJQUNQLE1BQU07SUFDTix1RUFBK0Q7SUFBL0QsK0RBQStEO0FBQ25FO0FBQ0E7SUFDSSxtREFBbUQ7QUFDdkQiLCJmaWxlIjoibWFpbi5jc3MiLCJzb3VyY2VzQ29udGVudCI6WyIvKlxuICAgIEJhY2tyb29tcyBDTiBNYWluIFBhZ2UgQ1NTXG4gICAgYnkgaG9haDIzMzMgJiBFbHRyYWNcbiovXG4jcGFnZS10aXRsZSB7XG4gICAgZGlzcGxheTogbm9uZTtcbn1cblxuI3BhZ2UtY29udGVudCAuYmFubmVyQ29udGFpbmVyIHtcbiAgICBkaXNwbGF5OiBncmlkO1xuICAgIGdyaWQtdGVtcGxhdGUtYXJlYXM6IFwid2VsY29tZSB3ZWxjb21lIHdlbGNvbWVcIiBcImRpc2NvcmQgZmFxIGpvaW5cIjtcbiAgICBncmlkLXRlbXBsYXRlLWNvbHVtbnM6IDFmciAxZnIgMWZyO1xuICAgIGdyaWQtY29sdW1uLWdhcDogMyU7XG59XG4jcGFnZS1jb250ZW50IC5iYW5uZXJDb250YWluZXIgLndlbGNvbWUge1xuICAgIGdyaWQtYXJlYTogd2VsY29tZTtcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiByZ2IodmFyKC0tZ3JheS1tb25vY2hyb21lKSk7XG4gICAgY29sb3I6IHJnYih2YXIoLS13aGl0ZS1tb25vY2hyb21lKSk7XG4gICAgZm9udC1zdHlsZTogaXRhbGljO1xuICAgIHBhZGRpbmc6IDFyZW07XG59XG4jcGFnZS1jb250ZW50IC5iYW5uZXJDb250YWluZXIgLm5hdmlnYXRvciB7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiByZ2IodmFyKC0tZ3JheS1tb25vY2hyb21lKSk7XG4gICAgYm9yZGVyLXJhZGl1czogMCAwIDFyZW0gMXJlbTtcbiAgICBoZWlnaHQ6IG1pbi1jb250ZW50O1xuICAgIG1hcmdpbjogMCAwIDRyZW0gMDtcbiAgICB0cmFuc2l0aW9uOiBtYXJnaW4gMTUwbXMgY3ViaWMtYmV6aWVyKDAuNCwgMCwgMC4yLCAxKTtcbn1cbiNwYWdlLWNvbnRlbnQgLmJhbm5lckNvbnRhaW5lciAubmF2aWdhdG9yOmhvdmVyLCAjcGFnZS1jb250ZW50IC5iYW5uZXJDb250YWluZXIgLm5hdmlnYXRvcjphY3RpdmUge1xuICAgIG1hcmdpbjogMCAwIDFyZW0gMDtcbn1cbiNwYWdlLWNvbnRlbnQgLmJhbm5lckNvbnRhaW5lciAubmF2aWdhdG9yIGEge1xuICAgIHBhZGRpbmc6IDAuNXJlbSAwO1xuICAgIHdpZHRoOiAxMDAlO1xuICAgIHRleHQtYWxpZ246IGNlbnRlcjtcbiAgICBjb2xvcjogcmdiKHZhcigtLXdoaXRlLW1vbm9jaHJvbWUpKTtcbiAgICBmb250LXNpemU6IDEuMjVyZW07XG4gICAgdHJhbnNpdGlvbjogcGFkZGluZyAxNTBtcyBjdWJpYy1iZXppZXIoMC40LCAwLCAwLjIsIDEpO1xuICAgIGZvbnQtd2VpZ2h0OiBib2xkO1xufVxuI3BhZ2UtY29udGVudCAuYmFubmVyQ29udGFpbmVyIC5uYXZpZ2F0b3IgYTpob3ZlciwgI3BhZ2UtY29udGVudCAuYmFubmVyQ29udGFpbmVyIC5uYXZpZ2F0b3IgYTphY3RpdmUge1xuICAgIHRleHQtZGVjb3JhdGlvbjogbm9uZTtcbiAgICB0ZXh0LWRlY29yYXRpb24tY29sb3I6IHRyYW5zcGFyZW50O1xuICAgIHBhZGRpbmc6IDJyZW0gMDtcbn1cbkBtZWRpYSAobWF4LXdpZHRoOiA3NjdweCkge1xuICAgICNwYWdlLWNvbnRlbnQgLmJhbm5lckNvbnRhaW5lciAubmF2aWdhdG9yIHtcbiAgICAgICAgbWFyZ2luOiAwIDAgMnJlbSAwO1xuICAgIH1cbiAgICAjcGFnZS1jb250ZW50IC5iYW5uZXJDb250YWluZXIgLm5hdmlnYXRvcjpob3ZlciB7XG4gICAgICAgIG1hcmdpbjogMDtcbiAgICB9XG4gICAgI3BhZ2UtY29udGVudCAuYmFubmVyQ29udGFpbmVyIC5uYXZpZ2F0b3IgYSB7XG4gICAgICAgIGZvbnQtc2l6ZTogMS4xcmVtO1xuICAgIH1cbiAgICAjcGFnZS1jb250ZW50IC5iYW5uZXJDb250YWluZXIgLm5hdmlnYXRvciBhOmhvdmVyLCAjcGFnZS1jb250ZW50IC5iYW5uZXJDb250YWluZXIgLm5hdmlnYXRvciBhOmFjdGl2ZSB7XG4gICAgICAgIHBhZGRpbmc6IDEuNXJlbSAwO1xuICAgIH1cbn1cbiNwYWdlLWNvbnRlbnQgLmJhbm5lckNvbnRhaW5lciAuZGlzY29yZCB7XG4gICAgZ3JpZC1hcmVhOiBkaXNjb3JkO1xufVxuI3BhZ2UtY29udGVudCAuYmFubmVyQ29udGFpbmVyIC5mYXEge1xuICAgIGdyaWQtYXJlYTogZmFxO1xufVxuI3BhZ2UtY29udGVudCAuYmFubmVyQ29udGFpbmVyIC5qb2luIHtcbiAgICBncmlkLWFyZWE6IGpvaW47XG59XG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciB7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBmbGV4LXdyYXA6IHdyYXA7XG4gICAgYm9yZGVyOiA0cHggc29saWQgcmdiKHZhcigtLWdyYXktbW9ub2Nocm9tZSkpO1xuICAgIGFsaWduLWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XG59XG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAud2VsY29tZSB7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogcmdiKHZhcigtLWdyYXktbW9ub2Nocm9tZSkpO1xuICAgIGNvbG9yOiByZ2IodmFyKC0td2hpdGUtbW9ub2Nocm9tZSkpO1xuICAgIGZvbnQtd2VpZ2h0OiBib2xkO1xuICAgIHdpZHRoOiAxMDAlO1xuICAgIHRleHQtYWxpZ246IGNlbnRlcjtcbiAgICBmb250LXNpemU6IDEuNXJlbTtcbiAgICBwYWRkaW5nOiAwIDAuNzVyZW07XG59XG5AbWVkaWEgKG1heC13aWR0aDogNzY3cHgpIHtcbiAgICAjcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAud2VsY29tZSB7XG4gICAgICAgIGZvbnQtc2l6ZTogMS4ycmVtO1xuICAgIH1cbn1cbiNwYWdlLWNvbnRlbnQgLmFubm91bmNlQ29udGFpbmVyIC5hbm5vdW5jZW1lbnQsXG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAubW9yZSB7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogcmdiKHZhcigtLXBhbGUtZ3JheS1tb25vY2hyb21lKSk7XG4gICAgd2lkdGg6IDEwMCU7XG4gICAgcGFkZGluZzogMC43NXJlbTtcbiAgICBib3JkZXItdG9wOiA0cHggc29saWQgcmdiKHZhcigtLWdyYXktbW9ub2Nocm9tZSkpO1xufVxuI3BhZ2UtY29udGVudCAuYW5ub3VuY2VDb250YWluZXIgLm1vcmUge1xuICAgIHBhZGRpbmc6IDA7XG59XG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAubW9yZSAuY29sbGFwc2libGUtYmxvY2stZm9sZGVkLFxuI3BhZ2UtY29udGVudCAuYW5ub3VuY2VDb250YWluZXIgLm1vcmUgLmNvbGxhcHNpYmxlLWJsb2NrLXVuZm9sZGVkIC5jb2xsYXBzaWJsZS1ibG9jay11bmZvbGRlZC1saW5rIHtcbiAgICBkaXNwbGF5OiBmbGV4O1xufVxuI3BhZ2UtY29udGVudCAuYW5ub3VuY2VDb250YWluZXIgLm1vcmUgLmNvbGxhcHNpYmxlLWJsb2NrLWZvbGRlZCBhLmNvbGxhcHNpYmxlLWJsb2NrLWxpbmssXG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAubW9yZSAuY29sbGFwc2libGUtYmxvY2stdW5mb2xkZWQgLmNvbGxhcHNpYmxlLWJsb2NrLXVuZm9sZGVkLWxpbmsgYS5jb2xsYXBzaWJsZS1ibG9jay1saW5rIHtcbiAgICB3aWR0aDogMTAwJTtcbiAgICBwYWRkaW5nOiAxcmVtIDA7XG4gICAgdGV4dC1hbGlnbjogY2VudGVyO1xuICAgIGJhY2tncm91bmQ6IHJnYmEodmFyKC0tZ3JheS1tb25vY2hyb21lKSwgMC4yKTtcbiAgICB0cmFuc2l0aW9uOiBiYWNrZ3JvdW5kLWNvbG9yIDE1MG1zIGN1YmljLWJlemllcigwLjQsIDAsIDAuMiwgMSk7XG59XG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAubW9yZSAuY29sbGFwc2libGUtYmxvY2stZm9sZGVkIGEuY29sbGFwc2libGUtYmxvY2stbGluazpob3ZlcixcbiNwYWdlLWNvbnRlbnQgLmFubm91bmNlQ29udGFpbmVyIC5tb3JlIC5jb2xsYXBzaWJsZS1ibG9jay11bmZvbGRlZCAuY29sbGFwc2libGUtYmxvY2stdW5mb2xkZWQtbGluayBhLmNvbGxhcHNpYmxlLWJsb2NrLWxpbms6aG92ZXIge1xuICAgIHRleHQtZGVjb3JhdGlvbjogbm9uZTtcbiAgICB0ZXh0LWRlY29yYXRpb24tY29sb3I6IHRyYW5zcGFyZW50O1xuICAgIGJhY2tncm91bmQ6IHJnYmEodmFyKC0tZ3JheS1tb25vY2hyb21lKSwgMC40KTtcbn1cbiNwYWdlLWNvbnRlbnQgLmFubm91bmNlQ29udGFpbmVyIC5tb3JlIC5jb2xsYXBzaWJsZS1ibG9jay1mb2xkZWRbc3R5bGUqPWJsb2NrXSxcbiNwYWdlLWNvbnRlbnQgLmFubm91bmNlQ29udGFpbmVyIC5tb3JlIC5jb2xsYXBzaWJsZS1ibG9jay11bmZvbGRlZFtzdHlsZSo9YmxvY2tdIC5jb2xsYXBzaWJsZS1ibG9jay11bmZvbGRlZC1saW5rIHtcbiAgICBkaXNwbGF5OiBmbGV4ICFpbXBvcnRhbnQ7XG59XG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAubW9yZSAuY29sbGFwc2libGUtYmxvY2stdW5mb2xkZWQgLmNvbGxhcHNpYmxlLWJsb2NrLXVuZm9sZGVkLWxpbmsgYS5jb2xsYXBzaWJsZS1ibG9jay1saW5rIHtcbiAgICBib3JkZXItYm90dG9tOiA0cHggc29saWQgcmdiKHZhcigtLWdyYXktbW9ub2Nocm9tZSkpO1xufVxuI3BhZ2UtY29udGVudCAuYW5ub3VuY2VDb250YWluZXIgLm1vcmUgLmNvbGxhcHNpYmxlLWJsb2NrLXVuZm9sZGVkIC5jb2xsYXBzaWJsZS1ibG9jay1jb250ZW50IHtcbiAgICBiYWNrZ3JvdW5kOiByZ2IodmFyKC0tZ3JheS1tb25vY2hyb21lKSk7XG4gICAgY29sb3I6IHJnYih2YXIoLS13aGl0ZS1tb25vY2hyb21lKSk7XG4gICAgdGV4dC1hbGlnbjogY2VudGVyO1xufVxuI3BhZ2UtY29udGVudCAuYW5ub3VuY2VDb250YWluZXIgLm1vcmUgLmNvbGxhcHNpYmxlLWJsb2NrLXVuZm9sZGVkIC5jb2xsYXBzaWJsZS1ibG9jay1jb250ZW50IHAge1xuICAgIG1hcmdpbjogMDtcbn1cbiNwYWdlLWNvbnRlbnQgLmFubm91bmNlQ29udGFpbmVyIC5hcmNoaXZlIHtcbiAgICBiYWNrZ3JvdW5kOiByZ2IodmFyKC0tZ3JheS1tb25vY2hyb21lKSk7XG4gICAgY29sb3I6IHJnYih2YXIoLS13aGl0ZS1tb25vY2hyb21lKSk7XG4gICAgdGV4dC1hbGlnbjogcmlnaHQ7XG4gICAgd2lkdGg6IDEwMCU7XG59XG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAuYXJjaGl2ZSBhIHtcbiAgICBwYWRkaW5nOiAwIDFyZW07XG4gICAgY29sb3I6IHJnYih2YXIoLS13aGl0ZS1tb25vY2hyb21lKSk7XG59XG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyB7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBmbGV4LWRpcmVjdGlvbjogcm93O1xuICAgIGZsZXgtd3JhcDogd3JhcDtcbiAgICBqdXN0aWZ5LWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XG4gICAgcm93LWdhcDogMXJlbTtcbn1cbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5wYWdlQ29udGFpbmVyIHtcbiAgICBkaXNwbGF5OiBncmlkO1xuICAgIGdyaWQtdGVtcGxhdGUtYXJlYXM6IFwidGl0bGVcIiBcInBhZ2VcIiBcInJlY2VudGx5XCI7XG4gICAgZ3JpZC10ZW1wbGF0ZS1yb3dzOiAxLjVyZW0gbWlubWF4KGF1dG8sIDExLjgxcmVtKSAxLjVyZW07XG4gICAgZmxleC1iYXNpczogNTAlO1xufVxuQG1lZGlhIChtYXgtd2lkdGg6IDU1MHB4KSB7XG4gICAgI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLnBhZ2VDb250YWluZXIge1xuICAgICAgICBmbGV4LWJhc2lzOiAxMDAlO1xuICAgIH1cbn1cbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5wYWdlQ29udGFpbmVyIHAge1xuICAgIG1hcmdpbjogMDtcbn1cbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5wYWdlQ29udGFpbmVyIC50aXRsZSB7XG4gICAgZ3JpZC1hcmVhOiB0aXRsZTtcbiAgICBiYWNrZ3JvdW5kOiByZ2IodmFyKC0tZ3JheS1tb25vY2hyb21lKSk7XG4gICAgY29sb3I6IHJnYih2YXIoLS13aGl0ZS1tb25vY2hyb21lKSk7XG4gICAgZm9udC13ZWlnaHQ6IGJvbGQ7XG4gICAgcGFkZGluZzogMCAxcmVtO1xufVxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLnBhZ2VDb250YWluZXIgLnBhZ2Uge1xuICAgIGdyaWQtYXJlYTogcGFnZTtcbiAgICBib3JkZXI6IHNvbGlkIHJnYih2YXIoLS1ncmF5LW1vbm9jaHJvbWUpKTtcbiAgICBib3JkZXItd2lkdGg6IDAgM3B4IDAgNHB4O1xuICAgIHBhZGRpbmc6IDAuNWVtIGNhbGMoMXJlbSAtIDRweCk7XG4gICAgbWF4LWhlaWdodDogMTJyZW07XG4gICAgYmFja2dyb3VuZC1jb2xvcjogcmdiKHZhcigtLXBhbGUtZ3JheS1tb25vY2hyb21lKSk7XG4gICAgb3ZlcmZsb3cteTogaGlkZGVuO1xufVxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLnBhZ2VDb250YWluZXIgLnBhZ2UgLmxpc3QtcGFnZXMtYm94IHAge1xuICAgIG1heC1oZWlnaHQ6IDEycmVtO1xuICAgIG92ZXJmbG93LXk6IGhpZGRlbjtcbn1cbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5wYWdlQ29udGFpbmVyIC5wYWdlIC5saXN0LXBhZ2VzLWJveCBwIGJyIHtcbiAgICBkaXNwbGF5OiBub25lO1xufVxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLnBhZ2VDb250YWluZXIgLnBhZ2UgLmxpc3QtcGFnZXMtYm94IHAgYSB7XG4gICAgZGlzcGxheTogYmxvY2s7XG4gICAgd2hpdGUtc3BhY2U6IG5vd3JhcDtcbiAgICBvdmVyZmxvdzogaGlkZGVuO1xuICAgIHRleHQtb3ZlcmZsb3c6IGVsbGlwc2lzO1xufVxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLnBhZ2VDb250YWluZXIgLnJlY2VudGx5IHtcbiAgICBncmlkLWFyZWE6IHJlY2VudGx5O1xuICAgIGJhY2tncm91bmQ6IHJnYih2YXIoLS1ncmF5LW1vbm9jaHJvbWUpKTtcbiAgICB0ZXh0LWFsaWduOiByaWdodDtcbiAgICBwYWRkaW5nOiAwIDFyZW07XG59XG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAucGFnZUNvbnRhaW5lciAucmVjZW50bHkgYSB7XG4gICAgY29sb3I6IHJnYih2YXIoLS13aGl0ZS1tb25vY2hyb21lKSk7XG59XG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVByaXplIHtcbiAgICBncmlkLXRlbXBsYXRlLXJvd3M6IDEuNXJlbSBtaW5tYXgoYXV0bywgNy42OHJlbSkgMS41cmVtO1xuICAgIGZsZXgtYmFzaXM6IDEwMCU7XG59XG5AbWVkaWEgKG1heC13aWR0aDogNTUwcHgpIHtcbiAgICAjcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVByaXplIHtcbiAgICAgICAgZ3JpZC10ZW1wbGF0ZS1yb3dzOiAxLjVyZW0gbWlubWF4KGF1dG8sIDExLjgxcmVtKSAxLjVyZW07XG4gICAgfVxufVxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLmZlYXR1cmVMZXZlbE8gLnBhZ2UgcCxcbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5mZWF0dXJlVGFsZU8gLnBhZ2UgcCxcbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5mZWF0dXJlTGV2ZWxUIC5wYWdlIHAsXG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVRhbGVUIC5wYWdlIHAsXG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVByaXplIC5wYWdlIHAge1xuICAgIGZvbnQtc2l6ZTogMC44cmVtO1xufVxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLmZlYXR1cmVMZXZlbE8gLnBhZ2UgcDpudGgtb2YtdHlwZSgxKSxcbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5mZWF0dXJlVGFsZU8gLnBhZ2UgcDpudGgtb2YtdHlwZSgxKSxcbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5mZWF0dXJlTGV2ZWxUIC5wYWdlIHA6bnRoLW9mLXR5cGUoMSksXG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVRhbGVUIC5wYWdlIHA6bnRoLW9mLXR5cGUoMSksXG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVByaXplIC5wYWdlIHA6bnRoLW9mLXR5cGUoMSkge1xuICAgIGZvbnQtc2l6ZTogMXJlbTtcbn1cbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5mZWF0dXJlTGV2ZWxPIC5wYWdlIHA6bnRoLW9mLXR5cGUoMiksXG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVRhbGVPIC5wYWdlIHA6bnRoLW9mLXR5cGUoMiksXG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZUxldmVsVCAucGFnZSBwOm50aC1vZi10eXBlKDIpLFxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLmZlYXR1cmVUYWxlVCAucGFnZSBwOm50aC1vZi10eXBlKDIpLFxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLmZlYXR1cmVQcml6ZSAucGFnZSBwOm50aC1vZi10eXBlKDIpIHtcbiAgICBmb250LXNpemU6IDAuNXJlbTtcbn1cbiNwYWdlLWNvbnRlbnQgLnRvb2xzQ29udGFpbmVyIHtcbiAgICBkaXNwbGF5OiBncmlkO1xuICAgIGNvbG9yOiByZ2IodmFyKC0td2hpdGUtbW9ub2Nocm9tZSkpO1xuICAgIGdyaWQtZ2FwOiAwLjVyZW07XG59XG4jcGFnZS1jb250ZW50IC50b29sc0NvbnRhaW5lciAudG9vbHMge1xuICAgIGRpc3BsYXk6IGdyaWQ7XG4gICAgZ3JpZC10ZW1wbGF0ZS1hcmVhczogXCJpbWFnZSB0ZXh0XCIgXCJsaW5rIHRleHRcIjtcbiAgICBncmlkLXRlbXBsYXRlLWNvbHVtbnM6IDVyZW0gYXV0bztcbiAgICBqdXN0aWZ5LWl0ZW1zOiBjZW50ZXI7XG4gICAgZ3JpZC1nYXA6IDAuNXJlbTtcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiByZ2IodmFyKC0tZ3JheS1tb25vY2hyb21lKSk7XG4gICAgcGFkZGluZzogMC43NXJlbTtcbn1cbiNwYWdlLWNvbnRlbnQgLnRvb2xzQ29udGFpbmVyIC50b29sczpudGgtb2YtdHlwZShldmVuKSB7XG4gICAgZGlyZWN0aW9uOiBydGw7XG59XG4jcGFnZS1jb250ZW50IC50b29sc0NvbnRhaW5lciAudG9vbHM6bnRoLW9mLXR5cGUoZXZlbikgKiB7XG4gICAgZGlyZWN0aW9uOiBsdHI7XG59XG4jcGFnZS1jb250ZW50IC50b29sc0NvbnRhaW5lciAudG9vbHMgaW1nIHtcbiAgICBncmlkLWFyZWE6IGltYWdlO1xufVxuI3BhZ2UtY29udGVudCAudG9vbHNDb250YWluZXIgLnRvb2xzIGEge1xuICAgIGdyaWQtYXJlYTogbGluaztcbiAgICBjb2xvcjogcmdiKHZhcigtLXdoaXRlLW1vbm9jaHJvbWUpKTtcbn1cbiNwYWdlLWNvbnRlbnQgLnRvb2xzQ29udGFpbmVyIC50b29scyAuZGVzY3JpcHRpb24ge1xuICAgIGdyaWQtYXJlYTogdGV4dDtcbiAgICBqdXN0aWZ5LXNlbGY6IGxlZnQ7XG4gICAgcG9pbnRlci1ldmVudHM6IG5vbmU7XG59XG4jcGFnZS1jb250ZW50IC50b29sc0NvbnRhaW5lciAudG9vbHMgYnIge1xuICAgIGRpc3BsYXk6IG5vbmU7XG59XG4jcGFnZS1jb250ZW50IC5pbnRlcm5hdGlvbmFsIC5hbm5vdW5jZW1lbnQge1xuICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAgICBwb3NpdGlvbjogcmVsYXRpdmU7XG59XG4jcGFnZS1jb250ZW50IC5pbnRlcm5hdGlvbmFsIC5hbm5vdW5jZW1lbnQgaW1nIHtcbiAgICB3aWR0aDogNTBweDtcbiAgICBmaWx0ZXI6IGRyb3Atc2hhZG93KDAgMCAxcHggcmdiYSh2YXIoLS1ncmF5LW1vbm9jaHJvbWUpLCAwLjgpKTtcbn1cbiNwYWdlLWNvbnRlbnQgLmludGVybmF0aW9uYWwgLmFubm91bmNlbWVudC5lcyBpbWcsICNwYWdlLWNvbnRlbnQgLmludGVybmF0aW9uYWwgLmFubm91bmNlbWVudC5qcCBpbWcge1xuICAgIGFsaWduLXNlbGY6IGNlbnRlcjtcbn1cbiNwYWdlLWNvbnRlbnQgLmludGVybmF0aW9uYWwgLmFubm91bmNlbWVudCBoMyB7XG4gICAgbWFyZ2luOiAwIDAgMCAxcmVtO1xuICAgIGxpbmUtaGVpZ2h0OiA1MHB4O1xufVxuI3BhZ2UtY29udGVudCAuaW50ZXJuYXRpb25hbCAuYW5ub3VuY2VtZW50IGEge1xuICAgIGZvbnQtc2l6ZTogMDtcbiAgICBwb3NpdGlvbjogYWJzb2x1dGU7XG4gICAgd2lkdGg6IDEwMCU7XG4gICAgaGVpZ2h0OiAxMDAlO1xuICAgIGxlZnQ6IDA7XG4gICAgdG9wOiAwO1xuICAgIHRyYW5zaXRpb246IGJhY2tncm91bmQtY29sb3IgMTUwbXMgY3ViaWMtYmV6aWVyKDAuNCwgMCwgMC4yLCAxKTtcbn1cbiNwYWdlLWNvbnRlbnQgLmludGVybmF0aW9uYWwgLmFubm91bmNlbWVudCBhOmhvdmVyIHtcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiByZ2JhKHZhcigtLWdyYXktbW9ub2Nocm9tZSksIDAuMik7XG59Il19 */
+    </style>
+    <style>
+        @import url("https://hoah.backroomswiki.cn/Backrooms/component-carousel-css/main.css");
+    </style>
+    <style>
+        /**
+ * 在这里添加特殊 CSS
+ * 请在对应的公告/新闻撤下后将此处清空
+**/
+    </style>
+    <style>
+        /* *** ART FEATURES *** */
+
+        .art {
+            height: 19rem;
+            background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            background-size: cover;
+            background-position: center;
+            -webkit-animation: artslide 20s linear infinite;
+            animation: artslide 20s linear infinite;
+            -webkit-animation-timing-function: step-end;
+            animation-timing-function: step-end;
+        }
+
+        .caption {
+            display: block;
+            position: relative;
+            bottom: -60%;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 0.25rem;
+            margin: 0.5rem;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .caption a {
+            font-weight: bold;
+            color: white;
+        }
+
+        @-webkit-keyframes artslide {
+            0% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            }
+
+            30% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            }
+
+            33% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/11223/1.jpg);
+            }
+
+            63% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/11223/1.jpg);
+            }
+
+            66% {
+                background-image: url(http://backroomssandboxcn.wikidot.com/local--files/file-storage/drm-baimulin.jpg);
+            }
+
+            96% {
+                background-image: url(http://backroomssandboxcn.wikidot.com/local--files/file-storage/drm-baimulin.jpg);
+            }
+
+            99% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            }
+
+        }
+
+        @keyframes artslide {
+            0% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            }
+
+            30% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            }
+
+            33% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/11223/1.jpg);
+            }
+
+            63% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/11223/1.jpg);
+            }
+
+            66% {
+                background-image: url(http://backroomssandboxcn.wikidot.com/local--files/file-storage/drm-baimulin.jpg);
+            }
+
+            96% {
+                background-image: url(http://backroomssandboxcn.wikidot.com/local--files/file-storage/drm-baimulin.jpg);
+            }
+
+            99% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            }
+
+        }
+    </style>
+    <style>
+        /**
+ * 在这里添加特殊 CSS
+ * 请在对应的公告/新闻撤下后将此处清空
+**/
+    </style>
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--modules/js/list/ListPagesModule.js"></script>
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--modules/js/misc/NewPageHelperModule.js"></script>
+    <script src="../../assets/ziyit_api.js"></script>
+</head>
+
+<body id="html-body">
+    
+
+    <div id="skrollr-body">
+        <a name="page-top"></a>
+        <div id="container-wrap-wrap">
+            <div id="container-wrap">
+                <div id="container">
+                    <div id="header">
+                        <h1><a href="../"><span>The Backrooms中文维基</span></a></h1>
+
+                        <h2><span>你曾经来过这里</span></h2>
+<div style="position: absolute; right: 10px; top: 10px; text-align: center;">
+        <div id="userInfo" style="color: black; font-size: 18px;">
+            <strong><span id="usernameDisplay">您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a></span></strong>
+            <br>
+            <strong><span id="userTypeDisplay"></span></strong>
+        </div>
+    </div>
+    <script>
+        // 获取Cookie值的函数
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // 从user.json获取用户权限信息的函数
+        async function getUserPermission(username) {
+            try {
+                const response = await fetch('/backrooms/user.json');
+                const userData = await response.json();
+
+                const usernameIndex = userData.Username.indexOf(username);
+                if (usernameIndex !== -1) {
+                    const permission = userData.Permission[usernameIndex];
+                    return { permission };
+                }
+                return null;
+            } catch (error) {
+                console.error('读取用户权限信息失败:', error);
+                return null;
+            }
+        }
+
+        // 页面加载完成后执行登录状态检测
+        document.addEventListener('DOMContentLoaded', async function () {
+            const authToken = getCookie('authToken') || localStorage.getItem('authToken');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const userTypeDisplay = document.getElementById('userTypeDisplay');
+            const pageContent = document.getElementById('page-content');
+
+            if (!authToken) {
+                if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';
+                if (userTypeDisplay) userTypeDisplay.textContent = '';
+            } else {
+                const user = await ZIYIT_API.currentUser();
+                const username = user ? user.username : '';
+                const type = (user && ZIYIT_API.isVip(user)) ? 'ZC' : 'UR';
+                if (usernameDisplay) usernameDisplay.textContent = user ? user.username : '';
+                if (userTypeDisplay) {
+                    try {
+                        userTypeDisplay.textContent = await ZIYIT_API.userType() || (ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户');
+                    } catch (e) {
+                        userTypeDisplay.textContent = ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户';
+                    }
+                }
+            }
+        });
+    </script>
+                        <div id="top-bar">
+                            <div class="top-bar">
+                                <ul>
+                                    <li>图书馆
+                                        <ul>
+                                            <li><a href="./normal-levels/">层级</a></li>
+                                            <li><a href="./sub-layers/">子区集</a></li>
+                                            <li><a href="./entities/">实体</a></li>
+                                            <li><a href="./objects/">物品</a></li>
+                                            <li><a href="./phenomena/">现象</a></li>
+                                            <li><a href="./groups-list">团体</a></li>
+                                        </ul>
+                                    </li>
+
+                                    <li>更多
+                                        <ul>
+                                            <li><a href="javascript:history.back()">返回上一步</a></li>
+                                            <li><a href="../">返回首页</a></li>
+                                            <li><a href="./">返回主站</a></li>
+                                            <li><a href="./Deployment">部署时刻表</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="mobile-top-bar">
+                                <div class="open-menu">
+                                    <p><a href="#side-bar">≡</a></p>
+                                </div>
+                                <ul>
+                                    <li>图书馆
+                                        <ul>
+                                            <li><a href="./normal-levels/">层级</a></li>
+                                            <li><a href="./sub-layers/">子区集</a></li>
+                                            <li><a href="./entities/">实体</a></li>
+                                            <li><a href="./objects/">物品</a></li>
+                                            <li><a href="./phenomena/">现象</a></li>
+                                            <li><a href="./groups-list">团体</a></li>
+                                        </ul>
+                                    </li>
+
+                                    <li>更多
+                                        <ul>
+                                            <li><a href="javascript:history.back()">返回上一步</a></li>
+                                            <li><a href="../">返回首页</a></li>
+                                            <li><a href="./">返回主站</a></li>
+                                            <li><a href="./Deployment">部署时刻表</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div id="header-extra-div-1"><span></span></div>
+                        <div id="header-extra-div-2"><span></span></div>
+                        <div id="header-extra-div-3"><span></span></div>
+                    </div>
+
+                    <div id="content-wrap">
+                        <div id="main-content">
+                            <h1>站规</h1>
+                            <div id="asdfghjkl" style="text-align: center; display: none;">
+                                <h1 id="toc0"><span>本页面无任何暗号</span></h1>
+                                <p>本页面内容由ZIYIT最高管理员编写和维护，旨在为The Backrooms中文维基的成员提供明确的行为准则和规范。所有成员在加入社区后应仔细阅读并遵守这些规则，以确保社区的和谐与秩序。
+                                </p>
+                                <hr>
+                            </div>
+                            <div id="page-content">
+                                <p><iframe src="//ciphertest.backroomer.com/pages/site-rules/ziyit"
+                                        allowtransparency="true"
+                                        style="border: none; width: calc(100% + 0.8rem); height: 200vh;"></iframe></p>
+                                <div>
+                                    <div class="style-block">
+                                        <h1 id="toc0"><span>给新成员的特别提示</span></h1>
+                                        <p>如果你是在撰写申请书时第一次打开这个页面的话，那么请务必耐心且认真地通读阅读全文内容。如果你在入站后的短时间内违反了任意站规的话，那么你将受到最低为<strong>移除成员资格</strong>的处分。
+                                        </p>
+                                        <p>以下是一些常见于新成员的违规行为，在此列出以作警示：</p>
+                                        <div class="quote-block">
+                                            <ul>
+                                                <li><strong>发布空白/草稿页面。</strong> 请使用“草稿:”命名空间来保存未完成的页面草稿，切勿直接发布未完成的页面。
+                                                </li>
+                                                <li><strong>占用翻译页面。</strong> 比如将原创层级发布为“Level XXX”而非“Level C-XXX”。</li>
+                                                <li><strong>擅自修改他人文章。</strong>
+                                                    包括为他人的页面添加出入口，按照自己的理解和想法修改他人页面的排版、描述或配图，在未参照原文的情况下修改翻译页面，随意回退页面历史版本等。
+                                                </li>
+                                                <li><strong>发表迷惑言论。</strong> 如果你不确定某个场合是否适合开玩笑或宣泄情绪，那么保持严肃和冷静总是最好的选择。
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <table style="margin:0; padding:0">
+                                            <tbody>
+                                                <tr>
+                                                    <td style="margin:0; padding:0">
+                                                        <div id="toc">
+                                                            <div id="toc-action-bar"><a href="javascript:;"
+                                                                    onclick="WIKIDOT.page.listeners.foldToc(event)">折叠</a><a
+                                                                    style="display: none" href="javascript:;"
+                                                                    onclick="WIKIDOT.page.listeners.unfoldToc(event)">展开</a>
+                                                            </div>
+                                                            <div class="title">目录</div>
+                                                            <div id="toc-list">
+                                                                <div style="margin-left: 1em;"><a
+                                                                        href="#toc0">给新成员的特别提示</a></div>
+                                                                <div style="margin-left: 1em;"><a href="#toc1">社区规则</a>
+                                                                </div>
+                                                                <div style="margin-left: 2em;"><a
+                                                                        href="#toc2">1.社群规范</a></div>
+                                                                <div style="margin-left: 3em;"><a
+                                                                        href="#toc3">1.1.年龄要求</a></div>
+                                                                <div style="margin-left: 3em;"><a
+                                                                        href="#toc4">1.2.尊重他人</a></div>
+                                                                <div style="margin-left: 3em;"><a
+                                                                        href="#toc5">1.3.关于对其他社群的攻击行为</a></div>
+                                                                <div style="margin-left: 2em;"><a
+                                                                        href="#toc6">2.内容规范</a></div>
+                                                                <div style="margin-left: 3em;"><a
+                                                                        href="#toc7">2.1.关于简体中文与繁體中文</a></div>
+                                                                <div style="margin-left: 3em;"><a
+                                                                        href="#toc8">2.2.编辑</a></div>
+                                                                <div style="margin-left: 3em;"><a
+                                                                        href="#toc9">2.3.特别内容</a></div>
+                                                                <div style="margin-left: 3em;"><a
+                                                                        href="#toc10">2.4.站点版权协议</a></div>
+                                                                <div style="margin-left: 2em;"><a
+                                                                        href="#toc11">3.评分守则</a></div>
+                                                                <div style="margin-left: 3em;"><a
+                                                                        href="#toc12">3.1.尊重并认真评分</a></div>
+                                                                <div style="margin-left: 3em;"><a
+                                                                        href="#toc13">3.2.关于自我投票</a></div>
+                                                                <div style="margin-left: 1em;"><a href="#toc14">处分规则</a>
+                                                                </div>
+                                                                <div style="margin-left: 2em;"><a href="#toc15">提醒</a>
+                                                                </div>
+                                                                <div style="margin-left: 2em;"><a href="#toc16">警告</a>
+                                                                </div>
+                                                                <div style="margin-left: 2em;"><a
+                                                                        href="#toc17">移除成员资格</a></div>
+                                                                <div style="margin-left: 2em;"><a href="#toc18">封禁</a>
+                                                                </div>
+                                                                <div style="margin-left: 1em;"><a href="#toc19">职员帖</a>
+                                                                </div>
+                                                                <div style="margin-left: 2em;"><a
+                                                                        href="#toc20">1.开放职员帖</a></div>
+                                                                <div style="margin-left: 2em;"><a href="#toc21">2.
+                                                                        非开放职员帖</a></div>
+                                                                <div style="margin-left: 1em;"><a href="#toc22">常见问题</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="style-block">
+                                        <h1 id="toc1"><span>社区规则</span></h1>
+                                        <div class="quote-block">
+                                            <p><strong>注意：</strong>本站规中的部分内容译自英文站点的站规且根据网站实际情况有所修订。</p>
+                                            <p>以下规则中的特定条例<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>，例如针对歧视性言论和不当政治讨论的处理等，可从本站延伸至本站运营的官方 Discord
+                                                服务器、官方哔哩哔哩弹幕视频网账号等场所，亦可由上述场所延伸至本站。</p>
+                                        </div>
+                                        <h2 id="toc2"><span>1.社群规范</span></h2>
+                                        <p>站点成员应遵循以下基本的行为规范，相关政策：<a href="./anti-harassment-policy">反骚扰政策</a>。</p>
+                                        <div style="margin-left: 1em;">
+                                            <h3 id="toc3"><span>1.1.年龄要求</span></h3>
+                                            <ul>
+                                                <li>加入网站的最低年龄限制是 <strong>17</strong>
+                                                    周岁，低于规定年龄的用户仍然可以阅读网站上的文章<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。表现出不成熟行为的用户会结合具体行为，予以相应处分。</li>
+                                            </ul>
+                                        </div>
+                                        <div style="margin-left: 1em;">
+                                            <h3 id="toc4"><span>1.2.尊重他人</span></h3>
+                                            <ul>
+                                                <li>必须尊重社区内的所有成员。提出反对意见或观点没问题，前提是必须保持礼貌<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。过于偏激、意图人身攻击，歧视他人者将会予以处分。</li>
+                                            </ul>
+                                        </div>
+                                        <div style="margin-left: 1em;">
+                                            <h3 id="toc5"><span>1.3.关于对其他社群的攻击行为</span></h3>
+                                            <ul>
+                                                <li>以 The Backrooms 中文维基的名义对另一个社群或站点的攻击是严令禁止的。特别是当你在其他 Backrooms
+                                                    相关网站内（如<a href="http://backrooms-wiki.wikidot.com/">英文维基</a>或 Fandom
+                                                    维基，无论是否宣称自己代表本网站）对其网站用户或网站本身进行攻击、言语辱骂或是其他恶劣行为时，你将会受到本站的处罚，视情节性质从警告至永久封禁<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <h2 id="toc6"><span>2.内容规范</span></h2>
+                                        <p>成员发送或编辑帖文和页面时，应遵守这些条例，相关政策：<a href="./content-policy">内容政策</a>、<a
+                                                href="./licensing-guide">授权指导</a>、<a
+                                                href="./normative-contribution-guide">规范性发布与编辑指导</a>。</p>
+                                        <div style="margin-left: 1em;">
+                                            <h3 id="toc7"><span>2.1.关于简体中文与繁體中文</span></h3>
+                                            <ul>
+                                                <li>本站同时接受简/繁两种形式的投稿和发帖，任何成员都不得因为语言差异而对相关语言使用群体提出质疑甚至歧视。我们是 The
+                                                    Backrooms 中文维基，不是简中维基。屡教不改者将会受到站务的着重处罚。特别地，不鼓励成员在本站完全使用他种语言发帖<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</li>
+                                            </ul>
+                                        </div>
+                                        <div style="margin-left: 1em;">
+                                            <h3 id="toc8"><span>2.2.编辑</span></h3>
+                                            <ul>
+                                                <li>你可以随时合规修改属于自己的帖文和页面。如因为更新或网络问题出错而误发了页面或帖文，请及时使用编辑功能补救。特别的，在发帖时如果仅表示更新或补充内容，应编辑更新而非直接重复发帖。
+                                                </li>
+                                                <li>你只能对本站内其他人发布的文章进行非常细微的修改，如修复错误的超链接或错别字（进行这种编辑时，需要在编辑注释栏内予以说明）。翻译页面应以原页面的实际内容为准。如果认为一个页面需要修改，应经过发布者或站务团队同意许可后才可编辑。
+                                                </li>
+                                                <li>含“<strong>合作</strong>”标签的<strong>原创</strong>页面即为合作页面，可添加对应的可合作内容。不过，页面创建者和站务团队有权删除他们认为页面里不适合出现的内容<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div style="margin-left: 1em;">
+                                            <h3 id="toc9"><span>2.3.特别内容</span></h3>
+                                            <ul>
+                                                <li>由于本网站的性质，部分成人内容和血腥内容是被允许存在的，但不提倡在页面内刻意表现大量的非必要成人内容，也不应在面向全站的讨论串发布直接的成人内容<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。成人内容页面使用“成人内容”标签特别标记以区分。
+                                                </li>
+                                                <li>出于国内网络的实际情况，与维护网站风气等因素考虑，发表政治言论、在作品里涉及政治是不被提倡的。发送涉及敏感事件，或时政要闻高度相关的内容将受到处罚<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                                </li>
+                                                <li>我们无权干涉用户的思想政治倾向，但严禁在网站内发表宣扬或支持极端反动性质、法西斯主义、种族主义、恐怖主义与其他违背公序良俗和普世价值观要求的政治言论与文章。包括但不限于支持或表现出对纳粹与法西斯主义的同情、宣扬种族歧视与仇视、带有主观恶意色彩地对国际人道主义灾难开玩笑的行为等。涉及有关内容文章将被勒令限期整改或删除，涉事用户则将受到警告至封禁不等的处分。
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div style="margin-left: 1em;">
+                                            <h3 id="toc10"><span>2.4.站点版权协议</span></h3>
+                                            <ul>
+                                                <li>本站遵守 <a href="/LICENSE">Apache 2.0</a> 协议。在原创页面内使用的各类素材都必须遵循 Apache
+                                                    2.0或相关兼容协议，这意味着不能使用任何有版权或无来源的素材，除非你得到了版权所有者的明确对应授权声明。请参阅<a
+                                                        href="./licensing-guide">授权指导</a>以了解更多信息。</li>
+                                            </ul>
+                                        </div>
+                                        <h2 id="toc11"><span>3.评分守则</span></h2>
+                                        <p>成员对页面进行评分互动时，应遵守评分守则，相关政策：<a href="./deletions-policy">删除政策</a>。</p>
+                                        <div style="margin-left: 1em;">
+                                            <h3 id="toc12"><span>3.1.尊重并认真评分</span></h3>
+                                            <ul>
+                                                <li>评分应该仅出于文章本身的综合质量，因文章本身质量以外的原因而评分是不允许的，例如所谓“拯救待删除页面”等。投票者可以选择不对评分做出任何解释，但主动声称因质量外原因评分可能招致处分。任何拉帮结派，或试图让大量的用户对一篇文章进行
+                                                    upvote/downvote 的行为都是不允许的。在翻译作品上，评分应该针对译文翻译质量，而非原文内容。</li>
+                                            </ul>
+                                        </div>
+                                        <div style="margin-left: 1em;">
+                                            <h3 id="toc13"><span>3.2.关于自我投票</span></h3>
+                                            <ul>
+                                                <li>本站允许作者对自己的文章进行
+                                                    upvote/downvote，但作品的删除线会因作者的自我投票而相应浮动<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。另外，读者也有权质疑进行自评分的作者是否是基于文章质量给出的评分，并给出合适的理由来佐证自己的观点。同样，作者回应自评分的理由时也应当给出合理的解释。
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <p><span style="white-space: pre-wrap;"> </span><br>
+                                            <strong><tt>* * *</tt></strong><br>
+                                            <span style="white-space: pre-wrap;"> </span>
+                                        </p>
+                                    </div>
+                                    <div class="style-block">
+                                        <h1 id="toc14"><span>处分规则</span></h1>
+                                        <p>违反以上社区规则将招致处分，处分内容由职员根据具体情况决定；所采取的行动将基于违反的规则和用户过去的行为<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。所有的警告与封禁处罚直接在右下角显示，可供成员查询。站务一般会在讨论区/论坛帖子中发布处分帖文，也可能通过站内私信等方式告知违规用户受到处分。
+                                        </p>
+                                        <p>处分共分为五档级别：<tt>警告、严重警告、移除成员资格、封禁、永久封禁</tt>。此外，还有非处分、但同样带有警示意味的<tt>提醒</tt><span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。五档处分以及<tt>提醒</tt>均分别计数，且一经记录便不再移除。因此，我们诚挚建议你不要抱着“试试也无所谓”的心态违反站规。<br>
+                                            <span style="white-space: pre-wrap;"> </span>
+                                        </p>
+                                        <h2 id="toc15"><span>提醒</span></h2>
+                                        <p>这并非一种处罚，通常适用于行为不符合某些指导的规范，或是轻微违规但影响小，站务认定不必处分的情况。它们通常包括：
+                                        </p>
+                                        <p>这些情况下，站务会发送“职员帖：提醒”来提醒用户及时修正行为或作出相应措施。当工作人员发布提醒帖并说明“好了，别再这样做了，下不为例<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。”等善意的提示时，你最好听他的。累积受到3次提醒或是提醒后仍不改正者会受到1次警告处分，请不要无视站务或成员的提醒。
+                                        </p>
+                                        <p><span style="white-space: pre-wrap;"> </span></p>
+                                        <h2 id="toc16"><span>警告</span></h2>
+                                        <p>这通常是惩罚的最主要手段。受到<strong>警告</strong>将使你的警告计数
+                                            <strong>+1</strong>，受到<strong>严重警告</strong>则使你的警告计数
+                                            <strong>+2</strong>。如果警告计数达到 3 及以上，就有可能招致最高为移除成员资格的处分。达到 5
+                                            以上，就有可能招致最高封禁的处分。<br>
+                                            以下行为都会让你受到警告：</p>
+                                        <div class="quote-block">
+                                            <p><strong>不当编辑。</strong>这包括了：</p>
+                                            <ul>
+                                                <li><strong>发布空白/草稿页面。</strong>
+                                                    即发布完全无内容、无意义；或完成度极低，如仅含有生存难度模块、版式的代码；或明显将网站作为沙盒，内容胡乱的页面<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。如仅是误操作，可及时通过页面右下角的+
+                                                    选项，删除按钮，再直接点击重新命名/移动即可将其移入deleted:分类——这种情况下不会受到处分。但如果不做处理，或者仍多次发布此类页面，则会受到警告<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                                </li>
+                                                <li><strong>擅自更改标签。</strong>如擅自移除和添加站务专用的“待删除”“_cc”等标签，或胡乱修改他人的页面标签都会受到警告处分<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                                </li>
+                                                <li><strong>擅自修改他人文章。</strong>任何在未经允许的情况下，对他人文章做出除修正语法错误、错字、非作者有意为之的代码错误外的其他编辑行为都将受到警告处分，同理，若对翻译文章进行了影响内容的编辑，且并非因为原文更新，同样会招致警告处分。过于恶劣的编辑行为（如清空页面）将会被视为破坏网站。
+                                                </li>
+                                                <li><strong>占用翻译页面。</strong>本站页面可大致分为原创和翻译页面，成员在发布页面时应特别注意页面URL。如果希望撰写属于自己的原创作品，则应规范发布在原创的URL下。若发布的原创作品占用了本应属于特定翻译页面的URL，例如"level-xx"等，则会给予警告处分。
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="quote-block">
+                                            <p><strong>发表不当言论。</strong>这包括了：</p>
+                                            <ul>
+                                                <li><strong>钓鱼。</strong>即通过某种手段达到哗众取宠的目的，并于事后取笑其他人对此的反应的行为。钓鱼行为和无法与钓鱼区分开的类似行为都会导致警告处分。
+                                                </li>
+                                                <li><strong>发表迷惑言论。</strong>迷惑言论的定义是在讨论区内发表令人费解的，或与讨论毫不相关的言论（如不分场合的玩烂梗或毫无由来的负面言论）<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。如果你想开个玩笑，那么你必须要能让别人意识到你在开玩笑。
+                                                </li>
+                                                <li><strong>水帖、洗版与占号。</strong>以增长Karma，讨论完全无关内容，或其他无意义行为为目的而进行的水帖行为会被警告。短时间内重复发布多个非常相似、甚至完全一致的页面，或是长时间内以占用特定url为目的而多次发布页面，也会视实际情节给出警告。
+                                                </li>
+                                                <li><strong>骚扰或攻击（辱骂等）他人。</strong>在任何情况下，本站内都不允许有骚扰或言论上的人身攻击行为发生<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。如果你觉得某个用户正在骚扰/攻击你，请联系工作人员。特别地，在某篇文章的讨论区中公然羞辱文章作者的行为亦会招致从警告起步的处分，无论你所不当评论的文章本身的质量如何。例如，阴阳怪气者也是警告处分的对象。此外，在极端情况下，用户可能会因为在站外的骚扰/攻击行为而被封禁。
+                                                </li>
+                                                <li><strong>错误回复职员帖。</strong>只有被标记为“职员帖：开放/提醒”的职员帖才是被允许回复或进行讨论的，在其他职员帖下你只能进行三种回复——在“职员帖：删除宣告”下申请重写/授权他人重写、对工作人员发表的处罚或对其他宣告进行合理质疑、对来源要求等类型职员帖进行回复表示页面已修正。
+                                                </li>
+                                                <li><strong>擅自发布职员帖。</strong>你不应当模仿网站工作人员进行发帖，如将自己的帖文标题命名为“职员帖：xx”的格式，这将会受到警告处分<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。值得一提的是，虽然工作人员在宣告删除某些页面时会使用计时器，但计时器并不是工作人员专用的（换言之，你可以随意使用计时器，只要不违反此规定即可）。
+                                                </li>
+                                                <li><strong>就简体与繁体问题对用户进行攻击。</strong>参考上文，任何就汉字繁简体进行攻击的行为都将受到警告处分<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</li>
+                                                <li><strong>时政内容和政治攻击。</strong>在网站内发布有关政治的言论是不被提倡的，同时也不要试图在网站内就他人的政治、宗教等信仰或思想理念进行攻击，这是非常令人不适的行为。在发帖和页面中直接涉及敏感的时政事件、政治内容和政治主张的行为将会受到警告。
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="quote-block">
+                                            <p><strong>谎报版权信息。</strong>违反<a
+                                                    href="/licensing-guide">授权指导</a>一般并不会直接导致你受到处罚，但不可以谎报版权信息，如将未经授权的游戏截图用于作品中并宣称由自己制作。此行为一经发现，你将被给予最低为警告的处分。
+                                            </p>
+                                            <p><strong>拉票。</strong>网站不允许用户以任何形式引导他人进行评分（包括upvote和downvote），意图操纵他人评分将会受到警告处分<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                            </p>
+                                            <p><strong>恶意downvote。</strong>网站不允许除文章质量之外的理由进行评分，如果你对页面进行了某种并非针对文章本身质量而是带有主观恶意的downvote，工作人员会要求你限期内撤回这些评分，并视情节严重程度给予警告或严重警告处分<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。在竞赛期间，恶意downvote将不被计入成绩，同时，若恶意downvote规模十分严重或造成极为恶劣的影响，工作人员将按照恶意控分/试图操纵竞赛对涉事用户进行封禁处理。
+                                            </p>
+                                            <p><strong>泄露暗号。</strong>如果你是通过检索“暗号”两字找到这里的，请好好反省一下自己并且再去仔细找，没那么容易。进入站点要求完整正确地将藏在本文中的暗号附在你的申请书里，在站点的讨论区、发表的页面中蓄意泄露暗号的，将被全帖/全文删除并对发布者处以警告处分。在站点以外的地方，如后室相关的非官方QQ群，哔哩哔哩弹幕视频网的评论区等地泄露暗号，调查后认定属实的，亦将处以警告处分。必要时会紧急更换暗号。另外，因泄露行径造成其他严重后果（如大量引流等）的将受上至封禁的连带处分。同样的，泄露申请书答案等行为一经查实也会招致处分。
+                                            </p>
+                                        </div>
+                                        <h2 id="toc17"><span>移除成员资格</span></h2>
+                                        <p>这是一个更严重的警告。违规用户可以随时重新申请。这通常适用于以下情况：被警告后不听劝阻，忽略了所有警告并继续违规<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</p>
+                                        <div class="quote-block">
+                                            <p><strong>累计3次被警告。</strong>累计3次违规并被警告将导致移除成员资格处理。</p>
+                                            <p><strong>将账号出借给他人。</strong>若有确凿证据证实当事人存在出借自己的账号的行为，站务将直接移除涉事账号的成员资格<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</p>
+                                            <p><strong>故意提交虚假伪造的举报或证据。</strong>任何作伪证的行为一旦被证实，将直接移除涉事账号的成员资格，并根据影响程度与情节轻重给予或不给予一段时间的封禁处分<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                            </p>
+                                        </div>
+                                        <h2 id="toc18"><span>封禁</span></h2>
+                                        <p>范围从封禁1周到永久封禁。适用于严重违规，带有明显恶意或偏激行为的情况下作为最终措施。封禁是工作人员对于一些严重恶劣的行为或用户进行的最终警告，被封禁的用户在封禁期限内无法再次申请加入网站。如果你有以下行为，你将受到封禁处罚：
+                                        </p>
+                                        <div class="quote-block">
+                                            <p><strong>多次被移除成员资格。</strong>若你因多次违反站规而被给予移除成员资格处分，工作人员将考虑进行封禁处理。同样的，若你已多次受到短期封禁处罚，工作人员亦会考虑将你永久封禁<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                            </p>
+                                            <p><strong>歧视性发言和偏激行为。</strong>发表种族主义等歧视性用语与发表宣扬支持纳粹/法西斯主义、恐怖主义/反人类或反社会言论是严重违反社群守则的行为，将会导致封禁一周的处罚<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                            </p>
+                                            <p><strong>谎报年龄。</strong>若用户被发现真实年龄未满17周岁，则他将被封禁直至满足年龄要求。在年龄限制规定发布前<sup
+                                                    class="footnoteref"><a id="footnoteref-1" href="javascript:;"
+                                                        class="footnoteref"
+                                                        onclick="WIKIDOT.page.utils.scrollToReference('footnote-1')">1</a></sup>加入站点的成员豁免于此。另外，所有成员都应有与17周岁相称的行为，明显表现低龄、无视规则、出现屡次屡犯违规行为等会引起特别注意，并可能会依据此前情况，给予更重的处分<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                            </p>
+                                            <p><strong>抄袭。</strong>任何试图将他人的作品或想法当作自己的作品或想法的行为都是禁止的，且会视情节给予封禁一个月到永久封禁的处分。将从某处获得的灵感写进你自己的作品中是被允许的，但对任何文本或文章有关要素的直接抄袭绝对禁止<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                            </p>
+                                            <p><strong>人肉/开盒。</strong>对网站用户进行人肉/开盒攻击是极为严重的骚扰行为，一旦确认，任何进行人肉的用户都将被永久封禁。同样地，帮助他人进行人肉、对人肉行为进行拱火或嘲讽受害者的用户将被封禁一个月<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                            </p>
+                                            <p><strong>冒充他人。</strong>冒用他人身份是严重的侵权和欺骗行为。任何擅自使用他人的身份信息创建账号，或试图让别人相信自己账号的使用者为其他人的用户，一经发现，都将被永久封禁<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                            </p>
+                                            <p><strong>账号分身/开小号。</strong>任何试图绕过封禁的行为都会导致封禁延期。此外，出于任何目的创建分身帐号并加入本站的行为都是禁止的。一经发现，将会受到封禁一个月的处罚，同时小号将被永久封禁。如果出现了特殊情况，如原账号被盗或无法找回，请及时联系管理团队更换活跃账号<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                            </p>
+                                            <p><strong>破坏页面/网站。</strong>诸如清空他人页面内容、肆意修改中心类页面等行为将被视为恶意破坏网站，这种行为将会导致封禁至少一个月的处罚。
+                                            </p>
+                                            <p><strong>恶意控分/试图操纵竞赛。</strong>极为严重的恶意评分（不论是拉up还是拉down）事件将被视为进行恶意控分操作，特别是在竞赛（非竞赛文章亦是）当中以各种形式试图操纵评分是严重违反站规的。若有该行为，你将被处以永久封禁<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                            </p>
+                                        </div>
+                                        <p>如果你被封禁，说明你很可能犯下了很严重的错误，以至于我们需要通过这种手段给予严厉惩戒。被封禁的用户将无法参与站内的讨论和评分，也不能发布作品（包括代发）<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                        </p>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <p><span style="white-space: pre-wrap;"> </span><br>
+                                            <strong><tt>* * *</tt></strong><br>
+                                            <span style="white-space: pre-wrap;"> </span>
+                                        </p>
+                                    </div>
+                                    <div class="style-block">
+                                        <h1 id="toc19"><span>职员帖</span></h1>
+                                        <p>站点职员会使用职员帖进行部分管理。相关政策也可参阅<a href="./meet-the-staff">会见职员</a>，<a
+                                                href="./mast-intro">MAST职员工作守则与流程</a>。<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span></p>
+                                        <div style="margin-left: 1em;">
+                                            <h2 id="toc20"><span>1.<strong>开放职员帖</strong></span></h2>
+                                            <ul>
+                                                <li>以下职员帖一般允许回复，但仍不应回帖闲聊。</li>
+                                                <li><strong>职员帖：提醒</strong> 提醒不至于警告的轻微成员不当行为。<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span></li>
+                                                <li><strong>职员帖：开放</strong> 一般为给出某项需说明的更新或预告。<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span></li>
+                                            </ul>
+                                        </div>
+                                        <div style="margin-left: 1em;">
+                                            <h2 id="toc21"><span>2. <strong>非开放职员帖</strong></span></h2>
+                                            <ul>
+                                                <li>以下职员帖一般不允许回复，除非帖文本身有说明、需举证质疑或请求更新。<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span></li>
+                                                <li><strong>职员帖：警告/移除成员资格/封禁</strong> 对成员不当行为给出相应处分。<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span></li>
+                                                <li><strong>职员帖：锁帖</strong>
+                                                    某讨论串下发生较剧烈的争执时，令某一楼层的双方立刻停止争吵行为；回复某一讨论串下明显离题/不当的帖文；标记某一讨论串为锁定状态，不允许继续回复。
+                                                </li>
+                                                <li><strong>职员帖：修改说明</strong> 撤下不合规素材。</li>
+                                                <li><strong>职员帖：限期修改</strong> 要求撤下不合规素材<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</li>
+                                                <li><strong>职员帖：来源要求</strong> 要求给出正确的素材来源<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</li>
+                                                <li><strong>职员帖：删除宣告</strong> 页面的分数跌至删除线以下，进入待删除状态<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <p><span style="white-space: pre-wrap;"> </span><br>
+                                            <strong><tt>* * *</tt></strong><br>
+                                            <span style="white-space: pre-wrap;"> </span>
+                                        </p>
+                                    </div>
+                                    <div class="style-block">
+                                        <h1 id="toc22"><span>常见问题</span></h1>
+                                        <p><strong>我认为这个警告并不合理，我希望将它撤回，怎么反映？</strong><br>
+                                            如果你认为工作人员对你或者其他人做出的警告处罚是错误的，或者这件事另有隐情，你可以在宣布该处罚的职员帖下进行回复。附上你的理由与证据，工作人员会做出回复与相应措施<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。<br>
+                                            对工作人员的宣告进行合理质疑是被允许的，质疑范围也包括工作人员所发布的其他职员宣告，如宣布对某项政策进行更新。但请确保质疑的合理性和证据的充分性，否则同样会受到警告处分。
+                                        </p>
+                                        <p><strong>我被封禁了，这不公平，我觉得我没错！</strong><br>
+                                            如果你觉得你被错误地封禁了，或者你认为应该再给你一次机会，请添加Z版Backrooms的QQ群聊1067518958私聊管理或通过Wikidot私信工作人员以便进行申诉。在申诉过程中，你应该解释为什么你认为你应该被解禁（并提供相应的证据，如果需要的话），工作人员将决定你的封禁时段是否会被缩短以及在再次申诉之前你需要等待多长时间。
+                                        </p>
+                                        <p><strong>被永久封禁之后就完全没有余地了吗？可我还想在网站内活动，我可以开小号吗？</strong><br>
+                                            通常而言，工作人员不会随意做出永久封禁的处罚，除非你的行为对社区造成了严重恶劣影响。但这种处罚并非是毫无回旋余地的，你可以按上述方法进行申诉，若申诉通过，你的封禁期限将被适当缩短<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。<br>
+                                            被封禁之后你仍然可以阅读网站上的文章，但你不可以开小号，这是绝对禁止的，一经发现同样予以永久封禁。</p>
+                                        <p><strong>我认为某个/些成员的行为令人反感但不在站规的处罚范围内，要怎么办？</strong><br>
+                                            你可以通过向站务发送wikidot私信或Discord私信等方式向站务检举。检举时必须附带足够可信的证据、理由以及你希望站务对被检举人做出的处罚手段，这些将作为站务的评判依据并有可能在站内予以公示（当然，检举人身份信息不会予以透露）。站务收到检举后会予以评判并会在三个工作日内作出回应。
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="footnotes-footer">
+                                    <div class="title">脚注</div>
+                                    <div class="footnote-footer" id="footnote-1"><a href="javascript:;"
+                                            onclick="WIKIDOT.page.utils.scrollToReference('footnoteref-1')">1</a>.
+                                        即2022年1月31日</div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<style>
+    /* 生存难度容器居中 */
+    .sd-container {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 调整内容包装器 */
+    #content-wrap {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+</style>
+
+<script>
+    // 实现随机显示暗号功能
+    document.addEventListener('DOMContentLoaded', function() {
+        // 随机生成0~3之间的数字
+        const randomNum = Math.floor(Math.random() * 4); // 0, 1, 2, 3
+        
+        // 获取所有class为randomCode的span标签
+        const randomCodeSpans = document.querySelectorAll('span.randomCode');
+        
+        // 获取id为asdfghjkl的div
+        const asdfghjklDiv = document.getElementById('asdfghjkl');
+        
+        // 如果randomNum为0，显示asdfghjkl div
+        if (randomNum === 0) {
+            if (asdfghjklDiv) {
+                asdfghjklDiv.style.display = 'block';
+            }
+            // 隐藏所有randomCode span
+            randomCodeSpans.forEach(span => {
+                span.style.display = 'none';
+            });
+        } else {
+            // 隐藏asdfghjkl div
+            if (asdfghjklDiv) {
+                asdfghjklDiv.style.display = 'none';
+            }
+            
+            // 读取暗号文件
+            fetch('../暗号')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('无法读取暗号文件');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    // 用\n分割暗号
+                    const codeWords = data.trim().split('\n');
+                    
+                    // 随机选择randomNum个暗号
+                    const selectedCodeWords = [];
+                    const codeWordsCopy = [...codeWords];
+                    
+                    for (let i = 0; i < randomNum && codeWordsCopy.length > 0; i++) {
+                        const randomIndex = Math.floor(Math.random() * codeWordsCopy.length);
+                        selectedCodeWords.push(codeWordsCopy.splice(randomIndex, 1)[0]);
+                    }
+                    
+                    // 随机选择randomNum个span标签
+                    const selectedSpans = [];
+                    const spansCopy = Array.from(randomCodeSpans);
+                    
+                    for (let i = 0; i < randomNum && spansCopy.length > 0; i++) {
+                        const randomIndex = Math.floor(Math.random() * spansCopy.length);
+                        selectedSpans.push(spansCopy.splice(randomIndex, 1)[0]);
+                    }
+                    
+                    // 显示选中的span并填充暗号
+                    selectedSpans.forEach((span, index) => {
+                        if (index < selectedCodeWords.length) {
+                            // 替换${randomCode}为实际的暗号
+                            span.innerHTML = span.innerHTML.replace('${randomCode}', selectedCodeWords[index]);
+                            span.style.display = 'inline';
+                        }
+                    });
+                    
+                    // 隐藏未选中的span
+                    spansCopy.forEach(span => {
+                        span.style.display = 'none';
+                    });
+                })
+                .catch(error => {
+                    console.error('读取暗号文件失败:', error);
+                    // 使用默认暗号
+                    const defaultCodeWords = ['安全', '稳定', '规则', '遵守', '文明'];
+                    
+                    // 随机选择randomNum个默认暗号
+                    const selectedCodeWords = [];
+                    const codeWordsCopy = [...defaultCodeWords];
+                    
+                    for (let i = 0; i < randomNum && codeWordsCopy.length > 0; i++) {
+                        const randomIndex = Math.floor(Math.random() * codeWordsCopy.length);
+                        selectedCodeWords.push(codeWordsCopy.splice(randomIndex, 1)[0]);
+                    }
+                    
+                    // 随机选择randomNum个span标签
+                    const selectedSpans = [];
+                    const spansCopy = Array.from(randomCodeSpans);
+                    
+                    for (let i = 0; i < randomNum && spansCopy.length > 0; i++) {
+                        const randomIndex = Math.floor(Math.random() * spansCopy.length);
+                        selectedSpans.push(spansCopy.splice(randomIndex, 1)[0]);
+                    }
+                    
+                    // 显示选中的span并填充暗号
+                    selectedSpans.forEach((span, index) => {
+                        if (index < selectedCodeWords.length) {
+                            // 替换${randomCode}为实际的暗号
+                            span.innerHTML = span.innerHTML.replace('${randomCode}', selectedCodeWords[index]);
+                            span.style.display = 'inline';
+                        }
+                    });
+                    
+                    // 隐藏未选中的span
+                    spansCopy.forEach(span => {
+                        span.style.display = 'none';
+                    });
+                });
+        }
+    });
+</script>
+
+</html>

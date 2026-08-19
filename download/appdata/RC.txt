@@ -1,0 +1,94 @@
+# 注意！本更新可能会导致不兼容之前版本的文件信息，请在更新前备份重要文件。
+# 本更新为LTS版本，强烈建议用户升级到此版本
+
+## Release Control 26.8 更新说明
+
+### 一、新增功能
+
+- **启动画面（Splash Screen）**：软件启动时显示品牌启动画面，包含软件图标、实时进度条和当前加载步骤提示；MOD 加载时逐个显示正在解析/加载的 MOD 名称，并区分 DLC 与普通 MOD
+- **许可证验证与 UI 分线程**：许可证验证移至后台线程，启动画面全程响应不卡顿；验证完成后自动应用权限控制并进入主界面，无需等待网络请求
+- **MOD 市场**：新增 MOD 市场窗口，支持浏览在线 MOD、**按作者或 MOD ID 搜索**、一键下载安装（下载自动携带用户 Token 鉴权），窗口宽度自适应语言与内容
+- **实时日志查看器**：新增终端风格日志查看窗口（黑色背景、按级别着色：错误红/警告黄/信息绿/调试灰），日志自动滚动到底部，支持 `↑`/`PageUp` 暂停回看历史，按 `→` 恢复自动滚动；打开时自动加载已有日志，日志采集与 UI 渲染分线程执行
+- **查看日志入口选择**：工具菜单"查看日志"新增选择对话框，可选"查看实时日志"或"打开日志文件夹"
+- **服务器自动验证许可证**：移除本地时间/过期计算逻辑，密钥有效性统一由服务器 `/keys/verify` 判定
+- **许可证稳定性重构**：
+  - 硬件指纹改用稳定值（MachineGuid → MAC → 主机名），不再因随机兜底导致每次启动指纹变化
+  - RSA 密钥对不再随硬件哈希不匹配被重置，Personal.license 与 ziyit.license 共用同一密钥对
+  - Personal.license 解密失败时自动使用 ziyit.license 的信息重建，无需手动重新登录
+- **管理员权限改用用户 ID 判定**：管理员识别基于用户 ID（ID 为 1 必为管理员），不再依赖用户名
+- **DLC 授权链路重构**：免费版（ZIYIT 账号无密钥）改用 `GET /mods/{ModId}/download` 判定是否拥有 DLC，请求自动携带 Bearer Token；持有密钥时仍走 `/dlc/check`
+- **单实例外部参数传递**：新增 WM_COPYDATA 监听机制，软件已运行时可通过命令行向现有实例传递参数
+- **Pro Tools 菜单**：新增"Pro Tools"顶级菜单，包含进程工具、系统工具、MOD工具三大子菜单
+  - 进程工具：进程内存快照、导出进程内存布局、进程重启、自动重启被结束进程、CPU亲和性持久化、进程优先级持久化、进程启动时间线、进程资源排名
+  - 系统工具：系统资源看板、电池/电源监控、系统健康报告、日志分析器
+  - MOD工具：MOD冲突检测、MOD沙箱升级
+- **DLC 加密支持**：打包 DLC 时自动使用 AES-CBC 加密 Python 源码文件，生成带 `.rce` 扩展名的加密文件；加载时自动解密并做 PKCS7 反填充
+- **CLI 新增 `--uninstall-mod` 命令**：支持通过命令行按名称卸载已安装的 MOD
+- **CLI `--verify` 增加 ZEP 2 验证**：验证 RCM 包时自动检查代码是否符合 ZEP 2 规范
+- **ZEP 2 代码规范验证器**：新增 `validate_zep2()`、`validate_zep2_zip()`、`validate_zep2_dir()` 函数，检查空行、注释数量、缩进、行长度、通配符导入、裸 except 等
+- **新增 `ZEPError` 自定义异常类**
+- **连点器功能增强**：
+  - 多按钮选择支持（左键/中键/右键可多选）
+  - 新增"获取位置热键"功能，可在任意窗口获取当前鼠标坐标
+  - 连点器设置增加持久化保存
+- **关键属性保护机制**：新增 `_protect_critical_attributes`、`AppDictProxy`、`SafeWidget`、`SafeRoot`，防止 MOD 越权访问或修改核心属性
+- **MOD 安全检查增强**：
+  - 代码嵌套深度限制（最大 5 层）
+  - 函数长度限制（最大 500 行）
+  - 禁止函数检测（eval、exec、compile）
+  - 危险函数检测（__import__、globals 等）
+  - 内部符号保护（禁止 MOD 覆盖内部类名）
+  - 危险属性访问拦截（os.system、subprocess.Popen 等）
+- **MOD API 扩展**：为主应用新增大量公开方法（共 130+ 个），供 MOD 调用
+  - 进程操作：`get_process_by_pid`、`get_process_count`、`get_process_by_name`、`suspend_process`、`resume_process`、`kill_process_tree` 等
+  - 系统信息：`get_system_uptime`、`get_system_health_data`、`get_battery_status_data`、`get_cpu_per_core`、`get_cpu_frequency` 等
+  - 网络工具：`get_local_ip_address`、`get_public_ip_address`、`ping_address`、`check_port_open`、`download_url_to_file` 等
+  - 文件工具：`hash_file_md5`、`hash_file_sha256`、`get_file_metadata`、`get_cache_size` 等
+  - 窗口工具：`set_window_size`、`set_window_minimized`、`center_window`、`set_always_on_top_mode` 等
+  - MOD/DLC 管理：`enable_mod_by_name`、`disable_mod_by_name`、`reload_all_mods`、`has_dlc`、`get_available_dlcs` 等
+  - 事件系统：`register_callback`、`unregister_callback`、`trigger_event`、`add_timer`
+- **新增依赖库**：`cryptography`、`PIL`、`numpy`、`pynput`、`win32com`、`pdf417gen`、`pdf417decoder`、`collections`、`io`
+- **PackToolGUI 打包工具增加 ZEP 2 验证**：打包前自动检查源代码是否符合 ZEP 2 规范
+
+### 二、优化改进
+
+- 许可证验证、DLC 授权检查全部移至后台线程，启动不再白屏/未响应
+- 实时日志查看器渲染改为批量模式（一次插入多行），并限制行数上限，长日志不卡顿
+- 启动画面进度条改用 sv_ttk 主题，窗口加宽以容纳更多信息
+- 多语言文件补齐全部新增功能文案（splash、mod_market、log_viewer 等 30+ 新 key）
+- MOD 导入安全检查全面重构为重写，增加多项安全检测规则
+- 连点器 UI 增加本地化支持（按钮文字、下拉选项跟随语言切换）
+- PackToolGUI 打包时支持自动检测 DLC 并重命名输出文件
+- 清理冗余调试日志输出
+
+### 三、漏洞修复
+
+- 修复启动时窗口白屏、未响应的问题（验证与 UI 分线程）
+- 修复无许可证文件（Personal.license / ziyit.license）时启动窗口不显示、卡在激活流程的问题（启动加载时检测密钥文件是否存在，激活提示延后至主窗口显示后弹出）
+- 修复 MOD 市场打开时崩溃（`ModManager` 缺少 `get_all_mod_names` 方法调用错误）
+- 修复 MOD 市场版本号显示错误（字符串版本被逐字符拼接成 `1..0..1`）
+- 修复免费版（无密钥）DLC 全部显示"未授权"的问题（token 获取链路错误）
+- 修复 `rsa_decrypt error: Decryption failed`（硬件指纹随机兜底导致密钥对每次启动被重置）
+- 修复后台线程调用 Tk 导致的 `main thread is not in main loop` 崩溃（统一改为队列 + 主线程轮询）
+- 修复实时日志查看器周期性清空整个日志区域的问题
+- 修复程序退出时未清理连点器热键的问题
+- 修复连点器设置中按钮类型、点击类型、位置类型的值映射错误
+- 修复部分多余空行和格式问题
+
+***
+
+### 四、系统要求
+
+- 操作系统：Windows 10 / Windows 11
+- 架构：64位（x64）
+
+***
+
+## 信息
+
+- **制作团队**：ZIYIT STUDIO
+- **软件名称**：Release Control
+- **软件版本**：26.8
+- **版本类型**：正式版
+- **软件主页**：<https://ziyit-hacker.github.io/download/RC>
+- **电子邮箱**：<ziyitstudio@qq.com>

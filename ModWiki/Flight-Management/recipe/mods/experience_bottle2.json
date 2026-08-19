@@ -1,0 +1,14 @@
+{
+  "type": "crafting_shapeless",
+  "category": "redstone",
+  "group": "experience_bottle",
+  "ingredients": [
+    "minecraft:lapis_lazuli",
+    "minecraft:glass_bottle"
+  ],
+  "result": {
+    "id": "minecraft:experience_bottle",
+    "count": 8
+  },
+  "show_notification": true
+}

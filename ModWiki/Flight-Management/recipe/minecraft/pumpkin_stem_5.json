@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "pumpkin stem 5",
+    "ingredients": [
+        "flyconfig:music_disc_sieg_heil",
+        "flyconfig:music_disc_hitler",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:pumpkin_stem_5",
+        "count": 1
+    },
+    "show_notification": true
+}

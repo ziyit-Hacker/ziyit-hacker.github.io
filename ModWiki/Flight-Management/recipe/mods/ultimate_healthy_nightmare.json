@@ -1,0 +1,15 @@
+{
+  "type": "crafting_shapeless",
+  "category": "redstone",
+  "group": "ultimate_healthy_nightmare",
+  "ingredients": [
+    "flyconfig:germany_developed",
+    "minecraft:enchanted_golden_apple",
+    "minecraft:golden_carrot"
+  ],
+  "result": {
+    "id": "flyconfig:ultimate_healthy_nightmare",
+    "count": 1
+  },
+  "show_notification": true
+}

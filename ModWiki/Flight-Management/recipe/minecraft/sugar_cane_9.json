@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "sugar cane 9",
+    "ingredients": [
+        "flyconfig:music_disc_hitler",
+        "flyconfig:nuclear_spawn_egg",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:sugar_cane_9",
+        "count": 1
+    },
+    "show_notification": true
+}

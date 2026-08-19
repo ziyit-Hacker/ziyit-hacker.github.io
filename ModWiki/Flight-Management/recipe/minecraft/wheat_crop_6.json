@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "wheat crop 6",
+    "ingredients": [
+        "flyconfig:ultimate_healthy_nightmare",
+        "flyconfig:what_the_dog_doing",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:wheat_crop_6",
+        "count": 1
+    },
+    "show_notification": true
+}

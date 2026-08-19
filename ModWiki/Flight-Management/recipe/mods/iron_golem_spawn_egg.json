@@ -1,0 +1,19 @@
+{
+  "type": "crafting_shaped",
+  "category": "redstone",
+  "group": "iron_golem_spawn_egg",
+  "show_notification": true,
+  "key": {
+    "#": "minecraft:iron_block",
+    "&": "minecraft:carved_pumpkin"
+  },
+  "pattern": [
+    " & ",
+    "###",
+    " # "
+  ],
+  "result": {
+    "id": "minecraft:iron_golem_spawn_egg",
+    "count": 1
+  }
+}

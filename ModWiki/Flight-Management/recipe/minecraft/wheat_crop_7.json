@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "wheat crop 7",
+    "ingredients": [
+        "flyconfig:what_the_dog_doing",
+        "flyconfig:music_disc_sieg_heil",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:wheat_crop_7",
+        "count": 1
+    },
+    "show_notification": true
+}

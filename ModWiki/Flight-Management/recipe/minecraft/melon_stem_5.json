@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "melon stem 5",
+    "ingredients": [
+        "flyconfig:nuclear_disarm_tool",
+        "flyconfig:uranium_ingot",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:melon_stem_5",
+        "count": 1
+    },
+    "show_notification": true
+}

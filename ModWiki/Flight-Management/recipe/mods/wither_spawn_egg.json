@@ -1,0 +1,19 @@
+{
+  "type": "crafting_shaped",
+  "category": "redstone",
+  "group": "wither_spawn_egg",
+  "show_notification": true,
+  "key": {
+    "&": "minecraft:wither_skeleton_skull",
+    "#": "minecraft:soul_sand"
+  },
+  "pattern": [
+    "&&&",
+    "###",
+    " # "
+  ],
+  "result": {
+    "id": "minecraft:wither_spawn_egg",
+    "count": 1
+  }
+}

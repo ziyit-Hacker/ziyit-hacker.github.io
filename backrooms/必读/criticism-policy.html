@@ -1,0 +1,1126 @@
+﻿<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cn" lang="cn">
+
+<head>
+    <title>站点规则 - The Backrooms中文维基</title>
+    <link rel="icon" href="../../assets/ziyit.png">
+    <script src="../../assets/f12check.js"></script>
+
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/init.combined.js"></script>
+    <script type="text/javascript">
+        var URL_HOST = 'www.wikidot.com';
+        var URL_DOMAIN = 'wikidot.com';
+        var USE_SSL = true;
+        var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
+        // global request information
+
+        var WIKIREQUEST = {};
+        WIKIREQUEST.info = {};
+
+        WIKIREQUEST.info.domain = "backrooms-wiki-cn.wikidot.com";
+        WIKIREQUEST.info.siteId = 4716348;
+        WIKIREQUEST.info.siteUnixName = "backrooms-wiki-cn";
+        WIKIREQUEST.info.categoryId = 40786773;
+        WIKIREQUEST.info.themeId = 1;
+        WIKIREQUEST.info.requestPageName = "start";
+        OZONE.request.timestamp = 1767421974;
+        OZONE.request.date = new Date();
+        WIKIREQUEST.info.lang = 'cn';
+        WIKIREQUEST.info.pageUnixName = "start";
+        WIKIREQUEST.info.pageId = 1312481462;
+        WIKIREQUEST.info.lang = "cn";
+        OZONE.lang = "cn";
+        var isUAMobile = !!/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    </script>
+
+    <script type="text/javascript">
+
+        require.config({
+            baseUrl: URL_STATIC + '/common--javascript',
+            paths: {
+                'jquery.ui': 'jquery-ui.min',
+                'jquery.form': 'jquery.form'
+            }
+        });
+
+    </script>
+
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <meta name="baidu-site-verification" content="codeva-47Yi9iuOuV" />
+    <meta name="msvalidate.01" content="D54FA9739BC43B75C4E90F71B35F6C0E" />
+    <meta name="google-site-verification" content="KS6XqxX4GYHTFxxrHO_Dmz0xuyJJAU_ZoCJSgVC9FNo" />
+    <meta name="theme-color" content="#35B1A4" />
+    <meta name="og:type" content="article" />
+    <meta name="description" content="后室文档公共数据库——你曾经来过这里。" />
+    <meta name="og:site_name" content="The Backrooms 中文维基" />
+    <meta name="og:image" content="https://backrooms-oversight-cn.wdfiles.com/local--files/bml-emojis-1/bml_04.png" />
+    <meta name="og:locale" content="zh-cn" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta http-equiv="content-language" content="cn" />
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/WIKIDOT.combined.js"></script>
+
+    <style type="text/css" id="internal-style">
+        @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
+        @import url(https://github.backroomswiki.cn/Old_BHL/css/liminal-impact.css);
+    </style>
+
+    <meta name="msapplication-TileColor" content="#000000" />
+
+    <link rel="alternate" type="application/wiki" title="Edit this page"
+        href="javascript:WIKIDOT.page.listeners.editClick()" />
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-18234656-1']);
+        _gaq.push(['_setDomainName', 'none']);
+        _gaq.push(['_setAllowLinker', true]);
+        _gaq.push(['_trackPageview']);
+
+        _gaq.push(['old._setAccount', 'UA-68540-5']);
+        _gaq.push(['old._setDomainName', 'none']);
+        _gaq.push(['old._setAllowLinker', true]);
+        _gaq.push(['old._trackPageview']);
+
+        _gaq.push(['userTracker._setAccount', 'UA-290379544-1']);
+        _gaq.push(['userTracker._trackPageview']);
+    </script>
+
+    <script type="text/javascript">
+        window.google_analytics_uacct = 'UA-18234656-1';
+        window.google_analytics_domain_name = 'none';
+    </script>
+
+    <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" acync=""></script>
+    <script>
+        var OneSignal = window.OneSignal || [];
+        OneSignal.push(function () {
+            OneSignal.init({
+                appId: null,
+            });
+        });
+    </script>
+
+    <style>
+        /*
+    Backrooms CN Main Page CSS
+    by hoah2333, Eltrac, Ambersight &amp; Lambda Core
+*/
+        #page-title {
+            display: none;
+        }
+
+        #page-content .bannerContainer {
+            display: grid;
+            grid-template-areas: "welcome welcome welcome" "bilibili faq join";
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-column-gap: 3%;
+        }
+
+        #page-content .bannerContainer .welcome {
+            grid-area: welcome;
+            background-color: rgb(var(--gray-monochrome));
+            color: rgb(var(--white-monochrome));
+            font-style: italic;
+            padding: 1rem;
+        }
+
+        #page-content .bannerContainer .navigator {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            background-color: rgb(var(--gray-monochrome));
+            border-radius: 0 0 1rem 1rem;
+            height: -webkit-min-content;
+            height: -moz-min-content;
+            height: min-content;
+            margin: 0 0 4rem 0;
+            -webkit-transition: margin 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            transition: margin 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #page-content .bannerContainer .navigator:hover,
+        #page-content .bannerContainer .navigator:active {
+            margin: 0 0 1rem 0;
+        }
+
+        #page-content .bannerContainer .navigator a {
+            padding: 0.5rem 0;
+            width: 100%;
+            text-align: center;
+            color: rgb(var(--white-monochrome));
+            font-size: 1.25rem;
+            -webkit-transition: padding 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            transition: padding 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: bold;
+        }
+
+        #page-content .bannerContainer .navigator a:hover,
+        #page-content .bannerContainer .navigator a:active {
+            text-decoration: none;
+            text-decoration-color: transparent;
+            padding: 2rem 0;
+        }
+
+        @media (max-width: 767px) {
+            #page-content .bannerContainer .navigator {
+                margin: 0 0 2rem 0;
+            }
+
+            #page-content .bannerContainer .navigator:hover {
+                margin: 0;
+            }
+
+            #page-content .bannerContainer .navigator a {
+                font-size: 1.1rem;
+            }
+
+            #page-content .bannerContainer .navigator a:hover,
+            #page-content .bannerContainer .navigator a:active {
+                padding: 1.5rem 0;
+            }
+        }
+
+        #page-content .bannerContainer .bilibili {
+            grid-area: bilibili;
+        }
+
+        #page-content .bannerContainer .faq {
+            grid-area: faq;
+        }
+
+        #page-content .bannerContainer .join {
+            grid-area: join;
+        }
+
+        #page-content .announceContainer {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            border: 4px solid rgb(var(--gray-monochrome));
+            -ms-flex-line-pack: justify;
+            align-content: space-between;
+        }
+
+        #page-content .announceContainer .welcome {
+            background-color: rgb(var(--gray-monochrome));
+            color: rgb(var(--white-monochrome));
+            font-weight: bold;
+            width: 100%;
+            text-align: center;
+            font-size: 1.5rem;
+            padding: 0 0.75rem;
+            word-break: keep-all;
+        }
+
+        @media (max-width: 767px) {
+            #page-content .announceContainer .welcome {
+                font-size: 1.2rem;
+            }
+        }
+
+        #page-content .announceContainer .announcement,
+        #page-content .announceContainer .more {
+            background-color: rgb(var(--pale-gray-monochrome));
+            width: 100%;
+            padding: 0.75rem;
+            border-top: 4px solid rgb(var(--gray-monochrome));
+        }
+
+        #page-content .announceContainer .more {
+            padding: 0;
+        }
+
+        #page-content .announceContainer .more .collapsible-block-folded,
+        #page-content .announceContainer .more .collapsible-block-unfolded .collapsible-block-unfolded-link {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+        }
+
+        #page-content .announceContainer .more .collapsible-block-folded a.collapsible-block-link,
+        #page-content .announceContainer .more .collapsible-block-unfolded .collapsible-block-unfolded-link a.collapsible-block-link {
+            width: 100%;
+            padding: 1rem 0;
+            text-align: center;
+            background: rgba(var(--gray-monochrome), 0.2);
+            -webkit-transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #page-content .announceContainer .more .collapsible-block-folded a.collapsible-block-link:hover,
+        #page-content .announceContainer .more .collapsible-block-unfolded .collapsible-block-unfolded-link a.collapsible-block-link:hover {
+            text-decoration: none;
+            text-decoration-color: transparent;
+            background: rgba(var(--gray-monochrome), 0.4);
+        }
+
+        #page-content .announceContainer .more .collapsible-block-folded[style*=block],
+        #page-content .announceContainer .more .collapsible-block-unfolded[style*=block] .collapsible-block-unfolded-link {
+            display: -webkit-box !important;
+            display: -ms-flexbox !important;
+            display: flex !important;
+        }
+
+        #page-content .announceContainer .more .collapsible-block-unfolded .collapsible-block-unfolded-link a.collapsible-block-link {
+            border-bottom: 4px solid rgb(var(--gray-monochrome));
+        }
+
+        #page-content .announceContainer .more .collapsible-block-unfolded .collapsible-block-content {
+            background: rgb(var(--gray-monochrome));
+            color: rgb(var(--white-monochrome));
+            text-align: center;
+        }
+
+        #page-content .announceContainer .more .collapsible-block-unfolded .collapsible-block-content p {
+            margin: 0;
+        }
+
+        #page-content .announceContainer .archive {
+            background: rgb(var(--gray-monochrome));
+            color: rgb(var(--white-monochrome));
+            text-align: right;
+            width: 100%;
+        }
+
+        #page-content .announceContainer .archive a {
+            padding: 0 1rem;
+            color: rgb(var(--white-monochrome));
+        }
+
+        #page-content .recentPages {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-orient: horizontal;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: row;
+            flex-direction: row;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+            justify-content: space-between;
+            row-gap: 1rem;
+        }
+
+        #page-content .recentPages .pageContainer {
+            display: grid;
+            grid-template-areas: "title" "page" "recently";
+            grid-template-rows: 1.5rem minmax(auto, 11.81rem) 1.5rem;
+            -ms-flex-preferred-size: 50%;
+            flex-basis: 50%;
+        }
+
+        @media (max-width: 550px) {
+            #page-content .recentPages .pageContainer {
+                -ms-flex-preferred-size: 100%;
+                flex-basis: 100%;
+            }
+        }
+
+        #page-content .recentPages .pageContainer p {
+            margin: 0;
+        }
+
+        #page-content .recentPages .pageContainer .title {
+            grid-area: title;
+            background: rgb(var(--gray-monochrome));
+            color: rgb(var(--white-monochrome));
+            font-weight: bold;
+            padding: 0 1rem;
+        }
+
+        #page-content .recentPages .pageContainer .page {
+            grid-area: page;
+            border: solid rgb(var(--gray-monochrome));
+            border-width: 0 3px 0 4px;
+            padding: 0.5em calc(1rem - 4px);
+            max-height: 12rem;
+            background-color: rgb(var(--pale-gray-monochrome));
+            overflow-y: hidden;
+        }
+
+        #page-content .recentPages .pageContainer .page .list-pages-box p {
+            max-height: 12rem;
+            overflow-y: hidden;
+        }
+
+        #page-content .recentPages .pageContainer .page .list-pages-box p br {
+            display: none;
+        }
+
+        #page-content .recentPages .pageContainer .page .list-pages-box p a {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #page-content .recentPages .pageContainer .recently {
+            grid-area: recently;
+            background: rgb(var(--gray-monochrome));
+            text-align: right;
+            padding: 0 1rem;
+        }
+
+        #page-content .recentPages .pageContainer .recently a {
+            color: rgb(var(--white-monochrome));
+        }
+
+        #page-content .recentPages .featurePrize {
+            grid-template-rows: 1.5rem minmax(auto, 7.68rem) 1.5rem;
+            -ms-flex-preferred-size: 100%;
+            flex-basis: 100%;
+        }
+
+        @media (max-width: 550px) {
+            #page-content .recentPages .featurePrize {
+                grid-template-rows: 1.5rem minmax(auto, 11.81rem) 1.5rem;
+            }
+        }
+
+        #page-content .recentPages .featureLevelO .page p,
+        #page-content .recentPages .featureTaleO .page p,
+        #page-content .recentPages .featureLevelT .page p,
+        #page-content .recentPages .featureTaleT .page p,
+        #page-content .recentPages .featurePrize .page p {
+            font-size: 0.8rem;
+        }
+
+        #page-content .recentPages .featureLevelO .page p:nth-of-type(1),
+        #page-content .recentPages .featureTaleO .page p:nth-of-type(1),
+        #page-content .recentPages .featureLevelT .page p:nth-of-type(1),
+        #page-content .recentPages .featureTaleT .page p:nth-of-type(1),
+        #page-content .recentPages .featurePrize .page p:nth-of-type(1) {
+            font-size: 1rem;
+        }
+
+        #page-content .recentPages .featureLevelO .page p:nth-of-type(2),
+        #page-content .recentPages .featureTaleO .page p:nth-of-type(2),
+        #page-content .recentPages .featureLevelT .page p:nth-of-type(2),
+        #page-content .recentPages .featureTaleT .page p:nth-of-type(2),
+        #page-content .recentPages .featurePrize .page p:nth-of-type(2) {
+            font-size: 0.5rem;
+            margin: 0 0 0.5rem 0;
+        }
+
+        #page-content .flexContainer {
+            display: grid;
+            /* Ha-ha, Fat chance. */
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 7px;
+        }
+
+        #page-content .toolsContainer {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            grid-gap: 7px;
+        }
+
+        #page-content .toolsContainer .tools {
+            background: rgba(var(--gray-monochrome));
+            color: rgba(var(--white-monochrome));
+            padding: 1em;
+            display: grid;
+            grid-template-areas:
+                "icon content"
+                "title content";
+            grid-template-columns: max-content 1fr;
+            grid-template-rows: 0.6fr 0.4fr;
+            grid-gap: 2px 1em;
+        }
+
+        #page-content .toolsContainer .tools.tright {
+            grid-template-areas:
+                "content icon"
+                "content title";
+            grid-template-columns: 1fr max-content;
+        }
+
+        #page-content .toolsContainer .tools img {
+            grid-area: icon;
+            justify-self: center;
+            align-self: end;
+        }
+
+        #page-content .toolsContainer .tools a {
+            grid-area: title;
+            color: rgba(var(--white-monochrome));
+        }
+
+        #page-content .toolsContainer .tools .description {
+            grid-area: content;
+            align-self: center;
+        }
+
+        #page-content .toolsContainer .tools br {
+            display: none;
+        }
+
+        #page-content .artbox {
+            background: rgba(var(--gray-monochrome));
+            color: rgba(var(--white-monochrome));
+            padding: 0.00001px 1em;
+        }
+
+        #page-content .artbox .title {
+            font-weight: 700;
+            margin: 0.5em 0 0;
+        }
+
+        #page-content .artbox .artContent {
+            overflow-y: hidden;
+            max-height: 18rem;
+        }
+
+        #page-content .artbox .featuredLink {
+            text-align: right;
+            padding: 0.2em 0;
+            margin-right: calc(1rem - 1em);
+        }
+
+        #page-content .artbox .featuredLink a {
+            color: rgba(var(--white-monochrome));
+        }
+
+        @media (max-width: 600px) {
+            #page-content .flexContainer {
+                grid-template-columns: auto;
+                grid-template-rows: max-content max-content;
+            }
+        }
+
+        #page-content .international .announcement {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            position: relative;
+        }
+
+        #page-content .international .announcement img {
+            width: 50px;
+            -webkit-filter: drop-shadow(0 0 1px rgba(var(--gray-monochrome), 0.8));
+            filter: drop-shadow(0 0 1px rgba(var(--gray-monochrome), 0.8));
+        }
+
+        #page-content .international .announcement.es img,
+        #page-content .international .announcement.jp img {
+            -ms-flex-item-align: center;
+            align-self: center;
+        }
+
+        #page-content .international .announcement h3 {
+            margin: 0 0 0 1rem;
+            line-height: 50px;
+        }
+
+        #page-content .international .announcement a {
+            font-size: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            left: 0;
+            top: 0;
+            -webkit-transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #page-content .international .announcement a:hover {
+            background-color: rgba(var(--gray-monochrome), 0.2);
+        }
+
+        /*# sourceMappingURL=data:application/json;base64,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WUFBOUQsOERBQThEO0FBQ2xFO0FBQ0E7SUFDSSwyQkFBa0I7UUFBbEIsa0JBQWtCO0FBQ3RCO0FBQ0E7SUFDSSxrQkFBa0I7SUFDbEIsaUJBQWlCO0FBQ3JCO0FBQ0E7SUFDSSxZQUFZO0lBQ1osa0JBQWtCO0lBQ2xCLFdBQVc7SUFDWCxZQUFZO0lBQ1osT0FBTztJQUNQLE1BQU07SUFDTix1RUFBK0Q7SUFBL0QsK0RBQStEO0FBQ25FO0FBQ0E7SUFDSSxtREFBbUQ7QUFDdkQiLCJmaWxlIjoibWFpbi5jc3MiLCJzb3VyY2VzQ29udGVudCI6WyIvKlxuICAgIEJhY2tyb29tcyBDTiBNYWluIFBhZ2UgQ1NTXG4gICAgYnkgaG9haDIzMzMgJiBFbHRyYWNcbiovXG4jcGFnZS10aXRsZSB7XG4gICAgZGlzcGxheTogbm9uZTtcbn1cblxuI3BhZ2UtY29udGVudCAuYmFubmVyQ29udGFpbmVyIHtcbiAgICBkaXNwbGF5OiBncmlkO1xuICAgIGdyaWQtdGVtcGxhdGUtYXJlYXM6IFwid2VsY29tZSB3ZWxjb21lIHdlbGNvbWVcIiBcImRpc2NvcmQgZmFxIGpvaW5cIjtcbiAgICBncmlkLXRlbXBsYXRlLWNvbHVtbnM6IDFmciAxZnIgMWZyO1xuICAgIGdyaWQtY29sdW1uLWdhcDogMyU7XG59XG4jcGFnZS1jb250ZW50IC5iYW5uZXJDb250YWluZXIgLndlbGNvbWUge1xuICAgIGdyaWQtYXJlYTogd2VsY29tZTtcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiByZ2IodmFyKC0tZ3JheS1tb25vY2hyb21lKSk7XG4gICAgY29sb3I6IHJnYih2YXIoLS13aGl0ZS1tb25vY2hyb21lKSk7XG4gICAgZm9udC1zdHlsZTogaXRhbGljO1xuICAgIHBhZGRpbmc6IDFyZW07XG59XG4jcGFnZS1jb250ZW50IC5iYW5uZXJDb250YWluZXIgLm5hdmlnYXRvciB7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiByZ2IodmFyKC0tZ3JheS1tb25vY2hyb21lKSk7XG4gICAgYm9yZGVyLXJhZGl1czogMCAwIDFyZW0gMXJlbTtcbiAgICBoZWlnaHQ6IG1pbi1jb250ZW50O1xuICAgIG1hcmdpbjogMCAwIDRyZW0gMDtcbiAgICB0cmFuc2l0aW9uOiBtYXJnaW4gMTUwbXMgY3ViaWMtYmV6aWVyKDAuNCwgMCwgMC4yLCAxKTtcbn1cbiNwYWdlLWNvbnRlbnQgLmJhbm5lckNvbnRhaW5lciAubmF2aWdhdG9yOmhvdmVyLCAjcGFnZS1jb250ZW50IC5iYW5uZXJDb250YWluZXIgLm5hdmlnYXRvcjphY3RpdmUge1xuICAgIG1hcmdpbjogMCAwIDFyZW0gMDtcbn1cbiNwYWdlLWNvbnRlbnQgLmJhbm5lckNvbnRhaW5lciAubmF2aWdhdG9yIGEge1xuICAgIHBhZGRpbmc6IDAuNXJlbSAwO1xuICAgIHdpZHRoOiAxMDAlO1xuICAgIHRleHQtYWxpZ246IGNlbnRlcjtcbiAgICBjb2xvcjogcmdiKHZhcigtLXdoaXRlLW1vbm9jaHJvbWUpKTtcbiAgICBmb250LXNpemU6IDEuMjVyZW07XG4gICAgdHJhbnNpdGlvbjogcGFkZGluZyAxNTBtcyBjdWJpYy1iZXppZXIoMC40LCAwLCAwLjIsIDEpO1xuICAgIGZvbnQtd2VpZ2h0OiBib2xkO1xufVxuI3BhZ2UtY29udGVudCAuYmFubmVyQ29udGFpbmVyIC5uYXZpZ2F0b3IgYTpob3ZlciwgI3BhZ2UtY29udGVudCAuYmFubmVyQ29udGFpbmVyIC5uYXZpZ2F0b3IgYTphY3RpdmUge1xuICAgIHRleHQtZGVjb3JhdGlvbjogbm9uZTtcbiAgICB0ZXh0LWRlY29yYXRpb24tY29sb3I6IHRyYW5zcGFyZW50O1xuICAgIHBhZGRpbmc6IDJyZW0gMDtcbn1cbkBtZWRpYSAobWF4LXdpZHRoOiA3NjdweCkge1xuICAgICNwYWdlLWNvbnRlbnQgLmJhbm5lckNvbnRhaW5lciAubmF2aWdhdG9yIHtcbiAgICAgICAgbWFyZ2luOiAwIDAgMnJlbSAwO1xuICAgIH1cbiAgICAjcGFnZS1jb250ZW50IC5iYW5uZXJDb250YWluZXIgLm5hdmlnYXRvcjpob3ZlciB7XG4gICAgICAgIG1hcmdpbjogMDtcbiAgICB9XG4gICAgI3BhZ2UtY29udGVudCAuYmFubmVyQ29udGFpbmVyIC5uYXZpZ2F0b3IgYSB7XG4gICAgICAgIGZvbnQtc2l6ZTogMS4xcmVtO1xuICAgIH1cbiAgICAjcGFnZS1jb250ZW50IC5iYW5uZXJDb250YWluZXIgLm5hdmlnYXRvciBhOmhvdmVyLCAjcGFnZS1jb250ZW50IC5iYW5uZXJDb250YWluZXIgLm5hdmlnYXRvciBhOmFjdGl2ZSB7XG4gICAgICAgIHBhZGRpbmc6IDEuNXJlbSAwO1xuICAgIH1cbn1cbiNwYWdlLWNvbnRlbnQgLmJhbm5lckNvbnRhaW5lciAuZGlzY29yZCB7XG4gICAgZ3JpZC1hcmVhOiBkaXNjb3JkO1xufVxuI3BhZ2UtY29udGVudCAuYmFubmVyQ29udGFpbmVyIC5mYXEge1xuICAgIGdyaWQtYXJlYTogZmFxO1xufVxuI3BhZ2UtY29udGVudCAuYmFubmVyQ29udGFpbmVyIC5qb2luIHtcbiAgICBncmlkLWFyZWE6IGpvaW47XG59XG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciB7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBmbGV4LXdyYXA6IHdyYXA7XG4gICAgYm9yZGVyOiA0cHggc29saWQgcmdiKHZhcigtLWdyYXktbW9ub2Nocm9tZSkpO1xuICAgIGFsaWduLWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XG59XG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAud2VsY29tZSB7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogcmdiKHZhcigtLWdyYXktbW9ub2Nocm9tZSkpO1xuICAgIGNvbG9yOiByZ2IodmFyKC0td2hpdGUtbW9ub2Nocm9tZSkpO1xuICAgIGZvbnQtd2VpZ2h0OiBib2xkO1xuICAgIHdpZHRoOiAxMDAlO1xuICAgIHRleHQtYWxpZ246IGNlbnRlcjtcbiAgICBmb250LXNpemU6IDEuNXJlbTtcbiAgICBwYWRkaW5nOiAwIDAuNzVyZW07XG59XG5AbWVkaWEgKG1heC13aWR0aDogNzY3cHgpIHtcbiAgICAjcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAud2VsY29tZSB7XG4gICAgICAgIGZvbnQtc2l6ZTogMS4ycmVtO1xuICAgIH1cbn1cbiNwYWdlLWNvbnRlbnQgLmFubm91bmNlQ29udGFpbmVyIC5hbm5vdW5jZW1lbnQsXG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAubW9yZSB7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogcmdiKHZhcigtLXBhbGUtZ3JheS1tb25vY2hyb21lKSk7XG4gICAgd2lkdGg6IDEwMCU7XG4gICAgcGFkZGluZzogMC43NXJlbTtcbiAgICBib3JkZXItdG9wOiA0cHggc29saWQgcmdiKHZhcigtLWdyYXktbW9ub2Nocm9tZSkpO1xufVxuI3BhZ2UtY29udGVudCAuYW5ub3VuY2VDb250YWluZXIgLm1vcmUge1xuICAgIHBhZGRpbmc6IDA7XG59XG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAubW9yZSAuY29sbGFwc2libGUtYmxvY2stZm9sZGVkLFxuI3BhZ2UtY29udGVudCAuYW5ub3VuY2VDb250YWluZXIgLm1vcmUgLmNvbGxhcHNpYmxlLWJsb2NrLXVuZm9sZGVkIC5jb2xsYXBzaWJsZS1ibG9jay11bmZvbGRlZC1saW5rIHtcbiAgICBkaXNwbGF5OiBmbGV4O1xufVxuI3BhZ2UtY29udGVudCAuYW5ub3VuY2VDb250YWluZXIgLm1vcmUgLmNvbGxhcHNpYmxlLWJsb2NrLWZvbGRlZCBhLmNvbGxhcHNpYmxlLWJsb2NrLWxpbmssXG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAubW9yZSAuY29sbGFwc2libGUtYmxvY2stdW5mb2xkZWQgLmNvbGxhcHNpYmxlLWJsb2NrLXVuZm9sZGVkLWxpbmsgYS5jb2xsYXBzaWJsZS1ibG9jay1saW5rIHtcbiAgICB3aWR0aDogMTAwJTtcbiAgICBwYWRkaW5nOiAxcmVtIDA7XG4gICAgdGV4dC1hbGlnbjogY2VudGVyO1xuICAgIGJhY2tncm91bmQ6IHJnYmEodmFyKC0tZ3JheS1tb25vY2hyb21lKSwgMC4yKTtcbiAgICB0cmFuc2l0aW9uOiBiYWNrZ3JvdW5kLWNvbG9yIDE1MG1zIGN1YmljLWJlemllcigwLjQsIDAsIDAuMiwgMSk7XG59XG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAubW9yZSAuY29sbGFwc2libGUtYmxvY2stZm9sZGVkIGEuY29sbGFwc2libGUtYmxvY2stbGluazpob3ZlcixcbiNwYWdlLWNvbnRlbnQgLmFubm91bmNlQ29udGFpbmVyIC5tb3JlIC5jb2xsYXBzaWJsZS1ibG9jay11bmZvbGRlZCAuY29sbGFwc2libGUtYmxvY2stdW5mb2xkZWQtbGluayBhLmNvbGxhcHNpYmxlLWJsb2NrLWxpbms6aG92ZXIge1xuICAgIHRleHQtZGVjb3JhdGlvbjogbm9uZTtcbiAgICB0ZXh0LWRlY29yYXRpb24tY29sb3I6IHRyYW5zcGFyZW50O1xuICAgIGJhY2tncm91bmQ6IHJnYmEodmFyKC0tZ3JheS1tb25vY2hyb21lKSwgMC40KTtcbn1cbiNwYWdlLWNvbnRlbnQgLmFubm91bmNlQ29udGFpbmVyIC5tb3JlIC5jb2xsYXBzaWJsZS1ibG9jay1mb2xkZWRbc3R5bGUqPWJsb2NrXSxcbiNwYWdlLWNvbnRlbnQgLmFubm91bmNlQ29udGFpbmVyIC5tb3JlIC5jb2xsYXBzaWJsZS1ibG9jay11bmZvbGRlZFtzdHlsZSo9YmxvY2tdIC5jb2xsYXBzaWJsZS1ibG9jay11bmZvbGRlZC1saW5rIHtcbiAgICBkaXNwbGF5OiBmbGV4ICFpbXBvcnRhbnQ7XG59XG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAubW9yZSAuY29sbGFwc2libGUtYmxvY2stdW5mb2xkZWQgLmNvbGxhcHNpYmxlLWJsb2NrLXVuZm9sZGVkLWxpbmsgYS5jb2xsYXBzaWJsZS1ibG9jay1saW5rIHtcbiAgICBib3JkZXItYm90dG9tOiA0cHggc29saWQgcmdiKHZhcigtLWdyYXktbW9ub2Nocm9tZSkpO1xufVxuI3BhZ2UtY29udGVudCAuYW5ub3VuY2VDb250YWluZXIgLm1vcmUgLmNvbGxhcHNpYmxlLWJsb2NrLXVuZm9sZGVkIC5jb2xsYXBzaWJsZS1ibG9jay1jb250ZW50IHtcbiAgICBiYWNrZ3JvdW5kOiByZ2IodmFyKC0tZ3JheS1tb25vY2hyb21lKSk7XG4gICAgY29sb3I6IHJnYih2YXIoLS13aGl0ZS1tb25vY2hyb21lKSk7XG4gICAgdGV4dC1hbGlnbjogY2VudGVyO1xufVxuI3BhZ2UtY29udGVudCAuYW5ub3VuY2VDb250YWluZXIgLm1vcmUgLmNvbGxhcHNpYmxlLWJsb2NrLXVuZm9sZGVkIC5jb2xsYXBzaWJsZS1ibG9jay1jb250ZW50IHAge1xuICAgIG1hcmdpbjogMDtcbn1cbiNwYWdlLWNvbnRlbnQgLmFubm91bmNlQ29udGFpbmVyIC5hcmNoaXZlIHtcbiAgICBiYWNrZ3JvdW5kOiByZ2IodmFyKC0tZ3JheS1tb25vY2hyb21lKSk7XG4gICAgY29sb3I6IHJnYih2YXIoLS13aGl0ZS1tb25vY2hyb21lKSk7XG4gICAgdGV4dC1hbGlnbjogcmlnaHQ7XG4gICAgd2lkdGg6IDEwMCU7XG59XG4jcGFnZS1jb250ZW50IC5hbm5vdW5jZUNvbnRhaW5lciAuYXJjaGl2ZSBhIHtcbiAgICBwYWRkaW5nOiAwIDFyZW07XG4gICAgY29sb3I6IHJnYih2YXIoLS13aGl0ZS1tb25vY2hyb21lKSk7XG59XG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyB7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBmbGV4LWRpcmVjdGlvbjogcm93O1xuICAgIGZsZXgtd3JhcDogd3JhcDtcbiAgICBqdXN0aWZ5LWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XG4gICAgcm93LWdhcDogMXJlbTtcbn1cbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5wYWdlQ29udGFpbmVyIHtcbiAgICBkaXNwbGF5OiBncmlkO1xuICAgIGdyaWQtdGVtcGxhdGUtYXJlYXM6IFwidGl0bGVcIiBcInBhZ2VcIiBcInJlY2VudGx5XCI7XG4gICAgZ3JpZC10ZW1wbGF0ZS1yb3dzOiAxLjVyZW0gbWlubWF4KGF1dG8sIDExLjgxcmVtKSAxLjVyZW07XG4gICAgZmxleC1iYXNpczogNTAlO1xufVxuQG1lZGlhIChtYXgtd2lkdGg6IDU1MHB4KSB7XG4gICAgI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLnBhZ2VDb250YWluZXIge1xuICAgICAgICBmbGV4LWJhc2lzOiAxMDAlO1xuICAgIH1cbn1cbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5wYWdlQ29udGFpbmVyIHAge1xuICAgIG1hcmdpbjogMDtcbn1cbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5wYWdlQ29udGFpbmVyIC50aXRsZSB7XG4gICAgZ3JpZC1hcmVhOiB0aXRsZTtcbiAgICBiYWNrZ3JvdW5kOiByZ2IodmFyKC0tZ3JheS1tb25vY2hyb21lKSk7XG4gICAgY29sb3I6IHJnYih2YXIoLS13aGl0ZS1tb25vY2hyb21lKSk7XG4gICAgZm9udC13ZWlnaHQ6IGJvbGQ7XG4gICAgcGFkZGluZzogMCAxcmVtO1xufVxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLnBhZ2VDb250YWluZXIgLnBhZ2Uge1xuICAgIGdyaWQtYXJlYTogcGFnZTtcbiAgICBib3JkZXI6IHNvbGlkIHJnYih2YXIoLS1ncmF5LW1vbm9jaHJvbWUpKTtcbiAgICBib3JkZXItd2lkdGg6IDAgM3B4IDAgNHB4O1xuICAgIHBhZGRpbmc6IDAuNWVtIGNhbGMoMXJlbSAtIDRweCk7XG4gICAgbWF4LWhlaWdodDogMTJyZW07XG4gICAgYmFja2dyb3VuZC1jb2xvcjogcmdiKHZhcigtLXBhbGUtZ3JheS1tb25vY2hyb21lKSk7XG4gICAgb3ZlcmZsb3cteTogaGlkZGVuO1xufVxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLnBhZ2VDb250YWluZXIgLnBhZ2UgLmxpc3QtcGFnZXMtYm94IHAge1xuICAgIG1heC1oZWlnaHQ6IDEycmVtO1xuICAgIG92ZXJmbG93LXk6IGhpZGRlbjtcbn1cbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5wYWdlQ29udGFpbmVyIC5wYWdlIC5saXN0LXBhZ2VzLWJveCBwIGJyIHtcbiAgICBkaXNwbGF5OiBub25lO1xufVxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLnBhZ2VDb250YWluZXIgLnBhZ2UgLmxpc3QtcGFnZXMtYm94IHAgYSB7XG4gICAgZGlzcGxheTogYmxvY2s7XG4gICAgd2hpdGUtc3BhY2U6IG5vd3JhcDtcbiAgICBvdmVyZmxvdzogaGlkZGVuO1xuICAgIHRleHQtb3ZlcmZsb3c6IGVsbGlwc2lzO1xufVxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLnBhZ2VDb250YWluZXIgLnJlY2VudGx5IHtcbiAgICBncmlkLWFyZWE6IHJlY2VudGx5O1xuICAgIGJhY2tncm91bmQ6IHJnYih2YXIoLS1ncmF5LW1vbm9jaHJvbWUpKTtcbiAgICB0ZXh0LWFsaWduOiByaWdodDtcbiAgICBwYWRkaW5nOiAwIDFyZW07XG59XG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAucGFnZUNvbnRhaW5lciAucmVjZW50bHkgYSB7XG4gICAgY29sb3I6IHJnYih2YXIoLS13aGl0ZS1tb25vY2hyb21lKSk7XG59XG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVByaXplIHtcbiAgICBncmlkLXRlbXBsYXRlLXJvd3M6IDEuNXJlbSBtaW5tYXgoYXV0bywgNy42OHJlbSkgMS41cmVtO1xuICAgIGZsZXgtYmFzaXM6IDEwMCU7XG59XG5AbWVkaWEgKG1heC13aWR0aDogNTUwcHgpIHtcbiAgICAjcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVByaXplIHtcbiAgICAgICAgZ3JpZC10ZW1wbGF0ZS1yb3dzOiAxLjVyZW0gbWlubWF4KGF1dG8sIDExLjgxcmVtKSAxLjVyZW07XG4gICAgfVxufVxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLmZlYXR1cmVMZXZlbE8gLnBhZ2UgcCxcbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5mZWF0dXJlVGFsZU8gLnBhZ2UgcCxcbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5mZWF0dXJlTGV2ZWxUIC5wYWdlIHAsXG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVRhbGVUIC5wYWdlIHAsXG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVByaXplIC5wYWdlIHAge1xuICAgIGZvbnQtc2l6ZTogMC44cmVtO1xufVxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLmZlYXR1cmVMZXZlbE8gLnBhZ2UgcDpudGgtb2YtdHlwZSgxKSxcbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5mZWF0dXJlVGFsZU8gLnBhZ2UgcDpudGgtb2YtdHlwZSgxKSxcbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5mZWF0dXJlTGV2ZWxUIC5wYWdlIHA6bnRoLW9mLXR5cGUoMSksXG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVRhbGVUIC5wYWdlIHA6bnRoLW9mLXR5cGUoMSksXG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVByaXplIC5wYWdlIHA6bnRoLW9mLXR5cGUoMSkge1xuICAgIGZvbnQtc2l6ZTogMXJlbTtcbn1cbiNwYWdlLWNvbnRlbnQgLnJlY2VudFBhZ2VzIC5mZWF0dXJlTGV2ZWxPIC5wYWdlIHA6bnRoLW9mLXR5cGUoMiksXG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZVRhbGVPIC5wYWdlIHA6bnRoLW9mLXR5cGUoMiksXG4jcGFnZS1jb250ZW50IC5yZWNlbnRQYWdlcyAuZmVhdHVyZUxldmVsVCAucGFnZSBwOm50aC1vZi10eXBlKDIpLFxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLmZlYXR1cmVUYWxlVCAucGFnZSBwOm50aC1vZi10eXBlKDIpLFxuI3BhZ2UtY29udGVudCAucmVjZW50UGFnZXMgLmZlYXR1cmVQcml6ZSAucGFnZSBwOm50aC1vZi10eXBlKDIpIHtcbiAgICBmb250LXNpemU6IDAuNXJlbTtcbn1cbiNwYWdlLWNvbnRlbnQgLnRvb2xzQ29udGFpbmVyIHtcbiAgICBkaXNwbGF5OiBncmlkO1xuICAgIGNvbG9yOiByZ2IodmFyKC0td2hpdGUtbW9ub2Nocm9tZSkpO1xuICAgIGdyaWQtZ2FwOiAwLjVyZW07XG59XG4jcGFnZS1jb250ZW50IC50b29sc0NvbnRhaW5lciAudG9vbHMge1xuICAgIGRpc3BsYXk6IGdyaWQ7XG4gICAgZ3JpZC10ZW1wbGF0ZS1hcmVhczogXCJpbWFnZSB0ZXh0XCIgXCJsaW5rIHRleHRcIjtcbiAgICBncmlkLXRlbXBsYXRlLWNvbHVtbnM6IDVyZW0gYXV0bztcbiAgICBqdXN0aWZ5LWl0ZW1zOiBjZW50ZXI7XG4gICAgZ3JpZC1nYXA6IDAuNXJlbTtcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiByZ2IodmFyKC0tZ3JheS1tb25vY2hyb21lKSk7XG4gICAgcGFkZGluZzogMC43NXJlbTtcbn1cbiNwYWdlLWNvbnRlbnQgLnRvb2xzQ29udGFpbmVyIC50b29sczpudGgtb2YtdHlwZShldmVuKSB7XG4gICAgZGlyZWN0aW9uOiBydGw7XG59XG4jcGFnZS1jb250ZW50IC50b29sc0NvbnRhaW5lciAudG9vbHM6bnRoLW9mLXR5cGUoZXZlbikgKiB7XG4gICAgZGlyZWN0aW9uOiBsdHI7XG59XG4jcGFnZS1jb250ZW50IC50b29sc0NvbnRhaW5lciAudG9vbHMgaW1nIHtcbiAgICBncmlkLWFyZWE6IGltYWdlO1xufVxuI3BhZ2UtY29udGVudCAudG9vbHNDb250YWluZXIgLnRvb2xzIGEge1xuICAgIGdyaWQtYXJlYTogbGluaztcbiAgICBjb2xvcjogcmdiKHZhcigtLXdoaXRlLW1vbm9jaHJvbWUpKTtcbn1cbiNwYWdlLWNvbnRlbnQgLnRvb2xzQ29udGFpbmVyIC50b29scyAuZGVzY3JpcHRpb24ge1xuICAgIGdyaWQtYXJlYTogdGV4dDtcbiAgICBqdXN0aWZ5LXNlbGY6IGxlZnQ7XG4gICAgcG9pbnRlci1ldmVudHM6IG5vbmU7XG59XG4jcGFnZS1jb250ZW50IC50b29sc0NvbnRhaW5lciAudG9vbHMgYnIge1xuICAgIGRpc3BsYXk6IG5vbmU7XG59XG4jcGFnZS1jb250ZW50IC5pbnRlcm5hdGlvbmFsIC5hbm5vdW5jZW1lbnQge1xuICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAgICBwb3NpdGlvbjogcmVsYXRpdmU7XG59XG4jcGFnZS1jb250ZW50IC5pbnRlcm5hdGlvbmFsIC5hbm5vdW5jZW1lbnQgaW1nIHtcbiAgICB3aWR0aDogNTBweDtcbiAgICBmaWx0ZXI6IGRyb3Atc2hhZG93KDAgMCAxcHggcmdiYSh2YXIoLS1ncmF5LW1vbm9jaHJvbWUpLCAwLjgpKTtcbn1cbiNwYWdlLWNvbnRlbnQgLmludGVybmF0aW9uYWwgLmFubm91bmNlbWVudC5lcyBpbWcsICNwYWdlLWNvbnRlbnQgLmludGVybmF0aW9uYWwgLmFubm91bmNlbWVudC5qcCBpbWcge1xuICAgIGFsaWduLXNlbGY6IGNlbnRlcjtcbn1cbiNwYWdlLWNvbnRlbnQgLmludGVybmF0aW9uYWwgLmFubm91bmNlbWVudCBoMyB7XG4gICAgbWFyZ2luOiAwIDAgMCAxcmVtO1xuICAgIGxpbmUtaGVpZ2h0OiA1MHB4O1xufVxuI3BhZ2UtY29udGVudCAuaW50ZXJuYXRpb25hbCAuYW5ub3VuY2VtZW50IGEge1xuICAgIGZvbnQtc2l6ZTogMDtcbiAgICBwb3NpdGlvbjogYWJzb2x1dGU7XG4gICAgd2lkdGg6IDEwMCU7XG4gICAgaGVpZ2h0OiAxMDAlO1xuICAgIGxlZnQ6IDA7XG4gICAgdG9wOiAwO1xuICAgIHRyYW5zaXRpb246IGJhY2tncm91bmQtY29sb3IgMTUwbXMgY3ViaWMtYmV6aWVyKDAuNCwgMCwgMC4yLCAxKTtcbn1cbiNwYWdlLWNvbnRlbnQgLmludGVybmF0aW9uYWwgLmFubm91bmNlbWVudCBhOmhvdmVyIHtcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiByZ2JhKHZhcigtLWdyYXktbW9ub2Nocm9tZSksIDAuMik7XG59Il19 */
+    </style>
+    <style>
+        @import url("https://hoah.backroomswiki.cn/Backrooms/component-carousel-css/main.css");
+    </style>
+    <style>
+        /**
+ * 在这里添加特殊 CSS
+ * 请在对应的公告/新闻撤下后将此处清空
+**/
+    </style>
+    <style>
+        /* *** ART FEATURES *** */
+
+        .art {
+            height: 19rem;
+            background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            background-size: cover;
+            background-position: center;
+            -webkit-animation: artslide 20s linear infinite;
+            animation: artslide 20s linear infinite;
+            -webkit-animation-timing-function: step-end;
+            animation-timing-function: step-end;
+        }
+
+        .caption {
+            display: block;
+            position: relative;
+            bottom: -60%;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 0.25rem;
+            margin: 0.5rem;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .caption a {
+            font-weight: bold;
+            color: white;
+        }
+
+        @-webkit-keyframes artslide {
+            0% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            }
+
+            30% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            }
+
+            33% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/11223/1.jpg);
+            }
+
+            63% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/11223/1.jpg);
+            }
+
+            66% {
+                background-image: url(http://backroomssandboxcn.wikidot.com/local--files/file-storage/drm-baimulin.jpg);
+            }
+
+            96% {
+                background-image: url(http://backroomssandboxcn.wikidot.com/local--files/file-storage/drm-baimulin.jpg);
+            }
+
+            99% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            }
+
+        }
+
+        @keyframes artslide {
+            0% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            }
+
+            30% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            }
+
+            33% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/11223/1.jpg);
+            }
+
+            63% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/11223/1.jpg);
+            }
+
+            66% {
+                background-image: url(http://backroomssandboxcn.wikidot.com/local--files/file-storage/drm-baimulin.jpg);
+            }
+
+            96% {
+                background-image: url(http://backroomssandboxcn.wikidot.com/local--files/file-storage/drm-baimulin.jpg);
+            }
+
+            99% {
+                background-image: url(http://brsandbox-pro.wikidot.com/local--files/395paint/571_a3dab1e8cf00128836e06b01b403f7af.jpg);
+            }
+
+        }
+    </style>
+    <style>
+        /**
+ * 在这里添加特殊 CSS
+ * 请在对应的公告/新闻撤下后将此处清空
+**/
+    </style>
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--modules/js/list/ListPagesModule.js"></script>
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--modules/js/misc/NewPageHelperModule.js"></script>
+    <script src="../../assets/ziyit_api.js"></script>
+</head>
+
+<body id="html-body">
+    
+
+    <div id="skrollr-body">
+        <a name="page-top"></a>
+        <div id="container-wrap-wrap">
+            <div id="container-wrap">
+                <div id="container">
+                    <div id="header">
+                        <h1><a href="../"><span>The Backrooms中文维基</span></a></h1>
+
+                        <h2><span>你曾经来过这里</span></h2>
+<div style="position: absolute; right: 10px; top: 10px; text-align: center;">
+        <div id="userInfo" style="color: black; font-size: 18px;">
+            <strong><span id="usernameDisplay">您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a></span></strong>
+            <br>
+            <strong><span id="userTypeDisplay"></span></strong>
+        </div>
+    </div>
+    <script>
+        // 获取Cookie值的函数
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // 从user.json获取用户权限信息的函数
+        async function getUserPermission(username) {
+            try {
+                const response = await fetch('/backrooms/user.json');
+                const userData = await response.json();
+
+                const usernameIndex = userData.Username.indexOf(username);
+                if (usernameIndex !== -1) {
+                    const permission = userData.Permission[usernameIndex];
+                    return { permission };
+                }
+                return null;
+            } catch (error) {
+                console.error('读取用户权限信息失败:', error);
+                return null;
+            }
+        }
+
+        // 页面加载完成后执行登录状态检测
+        document.addEventListener('DOMContentLoaded', async function () {
+            const authToken = getCookie('authToken') || localStorage.getItem('authToken');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const userTypeDisplay = document.getElementById('userTypeDisplay');
+            const pageContent = document.getElementById('page-content');
+
+            if (!authToken) {
+                if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';
+                if (userTypeDisplay) userTypeDisplay.textContent = '';
+            } else {
+                const user = await ZIYIT_API.currentUser();
+                const username = user ? user.username : '';
+                const type = (user && ZIYIT_API.isVip(user)) ? 'ZC' : 'UR';
+                if (usernameDisplay) usernameDisplay.textContent = user ? user.username : '';
+                if (userTypeDisplay) {
+                    try {
+                        userTypeDisplay.textContent = await ZIYIT_API.userType() || (ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户');
+                    } catch (e) {
+                        userTypeDisplay.textContent = ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户';
+                    }
+                }
+            }
+        });
+    </script>
+                        <div id="top-bar">
+                            <div class="top-bar">
+                                <ul>
+                                    <li>图书馆
+                                        <ul>
+                                            <li><a href="./normal-levels/">层级</a></li>
+                                            <li><a href="./sub-layers/">子区集</a></li>
+                                            <li><a href="./entities/">实体</a></li>
+                                            <li><a href="./objects/">物品</a></li>
+                                            <li><a href="./phenomena/">现象</a></li>
+                                            <li><a href="./groups-list">团体</a></li>
+                                        </ul>
+                                    </li>
+
+                                    <li>更多
+                                        <ul>
+                                            <li><a href="javascript:history.back()">返回上一步</a></li>
+                                            <li><a href="../">返回首页</a></li>
+                                            <li><a href="./">返回主站</a></li>
+                                            <li><a href="./Deployment">部署时刻表</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="mobile-top-bar">
+                                <div class="open-menu">
+                                    <p><a href="#side-bar">≡</a></p>
+                                </div>
+                                <ul>
+                                    <li>图书馆
+                                        <ul>
+                                            <li><a href="./normal-levels/">层级</a></li>
+                                            <li><a href="./sub-layers/">子区集</a></li>
+                                            <li><a href="./entities/">实体</a></li>
+                                            <li><a href="./objects/">物品</a></li>
+                                            <li><a href="./phenomena/">现象</a></li>
+                                            <li><a href="./groups-list">团体</a></li>
+                                        </ul>
+                                    </li>
+
+                                    <li>更多
+                                        <ul>
+                                            <li><a href="javascript:history.back()">返回上一步</a></li>
+                                            <li><a href="../">返回首页</a></li>
+                                            <li><a href="./">返回主站</a></li>
+                                            <li><a href="./Deployment">部署时刻表</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div id="header-extra-div-1"><span></span></div>
+                        <div id="header-extra-div-2"><span></span></div>
+                        <div id="header-extra-div-3"><span></span></div>
+                    </div>
+
+                    <div id="content-wrap">
+                        <div id="main-content">
+                            <h1>评价守则</h1>
+                            <div id="asdfghjkl" style="text-align: center; display: none;">
+                                <h1 id="toc0"><span>本页面无任何暗号</span></h1>
+                                <p>本页面内容由ZIYIT最高管理员编写和维护，旨在为The
+                                    Backrooms中文维基的成员提供明确的行为准则和规范。所有成员在加入社区后应仔细阅读并遵守这些规则，以确保社区的和谐与秩序。
+                                </p>
+                                <hr>
+                            </div>
+                            <div id="page-content">
+                                <p><iframe src="//ciphertest.backroomer.com/pages/criticism-policy/ziyit"
+                                        allowtransparency="true"
+                                        style="border: none; width: calc(100% + 0.8rem); height: 200vh;"></iframe></p>
+                                <div>
+                                    <div class="style-block">
+                                        <p>欢迎来到“评价守则”页面。本页面创建的目的是——</p>
+                                        <div class="quote-block">
+                                            <ul>
+                                                <li>提供一个明确的标准，指出什么样的评价是<strong>有成效的</strong><span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</li>
+                                                <li>明确指出会受到处分的不当评价是什么样的，并为这些不当评价具体规定处分<sup class="footnoteref"><a
+                                                            id="footnoteref-1" href="javascript:;" class="footnoteref"
+                                                            onclick="WIKIDOT.page.utils.scrollToReference('footnote-1')">1</a></sup><span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。
+                                                </li>
+                                                <li>为欲在本站发表作品和已经发表过作品的作者提供回应评分和评价的参考方法<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <table style="margin:0; padding:0">
+                                        <tbody>
+                                            <tr>
+                                                <td style="margin:0; padding:0">
+                                                    <div id="toc">
+                                                        <div id="toc-action-bar"><a href="javascript:;"
+                                                                onclick="WIKIDOT.page.listeners.foldToc(event)">折叠</a><a
+                                                                style="display: none" href="javascript:;"
+                                                                onclick="WIKIDOT.page.listeners.unfoldToc(event)">展开</a>
+                                                        </div>
+                                                        <div class="title">目录</div>
+                                                        <div id="toc-list">
+                                                            <div style="margin-left: 1em;"><a href="#toc0">基本问题</a>
+                                                            </div>
+                                                            <div style="margin-left: 2em;"><a
+                                                                    href="#toc1">本指导是一种建议，还是一种规范？</a></div>
+                                                            <div style="margin-left: 2em;"><a
+                                                                    href="#toc2">本指导所规定的评价，具体是指什么？</a></div>
+                                                            <div style="margin-left: 2em;"><a
+                                                                    href="#toc3">说了这么多，那本指导到底规范和约束什么评价？</a></div>
+                                                            <div style="margin-left: 1em;"><a href="#toc4">给予评价</a>
+                                                            </div>
+                                                            <div style="margin-left: 2em;"><a href="#toc5">原则</a></div>
+                                                            <div style="margin-left: 3em;"><a href="#toc6">1.
+                                                                    你的所有评价应当是针对作品本身进行的。</a></div>
+                                                            <div style="margin-left: 3em;"><a href="#toc7">2.
+                                                                    当你给出评分时，你不需要解释任何理由。</a></div>
+                                                            <div style="margin-left: 3em;"><a href="#toc8">3.
+                                                                    当你给出评论时，你天然就允诺了会仔细考虑自己说出的话。</a></div>
+                                                            <div style="margin-left: 2em;"><a href="#toc9">建议和规定</a>
+                                                            </div>
+                                                            <div style="margin-left: 3em;"><a href="#toc10">1.
+                                                                    不要恶意评分，这会在被适当判断后受到处分。</a></div>
+                                                            <div style="margin-left: 3em;"><a href="#toc11">2.
+                                                                    攻击作者的行为是令人不齿的，并且会招致严厉的处分。</a></div>
+                                                            <div style="margin-left: 3em;"><a href="#toc12">3.
+                                                                    你没有必要表现得非常刻薄，这不会使你显得更加高明。</a></div>
+                                                            <div style="margin-left: 3em;"><a href="#toc13">4.
+                                                                    面对草稿和正式文章时，都要认真对待自己的评价。</a></div>
+                                                            <div style="margin-left: 1em;"><a href="#toc14">面对评价</a>
+                                                            </div>
+                                                            <div style="margin-left: 2em;"><a href="#toc15">原则</a></div>
+                                                            <div style="margin-left: 3em;"><a href="#toc16">1.
+                                                                    友善地面对并不违反规定的评价。</a></div>
+                                                            <div style="margin-left: 3em;"><a href="#toc17">2.
+                                                                    学会采取站规的武器，抵抗违规评价。</a></div>
+                                                            <div style="margin-left: 3em;"><a href="#toc18">3.
+                                                                    永远记得主动寻求帮助，也不必担心受到嘲讽。</a></div>
+                                                            <div style="margin-left: 2em;"><a href="#toc19">建议和规定</a>
+                                                            </div>
+                                                            <div style="margin-left: 1em;"><a href="#toc20">其他评价场景</a>
+                                                            </div>
+                                                            <div style="margin-left: 2em;"><a
+                                                                    href="#toc21">针对站内翻译的评价指导</a></div>
+                                                            <div style="margin-left: 2em;"><a
+                                                                    href="#toc22">针对站外后室作品的评价指导</a></div>
+                                                            <div style="margin-left: 3em;"><a href="#toc23">1.
+                                                                    少觉得自己加入了后室中文维基就高人一等，可以指手画脚。</a></div>
+                                                            <div style="margin-left: 3em;"><a href="#toc24">2.
+                                                                    不建议参与“反小鬼”“反营销号”的活动，要客观评价作品。</a></div>
+                                                            <div style="margin-left: 3em;"><a href="#toc25">3.
+                                                                    学会用科普和帮助的态度在站外自处。</a></div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <hr>
+                                    <div class="style-block">
+                                        <h1 id="toc0"><span>基本问题</span></h1>
+                                        <h2 id="toc1"><span>本指导是一种建议，还是一种规范？</span></h2>
+                                        <p>请注意，遵守本守则所提出的各种评价指南和面对评价的建议并不是强制的，但是不违背本守则所提出的各种评价和面对评价的底线是强制的<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</p>
+                                        <h2 id="toc2"><span>本指导所规定的评价，具体是指什么？</span></h2>
+                                        <p>评价是对事物的判断和分析<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。在本站，<strong>表达评价</strong>这一行为，通常是具体指评分和评论这两个途径所带来的分数呈现和讨论区新帖观点呈现。特定的页面，例如<tt>解密</tt>和<tt>文章</tt>（特别是一些<tt>访谈</tt>）页面，其中可能包含该文章作者/受访者对另一篇文章的评价；然而应注意，这些评价只是某一文章的附属物，并不服务于评价的目的，且这些评价若失当，含有评价的文章将会相应地得到差评，因此并不需要受到本守则的规范和约束。
+                                        </p>
+                                        <h2 id="toc3"><span>说了这么多，那本指导到底规范和约束什么评价？</span></h2>
+                                        <p>简而言之，本指导主要规范和约束的是对原创作品（包括文字性的和艺术作品）的评分行为和评论行为<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。翻译作品的评分只具有参考意义，而其评论实质上分为对原文质量的评论和对翻译质量的评论两种。尽管我们鼓励这些评价也参考评价守则，但不是一种强制性要求，职员在实践中会根据具体情况判断它们是否违规，文末会顺便提到这些。在文章最后，还会给出站外后室作品评价的一点补充建议。
+                                        </p>
+                                    </div>
+                                    <div class="style-block">
+                                        <h1 id="toc4"><span>给予评价</span></h1>
+                                        <h2 id="toc5"><span>原则</span></h2>
+                                        <h3 id="toc6"><span>1. 你的所有评价应当是针对作品本身进行的<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</span></h3>
+                                        <p>作品本身，就是该作品所对应的页面内容、其样式呈现、其列表元素（若有）及其所有其他附属内容的总和<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。在评分时，明智的评分者会根据全文的具体内容给出一个综合的印象分，并最后作出“+1”、“-1”或什么也不投的决定。在评论时，评论者则应该根据自己的评价偏好，尽量以严谨的语句点评文章。
+                                        </p>
+                                        <p>值得注意的是，有一些因素是否算是作品本身的考量仍然有争议。这些充其量只算是评价者的个人喜好<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。比如，作者的文风是否有模仿某位作家的痕迹？作者在写作时采用的单位制是否符合我的偏好？作者采取了Pride徽标<sup
+                                                class="footnoteref"><a id="footnoteref-2" href="javascript:;"
+                                                    class="footnoteref"
+                                                    onclick="WIKIDOT.page.utils.scrollToReference('footnote-2')">2</a></sup>，我是否应支持这点？不一而足。评分者可以将这些内容作为评分时的参考因素。评论者可以考虑并表达这些态度在自己的评论中，但不得因此刻意引发争执。
+                                        </p>
+                                        <h3 id="toc7"><span>2. 当你给出评分时，你不需要解释任何理由<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</span></h3>
+                                        <p>要说明白这点似乎有点困难，但我想试一试。这么说吧，如果没有站务发职员帖，你就没必要回应让你解释自己评分的请求。而站务只会在怀疑你进行恶意评分时发这样的职员帖，因此只要你采取问心无愧的评分标准并严格执行它，事实上并没有什么好担心的。
+                                        </p>
+                                        <h3 id="toc8"><span>3. 当你给出评论时，你天然就允诺了会仔细考虑自己说出的话。</span></h3>
+                                        <p>即使是只评论一句“这让我想起了我祖母的围巾”，你也是在表达一个态度或者想法。评论分为<strong>非规范/评述性评论</strong>和<strong>规范/评述性评论</strong>。前者是一些和文章有关联的话，或者只是针对文章说一句“好”或“不好”，只要不是灌水，这种评论是可以接受的。后者则是针对文章比较详细的评论，或针对文章提出改进的建议，你要说出文章好在哪里或不好在哪里，或是说出文章该如何改进才能变得更好。
+                                        </p>
+                                        <p>然而，无论是不是规范/评述性评论，言语就像泼出去的水，尽管你总可以编辑自己的评论（除非有职员锁帖），但历史记录是对所有人公开展示的<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。至少要在发言前斟酌自己的言论。
+                                        </p>
+                                        <h2 id="toc9"><span>建议和规定</span></h2>
+                                        <h3 id="toc10"><span>1. 不要恶意评分，这会在被适当判断后受到处分<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</span></h3>
+                                        <p>站务可能在以下情形怀疑评分者采取了恶意评分（特别是差评）行为：</p>
+                                        <ul>
+                                            <li>评分者集中差评了一个时期的/一个列表的连续一段/具有一定规律的编号或url的一系列/同一作者的全部或绝大多数文章；</li>
+                                            <li>评分者恰同某人发生矛盾，随即前去差评其文章；</li>
+                                            <li>评分者在讨论区说明了蹩脚的评论理由，以至于理智的读者有理由怀疑其评分意图不良，或者并未基于对文章本身或其附属元素进行评分。</li>
+                                        </ul>
+                                        <p>然而，上述三者并不绝对能导出“此评分为恶意评分”这一结论<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。由于恶意评分这种事并不好判定，在判定时难免会掺杂站务审核时的个人倾向，这是无法避免的。在特定情形下，站务不排除（尽管从未实践，也没有计划实践）会通过组织特定的非职员（例如在站内有威望的评价者或作者，或者随机抽取的一些成员）进行投票，乃至发起公共投票，来决定影响特别重大的评分质疑的最终决定和处理方式。站务承诺尽力保证评分机制及恶意评分的判定机制是公平的。
+                                        </p>
+                                        <h3 id="toc11"><span>2. 攻击作者的行为是令人不齿的，并且会招致严厉的处分<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</span></h3>
+                                        <p>说“作者的文笔还很稚嫩，要再练习”当然可以，但要是你非得因为文章质量把作者贬成“小学生”“混蛋”“废柴”，你就是在递交一份退站申请。职员会根据攻击作者的具体言论和行为，对作出这种不当举动的成员予以从提醒至封禁的处分，这点请参考站规中的有关规定。
+                                        </p>
+                                        <h3 id="toc12"><span>3. 你没有必要表现得非常刻薄，这不会使你显得更加高明。</span></h3>
+                                        <p>刻薄的评论会根据实际情况处理或不处理<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。职员将会分辨你的言论到底只是说得过分直率了些，还是就是故意讲得非常难听，用自己还不知道存不存在的写作经验欺负别人。
+                                        </p>
+                                        <p>“这文章很多地方都没有打磨清楚，许多用语还未推敲，作者要好好地去读遍有参考价值的各种文章”听着有些冷冰冰的，但算不上刻薄；但要是讲出“这文章一无是处，从第一段到最后一段完全没有任何闪光点，如果没有天分就放弃写作吧”这样的话，你该好好反思自己说话到底有没有分寸。职员将根据言语的刻薄程度以及是否掺杂了对作者的攻击，予以这些评论者提醒至封禁的处分。
+                                        </p>
+                                        <h3 id="toc13"><span>4. 面对草稿和正式文章时，都要认真对待自己的评价<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</span></h3>
+                                        <p>尽管有些人会觉得已发布的文章并不需要太多规范性的建议，但是除了有些竞赛会给出具体的规定以外，大多数文章发布之后还可多次修改，以求尽善。不管是针对讨论区里的草稿，还是针对已经发出的正式文章，都要一视同仁地认真对待，不要讲出没有考虑好的话。
+                                        </p>
+                                    </div>
+                                    <div class="style-block">
+                                        <h1 id="toc14"><span>面对评价</span></h1>
+                                        <h2 id="toc15"><span>原则</span></h2>
+                                        <h3 id="toc16"><span>1. 友善地面对并不违反规定的评价。</span></h3>
+                                        <p>原创作者（当然还有译者、艺术家以及活跃的批评家等等）是本站的宝贵财富，因此我们并不希望他们受到伤害<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。然而，一篇原创文章发出来，除非它尽善尽美或无药可救（后者通常是不可能的），总会面对各种各样的评价。好评当然是我们希望看到的，但读者给出差评也完全是他们的权利，并且很多时候差评有助于使文章变得更好。你当然没有必要因为受到-1的评分而完全否定自己，或者完全执行评论者给出的每条建议，但是请相信多数评价者给出负面评价的初衷是为了帮助和完善。并不违反规定的评价，无论是好是坏，也无论其见地高低，都值得被友善地对待。如果你不完全认同，跟帖追问或私讯细聊只要没有骚扰的嫌疑，就都是可以接受的。
+                                        </p>
+                                        <h3 id="toc17"><span>2. 学会采取站规的武器，抵抗违规评价。</span></h3>
+                                        <p>批评的站规永远不能取代站规的批评，必要的时候请向站务检举违规的评价。请注意帮助站务维护站点的风气并不是什么恶劣或值得恐惧的行为，站务会根据实际情况，按照本指导和站规的有关内容，对违规评价者作出处分。如果违规评价者作出打击报复的行为，采取群体性差评等方式刷低你文章的分数，站务保留维护页面并取消其评分模块的手段，因此不必担心。
+                                        </p>
+                                        <h3 id="toc18"><span>3. 永远记得主动寻求帮助，也不必担心受到嘲讽。</span></h3>
+                                        <p>你在站点内值得信任的朋友和活跃用户，以及全体站务，都会在力所能及的范围内给予你帮助<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。我们会尽力确保所有的评价都是出于帮助的第一目的，只要你用友善且乐于合作的态度回应批评，我们很乐于给出写作上的具体建议。
+                                        </p>
+                                        <p>如果你感到写作时遇到的差评给你带来了太大的心理压力，请永远记住：写作的首要目的是娱乐自身<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</p>
+                                        <p>没有人是圣人，闻过则喜是一种理想的精神状态，但并非每个人都非得做到这种地步才算一个合格的写作者。在维基上发表文章是个“用爱发电”的过程，大多数人只是单纯地喜爱写作的行为，或喜爱看到自己的作品得到他人的肯定。请永远记得在这种时候采取各种方式放松自己，虽然不能轻率地发表文章，但也没必要看得太重。在必要的时候，请咨询站务或者你信得过的其他用户，让他们提供一些你该怎么做的建议。不要迟疑或担心是否不该向多名用户提出帮助的请求，也不必因为某人回信息不及时就焦虑自己是否被讨厌了，有些时候你寻求帮助的对象只是太忙，这种时候不要有心理压力，再寻求其他人的帮助也是完全OK的。
+                                        </p>
+                                        <h2 id="toc19"><span>建议和规定</span></h2>
+                                        <p>面对批评的行为并没有那么多的细分条目可以写，但请注意，消极对待批评的行为将不会受到鼓励<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。完全无视和不理会你不喜欢的批评只是没礼貌，但是如果你采取完全摆烂和躺平的态度回复它们，站务会根据具体的行为使用提醒至移除成员资格的处分手段予以惩戒。
+                                        </p>
+                                    </div>
+                                    <div class="style-block">
+                                        <h1 id="toc20"><span>其他评价场景</span></h1>
+                                        <h2 id="toc21"><span>针对站内翻译的评价指导</span></h2>
+                                        <p>翻译是个很复杂的话题，有些人喜欢忠实原文，有些人喜欢加入一点个人风味<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。当然，总体的原则是尽量做到信、达、雅，所有对翻译质量的评价基本都应遵循这个原则。特别需要说明的是翻译的评分并没有特别的意义，它们也没有低分删除机制，而是由站务和指定的一些成员予以评估。
+                                        </p>
+                                        <p>别因为原文质量差而去给翻译-1！这么做很伤人<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。正确的做法是在讨论区留下你对原文的态度，把翻译质量和原文质量分开。如果你会讲这篇文章对应的源语言，也可以到原站点申请成员资格并留下你的评价。注意不要在其他站点耍厨（troll）和乱讲话，别败坏中文使用者的总体形象，否则在中文站点你也会受到合适的处分。
+                                        </p>
+                                        <h2 id="toc22"><span>针对站外后室作品的评价指导</span></h2>
+                                        <p>这里主要是说Fandom以外的站外后室作品。例如，在哔哩哔哩弹幕视频网、抖音、贴吧等地，常会有后室题材的爱好者撰写文章或创作艺术作品<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。对此，我们有一点需要特别嘱咐，那就是<strong>把他们当作和维基用户平等的爱好者，把他们的作品当作和维基作品平等的作品</strong>。在这类站外场所作出不当批评行为以至于有损本站形象或者被人举报，将可能被站务予以适当的处分。
+                                        </p>
+                                        <h3 id="toc23"><span>1. 少觉得自己加入了后室中文维基就高人一等，可以指手画脚<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</span></h3>
+                                        <p>你可以在给出批评时亮明自己作为后室中文维基成员的身份，但这应当仅仅是为了体现你对后室作品有一定的阅历或写作经验，而不是为了压别人一头、呛得别人没话说。不同的平台对于后室作品有不同的评价标准，这是相当正常的，你应当入乡随俗。你可以拿你品评维基作品的态度和标准作为一个参考，但别强加给别人。指手画脚，说别人这也不好那也挑得出刺，这种行为在哪里都会招致厌恶。
+                                        </p>
+                                        <h3 id="toc24"><span>2. 不建议参与“反小鬼”“反营销号”的活动，要客观评价作品。</span></h3>
+                                        <p>事先把别人划分成各种标签是纳粹会做的事<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。看别人的作品“感觉像引流来的小鬼”“感觉像营销号”就肆意地贴上各种标签，声称要肃清“后室圈”的风气，因此对这些作品吹毛求疵，号召大家群起而攻之，这种党同伐异的行为幼稚而且无意义。说得简单些，就是不要给作品的作者贴标签，对各种作品一视同仁地给予评价才对。
+                                        </p>
+                                        <h3 id="toc25"><span>3. 学会用科普和帮助的态度在站外自处。</span></h3>
+                                        <p>站外的人未必有和你一样的对后室的认识和了解程度，或者他们喜欢的后室种类及设定和我们完全不同<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。首先先清楚对方是真的不了解还是只是持有不同的偏好，之后再针对他们的作品和评价给予可能需要的适当纠正。对你觉得有潜力的作者和评价者，可以吸纳他们来后室中文维基进一步发展，但别强求。
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="footnotes-footer">
+                                    <div class="title">脚注</div>
+                                    <div class="footnote-footer" id="footnote-1"><a href="javascript:;"
+                                            onclick="WIKIDOT.page.utils.scrollToReference('footnoteref-1')">1</a>.
+                                        这也就使得本指导不再仅仅是指导，而具有补充和完善站规的意义。</div>
+                                    <div class="footnote-footer" id="footnote-2"><a href="javascript:;"
+                                            onclick="WIKIDOT.page.utils.scrollToReference('footnoteref-2')">2</a>.
+                                        Pride徽标，即在后室标志或其他标志上蒙版覆盖一个性少数骄傲旗帜配色，或在后室相关标志上加入性少数骄傲元素<span class="randomCode" style="display: none;">(暗号: ${randomCode})</span>。</div>
+                                </div>
+                            </div>
+                            <div class="page-tags">
+                                <span>
+                                    <a href="/system:page-tags/tag/%E5%8E%9F%E5%88%9B#pages">原创</a><a
+                                        href="/system:page-tags/tag/%E5%BF%85%E8%AF%BB#pages">必读</a><a
+                                        href="/system:page-tags/tag/%E6%8C%87%E5%AF%BC#pages">指导</a>
+                                </span>
+                            </div>
+                            <div id="page-info-break"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<style>
+    /* 生存难度容器居中 */
+    .sd-container {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 调整内容包装器 */
+    #content-wrap {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+</style>
+
+<script>
+    // 实现随机显示暗号功能
+    document.addEventListener('DOMContentLoaded', function () {
+        // 随机生成0~3之间的数字
+        const randomNum = Math.floor(Math.random() * 4); // 0, 1, 2, 3
+
+        // 获取所有class为randomCode的span标签
+        const randomCodeSpans = document.querySelectorAll('span.randomCode');
+
+        // 获取id为asdfghjkl的div
+        const asdfghjklDiv = document.getElementById('asdfghjkl');
+
+        // 如果randomNum为0，显示asdfghjkl div
+        if (randomNum === 0) {
+            if (asdfghjklDiv) {
+                asdfghjklDiv.style.display = 'block';
+            }
+            // 隐藏所有randomCode span
+            randomCodeSpans.forEach(span => {
+                span.style.display = 'none';
+            });
+        } else {
+            // 隐藏asdfghjkl div
+            if (asdfghjklDiv) {
+                asdfghjklDiv.style.display = 'none';
+            }
+
+            // 读取暗号文件
+            fetch('../暗号')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('无法读取暗号文件');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    // 用\n分割暗号
+                    const codeWords = data.trim().split('\n');
+
+                    // 随机选择randomNum个暗号
+                    const selectedCodeWords = [];
+                    const codeWordsCopy = [...codeWords];
+
+                    for (let i = 0; i < randomNum && codeWordsCopy.length > 0; i++) {
+                        const randomIndex = Math.floor(Math.random() * codeWordsCopy.length);
+                        selectedCodeWords.push(codeWordsCopy.splice(randomIndex, 1)[0]);
+                    }
+
+                    // 随机选择randomNum个span标签
+                    const selectedSpans = [];
+                    const spansCopy = Array.from(randomCodeSpans);
+
+                    for (let i = 0; i < randomNum && spansCopy.length > 0; i++) {
+                        const randomIndex = Math.floor(Math.random() * spansCopy.length);
+                        selectedSpans.push(spansCopy.splice(randomIndex, 1)[0]);
+                    }
+
+                    // 显示选中的span并填充暗号
+                    selectedSpans.forEach((span, index) => {
+                        if (index < selectedCodeWords.length) {
+                            // 替换${randomCode}为实际的暗号
+                            span.innerHTML = span.innerHTML.replace('${randomCode}', selectedCodeWords[index]);
+                            span.style.display = 'inline';
+                        }
+                    });
+
+                    // 隐藏未选中的span
+                    spansCopy.forEach(span => {
+                        span.style.display = 'none';
+                    });
+                })
+                .catch(error => {
+                    console.error('读取暗号文件失败:', error);
+                    // 使用默认暗号
+                    const defaultCodeWords = ['安全', '稳定', '规则', '遵守', '文明'];
+
+                    // 随机选择randomNum个默认暗号
+                    const selectedCodeWords = [];
+                    const codeWordsCopy = [...defaultCodeWords];
+
+                    for (let i = 0; i < randomNum && codeWordsCopy.length > 0; i++) {
+                        const randomIndex = Math.floor(Math.random() * codeWordsCopy.length);
+                        selectedCodeWords.push(codeWordsCopy.splice(randomIndex, 1)[0]);
+                    }
+
+                    // 随机选择randomNum个span标签
+                    const selectedSpans = [];
+                    const spansCopy = Array.from(randomCodeSpans);
+
+                    for (let i = 0; i < randomNum && spansCopy.length > 0; i++) {
+                        const randomIndex = Math.floor(Math.random() * spansCopy.length);
+                        selectedSpans.push(spansCopy.splice(randomIndex, 1)[0]);
+                    }
+
+                    // 显示选中的span并填充暗号
+                    selectedSpans.forEach((span, index) => {
+                        if (index < selectedCodeWords.length) {
+                            // 替换${randomCode}为实际的暗号
+                            span.innerHTML = span.innerHTML.replace('${randomCode}', selectedCodeWords[index]);
+                            span.style.display = 'inline';
+                        }
+                    });
+
+                    // 隐藏未选中的span
+                    spansCopy.forEach(span => {
+                        span.style.display = 'none';
+                    });
+                });
+        }
+    });
+</script>
+
+</html>

@@ -1,0 +1,743 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索 - ZIYIT STUDIO</title>
+    <meta name="description" content="ZIYIT STUDIO 搜索中心：快速使用必应搜索、微软机翻，浏览精选推荐网站与在线工具导航。">
+    <meta name="keywords" content="ZIYIT,搜索,必应,导航,在线工具,网站导航">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/search.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ZIYIT STUDIO">
+    <meta property="og:title" content="搜索 - ZIYIT STUDIO">
+    <meta property="og:description" content="ZIYIT STUDIO 搜索中心：快速搜索、微软机翻与精选网站导航。">
+    <meta property="og:url" content="https://ziyit-hacker.github.io/search.html">
+    <meta property="og:image" content="https://ziyit-hacker.github.io/assets/ziyit.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="搜索 - ZIYIT STUDIO">
+    <meta name="twitter:description" content="ZIYIT STUDIO 搜索中心：快速搜索、微软机翻与精选网站导航。">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "搜索 - ZIYIT STUDIO",
+        "url": "https://ziyit-hacker.github.io/search.html",
+        "description": "ZIYIT STUDIO 搜索中心：快速搜索、微软机翻与精选网站导航。"
+    }
+    </script>
+    <link rel="icon" href="./assets/ziyit.png" type="image/x-icon">
+    <script src="./assets/f12check.js"></script>
+    <script src="./assets/blacklist.js"></script>
+    <script src="./assets/ziyit_api.js"></script>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0;
+            list-style: none;
+        }
+
+        a {
+            text-decoration: none;
+            color: #66e656;
+        }
+
+        p {
+            color: black;
+        }
+
+        ul li {
+            display: inline-block;
+            line-height: 35px;
+        }
+
+        li a {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        li p {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .bid {
+            color: #f25767;
+        }
+
+        .tit {
+            color: black;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 5px 0;
+        }
+
+        .line {
+            width: 1px;
+            height: 12px;
+            background-color: #f3a707;
+        }
+
+        a:hover {
+            color: #ff8000;
+        }
+
+        h1 {
+            width: 100%;
+            background-color: var(--ziyit-primary-light);
+            color: var(--ziyit-text-primary);
+            text-align: center;
+            font-size: 50px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .slider {
+            width: 560px;
+            height: 400px;
+            overflow: hidden;
+        }
+
+        .slider-wrapper {
+            width: 100%;
+            height: 320px;
+        }
+
+        .slider-wrapper img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .slider-footer {
+            height: 80px;
+            background-color: rgb(100, 67, 68);
+            padding: 12px 12px 0 12px;
+            position: relative;
+        }
+
+        .slider-footer .toggle {
+            position: absolute;
+            right: 0;
+            top: 12px;
+            display: flex;
+        }
+
+        .slider-footer .toggle button {
+            margin-right: 12px;
+            width: 28px;
+            height: 28px;
+            appearance: none;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .slider-footer .toggle button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .slider-footer p {
+            margin: 0;
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .slider-indicator {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .slider-indicator li {
+            width: 8px;
+            height: 8px;
+            margin: 4px;
+            border-radius: 50%;
+            background: #fff;
+            opacity: 0.4;
+            cursor: pointer;
+        }
+
+        .slider-indicator li.active {
+            width: 12px;
+            height: 12px;
+            opacity: 1;
+        }
+
+        footer {
+            transition: background-color 0.5s ease;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+        
+        .visible {
+            display: inline-block !important;
+        }
+
+        * {
+            cursor: default !important;
+        }
+    </style>
+    <style>
+        @media (max-width: 768px) {
+            .service-grid {
+                flex-direction: column;
+            }
+
+            .service-grid>div {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                text-align: center;
+            }
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="./assets/ziyit-theme.css">
+    <style>
+        /* ===== 站内/全网搜索模式切换 ===== */
+        .search-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 24px auto 14px;
+            max-width: 600px;
+        }
+
+        .search-tab {
+            padding: 8px 24px;
+            border: 1px solid var(--ziyit-border);
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            border-radius: 100px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all .2s;
+        }
+
+        .search-tab:hover {
+            border-color: var(--ziyit-primary);
+            color: var(--ziyit-primary);
+        }
+
+        .search-tab.active {
+            background: var(--ziyit-primary);
+            color: #fff;
+            border-color: var(--ziyit-primary);
+        }
+
+        /* ===== 站内搜索结果 ===== */
+        #site-results {
+            max-width: 800px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        .site-result {
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            transition: border-color .2s;
+        }
+
+        .site-result:hover {
+            border-color: var(--ziyit-primary);
+        }
+
+        .sr-title {
+            color: var(--ziyit-primary);
+            font-size: 17px;
+            font-weight: 600;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .sr-title:hover {
+            color: var(--ziyit-primary-dark);
+        }
+
+        .sr-url {
+            color: var(--ziyit-text-disabled);
+            font-size: 12px;
+            word-break: break-all;
+        }
+
+        .sr-snippet {
+            color: var(--ziyit-text-secondary);
+            font-size: 13px;
+            margin-top: 8px;
+            line-height: 1.7;
+        }
+
+        .sr-snippet mark {
+            background: var(--ziyit-primary-light);
+            color: var(--ziyit-text-primary);
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+
+        .site-result-count {
+            color: var(--ziyit-text-secondary);
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .site-result-empty {
+            text-align: center;
+            color: var(--ziyit-text-secondary);
+            padding: 40px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>搜索</h1>
+    <hr>
+    <script>
+        // 获取cookie值的函数
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+            return null;
+        }
+
+        // 检查用户权限
+        function checkUserPermission() {
+            const authToken = getCookie('authToken') || localStorage.getItem('authToken');
+            if (!authToken) {
+                alert('请先登录以访问该页面');
+                window.location.href = './';
+                return;
+            }
+        }
+
+        // 页面加载时检查权限
+        document.addEventListener('DOMContentLoaded', checkUserPermission);
+    </script>
+    <hr>
+    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item" data-role="all"><a href='https://cn.bing.com/'>必应搜索</a></li>
+                <li class="nav-item" data-role="admin"><a href='https://cn.bing.com/translator'>微软机翻</a></li>
+                <li class="nav-item" data-role="all"><a href="https://www.microsoft.com/zh-cn/">微软官网</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="search-tabs">
+        <button type="button" class="search-tab active" data-mode="site">站内搜索</button>
+        <button type="button" class="search-tab" data-mode="web">全网搜索</button>
+    </div>
+
+    <!-- 站内搜索面板 -->
+    <div id="site-search-panel" class="search-panel" style="text-align: center; margin: 0 auto; max-width: 600px;">
+        <form id="site-search-form" style="display: flex;" autocomplete="off">
+            <label for="site-search-input" style="font-size: 24px; color: #0078d4"><strong>站内搜索: </strong></label>
+            <input type="text" id="site-search-input" placeholder="搜索站内页面与内容…"
+                style="flex: 1; padding: 10px; font-size: 16px; border: 1px solid #0078d4; border-radius: 100px 0 0 100px; outline: none; background: var(--ziyit-bg-card); color: var(--ziyit-text-primary);">
+            <button type="submit" id="site-search-button"
+                style="padding: 10px 15px; background-color: #0078d4; color: white; border: none; border-radius: 0 100px 100px 0; cursor: pointer;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"
+                    style="vertical-align: middle;">
+                    <path
+                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                </svg>
+            </button>
+        </form>
+    </div>
+
+    <!-- 全网搜索面板（必应） -->
+    <div id="web-search-panel" class="search-panel hidden" style="text-align: center; margin: 0 auto; max-width: 600px;">
+        <form id="web-search-form" action="https://cn.bing.com/search" method="get" style="display: flex;" autocomplete="off">
+            <label for="web-search-input" style="font-size: 24px; color: #0078d4"><strong>快速搜索: </strong></label>
+            <input type="text" id="web-search-input" name="q" placeholder="使用必应搜索全网…"
+                style="flex: 1; padding: 10px; font-size: 16px; border: 1px solid #0078d4; border-radius: 100px 0 0 100px; outline: none; background: var(--ziyit-bg-card); color: var(--ziyit-text-primary);">
+            <button type="submit" id="web-search-button"
+                style="padding: 10px 15px; background-color: #0078d4; color: white; border: none; border-radius: 0 100px 100px 0; cursor: pointer;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"
+                    style="vertical-align: middle;">
+                    <path
+                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                </svg>
+            </button>
+            <input type="hidden" name="form" value="ANNTH1">
+            <input type="hidden" name="refig" value="6890ac27dc5a4a31b41d8cc9a3987691">
+            <input type="hidden" name="pc" value="CNNDDB">
+        </form>
+    </div>
+
+    <div id="site-results"></div>
+
+    <div style="text-align: center; margin: 20px auto; max-width: 800px;">
+        <h3
+            style="color: var(--ziyit-text-primary); font-size: 20px; margin-bottom: 20px;">
+            推荐网站</h3>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
+            <div
+                style="background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); border-radius: 8px; padding: 15px; width: 300px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <a href="https://www.bilibili.com"
+                    style="color: #0078d4; text-decoration: none; font-weight: bold;">哔哩哔哩</a>
+                <p style="margin-top: 5px; font-size: 14px; color: var(--ziyit-text-secondary);">
+                    用途：视频分享平台<br>
+                    优点：内容丰富，社区活跃<br>
+                    缺点：部分内容需要大会员<br>
+                    版权：© 2009-2023 bilibili Inc.
+                </p>
+            </div>
+
+            <div
+                style="background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); border-radius: 8px; padding: 15px; width: 300px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <a href="https://study.dgjy.net"
+                    style="color: #0078d4; text-decoration: none; font-weight: bold;">莞易学</a>
+                <p style="margin-top: 5px; font-size: 14px; color: var(--ziyit-text-secondary);">
+                    用途：东莞教育资源平台<br>
+                    优点：本地化教育资源丰富<br>
+                    缺点：没有完善<br>
+                    版权：© 东莞市教育信息中心 © 佰科科技
+                </p>
+            </div>
+
+            <div
+                style="background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); border-radius: 8px; padding: 15px; width: 300px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <a href="https://www.vmware.com"
+                    style="color: #0078d4; text-decoration: none; font-weight: bold;">VMware</a>
+                <p style="margin-top: 5px; font-size: 14px; color: var(--ziyit-text-secondary);">
+                    用途：虚拟化软件提供商<br>
+                    优点：企业级虚拟化解决方案<br>
+                    缺点：商业软件需要付费<br>
+                    版权：© 2023 VMware, Inc.
+                </p>
+            </div>
+
+            <div
+                style="background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); border-radius: 8px; padding: 15px; width: 300px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <a href="https://www.ico51.cn"
+                    style="color: #0078d4; text-decoration: none; font-weight: bold;">在线生成透明icon</a>
+                <p style="margin-top: 5px; font-size: 14px; color: var(--ziyit-text-secondary);">
+                    用途：在线图标生成工具<br>
+                    优点：简单易用，无需安装<br>
+                    缺点：功能相对基础<br>
+                    版权：© 2015-2023 ico51.cn
+                </p>
+            </div>
+
+            <div
+                style="background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); border-radius: 8px; padding: 15px; width: 300px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <a href="https://www.decompiler.com"
+                    style="color: #0078d4; text-decoration: none; font-weight: bold;">在线反编译</a>
+                <p style="margin-top: 5px; font-size: 14px; color: var(--ziyit-text-secondary);">
+                    用途：在线反编译工具<br>
+                    优点：支持多种格式<br>
+                    缺点：可能存在安全风险<br>
+                    版权：© decompiler.com
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <p class="tit">&copy;2026 ZIYIT <strong>版权所有，侵权必究</strong></p>
+
+    <script>
+        async function checkBlacklist(username) {
+            try {
+                const response = await fetch('./hmd.txt');
+                const text = await response.text();
+                const lines = text.split('\n');
+                return lines.some(line => {
+                    const trimmed = line.trim();
+                    if (!trimmed) return false;
+                    const parts = trimmed.split('\\');
+                    const dataPart = parts[0].trim().split('-');
+                    return dataPart.length >= 2 && dataPart[1] === username;
+                });
+            } catch (error) {
+                console.error('检查黑名单出错:', error);
+                return false;
+            }
+        }
+
+        function addBlacklistNotice() {
+            const notice = document.createElement('div');
+            notice.style.position = 'fixed';
+            notice.style.bottom = '0';
+            notice.style.left = '0';
+            notice.style.width = '100%';
+            notice.style.backgroundColor = 'white';
+            notice.style.borderRadius = '8px 8px 0 0';
+            notice.style.border = '3px solid blue';
+            notice.style.color = 'red';
+            notice.style.fontSize = '50px';
+            notice.style.textAlign = 'center';
+            notice.style.padding = '10px';
+            notice.style.zIndex = '1000';
+
+            const noticeContent = document.createElement('div');
+            noticeContent.innerHTML = '你无法正常使用<span style="font-size: 15px;">您的帐号因种种原因被封禁</span><br><span style="font-size: 17px;">申诉账号问题请联系邮箱ziyitstudio@qq.com</span>';
+            notice.appendChild(noticeContent);
+
+            document.body.appendChild(notice);
+        }
+
+        async function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const slider = document.querySelector('.slider');
+            const lines = document.querySelectorAll('.line');
+
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(item => item.style.display = 'none');
+                lines.forEach(line => line.style.display = 'none');
+                return;
+            }
+
+            const username = await ZIYIT_API.currentUsername();
+            const isBlacklisted = await checkBlacklist(username);
+
+            if (isBlacklisted) {
+                document.querySelectorAll('#navMenu li').forEach(item => {
+                    const isVirusDb = item.querySelector('a[href=".\\move\\mod"]');
+                    item.style.display = isVirusDb ? 'inline-block' : 'none';
+                });
+                if (slider) slider.style.display = 'none';
+                document.querySelectorAll('footer').forEach(footer => footer.style.display = 'none');
+                const product = document.getElementById('product');
+                if (product) product.style.display = 'none';
+
+                addBlacklistNotice();
+                return;
+            }
+
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const intervalId = setInterval(() => {
+                    navItems.forEach(item => {
+                        const role = item.getAttribute('data-role');
+                        if (role === 'all' ||
+                            (isVip && role === 'admin') ||
+                            (!isVip && role === 'user')) {
+                            item.classList.add('visible');
+                            item.classList.remove('hidden');
+                        } else {
+                            item.classList.add('hidden');
+                            item.classList.remove('visible');
+                        }
+                    });
+                }, 250);
+            }).catch(function () {
+                navItems.forEach(item => item.style.display = 'none');
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+
+    <script>
+        document.getElementById('web-search-form').addEventListener('submit', function (e) {
+            const searchInput = document.getElementById('web-search-input');
+            if (searchInput.value.trim() === '') {
+                alert('搜索的消息为空。');
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+    <script src="./assets/site-index.js"></script>
+    <script>
+        /* ===== 站内搜索（DESIGN.md §4.x）：索引全站 HTML 页面并全文匹配 ===== */
+        // 页面清单 SITE_PAGES 由 build_site_index.py 自动扫描生成（assets/site-index.js）
+        var SITE_INDEX = null;
+        var SITE_INDEXING = null;
+        // 并发抓取数（浏览器同域并发限制约 6，取 10 兼顾速度与稳定）
+        var INDEX_CONCURRENCY = 10;
+        var INDEX_TOTAL = (window.SITE_PAGES || []).length;
+
+        function updateIndexProgress(done) {
+            var el = document.getElementById('site-index-progress');
+            if (el) el.textContent = '正在索引 ' + done + '/' + INDEX_TOTAL + ' 页…';
+        }
+
+        // 抓取并解析单个页面；失败返回 null（跳过）。
+        // 过滤 <script>/<style> 等非正文元素，避免搜索到 JS/CSS 代码、图标文字等；
+        // 并对容错解析可能残留的 CSS 颜色代码做二次清洗
+        function fetchPage(url) {
+            return fetch(url).then(function (r) { return r.text(); }).then(function (html) {
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                var title = (doc.querySelector('title') || {}).textContent || '';
+                doc.querySelectorAll('script, style, noscript, template, svg, canvas, video, audio, iframe').forEach(function (el) {
+                    if (el.parentNode) el.parentNode.removeChild(el);
+                });
+                var text = ((doc.body || {}).textContent || '').replace(/\s+/g, ' ');
+                // 二次清洗：移除 CSS 颜色代码（#hex / rgb() 等），防止解析容错残留
+                text = text
+                    .replace(/#[0-9a-fA-F]{3,8}\b/g, ' ')
+                    .replace(/rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+[^)]*\)/gi, ' ');
+                return { url: url, title: title.replace(/\s+/g, ' ').trim(), text: text };
+            }).catch(function () { return null; });
+        }
+
+        // 构建全站索引：并发分批抓取。构建结果缓存，force=true 才重建
+        function buildIndex(force) {
+            if (force) { SITE_INDEX = null; SITE_INDEXING = null; }
+            if (SITE_INDEX) return Promise.resolve(SITE_INDEX);
+            if (SITE_INDEXING) return SITE_INDEXING;
+            SITE_INDEXING = (function () {
+                var queue = SITE_PAGES.slice();
+                var results = [];
+                function run() {
+                    return new Promise(function (resolve) {
+                        (function next() {
+                            if (!queue.length) return resolve();
+                            var batch = queue.splice(0, INDEX_CONCURRENCY);
+                            Promise.all(batch.map(fetchPage)).then(function (items) {
+                                items.forEach(function (it) { results.push(it); });
+                                updateIndexProgress(results.length);
+                                next();
+                            });
+                        })();
+                    });
+                }
+                return run().then(function () {
+                    SITE_INDEX = results.filter(Boolean);
+                    SITE_INDEXING = null;
+                    updateIndexProgress(results.length);
+                    return SITE_INDEX;
+                });
+            })();
+            return SITE_INDEXING;
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        function highlight(s, q) {
+            var es = escapeHtml(s);
+            var eq = escapeHtml(q);
+            if (!eq) return es;
+            return es.split(eq).join('<mark>' + eq + '</mark>');
+        }
+
+        function searchSite(q) {
+            var low = q.toLowerCase();
+            return SITE_INDEX.map(function (p) {
+                var tLow = p.title.toLowerCase();
+                var bLow = p.text.toLowerCase();
+                var inTitle = tLow.includes(low);
+                var inBody = bLow.includes(low);
+                var score = inTitle ? 2 : (inBody ? 1 : 0);
+                var snippet = '';
+                if (score) {
+                    var idx = bLow.indexOf(low);
+                    if (idx >= 0) {
+                        var start = Math.max(0, idx - 40);
+                        snippet = (start > 0 ? '…' : '') + p.text.slice(start, idx + 60) + '…';
+                    }
+                }
+                return { url: p.url, title: p.title, snippet: snippet, score: score, inBody: inBody };
+            }).filter(function (r) { return r.score > 0; })
+                .sort(function (a, b) { return b.score - a.score; });
+        }
+
+        function renderResults(results, q) {
+            var box = document.getElementById('site-results');
+            if (!results.length) {
+                box.innerHTML = '<div class="site-result-empty">未找到与 "' + escapeHtml(q) + '" 相关的站内内容</div>';
+                return;
+            }
+            var html = '<div class="site-result-count">共找到 ' + results.length + ' 个相关页面</div>';
+            results.forEach(function (r) {
+                // 正文命中时附加定位参数（?zq=），目标页会高亮并滚动到内容位置；
+                // 仅标题命中则直接跳转页面
+                var href = r.url + (r.inBody ? '?zq=' + encodeURIComponent(q) : '');
+                html += '<div class="site-result"><a class="sr-title" href="' + href + '">' + highlight(r.title, q) + '</a>' +
+                    '<span class="sr-url">' + escapeHtml(r.url) + '</span>' +
+                    (r.snippet ? '<p class="sr-snippet">' + highlight(r.snippet, q) + '</p>' : '') +
+                    '</div>';
+            });
+            box.innerHTML = html;
+        }
+
+        // 模式切换：切到全网搜索时清空站内结果，切回时自动重新加载上次站内搜索
+        var lastSiteQuery = '';
+
+        function runSiteSearch(q) {
+            lastSiteQuery = q;
+            var box = document.getElementById('site-results');
+            box.innerHTML = '<div class="ziyit-loading"><div class="ziyit-loader">' +
+                '<div class="loader-title"><img src="./assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>' +
+                '<div class="loader-bar"><div class="loader-fill"></div></div>' +
+                '<div id="site-index-progress" style="margin-top:10px;color:var(--ziyit-text-secondary,#888);font-size:13px;"></div>' +
+                '</div></div>';
+            // 每次搜索都强制重建索引，重新抓取全部页面（不缓存，保证结果最新）
+            buildIndex(true).then(function () {
+                renderResults(searchSite(q), q);
+            });
+        }
+
+        document.querySelectorAll('.search-tab').forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                var mode = tab.getAttribute('data-mode');
+                document.querySelectorAll('.search-tab').forEach(function (t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+                document.getElementById('site-search-panel').classList.toggle('hidden', mode !== 'site');
+                document.getElementById('web-search-panel').classList.toggle('hidden', mode !== 'web');
+                if (mode === 'web') {
+                    document.getElementById('site-results').innerHTML = '';
+                } else if (mode === 'site' && lastSiteQuery) {
+                    runSiteSearch(lastSiteQuery);
+                }
+            });
+        });
+
+        // 站内搜索提交
+        document.getElementById('site-search-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            var q = document.getElementById('site-search-input').value.trim();
+            if (!q) {
+                alert('请输入搜索关键词');
+                return;
+            }
+            runSiteSearch(q);
+        });
+    </script>
+<script src="./assets/ziyit-theme.js"></script>
+</body>
+
+</html>

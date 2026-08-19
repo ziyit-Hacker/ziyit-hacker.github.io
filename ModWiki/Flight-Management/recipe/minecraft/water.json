@@ -1,0 +1,14 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "water",
+    "ingredients": [
+        "flyconfig:ultimate_healthy_nightmare",
+        "flyconfig:what_the_dog_doing"
+    ],
+    "result": {
+        "id": "flyconfig:water",
+        "count": 1
+    },
+    "show_notification": true
+}

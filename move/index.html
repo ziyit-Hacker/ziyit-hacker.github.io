@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>更多工具 - ZIYIT STUDIO</title>
+    <meta name="description" content="ZIYIT STUDIO 更多工具与资源汇总。">
+    <meta name="keywords" content="ZIYIT,工具,资源">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/move/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ZIYIT STUDIO">
+    <meta property="og:title" content="更多工具 - ZIYIT STUDIO">
+    <meta property="og:description" content="ZIYIT STUDIO 更多工具与资源汇总。">
+    <meta property="og:url" content="https://ziyit-hacker.github.io/move/">
+    <meta property="og:image" content="https://ziyit-hacker.github.io/assets/ziyit.png">
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/blacklist.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @media (max-width: 768px) {
+
+            /* 手机端样式 */
+            body {
+                font-size: 16px;
+            }
+
+            div[style*="max-width: 400px"] {
+                width: 90%;
+                margin: 10px auto;
+                padding: 15px;
+            }
+
+            input,
+            select {
+                width: 100%;
+            }
+
+            button {
+                width: 100%;
+                padding: 12px;
+            }
+        }
+    </style>
+    <style>
+        body {
+            background-color: #0b99fa;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+        }
+
+        .product-grid {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .brg {
+            text-align: left;
+        }
+
+        .brg:hover {
+            cursor: crosshair;
+        }
+
+        .cpg:hover {
+            cursor: help;
+        }
+
+        .cpg:active {
+            cursor: wait;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .ceors {
+            background: url(../assets/ziyit_miv.png);
+            width: 970px;
+            height: 142px;
+        }
+
+        h1:hover,
+        h4:hover,
+        h3:hover,
+        p:hover,
+        br:hover {
+            cursor: default;
+        }
+
+        button {
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        * {
+            cursor: default !important;
+        }
+    </style>
+</head>
+
+<body background="../assets/bgl.jpg" style=" background-repeat:no-repeat ;
+        background-size:100% 100%;
+        background-attachment: fixed;">
+    <script>
+        // 检查用户权限
+        function checkUserPermission() {
+            if (!ZIYIT_API.getToken()) {
+                alert('请先登录以访问该页面');
+                window.location.href = './';
+                return;
+            }
+        }
+
+        // 页面加载时检查权限
+        document.addEventListener('DOMContentLoaded', checkUserPermission);
+    </script>
+    <a href="javascript:history.back()">返回</a>
+    <hr class="brg">
+    <h1 id="up">欢迎来到只因更多主页</h1>
+    <h4>我们会提供对你们有帮助的工具，使用商业版需要产品密钥或额外付费，部分为商业VIP使用！</h4>
+    <h3>以下是只因科技提供的产品，请自行查看</h3>
+    <hr class="brg" />
+    <!-- <video crossorigin="anonymous" preload="auto"
+        src="blob:https://www.bilibili.com/e5e94ab6-b01f-446b-b3ba-d9dd38366f4a"></video>
+    <hr class="brg"> -->
+    <a href="mod">点我去“Minecraft_寒坤”的病毒库</a>
+    <br>
+    <a href="#" id="key">获得云储存提交密钥</a>
+    <br>
+    <a href="#up">
+        <img src="../assets/up.png" alt="到顶部">
+    </a>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <p>&copy;2026&nbsp;&nbsp;ZIYIT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>版权所有，侵权必究</strong></p>
+    <script>
+        let isPlay = false;
+        const audio = document.querySelector('audio');
+        const bgmList = ['../assets/bm.mp3', '../assets/bm2.mp3', '../assets/bm3.mp3', '../assets/bm4.mp3'];
+
+        function selectRandomBgm() {
+            const randomIndex = Math.floor(Math.random() * bgmList.length);
+            return bgmList[randomIndex];
+        }
+
+        audio.loop = false;
+
+        audio.addEventListener('ended', () => {
+            audio.src = selectRandomBgm();
+            if (isPlay) {
+                audio.play().catch((error) => {
+                    console.error('切换播放音频失败:', error);
+                });
+            }
+        });
+        const playAudioOnInteraction = () => {
+            if (!isPlay) {
+                audio.src = selectRandomBgm();
+                audio.play()
+                    .then(() => {
+                        isPlay = true;
+                        const events = ['mousemove', 'click', 'touchstart', 'keydown', 'mousedown'];
+                        events.forEach((event) => {
+                            document.removeEventListener(event, playAudioOnInteraction);
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('播放音频失败:', error);
+                    });
+            }
+        };
+        const interactionEvents = ['mousemove', 'click', 'touchstart', 'keydown', 'mousedown'];
+        interactionEvents.forEach((event) => {
+            document.addEventListener(event, playAudioOnInteraction);
+        });
+
+        audio.addEventListener('click', () => {
+            if (isPlay) {
+                audio.pause();
+                isPlay = false;
+            } else {
+                audio.play()
+                    .then(() => {
+                        isPlay = true;
+                    })
+                    .catch((error) => {
+                        console.error('切换播放音频失败:', error);
+                    });
+            }
+        });
+        toggle();
+    </script>
+
+    <script>
+        // 添加密钥获取功能
+        document.getElementById('key').addEventListener('click', function(e) {
+            e.preventDefault();
+
+            if (!ZIYIT_API.getToken()) {
+                window.location.href = '../user/';
+                return;
+            }
+
+            ZIYIT_API.currentUser().then(function (user) {
+                if (!user || !ZIYIT_API.isVip(user)) {
+                    alert("此功能仅VIP可用");
+                    return;
+                }
+
+                fetch('./key.txt')
+                    .then(response => response.text())
+                    .then(data => {
+                        const keys = data.split('\n').filter(key => key.trim() !== '');
+                        if (keys.length === 0) {
+                            alert("密钥文件为空");
+                            return;
+                        }
+
+                        // 随机选择一行密钥
+                        const randomIndex = Math.floor(Math.random() * keys.length);
+                        const upk = keys[randomIndex].trim();
+
+                        // 生成时间戳
+                        const now = new Date();
+                        const timeStr = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+
+                        // 创建用户信息字符串（数据以后端为准）
+                        const userInfo = `ZC-${user.username}`;
+                        const message = `请将网盘获取代码：${userInfo}/${upk}\\${timeStr}用短信发送到13258227085`;
+
+                        // 创建提示框
+                        const msgDiv = document.createElement('div');
+                        msgDiv.style.position = 'fixed';
+                        msgDiv.style.top = '50%';
+                        msgDiv.style.left = '50%';
+                        msgDiv.style.transform = 'translate(-50%, -50%)';
+                        msgDiv.style.backgroundColor = 'white';
+                        msgDiv.style.padding = '20px';
+                        msgDiv.style.borderRadius = '8px';
+                        msgDiv.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+                        msgDiv.style.zIndex = '1000';
+                        msgDiv.style.textAlign = 'center';
+
+                        const msgText = document.createElement('p');
+                        msgText.textContent = message;
+                        msgDiv.appendChild(msgText);
+
+                        const confirmBtn = document.createElement('button');
+                        confirmBtn.textContent = '已发送，回到主页';
+                        confirmBtn.style.marginTop = '15px';
+                        confirmBtn.onclick = function () {
+                            window.location.href = '../';
+                        };
+                        msgDiv.appendChild(confirmBtn);
+
+                        document.body.appendChild(msgDiv);
+
+                        // 复制到剪贴板
+                        navigator.clipboard.writeText(`${userInfo}/${upk}\\${timeStr}`);
+                    })
+                    .catch(error => {
+                        console.error('读取密钥文件失败:', error);
+                        alert("读取密钥文件失败");
+                    });
+            }).catch(function () {
+                alert("获取用户信息失败");
+            });
+        });
+    </script>
+    <script>
+        /* Toast 通知：替代原生 alert（DESIGN.md §4.9） */
+        (function () {
+            'use strict';
+            var CSS = '.ziyit-toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483001;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;max-width:90vw}.ziyit-toast{pointer-events:auto;background:var(--ziyit-bg-card,#1f2229);color:var(--ziyit-text-primary,#fff);border:1px solid var(--ziyit-border,#3a3f48);border-left:4px solid var(--ziyit-primary,#0078d4);padding:10px 18px;border-radius:8px;font-size:14px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .25s;max-width:60vw}.ziyit-toast.show{opacity:1;transform:translateY(0)}.ziyit-toast.hide{opacity:0;transform:translateY(-8px)}.ziyit-toast.success{border-left-color:var(--ziyit-success,#28a745)}.ziyit-toast.error{border-left-color:var(--ziyit-danger,#f25767)}.ziyit-toast.warning{border-left-color:var(--ziyit-warning,#f3a707)}';
+            var style = document.createElement('style');
+            style.textContent = CSS;
+            (document.head || document.documentElement).appendChild(style);
+            var wrap = null;
+            function getWrap() {
+                if (!wrap) { wrap = document.createElement('div'); wrap.className = 'ziyit-toast-wrap'; document.body.appendChild(wrap); }
+                return wrap;
+            }
+            function showToast(msg, type) {
+                if (typeof msg === 'string' && msg.length > 200) msg = msg.slice(0, 200) + '…';
+                var el = document.createElement('div');
+                el.className = 'ziyit-toast ' + (type || 'info');
+                el.textContent = msg == null ? '' : String(msg);
+                getWrap().appendChild(el);
+                requestAnimationFrame(function () { el.classList.add('show'); });
+                setTimeout(function () {
+                    el.classList.remove('show');
+                    el.classList.add('hide');
+                    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+                }, 3200);
+            }
+            function typeForText(s) {
+                if (/失败|错误|不能|无法|禁止|无效|超时|请(先|重试|勿|选择)/.test(s)) return 'error';
+                if (/成功|完成|已保存|已复制|已开启|已关闭|欢迎/.test(s)) return 'success';
+                if (/注意|警告|提醒/.test(s)) return 'warning';
+                return 'info';
+            }
+            window.alert = function (msg) { showToast(msg, typeForText(String(msg == null ? '' : msg))); };
+            if (document.body) getWrap(); else document.addEventListener('DOMContentLoaded', getWrap);
+        })();
+    </script>
+</body>
+
+</html>

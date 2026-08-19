@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "carrot crop 6",
+    "ingredients": [
+        "flyconfig:synthetic_motoroil",
+        "flyconfig:flight_manager",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:carrot_crop_6",
+        "count": 1
+    },
+    "show_notification": true
+}

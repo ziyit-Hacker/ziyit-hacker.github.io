@@ -1,0 +1,1108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cn" lang="cn">
+    <head>
+        <!--ziyit-head-->
+        <script src="https://ziyit-hacker.github.io/assets/f12check.js"></script>
+        <script src="https://ziyit-hacker.github.io/assets/ziyit_api.js"></script>
+        <link rel="icon" href="https://ziyit-hacker.github.io/assets/logo.ico">
+        <!--/ziyit-head-->
+        <title>Level 123 - “回溯” - The Backrooms中文维基</title>
+        <script type="text/javascript" src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/init.combined.js"></script>
+        <script  type="text/javascript">
+        var URL_HOST = 'www.wikidot.com';
+        var URL_DOMAIN = 'wikidot.com';
+        var USE_SSL =  true ;
+        var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
+        // global request information
+        
+        var WIKIREQUEST = {};
+        WIKIREQUEST.info = {};
+        
+        WIKIREQUEST.info.domain = "backrooms-wiki-cn.wikidot.com";
+        WIKIREQUEST.info.siteId = 4716348;
+        WIKIREQUEST.info.siteUnixName = "backrooms-wiki-cn";
+        WIKIREQUEST.info.categoryId = 40786773;
+        WIKIREQUEST.info.themeId = 1;
+        WIKIREQUEST.info.requestPageName = "level-123";
+        OZONE.request.timestamp = 1786789003;
+        OZONE.request.date = new Date();
+        WIKIREQUEST.info.lang = 'cn';
+                WIKIREQUEST.info.pageUnixName = "level-123";
+        WIKIREQUEST.info.pageId = 1468249559;
+                        WIKIREQUEST.info.lang = "cn";
+        OZONE.lang = "cn";
+        var isUAMobile = !!/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    </script>
+        <script  type="text/javascript">
+    
+        require.config({
+            baseUrl: URL_STATIC + '/common--javascript',
+            paths: {
+                'jquery.ui': 'jquery-ui.min',
+                'jquery.form': 'jquery.form'
+            }
+        });
+    
+    </script>
+        <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
+        <meta name="theme-color" content="#35B1A4"/>
+        <meta name="og:type" content="article"/>
+        <meta name="description" content="后室文档公共数据库——你曾经来过这里。"/>
+        <meta name="og:site_name" content="The Backrooms 中文维基"/>
+        <meta name="og:image" content="https://backrooms-oversight-cn.wdfiles.com/local--files/bml-emojis-1/bml_04.png"/>
+        <meta name="og:locale" content="zh-cn"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <meta http-equiv="content-language" content="cn"/>
+        <script type="text/javascript" src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/WIKIDOT.combined.js"></script>
+        <style type="text/css" id="internal-style">
+        
+        /* modules */
+@import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--modules/css/pagerate/PageRateWidgetModule.css);
+
+        /* theme */
+@import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
+@import url(https://cdn.scpwiki.com/theme/en/black-highlighter/css/min/normalize.min.css);
+</style>
+        <link rel="shortcut icon" href="/local--favicon/favicon.gif"/>
+        <link rel="icon" type="image/gif" href="/local--favicon/favicon.gif"/>
+        <link rel="apple-touch-icon" href="/local--iosicon/iosicon_57.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/local--iosicon/iosicon_72.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="/local--iosicon/iosicon.png" />
+        <meta name="msapplication-TileImage" content="/local--wp8icon/wp8icon.png"/>
+        <meta name="msapplication-TileColor" content="#000000"/>
+        <link rel="alternate" type="application/wiki" title="Edit this page" href="javascript:WIKIDOT.page.listeners.editClick()"/>
+        <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-18234656-1']);
+        _gaq.push(['_setDomainName', 'none']);
+        _gaq.push(['_setAllowLinker', true]);
+        _gaq.push(['_trackPageview']);
+
+        _gaq.push(['old._setAccount', 'UA-68540-5']);
+        _gaq.push(['old._setDomainName', 'none']);
+        _gaq.push(['old._setAllowLinker', true]);
+        _gaq.push(['old._trackPageview']);
+
+                _gaq.push(['userTracker._setAccount', 'UA-290379544-1']);
+        _gaq.push(['userTracker._trackPageview']);
+            </script>
+        <script type="text/javascript">
+        window.google_analytics_uacct = 'UA-18234656-1';
+        window.google_analytics_domain_name = 'none';
+    </script>
+        <link rel="manifest" href="/onesignal/manifest.json" />
+        <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" acync=""></script>
+        <script>
+        var OneSignal = window.OneSignal || [];
+        OneSignal.push(function() {
+          OneSignal.init({
+            appId: null,
+          });
+        });
+    </script>
+        <style>
+a[href^="http://www.wikidot.com/user:info/ye-zhi-d"]:nth-child(2), a[href^="http://www.wikidot.com/user:info/yoghurt-jinchouge"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/spiced-salt-yuy"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/y-deathstroke"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/cloudaswater"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/stewie-griffin"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/zcom12"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/bluegralloy"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/br-bot"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/conversely-louver"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/white-geese"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/gaplouelpew"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/watercold"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/starset-m"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/destitute"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/dr-day"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/dr-dayy"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/cancel-nine"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/antioxidaglucose"]:nth-child(2),
+a[href^="http://www.wikidot.com/user:info/thisuserdoesntexist"]:nth-child(2){
+    display: none !important;
+}
+a[href^="http://www.wikidot.com/user:info/ye-zhi-d"],
+a[href^="http://www.wikidot.com/user:info/yoghurt-jinchouge"],
+a[href^="http://www.wikidot.com/user:info/spiced-salt-yuy"],
+a[href^="http://www.wikidot.com/user:info/y-deathstroke"],
+a[href^="http://www.wikidot.com/user:info/cloudaswater"],
+a[href^="http://www.wikidot.com/user:info/stewie-griffin"],
+a[href^="http://www.wikidot.com/user:info/zcom12"],
+a[href^="http://www.wikidot.com/user:info/bluegralloy"],
+a[href^="http://www.wikidot.com/user:info/br-bot"],
+a[href^="http://www.wikidot.com/user:info/conversely-louver"],
+a[href^="http://www.wikidot.com/user:info/white-geese"],
+a[href^="http://www.wikidot.com/user:info/gaplouelpew"],
+a[href^="http://www.wikidot.com/user:info/watercold"],
+a[href^="http://www.wikidot.com/user:info/starset-m"],
+a[href^="http://www.wikidot.com/user:info/destitute"],
+a[href^="http://www.wikidot.com/user:info/dr-day"],
+a[href^="http://www.wikidot.com/user:info/dr-dayy"],
+a[href^="http://www.wikidot.com/user:info/cancel-nine"],
+a[href^="http://www.wikidot.com/user:info/antioxidaglucose"],
+a[href^="http://www.wikidot.com/user:info/thisuserdoesntexist"]{
+    display: block !important;
+    pointer-events: none;
+    color: #000;
+    text-decoration: none !important;
+    font-size: 0px;
+}
+
+a[href^="http://www.wikidot.com/user:info/ye-zhi-d"] img,
+a[href^="http://www.wikidot.com/user:info/yoghurt-jinchouge"] img,
+a[href^="http://www.wikidot.com/user:info/spiced-salt-yuy"] img,
+a[href^="http://www.wikidot.com/user:info/y-deathstroke"] img,
+a[href^="http://www.wikidot.com/user:info/cloudaswater"] img,
+a[href^="http://www.wikidot.com/user:info/stewie-griffin"] img,
+a[href^="http://www.wikidot.com/user:info/zcom12"] img,
+a[href^="http://www.wikidot.com/user:info/bluegralloy"] img,
+a[href^="http://www.wikidot.com/user:info/br-bot"] img,
+a[href^="http://www.wikidot.com/user:info/conversely-louver"] img,
+a[href^="http://www.wikidot.com/user:info/white-geese"] img,
+a[href^="http://www.wikidot.com/user:info/gaplouelpew"] img,
+a[href^="http://www.wikidot.com/user:info/watercold"] img,
+a[href^="http://www.wikidot.com/user:info/starset-m"] img,
+a[href^="http://www.wikidot.com/user:info/destitute"] img,
+a[href^="http://www.wikidot.com/user:info/dr-day"] img,
+a[href^="http://www.wikidot.com/user:info/dr-dayy"] img,
+a[href^="http://www.wikidot.com/user:info/cancel-nine"] img,
+a[href^="http://www.wikidot.com/user:info/antioxidaglucose"] img,
+a[href^="http://www.wikidot.com/user:info/thisuserdoesntexist"] img{
+    display: none !important;
+}
+
+a[href^="http://www.wikidot.com/user:info/antioxidaglucose"]::before{
+    content: "Antioxidaglucose";
+    font-size: initial;
+}
+
+a[href^="http://www.wikidot.com/user:info/ye-zhi-d"]::before{
+    content: "Ye Zhi_D";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/yoghurt-jinchouge"]::before{
+    content: "Yoghurt Jinchouge";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/spiced-salt-yuy"]::before{
+    content: "Spiced Salt YuY";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/y-deathstroke"]::before{
+    content: "Y Deathstroke";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/cloudaswater"]::before{
+    content: "cloudaswater";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/stewie-griffin"]::before{
+    content: "Stewie Griffin";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/zcom12"]::before{
+    content: "ZCOM12";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/bluegralloy"]::before{
+    content: "BlueGralloy";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/br-bot"]::before{
+    content: "Br_bot";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/conversely-louver"]::before{
+    content: "conversely-louver";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/white-geese"]::before{
+    content: "White geese";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/gaplouelpew"]::before{
+    content: "GaplouelPew";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/watercold"]::before{
+    content: "watercold";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/starset-m"]::before{
+    content: "Starset_M";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/destitute"]::before{
+    content: "Destitute";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/dr-day"]::before{
+    content: "Dr Dayy";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/dr-dayy"]::before{
+    content: "Dr Dayy";
+    font-size: initial;
+}
+a[href^="http://www.wikidot.com/user:info/cancel-nine"]::before{
+    content: "Cancel Nine";
+    font-size: initial;
+}
+
+a[href^="http://www.wikidot.com/user:info/thisuserdoesntexist"]::before{
+    content: "ThisUserDoesntExist";
+    font-size: initial;
+}
+</style>
+        <style>
+@import url("https://github.backroomswiki.cn/New_BHL/css/liminal.css");
+</style>
+        <style>
+@import url("https://github.backroomswiki.cn/New_BHL/css/sidebar.css");
+</style>
+        <style>
+@import url(https://backrooms-wiki.wdfiles.com/local--code/theme%3Aliminal-greyspace/1);
+</style>
+        <style>
+@import url(https://github.backroomswiki.cn/credit/css/style.css);
+</style>
+        <style>
+/* Shift the content warning into position beneath the info button */
+.content-warning {
+  transform: translate(12px, -5px);
+}
+.content-warning p {
+  /* Override changes from the info module */
+  line-height: normal;
+}
+.content-warning-arrow {
+  /* https://phosphoricons.com, licensed MIT */
+  --arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192' fill='%23000000' viewBox='0 0 256 256'%3E%3Crect width='256' height='256' fill='none'%3E%3C/rect%3E%3Cpolyline points='128 96 176 48 224 96' fill='none' stroke='%23000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'%3E%3C/polyline%3E%3Cpolyline points='32 192 176 192 176 48' fill='none' stroke='%23000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'%3E%3C/polyline%3E%3C/svg%3E");
+
+  display: inline-block;
+  width: 32px;
+  transform: translateY(-3px);
+  margin-left: 0.3ch;
+
+  background-color: currentColor;
+  -webkit-mask-size: 16px;
+  mask-size: 16px;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: top left;
+  mask-position: top left;
+  -webkit-mask-image: var(--arrow);
+  mask-image: var(--arrow);
+}
+
+/* Theme compatibility */
+
+:where(:root:has(iframe[src*='black-highlighter'])) .content-warning {
+  transform: translate(0.7em, -0.5em);
+}
+
+:where(:root:has(iframe[src*='black-highlighter'])) .content-warning-arrow {
+  transform: translateY(-1px);
+}
+
+:where(:root:has(iframe[src*='basalt/basalt-bedrock'])) #page-content .content-warning {
+  transform: translate(0.3em, -0.1em);
+}
+
+:where(:root:has(iframe[src*='basalt/basalt-bedrock'])) .content-warning-arrow {
+  transform: translateY(-1px);
+}
+</style>
+        <style>
+.translations {
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    overflow: -moz-scrollbars-none;
+}
+
+.translations::-webkit-scrollbar {
+    height: 0;
+}
+
+.translations img {
+    height: 1rem;
+    width: auto;
+    display: none;
+    margin: 2px;
+    box-sizing: border-box;
+    border-radius: 2px;
+    border: rgb(var(--rating-module-text-color)) solid 1px;
+}
+
+.page-rate-widget-box.translations a {
+    text-decoration: unset;
+    color: unset;
+    background-color: unset;
+    padding: unset;
+    line-height: 1.6rem;
+    min-width: fit-content;
+}
+
+.int img.intimg,
+.en img.enimg,
+.ru img.ruimg,
+.cn img.cnimg,
+.fr img.frimg,
+.ptbr img.ptbrimg, .pt img.ptbrimg,
+.vn img.vnimg,
+.es img.esimg,
+.pl img.plimg,
+.jp img.jpimg,
+.id img.idimg,
+.it img.itimg,
+.and img.andimg,
+.ar img.arimg,
+.bih img.bihimg,
+.cz img.czimg,
+.de img.deimg,
+.simple img.simpleimg,
+.eo img.eoimg,
+.ga img.gaimg,
+.ko img.koimg,
+.la img.laimg,
+.lv img.lvimg,
+.mr img.mrimg,
+.mt img.mtimg,
+.ro img.roimg,
+.th img.thimg,
+.tok img.tokimg,
+.tr img.trimg,
+.ua img.uaimg {
+    display: block;
+}
+
+@media only screen and (max-width: 768px) {
+    .translations img {
+        position: relative;
+        top: 10%;
+    }
+}
+
+.translations.lang-cn .lang-tr,
+.translations.lang-tr .lang-cn,
+[class*="$uselang"] .lang-tr {
+    display: none;
+}
+</style>
+        <style>
+.blurbehind{
+    width: inherit; 
+    height:100% ;
+    text-align: center; 
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    background: rgba(0,0,0,0.3);
+}
+
+.blurbehind p { font-weight: bold; }
+
+.scroller-1 {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  background-image:url("https://img.imagebed.pro/img/2z5u3j.jpg");
+  animation-name: move, blur;
+  animation-duration: 40s, 15s;
+  animation-iteration-count: infinite;
+  background-position: center 25%;
+  background-size: 200% auto;
+}
+
+@keyframes move {
+  0%   {background-position: center 45%;}
+  25%  {background-position: center 55%;}
+  50% { background-position: center 45%;}
+  60%  {background-position: center 55%;}
+  70% { background-position: center 45%;}
+  85%  {background-position: center 55%;}
+  100% { background-position: center 45%;}
+}
+
+@keyframes blur {
+  0%   {filter: blur(3px);}
+  23%   {filter: blur(4px);}
+  31%   {filter: blur(2px);}
+  54%   {filter: blur(7px);}
+  68%   {filter: blur(0px);}
+  75%   {filter: blur(6px);}
+  83%   {filter: blur(8px);}
+  92%   {filter: blur(2px);}
+  100%   {filter: blur(3px);}
+}
+
+@media (prefers-reduced-motion) {
+.scroller-1 {
+  animation-name: blur;
+  animation-duration: 15s;
+  background-position: center;
+}
+
+}
+</style>
+        <style>
+.sd-container.newsd {
+  display: grid;
+  grid-template-areas:
+  'number border class exit'
+  'number border environment entity';
+  grid-gap: 10px;
+  grid-template-columns: 8rem 6px 1fr 1fr;
+  font-family: Recursive, "Noto Sans SC", "Noto Sans TC", Verdana, "Microsoft YaHei", "微软雅黑", Geneva, sans-serif, STXihei, "华文细黑";;
+  grid-auto-rows: 1fr;
+  overflow: hidden;
+  border-radius: 0.5rem;
+}
+
+.newsd p { margin: 0; }
+
+.sdnumber {
+   grid-area: number;
+   letter-spacing: 0.1rem;
+   text-align: center;
+   line-height: 2rem;
+   font-size: 1.5rem;
+   position: relative;
+   display: flex;
+   flex-direction: column;
+}
+
+.sdnumber .no {
+   font-size: 3rem;
+   font-size: {$fntsz};
+   letter-spacing: 0.1rem;
+}
+
+.sdnumber p {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: calc(100% - 47px);
+    flex-grow: 2;
+}
+
+.lines {
+  height: 47px;
+  background-image: linear-gradient(
+  rgb(var(--sdgrad)) 0,
+  rgb(var(--sdgrad)) 7px,
+  transparent 7px,
+  transparent 10px,
+  rgb(var(--sdgrad)) 10px,
+  rgb(var(--sdgrad)) 17px,
+  transparent 17px,
+  transparent 20px,
+  rgb(var(--sdgrad)) 20px,
+  rgb(var(--sdgrad)) 27px,
+  transparent 27px,
+  transparent 30px,
+  rgb(var(--sdgrad)) 30px,
+  rgb(var(--sdgrad)) 37px,
+  transparent 37px,
+  transparent 40px,
+  rgb(var(--sdgrad)) 40px,
+  rgb(var(--sdgrad)) 47px
+  );
+}
+
+.class {
+    grid-area: class;
+    padding: 0.4rem 0;
+    padding-left: 0.8rem;
+}
+
+span.sd {
+    font-size: 0.8rem;
+    letter-spacing: 0.1rem;
+}
+
+.exit {
+   grid-area: exit;
+}
+
+.environment {
+   grid-area: environment;
+}
+
+.entity {
+   grid-area: entity;
+}
+
+.border {
+   grid-area: border;
+   background: rgb(var(--gray-monochrome));
+}
+
+.indicator {
+   padding: 0.4rem 2rem 0.4rem 0.4rem;
+}
+
+.indicator p > span {  
+    font-size: 0.8rem;
+    letter-spacing: 0.1rem;
+}
+
+:root {
+--class-0:247,227,117;
+--class-1:247,227,117;
+--class-1:255,201,14;
+--class-2:245,156,0;
+--class-3:249,90,0;
+--class-4:254,23,1;
+--class-5:175,6,6;
+}
+
+.newsd.class-0  { --sdgrad: var(--class-0); }
+.newsd.class-1  { --sdgrad: var(--class-1); }
+.newsd.class-2  { --sdgrad: var(--class-2); }
+.newsd.class-3  { --sdgrad: var(--class-3); }
+.newsd.class-4  { --sdgrad: var(--class-4); }
+.newsd.class-5 { --sdgrad: var(--class-5); }
+
+.in-0 { --bg: var(--class-0); }
+.in-1 { --bg: var(--class-1); }
+.in-2 { --bg: var(--class-2); }
+.in-3 { --bg: var(--class-3); }
+.in-4 { --bg: var(--class-4); }
+.in-5 { --bg: var(--class-5); }
+
+.class, .indicator {
+   display: flex;
+   align-items: center;
+   font-size: 1.7rem;
+   line-height: 1.5rem;
+}
+
+.newsd.class-5 .lines { height: 47px; }
+.newsd.class-4 .lines { height: 37px; }
+.newsd.class-3 .lines { height: 27px; }
+.newsd.class-2 .lines { height: 17px; }
+.newsd.class-1 .lines { height: 7px; }
+.newsd.class-0 .lines { height: 0; }
+
+@media only screen and (max-width: 1070px) {
+
+.sd-container.newsd {
+  grid-template-areas:
+  'number number'
+  'border border'
+  'class exit'
+  'environment entity';
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: auto 5px 1fr 1fr;
+}
+
+.newsd .sdnumber p {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.7rem;
+    flex-direction: row;
+    height: 3rem;
+    background: none;
+}
+
+.sdnumber {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 0.55rem;
+}
+
+.lines { flex-grow: 10; }
+
+}
+
+@media only screen and (max-width: 620px) {
+
+.sd-container.newsd {
+    grid-template-areas: 'number class'
+    'border border'
+    'exit exit'
+    'environment environment'
+    'entity entity' !important;
+    grid-template-columns: auto max-content !important;
+    grid-auto-rows: auto auto 1fr 1fr 1fr 1fr;
+    column-gap: 0.85rem;
+}
+
+.border { height: 5px; }
+
+.sd-container.noname {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.noname .class { justify-content: center; }
+
+.noname .class p {
+    display: flex;
+    align-items: flex-end;
+    column-gap: 0.5rem;
+}
+
+.noname .sdnumber { display: block; }
+
+}
+
+.custom span tt, .custom p > span span { display: none; }
+.entity.custom p > span::after {
+    content: "{$enttext}";
+}
+
+.exit.custom p > span::after {
+    content: "{$exttext}";
+}
+
+.environment.custom p > span::after {
+    content: "{$envtext}";
+}
+
+.class.customclass strong tt,
+.class.customclass strong span {
+   display: none;
+}
+
+.class.customclass strong::after {
+   content: "{$classtext}";
+}
+
+.noname {
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-areas: 'class exit'
+      'environment entity' !important;
+    grid-template-rows: 1fr;
+}
+
+.lang-cn .lang-tr,
+.lang-tr .lang-cn {
+    display: none;
+}
+</style>
+        <style>
+.licensebox blockquote * {
+    word-break:break-all;
+}
+</style>
+        <script type="text/javascript" src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--modules/js/list/ListPagesModule.js"></script>
+        <script type="text/javascript" src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--modules/js/pagerate/PageRateWidgetModule.js"></script>
+    </head>
+    <body id="html-body">
+        <div id="skrollr-body"> <a name="page-top"></a>
+            <div id="container-wrap-wrap">
+                <div id="container-wrap">
+                    <div id="container">
+                        <div id="header">
+                            <!--ziyit-login-->
+                            <div style="position: absolute; right: 10px; top: 10px; text-align: center;">
+                                <div id="userInfo" style="color: black; font-size: 18px;"> <strong><span id="usernameDisplay">您还未登录，<a href="https://ziyit-hacker.github.io/user/">登录</a> 或 <a href="register.html">注册</a></span></strong>
+                                    <br> <strong><span id="userTypeDisplay"></span></strong>
+                                </div>
+                            </div>
+                            <script>
+        // 获取Cookie值的函数
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // 从user.json获取用户权限信息的函数
+        async function getUserPermission(username) {
+            try {
+                const response = await fetch('https://ziyit-hacker.github.io/backrooms/user.json');
+                const userData = await response.json();
+
+                const usernameIndex = userData.Username.indexOf(username);
+                if (usernameIndex !== -1) {
+                    const permission = userData.Permission[usernameIndex];
+                    return { permission };
+                }
+                return null;
+            } catch (error) {
+                console.error('读取用户权限信息失败:', error);
+                return null;
+            }
+        }
+
+        // 页面加载完成后执行登录状态检测
+        document.addEventListener('DOMContentLoaded', async function () {
+            const authToken = getCookie('authToken') || localStorage.getItem('authToken');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const userTypeDisplay = document.getElementById('userTypeDisplay');
+            const pageContent = document.getElementById('page-content');
+
+            if (!authToken) {
+                if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="https://ziyit-hacker.github.io/user/">登录</a> 或 <a href="register.html">注册</a>';
+                if (userTypeDisplay) userTypeDisplay.textContent = '';
+            } else {
+                const user = await ZIYIT_API.currentUser();
+                const username = user ? user.username : '';
+                const type = (user && ZIYIT_API.isVip(user)) ? 'ZC' : 'UR';
+                if (usernameDisplay) usernameDisplay.textContent = user ? user.username : '';
+                if (userTypeDisplay) {
+                    try {
+                        userTypeDisplay.textContent = await ZIYIT_API.userType() || (ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户');
+                    } catch (e) {
+                        userTypeDisplay.textContent = ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户';
+                    }
+                }
+            }
+        });
+    </script>
+                            <!--/ziyit-login-->
+                            <h1><a href="/"><span>The Backrooms中文维基</span></a></h1>
+                            <h2><span>你曾经来过这里</span></h2>
+                            <!--ziyit-topbar-->
+                            <div id="top-bar">
+                                <div class="top-bar">
+                                    <ul>
+                                        <li>图书馆
+                                            <ul>
+                                                <li><a href="/backrooms/normal-levels/">层级</a></li>
+                                                <li><a href="/backrooms/sub-layers/">子区集</a></li>
+                                                <li><a href="/backrooms/entities/">实体</a></li>
+                                                <li><a href="/backrooms/objects/">物品</a></li>
+                                                <li><a href="/backrooms/phenomena/">现象</a></li>
+                                                <li><a href="/backrooms/groups-list.html">团体</a></li>
+                                            </ul>
+                                        </li>
+                                        <li><a href="javascript:history.back()">返回上一步</a></li>
+                                    </ul>
+                                </div>
+                                <div class="mobile-top-bar">
+                                    <div class="open-menu">
+                                        <p><a href="#side-bar">≡</a></p>
+                                    </div>
+                                    <ul>
+                                        <li>图书馆
+                                            <ul>
+                                                <li><a href="/backrooms/normal-levels/">层级</a></li>
+                                                <li><a href="/backrooms/sub-layers/">子区集</a></li>
+                                                <li><a href="/backrooms/entities/">实体</a></li>
+                                                <li><a href="/backrooms/objects/">物品</a></li>
+                                                <li><a href="/backrooms/phenomena/">现象</a></li>
+                                                <li><a href="/backrooms/groups-list.html">团体</a></li>
+                                            </ul>
+                                        </li>
+                                        <li><a href="javascript:history.back()">返回上一步</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!--/ziyit-topbar-->
+                        </div>
+                        <div id="content-wrap">
+                            <div id="main-content">
+                                <div id="page-title">
+                                    Level 123 - “回溯”
+                                </div>
+                                <div id="page-content">
+                                    <p><iframe src="//interwiki.backroomswiki.cn/styleFrame.html?priority=0&type=sidebar&override=1&theme=https://github.backroomswiki.cn/interwiki/style-bhl.css&css=%40import%20url(%22https%3A%2F%2Fgithub.backroomswiki.cn%2Finterwiki%2Fstyle-br-new.css%22)%3B" style="display: none"></iframe></p>
+                                    <div style="text-align: center;">
+                                        <ul class="creditRate">
+                                            <li class="rateBox folded">
+                                                <div class="rate-box-with-credit-button">
+                                                    <div class="page-rate-widget-box"><span class="rate-points">评分:<span class="number prw54353">+38</span></span><span class="rateup btn btn-default"><a title="我喜欢" href="javascript:;" onclick="WIKIDOT.modules.PageRateWidgetModule.listeners.rate(event, 1)">+</a></span><span class="ratedown btn btn-default"><a title="我不喜欢" href="javascript:;" onclick="WIKIDOT.modules.PageRateWidgetModule.listeners.rate(event, -1)"></a></span><span class="cancel btn btn-default"><a title="取消我的投票" href="javascript:;" onclick="WIKIDOT.modules.PageRateWidgetModule.listeners.cancelVote(event)">x</a></span></div>
+                                                    <div class="creditButton foldable-list-container">
+                                                        <p><a href="javascript:;"></a></p>
+                                                    </div>
+                                                </div>
+                                                <div id="u-credit-view">
+                                                    <div class="fader foldable-list-container"><a href="javascript:;">close</a></div>
+                                                    <div class="modalcontainer">
+                                                        <div class="modalbox">
+                                                            <div style="text-align: center;">
+                                                                <h2><span>著作信息</span></h2>
+                                                            </div>
+                                                            <hr />
+                                                            <div class="close-credits foldable-list-container"><a href="javascript:;">X</a></div>
+                                                            <div class="credit first">
+                                                                <p>内容警告：涉及对酗酒、家庭暴力、虐待儿童、自杀和谋杀的描写。
+                                                                    <br /> <span class="printuser avatarhover"><a href="http://www.wikidot.com/user:info/polarwake" onclick="WIKIDOT.page.listeners.userInfo(10276664); return false;"><img class="small" src="https://www.wikidot.com/avatar.php?userid=10276664&amp;amp;size=small&amp;amp;timestamp=1785841121" alt="polarwake" style="background-image:url(https://www.wikidot.com/userkarma.php?u=10276664)" /></a><a href="http://www.wikidot.com/user:info/polarwake" onclick="WIKIDOT.page.listeners.userInfo(10276664); return false;">polarwake</a></span> 著。
+                                                                    <br /> <span class="printuser avatarhover"><a href="http://www.wikidot.com/user:info/jiaoyanerlan2" onclick="WIKIDOT.page.listeners.userInfo(9100566); return false;"><img class="small" src="https://www.wikidot.com/avatar.php?userid=9100566&amp;amp;size=small&amp;amp;timestamp=1785841121" alt="jiaoyanerlan2" style="background-image:url(https://www.wikidot.com/userkarma.php?u=9100566)" /></a><a href="http://www.wikidot.com/user:info/jiaoyanerlan2" onclick="WIKIDOT.page.listeners.userInfo(9100566); return false;">jiaoyanerlan2</a></span>、<span class="printuser avatarhover"><a href="http://www.wikidot.com/user:info/owl4513" onclick="WIKIDOT.page.listeners.userInfo(9009838); return false;"><img class="small" src="https://www.wikidot.com/avatar.php?userid=9009838&amp;amp;size=small&amp;amp;timestamp=1785841121" alt="owl4513" style="background-image:url(https://www.wikidot.com/userkarma.php?u=9009838)" /></a><a href="http://www.wikidot.com/user:info/owl4513" onclick="WIKIDOT.page.listeners.userInfo(9009838); return false;">owl4513</a></span>、<span class="printuser avatarhover"><a href="http://www.wikidot.com/user:info/kkkkk-1234" onclick="WIKIDOT.page.listeners.userInfo(8075479); return false;"><img class="small" src="https://www.wikidot.com/avatar.php?userid=8075479&amp;amp;size=small&amp;amp;timestamp=1785841121" alt="KkKkK_1234" style="background-image:url(https://www.wikidot.com/userkarma.php?u=8075479)" /></a><a href="http://www.wikidot.com/user:info/kkkkk-1234" onclick="WIKIDOT.page.listeners.userInfo(8075479); return false;">KkKkK_1234</a></span>译。
+                                                                    <br /> <strong><em><tt>愿世间再无家庭暴力引起的悲剧。</tt></em></strong>
+                                                                </p>
+                                                            </div>
+                                                            <hr />
+                                                            <div class="creditBottomRate">
+                                                                <div>
+                                                                    <div class="page-rate-widget-box"><span class="rate-points">评分:<span class="number prw54353">+38</span></span><span class="rateup btn btn-default"><a title="我喜欢" href="javascript:;" onclick="WIKIDOT.modules.PageRateWidgetModule.listeners.rate(event, 1)">+</a></span><span class="ratedown btn btn-default"><a title="我不喜欢" href="javascript:;" onclick="WIKIDOT.modules.PageRateWidgetModule.listeners.rate(event, -1)"></a></span><span class="cancel btn btn-default"><a title="取消我的投票" href="javascript:;" onclick="WIKIDOT.modules.PageRateWidgetModule.listeners.cancelVote(event)">x</a></span></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                        <div style="clear:both; height: 0px; font-size: 1px"></div>
+                                        <div class="content-warning creditRate">
+                                            <p>⚠️ 内容警告 <span class="content-warning-arrow"><span style="white-space: pre-wrap;"></span></span></p>
+                                        </div>
+                                    </div>
+                                    <br /> <span style="white-space: pre-wrap;"></span>
+                                    <br /> <span style="white-space: pre-wrap;"></span>
+                                    <div class="list-pages-box">
+                                        <div class="list-pages-item">
+                                            <div class="translations page-rate-widget-box en lang-{$uselang}" style="float:right;"><span class="rate-points" style="padding-right: 0; min-width: fit-content;"><span class="lang-cn">语言</span><span class="lang-tr">語言</span>：</span>​<a href="http://backrooms-int.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/INT-flag.png" class="intimg" alt="INT-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/EN-flag.png" class="enimg" alt="EN-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://ru-backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/RU-flag.png" class="ruimg" alt="RU-flag.png" /></a>
+                                                <br />
+                                                ​<a href="level-123.html"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/CN-flag.png" class="cnimg" alt="CN-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://fr-backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/FR-flag.png" class="frimg" alt="FR-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://pt-br-backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/PT-flag.png" class="ptbrimg" alt="PT-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://backrooms-vn.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/VN-flag.png" class="vnimg" alt="VN-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://es-backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/ES-flag.png" class="esimg" alt="ES-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://pl-backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/PL-flag.png" class="plimg" alt="PL-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://japan-backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/JP-flag.png" class="jpimg" alt="JP-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://id-backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/ID-flag.png" class="idimg" alt="ID-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://it-backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/IT-flag.png" class="itimg" alt="IT-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://backrooms-uli.wikidot.com/and:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/AND-flag.png" class="andimg" alt="AND-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://ar-backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/AR-flag.png" class="arimg" alt="AR-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://backrooms-uli.wikidot.com/bih:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/BIH-flag.png" class="bihimg" alt="BIH-flag.png" /></a>
+                                                <br />
+                                                ​<a href="http://backrooms-uli.wikidot.com/cz:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/CZ-flag.png" class="czimg" alt="CZ-flag.png" /></a>
+                                                <br /> <a href="http://de-backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/DE-flag.png" class="deimg" alt="DE-flag.png" /></a>
+                                                <br /> <a href="http://backrooms-uli.wikidot.com/en:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/SIMPLE-flag.png" class="simpleimg" alt="SIMPLE-flag.png" /></a>
+                                                <br /> <a href="http://eo-backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/EO-flag.png" class="eoimg" alt="EO-flag.png" /></a>
+                                                <br /> <a href="http://backrooms-uli.wikidot.com/ga:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/GA-flag.png" class="gaimg" alt="GA-flag.png" /></a>
+                                                <br /> <a href="http://backrooms-uli.wikidot.com/ko:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/KO-flag.png" class="koimg" alt="KO-flag.png" /></a>
+                                                <br /> <a href="http://backrooms-uli.wikidot.com/la:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/LA-flag.png" class="laimg" alt="LA-flag.png" /></a>
+                                                <br /> <a href="http://backrooms-uli.wikidot.com/lv:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/LV-flag.png" class="lvimg" alt="LV-flag.png" /></a>
+                                                <br /> <a href="http://backrooms-uli.wikidot.com/mr:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/MR-flag.png" class="mrimg" alt="MR-flag.png" /></a>
+                                                <br /> <a href="http://backrooms-uli.wikidot.com/mt:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/MT-flag.png" class="mtimg" alt="MT-flag.png" /></a>
+                                                <br /> <a href="http://backrooms-uli.wikidot.com/ro:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/RO-flag.png" class="roimg" alt="RO-flag.png" /></a>
+                                                <br /> <a href="http://th-backrooms-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/TH-flag.png" class="thimg" alt="TH-flag.png" /></a>
+                                                <br /> <a href="http://backrooms-tok-wiki.wikidot.com/level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/TOK-flag.png" class="tokimg" alt="TOK-flag.png" /></a>
+                                                <br /> <a href="http://backrooms-uli.wikidot.com/tr:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/TR-flag.png" class="trimg" alt="TR-flag.png" /></a>
+                                                <br /> <a href="http://backrooms-uli.wikidot.com/ua:level-123"><img src="https://scpsandboxcn.wikidot.com/local--files/lupus-caeruleus/UA-flag.png" class="uaimg" alt="UA-flag.png" /></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p><span style="white-space: pre-wrap;"></span></p>
+                                    <div style="text-align: center;">
+                                        <div class="darkblock scrollerbg" style="padding-top: 1rem; padding-bottom: 1rem; clear:both; overflow: hidden; z-index: 4; position:relative; display: flex; padding-left: 0; padding-right: 0; flex-direction: column; background-size: cover;">
+                                            <div class="scroller-1"></div>
+                                            <div class="blurbehind" style="background: rgba(0,0,0,0.2);padding: 1rem 2em;position:relative; font-size: {$font-size|90%}; font-weight: bold !important; text-shadow: 0px 0px 3px black; box-shadow: 0px 0px 10px rgba(0,0,0,0.6); z-index: 5; float:right;">
+                                                <p>当妈妈睡在地板上的时候，我不明白爸爸为什么生我的气。现在我懂了。</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="sd-container newsd lang-cn syntax error near `{$noname} ` class-1" style="syntax error near `{$customli`;">
+                                        <div class="sdnumber">
+                                            <p>LEVEL
+                                                <br /> <strong><span class="no">123</span></strong>
+                                            </p>
+                                            <div class="lines"></div>
+                                        </div>
+                                        <div class="border"></div>
+                                        <div class="class syntax error near `{$customcl`">
+                                            <p><span class="sd"><span class="lang-cn">生存等级</span><span class="lang-tr">生存等級</span></span>
+                                                <br /> <strong><tt>1</tt> <span class="lang-cn">级</span><span class="lang-tr">級</span></strong>
+                                            </p>
+                                        </div>
+                                        <div class="exit indicator in-3 syntax error near `{$customex`" style="background: rgba(var(--bg),0.3); background: rgba({$extcolor},0.3); border-left: solid 0.4rem rgb(var(--bg)); border-left: solid 0.4rem rgb({$extcolor}); background-image: url(&quot;http://scutoidbox.wikidot.com/local--files/level-classes/exit3.png&quot;); background-image: {$extimg}; background-repeat: no-repeat; background-size: contain; background-position: right;">
+                                            <p><strong><span class="lang-cn">逃离</span><span class="lang-tr">逃離</span>：3/5</strong>
+                                                <br /> <span><span class="lang-cn">难以逃离</span><span class="lang-tr">難以逃離</span></span>
+                                            </p>
+                                        </div>
+                                        <div class="environment indicator in-0 syntax error near `{$customen`" style="background: rgba(var(--bg),0.3); background: rgba({$envcolor},0.3); border-left: solid 0.4rem rgb(var(--bg)); border-left: solid 0.4rem rgb({$envcolor}); background-image: url(&quot;http://scutoidbox.wikidot.com/local--files/level-classes/environmental0.png&quot;); background-image: {$envimg}; background-repeat: no-repeat; background-size: contain; background-position: right;">
+                                            <p><strong><span class="lang-cn">环境</span><span class="lang-tr">環境</span>：0/5</strong>
+                                                <br /> <span><span class="lang-cn">无环境风险</span><span class="lang-tr">無環境風險</span></span>
+                                            </p>
+                                        </div>
+                                        <div class="entity indicator in-1 syntax error near `{$customen`" style="background: rgba(var(--bg),0.3); background: rgba({$entcolor},0.3); border-left: solid 0.4rem rgb(var(--bg)); border-left: solid 0.4rem rgb({$entcolor}); background-image: url(&quot;http://scutoidbox.wikidot.com/local--files/level-classes/entity1.png&quot;); background-image: {$entimg}; background-repeat: no-repeat; background-size: contain; background-position: right;">
+                                            <p><strong><span class="lang-cn">实体</span><span class="lang-tr">實體</span>：1/5</strong>
+                                                <br /> <span><span class="lang-cn">极少敌意存在</span><span class="lang-tr">極少敵意存在</span></span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <p>
+                                        <br />
+                                    </p>
+                                    <div class="lightblock">
+                                        <p><strong>日期：</strong>2025 年 1 月 15 日</p>
+                                        <p><em>我一来到这儿，双手就变小了……照了照镜子，看见了年轻时的自己……这他妈怎么可能？这地方简直和家一模一样，但我对此有种奇怪的感觉，就好像我一直被人监视着。我觉得这地方好像发生过什么，可我记不起到底是什么。</em></p>
+                                        <p><em>我坐在客厅的沙发上，试图休息，但不能，于是我爬楼梯到上一层。左墙上有一张雏菊的照片，我房间前有一张宇航员地毯（我有一个梦想，就像任何其他孩子一样——成为一名宇航员），天花板上有一个带损坏拉杆的活板门……我记得在我 9 岁的时候，我在父母外出时卡在了阁楼里。当然，爸爸本该在家陪我的，可是他告诉我，他只在酒吧待 1 个小时，很快就会回来。我也是这么想，所以我决定去睡觉。</em></p>
+                                        <p><em>5 小时后，我听到门开了——显然，我尖叫着求救。那是爸爸，我能听见他边自言自语边迈着沉重、不稳的步子走来。我尖叫求救，我现在确信爸爸当时陷入了妄想。他喝得很多——他总是这样。不到 1 分钟，我就听到爸爸在客厅地板上昏倒了。</em></p>
+                                        <p><em>过了 12 个小时，妈妈回家了，问爸爸我在哪儿，他只说我在阁楼里玩，准备在那睡觉。她打开了活板门，随即看见我在地板上，蜷缩成一团，冷得发抖，痛苦地轻声呻吟。因为太渴，我再也哭不出来；又因为声带受损，我也无法尖叫。那天见到妈妈是我一生中最大的慰藉。而对她来说，那是一场纯粹的愤怒风暴。</em></p>
+                                        <p><em>我试图回忆发生了什么，但实在太累，无法思考。我打开了通向我房间的门，然后……里面一切都没变，时间仿佛静止。虽然这很怀旧，但我不禁感到不安。至少还有我的旧床可以睡，穿越 Level 8 耗尽了我的精力。</em></p>
+                                        <p>- <strong>JJ</strong></p>
+                                    </div>
+                                    <h2 id="toc0"><span>描述</span></h2>
+                                    <hr />
+                                    <p><strong>Level 123</strong> 具有变形特性，总是呈现流浪者童年时期存在某种情感联结的地方的样子。试图走到外面去是徒劳的，因为门窗都无法打开，而且如果房子原本没有门，出口会被砖块填实堵死。</p>
+                                    <p>由于 <strong>Level 123</strong> 是为每位访客量身定制的，因此可以得出结论，两个流浪者不可能相遇。有人怀疑这个地方一次只能容纳一位访客，而且访客必须离开，下一位才能进入。</p>
+                                    <p>流浪者们报告说，一旦进入这个层级，就会感受到强烈的怀旧与恐惧交织的情绪。目前尚不清楚这种感觉是由层级本身引起的，还是与这个地方相关的记忆所导致的。这个层级里没有食物供应，但这并不需要，因为在那里没有人会挨饿。</p>
+                                    <p><strong>Level 123</strong> 可通过一扇白色木门从任何层级进入，这扇门便是其入口。据报道，似乎只有那些有着严重童年创伤的流浪者才会遇到 <strong>Level 123</strong>。不幸的是，尽管有七名流浪者报告说进入过这个层级并描述了它的样子，但只有一个名叫 <strong>JJ</strong> 的人，人们通过他拥有的日记，得以描述自身在那里逗留期间发生的事情。由于未知原因，访客们都记不起自己在 <strong>Level 123</strong> 期间发生过什么。因此，有人推测该层级本身会通过一种名为“选择性失忆”的过程来保护访客的心理健康。然而，由于关于 <strong>Level 123</strong> 的报告数量极少，故无法证实这一解释是否接近事实。</p>
+                                    <p>一旦流浪者进入该层级，他们的外貌就会变回事件首次发生时的样子——通常像个孩子。首次进入该层级一天后，一场被称为“回溯”的事件将会发生。该层级会具象化出一个或多个与流浪者的创伤相关的人，迫使他们重新体验那段经历，持续时间与最初经历的时长相同。第一次“回溯”事件发生后，会有两天的间隔，之后它会无限次重复发生。</p>
+                                    <p>流浪者 JJ 从 <strong>Level 123</strong> 返回后被带到了 Level 1，人们发现他眼中含着泪水，用几乎听不见的声音喃喃自语：“对不起，妈妈。我还是很害怕。”最后一个字刚说完，他就晕倒在了地板上。之后，他被送往医院检查是否有神经损伤。事发一周后，JJ 醒了过来，却对自己在 <strong>Level 123</strong> 的经历毫无记忆。不过，人们找回他口袋里的一本日记，里面记录了他在那里的全部经历。</p>
+                                    <p>附件是关于该层级的唯一可用文档。</p>
+                                    <div class="lightblock">
+                                        <p><strong>日期：</strong>2025 年 1 月 16 日</p>
+                                        <p><em>现在是白天，我刚经历了一生中最好的一次睡眠。这房子还是让我不寒而栗，不过这儿让我感到十分舒适，我无法解释为什么。坏消息是这儿没有食物，而且门打不开，所以我惨了。我会……等待然后找出发生了什么事。</em></p>
+                                        <p><em>当然，还有阁楼那事。在妈妈找到我之后，我听到的第一声是她的尖叫，而那声音混杂着原始的愤怒与恐惧——那种恐惧，如同一个人初次领悟到自己终将死亡的那个日子所感受到的一样。在把我放进我的房间并关上房门后不久，我听到她突然打开她卧室的门，并对爸爸大喊大叫。</em></p>
+                                        <p><em>“你这恶心的狗娘养的，”妈妈说，“今天是你踏进这房子的最后一天。你根本就不在乎我们的儿子，我又怎么可能在乎你呢？你毁了这个家。快点滚出去吧，否则我他妈的会在你张开你那肮脏的嘴之前杀了你！”</em></p>
+                                        <p><em>“可是……可是……” 爸爸试图从地上爬起来，一边说着话。</em></p>
+                                        <p><em>“滚出去！”</em></p>
+                                        <p><em>我所听到的是爸爸愤怒冲出房子的声音。虽然我一整天哭个不停，但想到爸爸再也无法伤害我了，心底还是感到一丝慰藉……爸爸走了。</em></p>
+                                    </div>
+                                    <div class="lightblock">
+                                        <p><strong>日期：</strong>2025 年 1 月 16 日</p>
+                                        <p><em>天啊……我的双手在发抖。我在客厅中听到一声枪响，紧接着……我看到妈妈倒在地上，鲜血到处都是。爸爸……他眼里充满怒火地看着我，好像是我的错，又像是我亲手射杀了妈妈一样。</em></p>
+                                        <p><em>“是你逼我这么做的。”</em></p>
+                                        <p><em>怎么会是我的错？那天发生了什么？我尽力了——我发誓我尽力去想起那房子中发生的一切，可就似我的大脑想让我远离那件事情，仿佛它想履行上天未能向我保证的角色。毕竟，只有当我记起来，那才是真实的，对吧？</em></p>
+                                        <p><em>我整个人僵住了，我记不起妈妈的脸，在那时她的脸已完全毁容。不过我能记起爸爸的脸；那副该死的表情始终是我梦境的主线。我能看见他脸上挂着淡淡的微笑，仿佛他的灵魂被困于此，而我的死能最终将他从这个地狱中解脱。爸爸手中有一把猎枪，我闭上了双眼，因为我知道，在我妈妈之后，我是他最想除掉的一个，我知道他会来找我的。</em></p>
+                                        <p><em>紧接着我又听见另一声枪响，不过我不是目标。妈的……我满脸都是血，我可以尝到他血中的铁味……我很震惊，难以置信刚刚发生了什么。那场景我难以承受，我猛吐了整整 1 分钟。我试图朝楼梯走了几步，却随即昏倒在地。等我醒来时，一切都消失了。没有半点血迹，所有东西都消失了。</em></p>
+                                        <p><em>是的，我记起了一个事实：爸爸和妈妈已经死很久了，很久了。可是，我记不起在那个傍晚发生了什么……今天发生的究竟是过去的现实、我对事件的诠释，还是这房子开的残忍玩笑？据我的心理医生说，我的大脑大概是决定屏蔽这段记忆之类的。就这样。</em></p>
+                                    </div>
+                                    <div class="lightblock">
+                                        <p><strong>日期：</strong>2025 年 1 月 17 日</p>
+                                        <p><em>我现在想起来了。我和邻居的儿子们在后院玩捉人游戏，我是街上最快的孩子，尽管他们徒劳地试图从我身边跑开，可我太快了。</em></p>
+                                        <p><em>我能听到通往客厅的门打开了，但我没有理会。我想大概只是妈妈出去购物，她肯定很快会回来的。</em></p>
+                                        <p><em>我正要去抓孩子们的时候，我听见了他的声音。几秒钟过后，原本几近听不见的谈话声变为激烈的争吵声。我是个胆小鬼，我不敢和父亲对峙，因为他比我强壮得多。我害怕被他视为行为不正的孩子，而且我十分清楚他会对那些行为不正的孩子做出什么。我僵在原地，一动不动地站在邻居家的孩子们旁边。</em></p>
+                                        <p><em>也就在那时，我听见那两声枪响，那半夜总会把我惊醒的那两声枪响。过了 10 分钟，周遭恢复了沉寂，而我回到家后，发现“爸爸妈妈都睡在地板上”——警察是这么和我说的，我当真就信了他们的话。但就是这地方，带他们回来，让他们无法休息。</em></p>
+                                    </div>
+                                    <div class="lightblock">
+                                        <p><strong>日期：</strong>2025 年 1 月 18 日</p>
+                                        <p><em>又发生了，就在每天的同一时刻。我是个懦夫。我本可以阻止的，但我却待在我的房间里。这一次，他们在争吵。</em></p>
+                                        <p><em>“我知道你他妈就是克莱尔，我真的真的受够了听你胡扯，”妈妈说。“我不在乎你的道歉——什么‘不得不通宵加班’，什么‘交通太堵’，或者你‘和朋友喝酒’。我就不该相信你。永远都不该。<strong>滚出我的房子，不然我他妈现在就报——</strong>”</em></p>
+                                        <p><em>然后第一声枪响了。我一直在等第二声，可这次比我记忆中的间隔要长得多。接着爸爸走进了我的房间。他脸上还是上次那种表情。</em></p>
+                                        <p><em>“是你逼我这么做的。”</em></p>
+                                        <p><em>然后，他再一次把猎枪塞进自己嘴里，并扣动了扳机。<sup class="footnoteref"><a id="footnoteref-1" href="javascript:;" class="footnoteref" onclick="WIKIDOT.page.utils.scrollToReference('footnote-1')">1</a></sup>这次，血迹没有消失。</em></p>
+                                        <p><em>那一夜，我盯着他毫无生气的躯体睡着了。</em></p>
+                                    </div>
+                                    <div class="lightblock">
+                                        <p><strong>日期：</strong>2025 年 1 月 20 日</p>
+                                        <p><em>这次我准备好了。至少我以为我准备好了。</em></p>
+                                        <p><em>当我看到爸爸拿着枪过来时，我试图阻止他，但他力气更大。我冲妈妈喊快跑，但已经太晚了。那晚响了三枪。我流着血，看着妈妈喘气，开始朝她爬去，想在死前握住她的手。在我能再次感受到她的触摸之前，一切陷入了黑暗。</em></p>
+                                        <p><em>也许一切都结束了。</em></p>
+                                        <p><em>也许我终于从这个活生生的地狱中解脱了。</em></p>
+                                        <p><em>然后我在自己的床上醒来。至少，血迹消失了。</em></p>
+                                        <p><em>但地狱没有。</em></p>
+                                    </div>
+                                    <div class="lightblock">
+                                        <p><strong>日期：</strong>2025 年 1 月 21 日</p>
+                                        <p><em>从 16 号起我就没睡过觉。我承认，死亡是一种奇特的体验。在我徒劳地反抗后被爸爸开枪打死，这在我心中唤醒了一种不同于死亡本身的恐惧。</em></p>
+                                        <p><em>那是我六岁生日。爸爸那天在家工作，妈妈则在当服务员赚外快。我知道她在给我准备惊喜，她每年都是这样。是爸爸给的钱，让她能为我准备派对。可是，那一年家里很拮据。我当然很难过，不过当时情况便是如此，我理解家里的情况，所以我并没有发脾气。</em></p>
+                                        <p><em>爸爸让我从冰柜里给他拿瓶啤酒，我照做了，但意外发生了。瓶子从我手中滑落，摔碎了。我不该那样的……都怪我。当爸爸进来看到碎玻璃时，我理解他的愤怒。当爸爸抓住我的胳膊时，我理解他的暴怒。当我挣扎着想挣脱他，逼得他更用力地拽住我时，我理解他的暴力。当他把我的胳膊扭到我尖叫出声时，我理解了他的残忍。所以，当妈妈回家看到我胳膊断了，我告诉她是我从楼梯上摔下来了。都是因为我才打碎了瓶子，惩罚是必须的，这样就不会再发生了。管教是必须的。</em></p>
+                                    </div>
+                                    <div class="lightblock">
+                                        <p><strong>日期：</strong>2025 年 1 月 22 日</p>
+                                        <p><em>又一次。</em></p>
+                                        <p><em>妈妈尖叫。</em></p>
+                                        <p><em>爸爸开枪。</em></p>
+                                        <p><em>妈妈死了。</em></p>
+                                        <p><em>爸爸开枪。</em></p>
+                                        <p><em>爸爸死了。</em></p>
+                                        <p><em>什么都没变。</em></p>
+                                        <p><em>我不再写了……</em></p>
+                                        <p><em>暂时吧。</em></p>
+                                    </div>
+                                    <div class="lightblock">
+                                        <p><strong>日期：</strong>2025 年 2 月 14 日</p>
+                                        <p><em>我死过太多次了，已经数不清了。</em></p>
+                                        <p><em><strong>我的死，不全是爸爸造成的。</strong></em></p>
+                                    </div>
+                                    <div class="lightblock">
+                                        <p><strong>日期：</strong>2025 年 2 月 15 日</p>
+                                        <p><em>这一次，我甚至没有去想爸爸。我甚至没有去想那些血。我甚至没有去想这一切多么不公平，没有去想我的生活好不容易步入正轨，却被这个鬼地方全他妈的毁了。</em></p>
+                                        <p><em>我没有去想这个地狱。</em></p>
+                                        <p><em>我只想着妈妈。</em></p>
+                                        <p><em>我又一次见到了她。什么都改变不了。她总会死在这间客厅里，死在她的凶手身旁。她会被那个总是醉醺醺回家、一身屎臭的王八蛋杀死。</em></p>
+                                        <p><em>她会被那个只在乎半夜溜出去把血汗钱花在妓女和酒水上的混账爆头。太多次了，他踉跄着回家，身上带着若有若无的女人香水味。我一直知道爸爸的秘密。妈妈也怀疑过，但每次她问他，他都撒谎。他对妈妈撒了那么多次谎，而妈妈因为爱他，全都照单全收了。</em></p>
+                                        <p><em>当妈妈睡在地板上时，我不明白爸爸为什么生我的气。现在我懂了。我记得他以前是怎么打我妈妈的。“这房子还他妈是脏的”“你只是个没用的贱人，连这个家里的责任都不管”，以及“你个恶心的婊子，连饭都他妈的不会做”——这些都是爸爸过去常说的话，而妈妈则蜷缩在地板上，忍受着拳打脚踢。我会把自己锁在房间里，害怕他可能对我做什么。他习惯了，他知道妈妈会忍受这些殴打。她忍受这一切的唯一原因，是让我们能有个家，因为爸爸是家里唯一的经济来源。可是，我被困在阁楼的那天不一样。当她看到我独自一人，意识到他连自己的儿子都不在乎时，妈妈终于为自己站了出来。她把爸爸赶出了家门。当然，对他来说，我是那晚一切的起因。</em></p>
+                                        <p><em>我知道她又会死去，所以我只是抱住了她。我紧紧抱着她，等着爸爸十秒后进来。</em></p>
+                                        <p><em>三十秒过去了，什么都没发生。</em></p>
+                                        <p><em>于是我看向妈妈。她对我笑了。</em></p>
+                                        <p><em>“看看你，亲爱的，”妈妈说道。“你长这么高了，好帅。你是我在这世上生下的最可爱的男孩。”</em></p>
+                                        <p><em>我再次看向自己的双手。我不再是个孩子了，但在那一刻，我却像孩子一样无助脆弱。眼泪开始慢慢地涌出，然后像决堤的河水一样奔流。我一句话也说不出来……我无法相信眼前发生的一切。</em></p>
+                                        <p><em>“你那么，那么坚强。我知道你能战胜这个世界——我了解你。生活对你太残酷了，但我在这儿。我会一直陪着你，宝贝，哪怕你看不见我。我那么，那么，那么爱你，你知道的。你能做到的。”</em></p>
+                                        <p><em>我抱着她，泪水从眼中奔涌而出，如同大坝终被河水的力量冲垮。就在这时，我听到什么东西解锁的声音。门终于开了。</em></p>
+                                        <p><em>我那么爱你，妈妈。</em><sup class="footnoteref"><a id="footnoteref-2" href="javascript:;" class="footnoteref" onclick="WIKIDOT.page.utils.scrollToReference('footnote-2')">2</a></sup></p>
+                                    </div>
+                                    <h2 id="toc1"><span>入口与出口</span></h2>
+                                    <hr />
+                                    <h3 id="toc2"><span>入口</span></h3>
+                                    <ul>
+                                        <li>遭受严重童年创伤的流浪者可能会发现一扇白色的木门，它将通向 <strong>Level 123</strong>。</li>
+                                    </ul>
+                                    <h3 id="toc3"><span>出口</span></h3>
+                                    <ul>
+                                        <li>据信，原谅自己是离开 <strong>Level 123</strong> 的唯一方式。逃脱会将流浪者传送至一个安全层级。</li>
+                                    </ul>
+                                    <div class="footer-wikiwalk-nav">
+                                        <div style="text-align: center;">
+                                            <p> <a class="newpage" href="level-122.html">Level 122</a> | Level 123 | <a href="level-124.html">Level 124</a> </p>
+                                        </div>
+                                    </div>
+                                    <div class="footnotes-footer">
+                                        <div class="title">Footnotes</div>
+                                        <div class="footnote-footer" id="footnote-1"><a href="javascript:;" onclick="WIKIDOT.page.utils.scrollToReference('footnoteref-1')">1</a>. 这条信息表明，<strong>Level 123</strong> 可能不仅仅是流浪者记忆的简单具现化，更意在尽可能地去影响他。</div>
+                                        <div class="footnote-footer" id="footnote-2"><a href="javascript:;" onclick="WIKIDOT.page.utils.scrollToReference('footnoteref-2')">2</a>. 尽管这是唯一记录在案的案例，但可以推断，原谅自己是阻止“回溯”再次发生的唯一方法。因此，在理论上，创伤是 <strong>Level 123</strong> 的“燃料”。</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+    </body>
+    <!--ziyit-body-->
+    <style>
+    /* 生存难度容器居中 */
+    .sd-container {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 调整内容包装器 */
+    #content-wrap {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    /* 修复黑高亮主题 grid 布局把正文压窄的问题 */
+    #main-content {
+        display: block !important;
+        grid-template-columns: none !important;
+        grid-template-areas: none !important;
+    }
+
+    /* 保留 The Backrooms 标题，本站登录控件置于最上层不被标题遮挡 */
+    # header > div[style*="position: absolute"] {
+        position: absolute !important;
+        right: 10px !important;
+        top: 10px !important;
+        z-index: 999 !important;
+    }
+</style>
+    <!--/ziyit-body-->
+</html>

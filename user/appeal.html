@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>封禁申诉 - ZIYIT STUDIO</title>
+    <meta name="description" content="账号被封禁？在此提交申诉，接入人工客服审核。">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <style>
+        /* ===== 申诉页样式（沿用在线客服 token 设计体系） ===== */
+        body {
+            background: var(--ziyit-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .guide-wrap {
+            flex: 1;
+            max-width: 720px;
+            width: 100%;
+            margin: 24px auto 40px;
+            padding: 0 16px;
+            box-sizing: border-box;
+        }
+
+        .guide-card {
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 160px);
+            min-height: 460px;
+        }
+
+        .guide-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--ziyit-border);
+            background: var(--ziyit-bg-card);
+        }
+
+        .guide-header h1 {
+            font-size: 18px;
+            margin: 0;
+            color: var(--ziyit-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .guide-status {
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--ziyit-border);
+            color: var(--ziyit-text-secondary);
+        }
+
+        .guide-status.waiting {
+            color: #e67e22;
+            border-color: rgba(230, 126, 34, .4);
+            background: rgba(230, 126, 34, .1);
+        }
+
+        .guide-status.closed {
+            color: #95a5a6;
+            border-color: rgba(149, 165, 166, .4);
+            background: rgba(149, 165, 166, .1);
+        }
+
+        /* ---- 表单视图 ---- */
+        .appeal-form-view {
+            flex: 1;
+            overflow-y: auto;
+            padding: 26px 20px;
+        }
+
+        .appeal-form-view h2 {
+            font-size: 16px;
+            color: var(--ziyit-text-primary);
+            margin: 0 0 6px;
+        }
+
+        .appeal-form-view .a-desc {
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            margin: 0 0 20px;
+            line-height: 1.6;
+        }
+
+        .a-field {
+            margin-bottom: 14px;
+        }
+
+        .a-field label {
+            display: block;
+            font-size: 13px;
+            color: var(--ziyit-text-primary);
+            margin-bottom: 6px;
+        }
+
+        .a-field input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .a-field input:focus {
+            border-color: var(--ziyit-primary);
+        }
+
+        .a-error {
+            color: #e74c3c;
+            font-size: 13px;
+            margin: 10px 0 0;
+            white-space: pre-wrap;
+        }
+
+        .a-submit {
+            width: 100%;
+            padding: 11px 0;
+            border: none;
+            border-radius: 8px;
+            background: var(--ziyit-primary);
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: opacity .2s;
+        }
+
+        .a-submit:hover {
+            opacity: .88;
+        }
+
+        .a-submit:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+        .a-back {
+            display: inline-block;
+            margin-top: 18px;
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+        }
+
+        /* ---- 对话视图 ---- */
+        .appeal-chat-view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .guide-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: var(--ziyit-bg);
+        }
+
+        .g-msg {
+            max-width: 78%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.55;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .g-msg.user {
+            align-self: flex-end;
+            background: var(--ziyit-primary);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .g-msg.ai {
+            align-self: flex-start;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            color: var(--ziyit-text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .g-msg.human {
+            align-self: flex-start;
+            background: rgba(39, 174, 96, .12);
+            border: 1px solid rgba(39, 174, 96, .35);
+            color: var(--ziyit-text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .g-msg.sys {
+            align-self: center;
+            background: transparent;
+            color: var(--ziyit-text-secondary);
+            font-size: 12px;
+            padding: 6px 12px;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .g-msg .g-name {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--ziyit-text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .g-msg.human .g-name {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .g-msg .g-badge {
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: #27ae60;
+            color: #fff;
+        }
+
+        .g-msg .g-time {
+            font-size: 10px;
+            color: var(--ziyit-text-secondary);
+            margin-top: 4px;
+            opacity: .8;
+        }
+
+        .g-msg.user .g-time {
+            color: rgba(255, 255, 255, .75);
+        }
+
+        .guide-input-row {
+            display: flex;
+            gap: 10px;
+            padding: 12px 14px;
+            border-top: 1px solid var(--ziyit-border);
+            background: var(--ziyit-bg-card);
+        }
+
+        .guide-input {
+            flex: 1;
+            resize: none;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            outline: none;
+            transition: border-color .2s;
+            max-height: 120px;
+        }
+
+        .guide-input:focus {
+            border-color: var(--ziyit-primary);
+        }
+
+        .guide-input:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+        .guide-send {
+            align-self: flex-end;
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            background: var(--ziyit-primary);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity .2s;
+            white-space: nowrap;
+        }
+
+        .guide-send:hover {
+            opacity: .88;
+        }
+
+        .guide-send:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        /* ---- 轻提示 ---- */
+        .g-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 36px;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 30, .92);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 999;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .25);
+            max-width: 86vw;
+        }
+
+        .g-toast.ok {
+            background: rgba(39, 174, 96, .94);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ===== 封禁申诉主区 ===== -->
+    <div class="guide-wrap">
+        <div class="guide-card">
+            <div class="guide-header">
+                <h1>🔒 封禁申诉</h1>
+                <span class="guide-status" id="appeal-status">申诉系统</span>
+            </div>
+
+            <!-- 表单视图：输入用户名 + 密码换取 appealToken -->
+            <div class="appeal-form-view" id="appeal-form-view">
+                <h2>账号被封禁了？</h2>
+                <p class="a-desc">如认为封禁有误，可提交申诉并接入人工客服审核。请使用被封禁账号的用户名与密码进行验证。</p>
+                <div class="a-field">
+                    <label for="appeal-username">用户名</label>
+                    <input type="text" id="appeal-username" autocomplete="username" placeholder="请输入被封禁账号的用户名">
+                </div>
+                <div class="a-field">
+                    <label for="appeal-password">密码</label>
+                    <input type="password" id="appeal-password" autocomplete="current-password" placeholder="请输入账号密码">
+                </div>
+                <button class="a-submit" id="appeal-submit">提交申诉</button>
+                <div class="a-error" id="appeal-error"></div>
+                <div style="text-align:center;"><a class="a-back" href="./">← 返回登录页</a></div>
+            </div>
+
+            <!-- 对话视图：与人工客服沟通 -->
+            <div class="appeal-chat-view" id="appeal-chat-view">
+                <div class="guide-messages" id="appeal-messages">
+                    <div class="g-msg sys">正在连接申诉系统…</div>
+                </div>
+                <div class="guide-input-row">
+                    <textarea class="guide-input" id="appeal-input" rows="2" maxlength="500"
+                        placeholder="请输入申诉内容（1-500字），Enter 发送（Shift+Enter 换行）"></textarea>
+                    <button class="guide-send" id="appeal-send">发送</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/ziyit_api.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        (function () {
+            'use strict';
+
+            var A = {
+                token: null,        // appealToken
+                sessionId: null,
+                rendered: {},       // 已渲染消息 id（增量去重）
+                sending: false,
+                closed: false,
+                pollTimer: null,
+                username: ''
+            };
+
+            var el = {
+                status: document.getElementById('appeal-status'),
+                formView: document.getElementById('appeal-form-view'),
+                chatView: document.getElementById('appeal-chat-view'),
+                username: document.getElementById('appeal-username'),
+                password: document.getElementById('appeal-password'),
+                submit: document.getElementById('appeal-submit'),
+                error: document.getElementById('appeal-error'),
+                messages: document.getElementById('appeal-messages'),
+                input: document.getElementById('appeal-input'),
+                send: document.getElementById('appeal-send')
+            };
+
+            // ---------- 工具 ----------
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
+            function nowTime(ts) {
+                var d = ts ? new Date(ts) : new Date();
+                if (isNaN(d.getTime())) d = new Date();
+                var p = function (n) { return (n < 10 ? '0' : '') + n; };
+                return p(d.getHours()) + ':' + p(d.getMinutes());
+            }
+
+            function errText(err) {
+                var d = err && err.data && err.data.detail;
+                if (typeof d === 'string' && d) return d;
+                if (d && typeof d === 'object') {
+                    if (typeof d.message === 'string' && d.message) return d.message;
+                    if (typeof d.msg === 'string' && d.msg) return d.msg;
+                    if (typeof d.error === 'string' && d.error) return d.error;
+                }
+                return (err && err.message) || '请求失败，请稍后再试';
+            }
+
+            function showToast(text, ok) {
+                var t = document.createElement('div');
+                t.className = 'g-toast' + (ok ? ' ok' : '');
+                t.textContent = text;
+                document.body.appendChild(t);
+                setTimeout(function () { t.style.transition = 'opacity .3s'; t.style.opacity = '0'; }, 2400);
+                setTimeout(function () { t.remove(); }, 2800);
+            }
+
+            function scrollBottom() {
+                el.messages.scrollTop = el.messages.scrollHeight;
+            }
+
+            // ---------- 消息渲染 ----------
+            function addMsg(type, content, meta) {
+                meta = meta || {};
+                var wrap = document.createElement('div');
+                if (type === 'sys') {
+                    wrap.className = 'g-msg sys';
+                    wrap.textContent = content;
+                } else if (type === 'user') {
+                    wrap.className = 'g-msg user';
+                    var uw = document.createElement('div');
+                    uw.textContent = content;
+                    wrap.appendChild(uw);
+                    var ut = document.createElement('div');
+                    ut.className = 'g-time';
+                    ut.textContent = meta.time || nowTime();
+                    wrap.appendChild(ut);
+                } else {
+                    wrap.className = type === 'human' ? 'g-msg human' : 'g-msg ai';
+                    var name = document.createElement('div');
+                    name.className = 'g-name';
+                    if (type === 'human') {
+                        var badge = document.createElement('span');
+                        badge.className = 'g-badge';
+                        badge.textContent = '人工客服';
+                        name.appendChild(badge);
+                        var who = document.createElement('span');
+                        who.textContent = meta.username || '';
+                        name.appendChild(who);
+                    }
+                    wrap.appendChild(name);
+                    var body = document.createElement('div');
+                    body.textContent = content;
+                    wrap.appendChild(body);
+                    var tm = document.createElement('div');
+                    tm.className = 'g-time';
+                    tm.textContent = meta.time || nowTime();
+                    wrap.appendChild(tm);
+                }
+                el.messages.appendChild(wrap);
+                scrollBottom();
+            }
+
+            function addSys(content) {
+                addMsg('sys', content);
+            }
+
+            // 按后端消息结构渲染（role: user 自己 / system 系统 / 其余为客服）
+            function renderMsg(m) {
+                var id = m.id || (m.ts || m.sentAt || '') + '|' + (m.content || '');
+                if (A.rendered[id]) return;
+                A.rendered[id] = true;
+                var role = String(m.role || m.type || '').toLowerCase();
+                var content = m.content || '';
+                var time = nowTime(m.ts || m.sentAt);
+                if (role === 'system' || role === 'sys' || role === 'handoff' || role === 'transfer') {
+                    addSys(content || '系统消息');
+                } else if (role === 'user') {
+                    addMsg('user', content, { time: time });
+                } else {
+                    addMsg('human', content, { time: time, username: m.senderName || m.fromUsername || '' });
+                }
+            }
+
+            function renderAll(msgs) {
+                (msgs || []).forEach(renderMsg);
+            }
+
+            // ---------- 轮询申诉会话 ----------
+            function startPolling() {
+                stopPolling();
+                A.pollTimer = setInterval(pollSession, 2000);
+                pollSession();
+            }
+
+            function stopPolling() {
+                if (A.pollTimer) { clearInterval(A.pollTimer); A.pollTimer = null; }
+            }
+
+            function pollSession() {
+                if (A.closed) return;
+                ZIYIT_API.appealSession(A.token).then(function (d) {
+                    if (d.sessionId) A.sessionId = d.sessionId;
+                    if (d.status === 'closed') {
+                        finishClosed();
+                        return;
+                    }
+                    renderAll(d.messages);
+                }).catch(function (err) {
+                    if (err && err.status === 401) {
+                        // 申诉令牌失效：停止轮询，回到表单视图
+                        stopPolling();
+                        A.closed = true;
+                        el.chatView.style.display = 'none';
+                        el.formView.style.display = 'block';
+                        el.status.textContent = '申诉系统';
+                        el.status.className = 'guide-status';
+                        el.error.textContent = '申诉会话已失效，请重新提交申诉';
+                        showToast('申诉已失效，请重新提交', 'error');
+                        return;
+                    }
+                    // 其他错误静默忽略（下次轮询再试）
+                });
+            }
+
+            function finishClosed() {
+                stopPolling();
+                A.closed = true;
+                el.input.disabled = true;
+                el.send.disabled = true;
+                el.status.textContent = '申诉已结束';
+                el.status.className = 'guide-status closed';
+                addSys('本次申诉已结束');
+            }
+
+            // ---------- 发送 ----------
+            function sendMessage() {
+                if (A.closed || A.sending) return;
+                var content = (el.input.value || '').trim();
+                if (!content) return;
+                if (content.length > 500) { showToast('内容不能超过500字'); return; }
+                A.sending = true;
+                el.send.disabled = true;
+                el.input.value = '';
+                // 乐观渲染自己的消息
+                renderMsg({ role: 'user', content: content, ts: new Date().toISOString() });
+                ZIYIT_API.appealReply(A.token, content).then(function () {
+                    A.sending = false;
+                    el.send.disabled = false;
+                }).catch(function (err) {
+                    A.sending = false;
+                    el.send.disabled = false;
+                    if (err && (err.status === 400 || err.status === 404 || err.status === 403)) {
+                        finishClosed();
+                        showToast('申诉会话已结束', 'error');
+                    } else {
+                        showToast(errText(err), 'error');
+                    }
+                });
+            }
+
+            // ---------- 提交申诉 ----------
+            function submitAppeal() {
+                el.error.textContent = '';
+                var username = (el.username.value || '').trim();
+                var password = el.password.value;
+                if (!username) { el.error.textContent = '请输入用户名'; return; }
+                if (!password) { el.error.textContent = '请输入密码'; return; }
+
+                // 与登录页一致的编码：base64(md5(password))
+                var pwB64 = CryptoJS.MD5(password).toString(CryptoJS.enc.Base64);
+                el.submit.disabled = true;
+                el.submit.textContent = '提交中…';
+
+                ZIYIT_API.appealLogin(username, pwB64).then(function (d) {
+                    var token = d.appealToken || d.token || d.accessToken;
+                    if (!token) { throw new Error('未获取到申诉令牌'); }
+                    A.token = token;
+                    A.username = username;
+                    A.closed = false;
+                    // 切换到对话视图
+                    el.formView.style.display = 'none';
+                    el.chatView.style.display = 'flex';
+                    el.status.textContent = '申诉中 · ' + username;
+                    el.status.className = 'guide-status waiting';
+                    el.input.disabled = false;
+                    el.send.disabled = false;
+                    el.messages.innerHTML = '';
+                    A.rendered = {};
+                    addSys('申诉已提交，正在等待人工客服接入…');
+                    startPolling();
+                }).catch(function (err) {
+                    el.submit.disabled = false;
+                    el.submit.textContent = '提交申诉';
+                    el.error.textContent = errText(err);
+                });
+            }
+
+            // ---------- 事件绑定 ----------
+            el.submit.addEventListener('click', submitAppeal);
+            el.input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            el.send.addEventListener('click', sendMessage);
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线客服 - ZIYIT STUDIO</title>
+    <meta name="description" content="ZIYIT STUDIO 在线客服，AI 智能助手 + 人工客服。">
+    <link rel="icon" href="./assets/ziyit.png" type="image/x-icon">
+    <link rel="stylesheet" href="./assets/ziyit-theme.css">
+    <style>
+        /* ===== 客服对话页样式（沿用站点 token 设计体系） ===== */
+        body {
+            background: var(--ziyit-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .guide-wrap {
+            flex: 1;
+            max-width: 860px;
+            width: 100%;
+            margin: 24px auto 40px;
+            padding: 0 16px;
+            box-sizing: border-box;
+        }
+
+        .guide-card {
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 160px);
+            min-height: 460px;
+        }
+
+        .guide-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--ziyit-border);
+            background: var(--ziyit-bg-card);
+        }
+
+        .guide-header h1 {
+            font-size: 18px;
+            margin: 0;
+            color: var(--ziyit-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .guide-status {
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--ziyit-border);
+            color: var(--ziyit-text-secondary);
+        }
+
+        .guide-status.online {
+            color: #27ae60;
+            border-color: rgba(39, 174, 96, .4);
+            background: rgba(39, 174, 96, .1);
+        }
+
+        .guide-status.waiting {
+            color: #e67e22;
+            border-color: rgba(230, 126, 34, .4);
+            background: rgba(230, 126, 34, .1);
+        }
+
+        .guide-status.closed {
+            color: #95a5a6;
+            border-color: rgba(149, 165, 166, .4);
+            background: rgba(149, 165, 166, .1);
+        }
+
+        .guide-quota {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+            border-bottom: 1px solid var(--ziyit-border);
+            background: var(--ziyit-bg-card);
+        }
+
+        .guide-quota.locked {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, .08);
+        }
+
+        .guide-quota .q-bar {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--ziyit-border);
+            overflow: hidden;
+            max-width: 120px;
+        }
+
+        .guide-quota .q-fill {
+            height: 100%;
+            background: var(--ziyit-primary);
+            transition: width .4s;
+        }
+
+        .guide-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: var(--ziyit-bg);
+        }
+
+        /* ---- 四类气泡 ---- */
+        .g-msg {
+            max-width: 78%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.55;
+            word-break: break-word;
+            white-space: pre-wrap;
+            position: relative;
+        }
+
+        .g-msg.user {
+            align-self: flex-end;
+            background: var(--ziyit-primary);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .g-msg.ai {
+            align-self: flex-start;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            color: var(--ziyit-text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .g-msg.human {
+            align-self: flex-start;
+            background: rgba(39, 174, 96, .12);
+            border: 1px solid rgba(39, 174, 96, .35);
+            color: var(--ziyit-text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .g-msg.sys {
+            align-self: center;
+            background: transparent;
+            color: var(--ziyit-text-secondary);
+            font-size: 12px;
+            padding: 6px 12px;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .g-msg .g-name {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--ziyit-text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .g-msg.human .g-name {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .g-msg .g-badge {
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: #27ae60;
+            color: #fff;
+        }
+
+        .g-msg .g-time {
+            font-size: 10px;
+            color: var(--ziyit-text-secondary);
+            margin-top: 4px;
+            opacity: .8;
+        }
+
+        .g-msg.user .g-time {
+            color: rgba(255, 255, 255, .75);
+        }
+
+        /* ---- 输入区 ---- */
+        .guide-input-row {
+            display: flex;
+            gap: 10px;
+            padding: 12px 14px;
+            border-top: 1px solid var(--ziyit-border);
+            background: var(--ziyit-bg-card);
+        }
+
+        .guide-input {
+            flex: 1;
+            resize: none;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            outline: none;
+            transition: border-color .2s;
+            max-height: 120px;
+        }
+
+        .guide-input:focus {
+            border-color: var(--ziyit-primary);
+        }
+
+        .guide-input:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+        .guide-input-btns {
+            display: flex;
+            gap: 8px;
+            align-self: flex-end;
+        }
+
+        .guide-end {
+            padding: 10px 12px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--ziyit-text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color .2s, border-color .2s, opacity .2s;
+        }
+
+        .guide-end:hover:not(:disabled) {
+            color: var(--ziyit-danger, #e74c3c);
+            border-color: var(--ziyit-danger, #e74c3c);
+        }
+
+        .guide-end:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .guide-send {
+            align-self: flex-end;
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            background: var(--ziyit-primary);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity .2s;
+            white-space: nowrap;
+        }
+
+        .guide-send:hover {
+            opacity: .88;
+        }
+
+        .guide-send:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .guide-count {
+            font-size: 11px;
+            color: var(--ziyit-text-secondary);
+            padding: 0 14px 10px;
+            background: var(--ziyit-bg-card);
+            text-align: right;
+        }
+
+        /* ---- 转接中动画 ---- */
+        .g-transfer-wait {
+            align-self: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: rgba(230, 126, 34, .12);
+            color: #e67e22;
+            font-size: 13px;
+        }
+
+        .g-transfer-wait .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e67e22;
+            animation: gBlink 1s infinite;
+        }
+
+        @keyframes gBlink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .2;
+            }
+        }
+
+        /* ---- 转人工确认框 ---- */
+        .g-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 100000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .g-modal.active {
+            display: flex;
+        }
+
+        .g-modal-box {
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            padding: 22px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, .2);
+        }
+
+        .g-modal-box h3 {
+            margin: 0 0 10px;
+            font-size: 16px;
+            color: var(--ziyit-text-primary);
+        }
+
+        .g-modal-box p {
+            margin: 0 0 16px;
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            line-height: 1.6;
+        }
+
+        .g-modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .g-modal-actions button {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .g-btn-cancel {
+            background: var(--ziyit-border);
+            color: var(--ziyit-text-primary);
+        }
+
+        .g-btn-confirm {
+            background: var(--ziyit-primary);
+            color: #fff;
+        }
+
+        /* ---- Toast ---- */
+        .g-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100001;
+            padding: 10px 18px;
+            border-radius: 8px;
+            color: #fff;
+            background: #e74c3c;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .25);
+            font-size: 14px;
+            max-width: 80vw;
+            text-align: center;
+        }
+
+        .g-toast.ok {
+            background: #27ae60;
+        }
+
+        /* 未登录提示 */
+        .guide-login-hint {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--ziyit-text-secondary);
+        }
+
+        .guide-login-hint a {
+            color: var(--ziyit-primary);
+        }
+
+        @media (max-width: 600px) {
+            .g-msg {
+                max-width: 88%;
+            }
+            .guide-card {
+                height: calc(100vh - 120px);
+                min-height: 420px;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ===== 导航栏（与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='./download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='./move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="./move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="./search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="./music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="./Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="./Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="./developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="./backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="./music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="./ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="./user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="./user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()" id="backNavLink">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ===== 客服对话主区 ===== -->
+    <div class="guide-wrap">
+        <div class="guide-card">
+            <div class="guide-header">
+                <h1>💬 在线客服</h1>
+                <span class="guide-status" id="guide-status-badge">AI 助手</span>
+            </div>
+            <div class="guide-quota" id="guide-quota">
+                <span id="guide-quota-text">今日剩余 - 次</span>
+                <div class="q-bar"><div class="q-fill" id="guide-quota-fill" style="width:100%"></div></div>
+                <span id="guide-quota-reset"></span>
+            </div>
+            <div class="guide-messages" id="guide-messages">
+                <div class="g-msg sys">正在连接客服系统…</div>
+            </div>
+            <div class="guide-count"><span id="guide-count">0 / 500</span></div>
+            <div class="guide-input-row">
+                <textarea class="guide-input" id="guide-input" rows="2" maxlength="500"
+                    placeholder="请输入您的问题（1-500字），Enter 发送（Shift+Enter 换行）"></textarea>
+                <div class="guide-input-btns">
+                    <button class="guide-end" id="guide-end" title="结束本次对话">结束对话</button>
+                    <button class="guide-send" id="guide-send">发送</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 转人工确认框 -->
+    <div class="g-modal" id="g-transfer-modal">
+        <div class="g-modal-box">
+            <h3>转接人工客服</h3>
+            <p id="g-transfer-modal-text">当前由 AI 助手为您服务，是否转接人工客服？转接后请耐心等待客服接入。</p>
+            <div class="g-modal-actions">
+                <button class="g-btn-cancel" id="g-transfer-cancel">继续使用 AI</button>
+                <button class="g-btn-confirm" id="g-transfer-confirm">确认转接</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./assets/ziyit_api.js"></script>
+    <script>
+        (function () {
+            'use strict';
+
+            var G = {
+                sessionId: null,
+                sessionStatus: null,   // ai / waiting_human / human / closed / 等
+                humanAdmin: null,      // 当前服务的人工客服信息
+                rendered: {},          // 已渲染消息 messageId 集合（增量去重）
+                sending: false,
+                locked: false,         // 429 锁定
+                lockSeconds: 0,
+                lastResetIn: 0,
+                pollingSession: false,
+                closed: false,         // 会话已结束（用户/客服/系统关闭）
+                closedByUser: false,   // 是否由用户主动结束（区分"您/AI/人工客服已结束"）
+                welcomeShown: false
+            };
+
+            var el = {
+                statusBadge: document.getElementById('guide-status-badge'),
+                quota: document.getElementById('guide-quota'),
+                quotaText: document.getElementById('guide-quota-text'),
+                quotaFill: document.getElementById('guide-quota-fill'),
+                quotaReset: document.getElementById('guide-quota-reset'),
+                messages: document.getElementById('guide-messages'),
+                input: document.getElementById('guide-input'),
+                send: document.getElementById('guide-send'),
+                end: document.getElementById('guide-end'),
+                count: document.getElementById('guide-count')
+            };
+
+            // ---------- 工具 ----------
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
+            function nowTime() {
+                var d = new Date(), p = function (n) { return (n < 10 ? '0' : '') + n; };
+                return p(d.getHours()) + ':' + p(d.getMinutes());
+            }
+
+            function showToast(text, ok) {
+                var t = document.createElement('div');
+                t.className = 'g-toast' + (ok ? ' ok' : '');
+                t.textContent = text;
+                document.body.appendChild(t);
+                setTimeout(function () { t.style.transition = 'opacity .3s'; t.style.opacity = '0'; }, 2400);
+                setTimeout(function () { t.remove(); }, 2800);
+            }
+
+            function scrollBottom() {
+                el.messages.scrollTop = el.messages.scrollHeight;
+            }
+
+            // 追加消息：type ∈ user / ai / human / sys
+            function addMsg(type, content, meta) {
+                meta = meta || {};
+                var wrap = document.createElement('div');
+                if (type === 'sys') {
+                    wrap.className = 'g-msg sys';
+                    wrap.textContent = content;
+                } else if (type === 'user') {
+                    wrap.className = 'g-msg user';
+                    var uw = document.createElement('div');
+                    uw.textContent = content;
+                    wrap.appendChild(uw);
+                    var ut = document.createElement('div');
+                    ut.className = 'g-time';
+                    ut.textContent = meta.time || nowTime();
+                    wrap.appendChild(ut);
+                } else {
+                    wrap.className = type === 'human' ? 'g-msg human' : 'g-msg ai';
+                    var name = document.createElement('div');
+                    name.className = 'g-name';
+                    if (type === 'human') {
+                        var badge = document.createElement('span');
+                        badge.className = 'g-badge';
+                        badge.textContent = '人工客服';
+                        name.appendChild(badge);
+                        var who = document.createElement('span');
+                        who.textContent = meta.username || '';
+                        name.appendChild(who);
+                    } else {
+                        var ai = document.createElement('span');
+                        ai.textContent = 'AI 助手';
+                        name.appendChild(ai);
+                    }
+                    wrap.appendChild(name);
+                    var body = document.createElement('div');
+                    body.textContent = content;
+                    wrap.appendChild(body);
+                    var tm = document.createElement('div');
+                    tm.className = 'g-time';
+                    tm.textContent = meta.time || nowTime();
+                    wrap.appendChild(tm);
+                }
+                el.messages.appendChild(wrap);
+                scrollBottom();
+            }
+
+            function addSys(content) {
+                addMsg('sys', content);
+            }
+
+            // 结束会话的提示文案：按结束方区分（AI / 人工客服 / 用户）
+            function closedText() {
+                if (G.closedByUser) return '您已结束本次对话';
+                if (humanAdminName(G.humanAdmin)) return '人工客服已结束本次对话';
+                return 'AI 已结束本次对话';
+            }
+
+            // 转接中动画（持续闪烁的等待条）
+            function showTransferWait() {
+                hideTransferWait();
+                var w = document.createElement('div');
+                w.className = 'g-transfer-wait';
+                w.id = 'g-transfer-wait';
+                var dot = document.createElement('span');
+                dot.className = 'dot';
+                var txt = document.createElement('span');
+                txt.textContent = '正在转接人工客服…';
+                w.appendChild(dot);
+                w.appendChild(txt);
+                el.messages.appendChild(w);
+                scrollBottom();
+            }
+
+            function hideTransferWait() {
+                var w = document.getElementById('g-transfer-wait');
+                if (w) w.remove();
+            }
+
+            // ---------- 状态展示 ----------
+            function setStatusBadge(text, cls) {
+                el.statusBadge.textContent = text;
+                el.statusBadge.className = 'guide-status' + (cls ? ' ' + cls : '');
+            }
+
+            function setLocked(seconds) {
+                G.locked = seconds > 0;
+                G.lockSeconds = seconds;
+                el.input.disabled = G.locked;
+                el.send.disabled = G.locked || G.sending || G.closed;
+                el.end.disabled = G.locked || G.closed;
+                el.quota.classList.toggle('locked', G.locked);
+                if (G.locked) {
+                    el.quotaText.textContent = '已触发限流，' + seconds + ' 秒后可继续发送';
+                    el.quotaReset.textContent = '';
+                    el.quotaFill.style.width = '0%';
+                }
+            }
+
+            function updateQuota(data) {
+                var remaining = data.remaining != null ? data.remaining : null;
+                var resetIn = data.resetIn != null ? data.resetIn : null;
+                var limit = data.limit != null ? data.limit : null;
+                G.lastResetIn = resetIn != null ? resetIn : G.lastResetIn;
+
+                if (G.locked) {
+                    // 429 倒计时优先
+                    setLocked(G.lockSeconds - 1);
+                    if (G.lockSeconds <= 0) {
+                        setLocked(0);
+                        el.quotaText.textContent = '今日剩余 - 次';
+                    }
+                    return;
+                }
+                if (remaining == null) {
+                    el.quotaText.textContent = '今日剩余 - 次';
+                    el.quotaFill.style.width = '100%';
+                    el.quotaReset.textContent = '';
+                    return;
+                }
+                el.quotaText.textContent = '今日剩余 ' + remaining + ' 次';
+                var pct = limit ? Math.max(0, Math.min(100, Math.round(remaining / limit * 100))) : 100;
+                el.quotaFill.style.width = pct + '%';
+                if (resetIn != null) {
+                    // 每日限额跨天清零时 resetIn 可能是小时级，自适应显示 HH:MM:SS / MM:SS
+                    var h = Math.floor(resetIn / 3600), m = Math.floor((resetIn % 3600) / 60), s = resetIn % 60;
+                    var ss = (s < 10 ? '0' : '') + s;
+                    el.quotaReset.textContent = h > 0
+                        ? '重置 ' + h + ':' + (m < 10 ? '0' : '') + m + ':' + ss
+                        : '重置 ' + (m < 10 ? '0' : '') + m + ':' + ss;
+                } else {
+                    el.quotaReset.textContent = '';
+                }
+            }
+
+            // 每秒限流状态轮询
+            function startStatusPolling() {
+                setInterval(function () {
+                    if (G.locked) {
+                        updateQuota(null);
+                        return;
+                    }
+                    ZIYIT_API.guideStatus().then(function (d) {
+                        updateQuota(d || {});
+                        if (d && d.sessionStatus) {
+                            applySessionStatus(d.sessionStatus);
+                        }
+                    }).catch(function () {
+                        // 静默失败，下次再试
+                    });
+                }, 1000);
+            }
+
+            // 从会话/响应中提取客服显示名（兼容字符串与对象两种后端格式）
+            function humanAdminName(ha) {
+                if (!ha) return '';
+                if (typeof ha === 'string') return ha;
+                if (ha.username) return ha.username;
+                if (ha.name) return ha.name;
+                if (ha.displayName) return ha.displayName;
+                return '';
+            }
+
+            // 根据会话状态切换 UI
+            function applySessionStatus(status) {
+                if (!status || status === G.sessionStatus) return;
+                var prev = G.sessionStatus;
+                G.sessionStatus = status;
+                // 会话是否已接入人工客服（转人工成功后用户再发消息，后端仍可能返回 waiting 类状态，不应回退）
+                var hasHuman = G.sessionStatus === 'human' || G.sessionStatus === 'transfer_active' || !!humanAdminName(G.humanAdmin);
+
+                if (status === 'human' || status === 'transfer_active') {
+                    var nm = humanAdminName(G.humanAdmin);
+                    setStatusBadge(nm ? ('人工客服·' + nm) : '人工客服在线', 'online');
+                    hideTransferWait();
+                    startSessionPolling();
+                } else if (status === 'waiting_human' || status === 'transfer_waiting' || status === 'human_waiting') {
+                    if (hasHuman) {
+                        // 已接入人工：保持人工徽章，不显示转接等待条（避免状态抖动）
+                        hideTransferWait();
+                        var nmW = humanAdminName(G.humanAdmin);
+                        setStatusBadge(nmW ? ('人工客服·' + nmW) : '人工客服在线', 'online');
+                    } else {
+                        setStatusBadge('等待人工客服接入', 'waiting');
+                        showTransferWait();
+                        startSessionPolling();
+                    }
+                } else if (status === 'transfer_expired') {
+                    setStatusBadge('AI 助手');
+                    hideTransferWait();
+                    addSys('转人工请求已过期，您仍在使用 AI 助手服务。');
+                } else if (status === 'closed') {
+                    // 后端返回会话已结束：同步本地结束态，并提示是谁结束的
+                    if (G.closed) return;          // 用户已主动结束（endChat 已提示），不重复提示
+                    var closedTip = closedText();
+                    setClosedUI(closedTip);
+                    addSys(closedTip);
+                } else {
+                    setStatusBadge('AI 助手');
+                    hideTransferWait();
+                }
+                // 状态从人工回到 AI 时停止轮询
+                if (prev && (prev === 'human' || prev === 'waiting_human') &&
+                    status !== 'human' && status !== 'waiting_human' &&
+                    status !== 'transfer_waiting' && status !== 'human_waiting') {
+                    G.pollingSession = false;
+                }
+            }
+
+            // 人工同步：每 2 秒拉取会话详情，增量渲染客服回复
+            function startSessionPolling() {
+                if (G.pollingSession) return;
+                G.pollingSession = true;
+                var tick = function () {
+                    if (!G.pollingSession) return;
+                    ZIYIT_API.guideSession().then(function (d) {
+                        if (!d) return;
+                        if (d.sessionId) G.sessionId = d.sessionId;
+                        if (d.humanAdmin) {
+                            G.humanAdmin = d.humanAdmin;
+                            // 后端若未返回 status，只要有客服信息就把徽章切到人工并显示名字
+                            var nm = humanAdminName(G.humanAdmin);
+                            if (nm && G.sessionStatus !== 'human' && G.sessionStatus !== 'transfer_active') {
+                                G.sessionStatus = 'human';
+                                setStatusBadge('人工客服·' + nm, 'online');
+                                hideTransferWait();
+                            }
+                        }
+                        if (d.status) applySessionStatus(d.status);
+                        if (d.messages && d.messages.length) {
+                            var changed = false;
+                            d.messages.forEach(function (m) {
+                                var id = m.id || ((m.ts || m.sentAt || '') + '|' + (m.content || ''));
+                                if (G.rendered[id]) return;
+                                G.rendered[id] = true;
+                                changed = true;
+                                renderServerMessage(m, true);
+                            });
+                            if (changed) scrollBottom();
+                        }
+                        setTimeout(tick, 2000);
+                    }).catch(function () {
+                        setTimeout(tick, 2000);
+                    });
+                };
+                setTimeout(tick, 500);
+            }
+
+            // 渲染服务端消息，按后端消息规范：
+            //   sender=0, senderName="AI"   → AI 回复（默认样式）
+            //   sender=0, senderName="系统"  → 系统提示（居中灰字）
+            //   sender=用户ID                 → 用户自己发的（右侧）
+            //   sender=客服ID                 → 人工客服回复（徽标样式）
+            // 判断以 senderName / sender 为准，role 仅作兜底，避免后端 role 混用时误判
+            // skipMine=true 用于轮询：自己发送的消息本地已实时渲染，直接跳过，避免复读
+            function renderServerMessage(m, skipMine) {
+                var content = m.content || m.reply || '';
+                var role = m.role || '';
+                var sender = m.sender;
+                var sName = m.senderName || '';
+                var ts = m.ts || m.sentAt || m.time || '';
+
+                // 1) 系统提示（senderName=系统）
+                if (sName === '系统') {
+                    // 欢迎语（AI 客服自我介绍）即使被后端标记为系统消息，也按 AI 助手样式显示
+                    if (isWelcomeText(content)) {
+                        addMsg('ai', content, { time: fmtTime(ts) });
+                        return;
+                    }
+                    addSys(content);
+                    // 转人工成功/已接入的系统提示：把徽章切到人工并解析客服名
+                    var rt = m.replyType;
+                    if (rt === 'transfer_success' || rt === 'transfer_active' || rt === 'human') {
+                        var nm = humanAdminName(G.humanAdmin) || parseHumanFromText(content);
+                        if (nm) {
+                            G.sessionStatus = 'human';
+                            setStatusBadge('人工客服·' + nm, 'online');
+                            hideTransferWait();
+                            startSessionPolling();
+                        }
+                    }
+                    return;
+                }
+                // 2) AI 回复（senderName=AI 或 sender=0）
+                if (sName === 'AI' || (sender != null && Number(sender) === 0)) {
+                    addMsg('ai', content, { time: fmtTime(ts) });
+                    return;
+                }
+                // 3) 用户自己发送的消息（sender 是自己的 userId）
+                if (sender != null && G.myUserId != null && Number(sender) === Number(G.myUserId)) {
+                    if (!skipMine) addMsg('user', content, { time: fmtTime(ts) });
+                    return;
+                }
+                // 4) 人工客服回复（sender = 客服 userId，非 0）
+                if (sender != null && Number(sender) !== 0) {
+                    var fnm = sName || humanAdminName(G.humanAdmin) || '';
+                    // 徽章若仍是"AI 助手"则切到人工并显示客服名
+                    if (fnm && G.sessionStatus !== 'human' && G.sessionStatus !== 'transfer_active') {
+                        G.sessionStatus = 'human';
+                        setStatusBadge('人工客服·' + fnm, 'online');
+                        hideTransferWait();
+                    }
+                    addMsg('human', content, { username: fnm, time: fmtTime(ts) });
+                    return;
+                }
+                // 5) 兜底：role=system 按系统提示，其余按 AI
+                if (role === 'system') {
+                    addSys(content);
+                } else {
+                    addMsg('ai', content, { time: fmtTime(ts) });
+                }
+            }
+
+            // 从系统提示文案中解析客服名，例如"已为您转接人工客服（Minecraft_zy227）"
+            function parseHumanFromText(t) {
+                if (!t) return '';
+                var m = t.match(/[（(]([^（）()]+)[）)]/);
+                return m ? m[1].trim() : '';
+            }
+
+            // 判断是否为 AI 客服的欢迎语（含智能客服/快速指引/转人工说明且以问候语开头）
+            function isWelcomeText(t) {
+                if (!t) return false;
+                var s = t.trim();
+                return (/^(你好|您好|hi|hello)/i.test(s)) && (/智能客服|快速指引|转人工|官网客服/.test(s));
+            }
+
+            function fmtTime(t) {
+                if (!t) return '';
+                var d = new Date(t);
+                if (isNaN(d.getTime())) return '';
+                var p = function (n) { return (n < 10 ? '0' : '') + n; };
+                return p(d.getHours()) + ':' + p(d.getMinutes());
+            }
+
+            // ---------- 发送 ----------
+            function send() {
+                if (G.sending || G.locked) return;
+                if (G.closed) {
+                    showToast('本次对话已结束，请刷新页面开启新会话');
+                    return;
+                }
+                var text = (el.input.value || '').trim();
+                if (!text) return;
+                if (text.length > 500) {
+                    showToast('消息不能超过 500 字');
+                    return;
+                }
+                if (text.length < 1) {
+                    showToast('消息不能为空');
+                    return;
+                }
+                G.sending = true;
+                el.send.disabled = true;
+                addMsg('user', text);
+                el.input.value = '';
+                el.count.textContent = '0 / 500';
+
+                ZIYIT_API.guideChat(text).then(function (d) {
+                    G.sending = false;
+                    el.send.disabled = G.locked;
+                    handleChatReply(d, text);
+                }).catch(function (err) {
+                    G.sending = false;
+                    el.send.disabled = G.locked;
+                    handleError(err, true);
+                });
+            }
+
+            // 处理 chat 返回：replyType 驱动 UI
+            function handleChatReply(d, userText) {
+                if (!d) return;
+                // 兼容后端字段：消息内容可能是 content 而非 reply
+                if (d.content != null && d.reply == null) d.reply = d.content;
+                // 注册去重 key：会话轮询拉回同一条 AI/系统消息时不再重复渲染
+                var rid = d.id || ((d.ts || '') + '|' + (d.reply || ''));
+                if (rid && rid !== '|') G.rendered[rid] = true;
+                if (d.sessionId) G.sessionId = d.sessionId;
+                if (d.sessionStatus) applySessionStatus(d.sessionStatus);
+                if (d.remaining != null) updateQuota(d);
+                if (d.welcome != null && !G.welcomeShown) {
+                    G.welcomeShown = true;
+                    addMsg('ai', d.welcome, {});
+                }
+                var rt = d.replyType || 'ai';
+                // 会话是否已接入人工客服：已接入时，后端返回 waiting/forwarded 仅表示"消息已转给人工"，不应回退到转接中
+                var hasHuman = G.sessionStatus === 'human' || G.sessionStatus === 'transfer_active' || !!humanAdminName(G.humanAdmin);
+
+                // 转人工确认：弹窗（确认后发送固定指令"转人工"）
+                if (d.showTransferOption === true || rt === 'transfer_confirm') {
+                    showTransferModal();
+                    if (rt === 'transfer_confirm' && d.reply) addMsg('ai', d.reply, {});
+                    return;
+                }
+                // 转人工相关状态
+                if (rt === 'transfer_waiting') {
+                    if (hasHuman) {
+                        // 已接入人工：保持"人工客服"状态，只显示后端提示
+                        if (d.reply) addSys(d.reply);
+                        return;
+                    }
+                    setStatusBadge('等待人工客服接入', 'waiting');
+                    showTransferWait();
+                    startSessionPolling();
+                    return;
+                }
+                if (rt === 'transfer_success') {
+                    if (d.humanAdmin) G.humanAdmin = d.humanAdmin;
+                    var nmS = humanAdminName(G.humanAdmin);
+                    setStatusBadge(nmS ? ('人工客服·' + nmS) : '人工客服在线', 'online');
+                    hideTransferWait();
+                    startSessionPolling();
+                    if (d.reply) addSys(d.reply);
+                    return;
+                }
+                if (rt === 'transfer_active') {
+                    if (d.humanAdmin) G.humanAdmin = d.humanAdmin;
+                    var nmA = humanAdminName(G.humanAdmin);
+                    setStatusBadge(nmA ? ('人工客服·' + nmA) : '人工客服在线', 'online');
+                    hideTransferWait();
+                    startSessionPolling();
+                    if (d.reply) addMsg('human', d.reply, { username: nmA || '' });
+                    return;
+                }
+                if (rt === 'transfer_expired') {
+                    setStatusBadge('AI 助手');
+                    hideTransferWait();
+                    if (d.reply) addSys(d.reply);
+                    return;
+                }
+                if (rt === 'session_closed') {
+                    var closedTip = (d.reply) || closedText();
+                    setClosedUI(closedTip);
+                    addSys(closedTip);
+                    return;
+                }
+                if (rt === 'human_waiting') {
+                    if (hasHuman) {
+                        if (d.reply) addSys(d.reply);
+                        return;
+                    }
+                    setStatusBadge('等待人工客服接入', 'waiting');
+                    showTransferWait();
+                    startSessionPolling();
+                    if (d.reply) addSys(d.reply);
+                    return;
+                }
+                if (rt === 'forwarded') {
+                    if (hasHuman) {
+                        // 已接入人工：保持人工徽章，轻提示"已发送给人工客服"
+                        if (d.reply) addSys(d.reply);
+                        else addSys('消息已发送给人工客服');
+                        return;
+                    }
+                    // 尚未接入人工：徽章切到等待接入，避免仍显示"AI 助手"
+                    setStatusBadge('等待人工客服接入', 'waiting');
+                    showTransferWait();
+                    startSessionPolling();
+                    if (d.reply) addSys(d.reply);
+                    else addSys('消息已转发给人工客服，请稍候…');
+                    return;
+                }
+                if (rt === 'ai_busy') {
+                    if (d.reply) addSys(d.reply);
+                    else addSys('AI 助手暂时繁忙，请稍后再试。');
+                    return;
+                }
+                if (rt === 'jailbreak') {
+                    if (d.reply) addSys(d.reply);
+                    else addSys('检测到违规内容，已拦截。');
+                    return;
+                }
+                if (rt === 'off_topic') {
+                    if (d.reply) addMsg('ai', d.reply, {});
+                    return;
+                }
+                // ai / help / welcome 等默认 AI 气泡
+                if (d.reply) {
+                    addMsg('ai', d.reply, {});
+                } else if (d.message && d.message !== userText) {
+                    addMsg('ai', d.message, {});
+                }
+            }
+
+            // ---------- 转人工确认 ----------
+            function showTransferModal() {
+                document.getElementById('g-transfer-modal').classList.add('active');
+            }
+
+            function hideTransferModal() {
+                document.getElementById('g-transfer-modal').classList.remove('active');
+            }
+
+            function confirmTransfer() {
+                hideTransferModal();
+                setStatusBadge('等待人工客服接入', 'waiting');
+                showTransferWait();
+                // 二次确认后发送转人工指令（后端以此触发 waiting_human / human）
+                ZIYIT_API.guideChat('转人工').then(function (d) {
+                    if (d && d.sessionStatus) applySessionStatus(d.sessionStatus);
+                    if (d && d.replyType === 'transfer_confirm') {
+                        showTransferModal();
+                    }
+                }).catch(function (err) {
+                    handleError(err, true);
+                });
+            }
+
+            // ---------- 结束对话 ----------
+            // 会话结束后的 UI 状态：禁用输入/按钮、停止轮询、徽章切换
+            function setClosedUI(label) {
+                G.closed = true;
+                G.pollingSession = false;
+                el.input.disabled = true;
+                el.send.disabled = true;
+                el.end.disabled = true;
+                setStatusBadge(label || '对话已结束', 'closed');
+                hideTransferWait();
+            }
+
+            // 用户结束对话：POST /guide/session/close
+            function endChat() {
+                if (G.closed) {
+                    showToast('本次对话已结束');
+                    return;
+                }
+                if (!window.confirm('确定要结束本次对话吗？结束后将无法继续发送消息。')) return;
+                G.closedByUser = true;
+                var btn = el.end;
+                btn.disabled = true;
+                btn.textContent = '结束中…';
+                ZIYIT_API.guideSessionClose(G.sessionId || undefined).then(function (d) {
+                    btn.textContent = '结束对话';
+                    setClosedUI();
+                    addSys((d && d.message) || '您已结束本次对话');
+                    showToast('对话已结束', true);
+                }).catch(function (err) {
+                    btn.textContent = '结束对话';
+                    btn.disabled = G.closed;
+                    var st = err && err.status;
+                    if (st === 403) {
+                        G.closedByUser = false;
+                        showToast('无权结束该会话');
+                    } else if (st === 404) {
+                        G.closedByUser = false;
+                        showToast('当前没有进行中的会话');
+                    } else if (st === 400) {
+                        // 后端认为已结束：同步本地为结束态
+                        setClosedUI();
+                        addSys('您已结束本次对话');
+                        showToast('会话已结束');
+                    } else if (st === 401) {
+                        G.closedByUser = false;
+                        handleError(err, false);
+                    } else {
+                        G.closedByUser = false;
+                        showToast('网络错误，请重试');
+                    }
+                });
+            }
+
+            // ---------- 错误处理 ----------
+            function handleError(err, isSend) {
+                if (!err) return;
+                if (err.status === 401) {
+                    showToast('登录已过期，请重新登录');
+                    setTimeout(function () { window.location.href = './user/'; }, 1200);
+                    return;
+                }
+                if (err.status === 403) {
+                    showToast('无权限访问客服系统');
+                    return;
+                }
+                if (err.status === 404) {
+                    showToast('会话已失效，请刷新页面');
+                    return;
+                }
+                if (err.status === 429) {
+                    var secs = err.retryAfter || 0;
+                    if (secs > 0) {
+                        // 每分钟短限流：保留倒计时
+                        setLocked(secs);
+                        el.quotaText.textContent = '已触发限流，' + secs + ' 秒后可继续发送';
+                        showToast('发送过于频繁，请稍后再试');
+                    } else {
+                        // 每日 AI 问答限额（跨天清零）：提示升级 VIP
+                        showToast('今日 AI 问答次数已用完，请稍后再试；或联系 ziyitstudio@qq.com 升级为 VIP（价格为 RC 专业版价格）');
+                    }
+                    return;
+                }
+                // 网络错误：提示重试
+                showToast('网络错误，请重试');
+                if (isSend) {
+                    // 恢复输入内容由用户自行操作
+                }
+            }
+
+            // ---------- 初始化 ----------
+            function init() {
+                // 1) 有 Token：直接同步（Token 过期时 request() 会自动读取 Cookie 凭据
+                //    调用 /auth/login 刷新 Token 并写回 Cookie，再重试，与其他页面一致）
+                if (ZIYIT_API.getToken()) {
+                    startChat();
+                    return;
+                }
+                // 2) 无 Token 但 Cookie 里有"记住登录"凭据：自动调用 login 刷新 Token
+                if (ZIYIT_API.getCredentials()) {
+                    ZIYIT_API.loginWithCredentials().then(function () {
+                        startChat();
+                    }).catch(function () {
+                        goLogin();
+                    });
+                    return;
+                }
+                // 3) 实在没有登录态才跳登录页
+                goLogin();
+            }
+
+            function startChat() {
+                ZIYIT_API.guideAuthSync().then(function (d) {
+                    if (d) {
+                        var uid = d.userId != null ? d.userId : (d.user_id != null ? d.user_id : (d.user && d.user.id));
+                        if (uid != null) G.myUserId = uid;
+                    }
+                    startStatusPolling();
+                    loadHistory();
+                }).catch(function (err) {
+                    if (err && err.status === 401) {
+                        // request() 已尝试过 Cookie 凭据自动重登，仍 401：确认无有效登录态才去登录
+                        goLogin();
+                        return;
+                    }
+                    showToast('连接客服系统失败，请重试');
+                    el.messages.innerHTML = '<div class="g-msg sys">连接失败。请刷新页面重试，或前往 <a href="./user/" style="color:var(--ziyit-primary);">登录</a>。</div>';
+                    startStatusPolling();
+                    loadHistory();
+                });
+            }
+
+            function goLogin() {
+                showToast('请先登录后使用客服');
+                setTimeout(function () { window.location.href = './user/'; }, 1200);
+            }
+
+            function loadHistory() {
+                ZIYIT_API.guideSession().then(function (d) {
+                    el.messages.innerHTML = '';
+                    if (!d || !d.messages || !d.messages.length) {
+                        addSys('您好，我是 ZIYIT 客服助手，请问有什么可以帮您？');
+                        return;
+                    }
+                    if (d.sessionId) G.sessionId = d.sessionId;
+                    if (d.humanAdmin) {
+                        G.humanAdmin = d.humanAdmin;
+                        // 历史会话若已有客服信息，直接显示客服名（不依赖 status 字段）
+                        var nmH = humanAdminName(G.humanAdmin);
+                        if (nmH && G.sessionStatus !== 'human' && G.sessionStatus !== 'transfer_active') {
+                            G.sessionStatus = 'human';
+                            setStatusBadge('人工客服·' + nmH, 'online');
+                            hideTransferWait();
+                            startSessionPolling();
+                        }
+                    }
+                    if (d.status) applySessionStatus(d.status);
+                    d.messages.forEach(function (m) {
+                        var id = m.id || ((m.ts || m.sentAt || '') + '|' + (m.content || ''));
+                        G.rendered[id] = true;
+                        renderServerMessage(m, false);
+                    });
+                }).catch(function (err) {
+                    if (err && err.status === 404) {
+                        addSys('您好，我是 ZIYIT 客服助手，请问有什么可以帮您？');
+                        return;
+                    }
+                    handleError(err, false);
+                });
+            }
+
+            // ---------- 事件 ----------
+            el.send.addEventListener('click', function () { send(); });
+            el.end.addEventListener('click', function () { endChat(); });
+            el.input.addEventListener('input', function () {
+                el.count.textContent = el.input.value.length + ' / 500';
+            });
+            el.input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    send();
+                }
+            });
+            document.getElementById('g-transfer-cancel').addEventListener('click', function () {
+                hideTransferModal();
+            });
+            document.getElementById('g-transfer-confirm').addEventListener('click', function () {
+                confirmTransfer();
+            });
+
+            // 导航栏汉堡菜单（ziyit-theme.js 未接管时兜底）
+            var toggle = document.querySelector('.site-nav-toggle');
+            var menu = document.getElementById('navMenu');
+            if (toggle && menu) {
+                toggle.addEventListener('click', function () {
+                    menu.classList.toggle('open');
+                });
+            }
+
+            init();
+        })();
+    </script>
+</body>
+
+</html>

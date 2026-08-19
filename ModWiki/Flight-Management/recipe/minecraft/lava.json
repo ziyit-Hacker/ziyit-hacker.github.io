@@ -1,0 +1,14 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "lava",
+    "ingredients": [
+        "flyconfig:what_the_dog_doing",
+        "flyconfig:music_disc_sieg_heil"
+    ],
+    "result": {
+        "id": "flyconfig:lava",
+        "count": 1
+    },
+    "show_notification": true
+}

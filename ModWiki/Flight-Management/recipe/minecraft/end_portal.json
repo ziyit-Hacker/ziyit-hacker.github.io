@@ -1,0 +1,14 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "end portal",
+    "ingredients": [
+        "flyconfig:flight_manager",
+        "flyconfig:germany_developed"
+    ],
+    "result": {
+        "id": "flyconfig:end_portal",
+        "count": 1
+    },
+    "show_notification": true
+}

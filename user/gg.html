@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZIYIT - Update Notice</title>
+    <meta name="description" content="ZIYIT STUDIO 更新公告与系统通知。">
+    <meta name="keywords" content="ZIYIT,更新公告,通知">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/gg.html">
+    <link rel="icon" href="../assets/ziyit.png" type="image/png">
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <style>
+        /* ===== 更新公告页样式（DESIGN.md 设计体系，token 化） ===== */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: var(--ziyit-bg);
+            color: var(--ziyit-text-primary);
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: var(--ziyit-text-primary);
+            border-bottom: 2px solid var(--ziyit-primary);
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: var(--ziyit-text-primary);
+            margin-top: 25px;
+        }
+        h3 {
+            color: var(--ziyit-text-primary);
+        }
+        h4 {
+            color: var(--ziyit-text-primary);
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        strong {
+            color: var(--ziyit-danger);
+        }
+        .loading {
+            text-align: center;
+            color: var(--ziyit-text-secondary);
+            font-style: italic;
+        }
+        .error {
+            color: var(--ziyit-danger);
+            background: rgba(242, 87, 103, 0.15);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid var(--ziyit-danger);
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: var(--ziyit-primary);
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>ZIYIT Update Notice</h1>
+        <div id="content">
+            <div class="ziyit-loading" id="loadingText">
+                <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                <div class="ziyit-loader">
+                    <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                    <div class="loader-bar"><div class="loader-fill"></div></div>
+                </div>
+            </div>
+        </div>
+        <a href="javascript:history.back()" class="back-link">← Return to the previous step</a>
+    </div>
+
+    <script>
+        // Loading animation function（加载界面自带转圈/滑动动画，此处不再更新文本）
+        function startLoadingAnimation() {
+            return null;
+        }
+
+        // Simple Markdown parser for basic formatting
+        function parseMarkdown(markdown) {
+            return markdown
+                // Headers
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                // Bold
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                // Lists
+                .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
+                .replace(/^- (.*$)/gim, '<li>$1</li>')
+                // Line breaks
+                .replace(/\n/g, '<br>')
+                // Paragraphs
+                .replace(/(<br>){2,}/g, '</p><p>')
+                // Wrap in paragraphs
+                .replace(/^([^<].*)$/gim, '<p>$1</p>');
+        }
+
+        // Load and display the Update.md file with delay
+        async function loadUpdateContent() {
+            const contentDiv = document.getElementById('content');
+            
+            // Start loading animation
+            const animationInterval = startLoadingAnimation();
+            
+            try {
+                // Wait for 2.5 seconds before loading
+                await new Promise(resolve => setTimeout(resolve, 7891));
+                
+                const response = await fetch('Update.md');
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load update file: ${response.status}`);
+                }
+                
+                const markdownContent = await response.text();
+                const htmlContent = parseMarkdown(markdownContent);
+                
+                // Stop animation and display content
+                clearInterval(animationInterval);
+                contentDiv.innerHTML = htmlContent;
+                
+            } catch (error) {
+                // Stop animation and display error
+                clearInterval(animationInterval);
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <strong>Error loading update information:</strong><br>
+                        ${error.message}<br><br>
+                        Please check if the Update.md file exists in the user directory.
+                    </div>
+                `;
+                console.error('Error loading update file:', error);
+            }
+        }
+
+        // Load content when page is ready
+        document.addEventListener('DOMContentLoaded', loadUpdateContent);
+    </script>
+
+    <script src="../assets/ziyit_api.js"></script>
+    <script>
+        // 导航权限过滤（DESIGN.md §4.6.5，公开页模式）：未登录保留 all，登录后按角色显示
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const loginLink = document.getElementById('loginLink');
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    const show = role === 'all';
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                if (loginLink) loginLink.style.display = 'inline-block';
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    const show = role === 'all';
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+</html>

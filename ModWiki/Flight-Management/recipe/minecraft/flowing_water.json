@@ -1,0 +1,14 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "flowing water",
+    "ingredients": [
+        "flyconfig:music_disc_sieg_heil",
+        "flyconfig:music_disc_hitler"
+    ],
+    "result": {
+        "id": "flyconfig:flowing_water",
+        "count": 1
+    },
+    "show_notification": true
+}

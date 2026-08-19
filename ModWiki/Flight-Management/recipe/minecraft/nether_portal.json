@@ -1,0 +1,14 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "nether portal",
+    "ingredients": [
+        "flyconfig:synthetic_motoroil",
+        "flyconfig:flight_manager"
+    ],
+    "result": {
+        "id": "flyconfig:nether_portal",
+        "count": 1
+    },
+    "show_notification": true
+}

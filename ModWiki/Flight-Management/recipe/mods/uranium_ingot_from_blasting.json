@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "group": "uranium_ingot",
+  "experience": 1.5,
+  "cookingtime": 800,
+  "ingredient": "flyconfig:uranium_ore",
+  "result": {
+    "id": "flyconfig:uranium_ingot",
+    "count": 1
+  }
+}

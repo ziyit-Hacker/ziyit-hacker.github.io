@@ -1,0 +1,498 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户中心 - ZIYIT STUDIO</title>
+    <meta name="description" content="ZIYIT STUDIO 用户中心：登录、注册、VIP 会员与个人账户管理。">
+    <meta name="keywords" content="ZIYIT,用户中心,登录,注册,VIP">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user.html">
+    <link rel="icon" href="./assets/ziyit.png" type="image/x-icon">
+    <script src="./assets/f12check.js"></script>
+    <script src="./assets/blacklist.js"></script>
+    <script src="./assets/ziyit_api.js"></script>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0;
+            list-style: none;
+        }
+
+        a {
+            text-decoration: none;
+            color: #66e656;
+        }
+
+        p {
+            color: black;
+        }
+
+        ul li {
+            display: inline-block;
+            line-height: 35px;
+        }
+
+        li a {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        li p {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .bid {
+            color: #f25767;
+        }
+
+        .tit {
+            color: black;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 5px 0;
+        }
+
+        .line {
+            width: 1px;
+            height: 12px;
+            background-color: #f3a707;
+        }
+
+        a:hover {
+            color: #ff8000;
+        }
+
+        h1 {
+            width: 100%;
+            background-color: var(--ziyit-primary-light);
+            color: var(--ziyit-text-primary);
+            text-align: center;
+            font-size: 50px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .slider {
+            width: 560px;
+            height: 400px;
+            overflow: hidden;
+        }
+
+        .slider-wrapper {
+            width: 100%;
+            height: 320px;
+        }
+
+        .slider-wrapper img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .slider-footer {
+            height: 80px;
+            background-color: rgb(100, 67, 68);
+            padding: 12px 12px 0 12px;
+            position: relative;
+        }
+
+        .slider-footer .toggle {
+            position: absolute;
+            right: 0;
+            top: 12px;
+            display: flex;
+        }
+
+        .slider-footer .toggle button {
+            margin-right: 12px;
+            width: 28px;
+            height: 28px;
+            appearance: none;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .slider-footer .toggle button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .slider-footer p {
+            margin: 0;
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .slider-indicator {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .slider-indicator li {
+            width: 8px;
+            height: 8px;
+            margin: 4px;
+            border-radius: 50%;
+            background: #fff;
+            opacity: 0.4;
+            cursor: pointer;
+        }
+
+        .slider-indicator li.active {
+            width: 12px;
+            height: 12px;
+            opacity: 1;
+        }
+
+        #userAvatar{
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+        
+        .visible {
+            display: inline-block !important;
+        }
+
+        * {
+            cursor: default !important;
+        }
+    </style>
+    <style>
+        @media (max-width: 768px) {
+            .service-grid {
+                flex-direction: column;
+            }
+            .service-grid > div {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+            h1{
+                text-align: center;
+            }
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="./assets/ziyit-theme.css">
+</head>
+
+<body>
+    <div style="position: absolute; right: 10px; top: 10px; text-align: center;">
+        <img id="userAvatar" src="" alt="" style="width: 65px; height: 50px; display: none;">
+        <div id="userInfo" style="color: var(--ziyit-text-primary); font-size: 18px;">
+            <strong><span id="usernameDisplay">未登录</span></strong>
+            <br>
+            <strong><span id="userTypeDisplay"></span></strong>
+            <br>
+            <span id="emailVerifyStatus" style="font-size: 13px;"></span>
+            <br>
+            <button id="sendVerifyBtn" style="display: none; font-size: 12px; padding: 4px 10px;">发送验证邮件</button>
+        </div>
+    </div>
+    <h1>用户中心</h1>
+    <script>
+        // 获取cookie值的函数
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+            return null;
+        }
+
+        // 检查用户权限
+        function checkUserPermission() {
+            const authToken = getCookie('authToken') || localStorage.getItem('authToken');
+            if (!authToken) {
+                alert('请先登录以访问该页面');
+                window.location.href = './';
+                return;
+            }
+        }
+
+        // 页面加载时检查权限
+        document.addEventListener('DOMContentLoaded', checkUserPermission);
+    </script>
+    <hr>
+    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item" data-role="all"><a href='#' id="logoutLink">退出登录</a></li>
+                <li class="nav-item" data-role="all"><a href='.\user\password'>更改密码</a></li>
+                <li class="nav-item" data-role="user"><a href='.\user\VIP'>升级为会员</a></li>
+                <li class="nav-item" data-role="all"><a href='.\user\profile'>用户信息</a></li>
+                <li class="nav-item" data-role="all"><a href='.\user\username'>修改用户名</a></li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item" data-role="admin"><a href="#" id="adToggle">今天不限制弹出广告</a></li>
+                <li class="nav-item" data-role="user"><p><span style="color: red;">小彩蛋</span></p></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+                <li class="nav-item" data-role="ztg"><a href=".\ztg">查看游戏用户信息</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div style="margin: 30px auto; max-width: 1000px;">
+        <h2 style="text-align: center; margin-bottom: 20px;">我们的服务</h2>
+        <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+            <div
+                style="width: 300px; background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); padding: 20px; margin: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.06);">
+                <h3 style="color: var(--ziyit-primary)">安全防护</h3>
+                <p style="color: var(--ziyit-text-secondary);">新型机密科技，保障您数字安全</p>
+            </div>
+            <div
+                style="width: 300px; background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); padding: 20px; margin: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.06);">
+                <h3 style="color: var(--ziyit-primary);">操作简单</h3>
+                <p style="color: var(--ziyit-text-secondary);">操作简单，无需复杂配置，即可开始使用</p>
+            </div>
+            <div
+                style="width: 300px; background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); padding: 20px; margin: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.06);">
+                <h3 style="color: var(--ziyit-primary);">高效办公</h3>
+                <p style="color: var(--ziyit-text-secondary);">高效办公工具，提升工作效率</p>
+            </div>
+        </div>
+    </div>
+
+    <footer style="background: var(--ziyit-bg-card); border-top: 1px solid var(--ziyit-border); padding: 20px; margin-top: 50px;">
+        <div style="max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap;">
+            <div style="width: 300px; margin-bottom: 20px;">
+                <h3 style="color: var(--ziyit-text-primary);">关于我们</h3>
+                <p style="color: var(--ziyit-text-secondary);">只因科技致力于提供优质的技术服务和解决方案</p>
+            </div>
+            <div style="width: 300px; margin-bottom: 20px;">
+                <h3 style="color: var(--ziyit-text-primary);">联系方式</h3>
+                <a href="mailto:ziyitstudio@qq.com" style="color: var(--ziyit-text-secondary);">邮箱: ziyitstudio@qq.com</a>
+                <br>
+                <a href="tel:13258227085" style="color: var(--ziyit-text-secondary);">手机号: 13258227085</a>
+            </div>
+            <div style="width: 300px; margin-bottom: 20px;">
+                <h3 style="color: var(--ziyit-text-primary);">关注我们</h3>
+                <a href="https://space.bilibili.com/3546981356013833" style="color: var(--ziyit-primary); margin-right: 10px;">哔哩哔哩</a>
+                <p style="color: var(--ziyit-primary);">QQ: 3950140506</p>
+            </div>
+        </div>
+        <p class="tit">&copy;2026 ZIYIT <strong>版权所有，侵权必究</strong></p>
+    </footer>
+
+    <p class="tit">&copy;2026 ZIYIT <strong>版权所有，侵权必究</strong></p>
+    <script>
+        const authToken = ZIYIT_API.getToken();
+        if (!authToken) {
+            usernameDisplay.textContent = '未登录';
+            userTypeDisplay.textContent = '';
+        } else {
+            const userAvatar = document.getElementById('userAvatar');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const userTypeDisplay = document.getElementById('userTypeDisplay');
+
+            ZIYIT_API.currentUser().then(function (user) {
+                userAvatar.src = './assets/ziyit.png';
+                userAvatar.style.display = 'block';
+                usernameDisplay.textContent = user.username || '未知';
+                userTypeDisplay.textContent = ZIYIT_API.isVip(user) ? 'vip用户' : '普通用户';
+
+                const emailVerifyStatus = document.getElementById('emailVerifyStatus');
+                const sendVerifyBtn = document.getElementById('sendVerifyBtn');
+
+                if (user.emailVerified) {
+                    emailVerifyStatus.textContent = '邮箱已验证';
+                    emailVerifyStatus.style.color = '#107c10';
+                    sendVerifyBtn.style.display = 'none';
+                } else if (user.email) {
+                    emailVerifyStatus.textContent = '邮箱未验证（' + user.email + '）';
+                    emailVerifyStatus.style.color = '#a4262c';
+                    sendVerifyBtn.style.display = 'inline-block';
+                } else if (typeof user.email === 'undefined' && (user.userId || user.username)) {
+                    // 本地缓存缺少邮箱字段（登录时未取得），强制从后端刷新一次
+                    ZIYIT_API.currentUser(true).then(function (realUser) {
+                        if (realUser.emailVerified) {
+                            emailVerifyStatus.textContent = '邮箱已验证';
+                            emailVerifyStatus.style.color = '#107c10';
+                            sendVerifyBtn.style.display = 'none';
+                        } else if (realUser.email) {
+                            emailVerifyStatus.textContent = '邮箱未验证（' + realUser.email + '）';
+                            emailVerifyStatus.style.color = '#a4262c';
+                            sendVerifyBtn.style.display = 'inline-block';
+                        } else {
+                            emailVerifyStatus.textContent = '未绑定邮箱';
+                            emailVerifyStatus.style.color = '#a4262c';
+                            sendVerifyBtn.style.display = 'none';
+                        }
+                    }).catch(function () {
+                        emailVerifyStatus.textContent = '邮箱状态未知（后端不可达）';
+                        emailVerifyStatus.style.color = '#a4262c';
+                        sendVerifyBtn.style.display = 'none';
+                    });
+                } else {
+                    emailVerifyStatus.textContent = '未绑定邮箱';
+                    emailVerifyStatus.style.color = '#a4262c';
+                    sendVerifyBtn.style.display = 'none';
+                }
+            }).catch(function () {
+                usernameDisplay.textContent = '登录已过期';
+            });
+        }
+    </script>
+    <script>
+        const sendVerifyBtn = document.getElementById('sendVerifyBtn');
+        if (sendVerifyBtn) {
+            sendVerifyBtn.addEventListener('click', function () {
+                const btn = this;
+                btn.disabled = true;
+                btn.textContent = '发送中...';
+
+                ZIYIT_API.sendVerifyEmail().then(function () {
+                    btn.textContent = '已发送，请查收邮箱';
+                    setTimeout(function () {
+                        btn.textContent = '重新发送验证邮件';
+                        btn.disabled = false;
+                    }, 60000);
+                }).catch(function (err) {
+                    btn.textContent = '发送失败，请重试';
+                    btn.disabled = false;
+                    alert((err.data && err.data.detail) ? err.data.detail : '发送失败，请稍后再试');
+                });
+            });
+        }
+    </script>
+    <script>
+        const logoutLink = document.getElementById('logoutLink');
+        logoutLink.addEventListener('click', function() {
+            ZIYIT_API.clearToken();
+            window.location.href = './';
+        });
+    </script>
+    <script>
+        async function checkBlacklist(username) {
+            try {
+                const response = await fetch('./hmd.txt');
+                const text = await response.text();
+                const lines = text.split('\n');
+                return lines.some(line => {
+                    const trimmed = line.trim();
+                    if (!trimmed) return false;
+                    const parts = trimmed.split('\\');
+                    const dataPart = parts[0].trim().split('-');
+                    return dataPart.length >= 2 && dataPart[1] === username;
+                });
+            } catch (error) {
+                console.error('检查黑名单出错:', error);
+                return false;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async function() {
+            if (ZIYIT_API.getToken()) {
+                const username = await ZIYIT_API.currentUsername();
+                if (!username) return;
+                const isBlacklisted = await checkBlacklist(username);
+                if (isBlacklisted) {
+                    document.getElementById('userTypeDisplay').textContent = '黑名单用户';
+                    document.querySelectorAll('.nav-item').forEach(item => {
+                        item.style.display = 'none';
+                    });
+                }
+            }
+        });
+    </script>
+
+    <script>
+        setInterval(() => {
+            const authToken = ZIYIT_API.getToken();
+            const navItems = document.querySelectorAll('.nav-item');
+
+            if (!authToken) {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+                return;
+            }
+
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const isZtg = !!(user.is_ztg === true || user.is_ztg === 1 || user.is_ztg === 'True' || user.is_ztg === 'true');
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    if (role === 'all' ||
+                        (isVip && role === 'admin') ||
+                        (!isVip && role === 'user') ||
+                        (isZtg && role === 'ztg')) {
+                        item.classList.add('visible');
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                        item.classList.remove('visible');
+                    }
+                });
+            }).catch(function () {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+            });
+        }, 250);
+    </script>
+
+    <script>
+        // 初始化广告限制状态
+        const adToggle = document.getElementById('adToggle');
+        const today = new Date().toDateString();
+        const adPrefs = JSON.parse(localStorage.getItem('adPreferences') || '{}');
+        
+        // 检查今天的设置
+        if (adPrefs.date === today && adPrefs.noLimit) {
+            adToggle.textContent = '今天已取消广告限制';
+        }
+        
+        // 点击事件处理
+        adToggle.addEventListener('click', function() {
+            const currentDate = new Date().toDateString();
+            
+            if (adPrefs.date === currentDate && adPrefs.noLimit) {
+                // 恢复限制
+                adPrefs.noLimit = false;
+                adToggle.textContent = '今天不限制弹出广告';
+            } else {
+                // 取消限制
+                adPrefs.date = currentDate;
+                adPrefs.noLimit = true;
+                adToggle.textContent = '今天已取消广告限制';
+            }
+            
+            localStorage.setItem('adPreferences', JSON.stringify(adPrefs));
+        });
+    </script>
+<script src="./assets/ziyit-theme.js"></script>
+</body>
+</html>

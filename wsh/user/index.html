@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录页面</title>
+    <!-- 可选：添加简单样式让表单更美观 -->
+    <style>
+        #form-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label.bt {
+            display: inline-block;
+            width: 80px;
+        }
+        input, select {
+            padding: 6px;
+            width: 200px;
+        }
+        button {
+            padding: 8px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        a {
+            display: block;
+            margin: 10px 0;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="form-container">
+        <form method="get" autocomplete="off">
+            <a href="../">返回首页</a>
+            
+            <div class="form-group">
+                <label for="accountType" class="bt">账号类型</label>
+                <select id="accountType" name="accountType">
+                    <option value="普通用户">普通用户</option>
+                    <option value="vip用户">vip用户</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="username" class="bt">账号名称</label>
+                <input type="text" id="username" name="username" maxlength="11" placeholder="输入账号ID">
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="bt">密&emsp;码</label>
+                <input type="password" id="password" name="password" placeholder="输入密码" required>
+            </div>
+
+            <button type="submit" id="login">登录</button>
+
+            <div>
+                <a href="#" class="hidden">没有账号？点这里注册</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- 可选：保留 live-server 的自动刷新脚本（如果需要） -->
+    <script>
+        // <![CDATA[
+        if ('WebSocket' in window) {
+            (function () {
+                function refreshCSS() {
+                    var sheets = [].slice.call(document.getElementsByTagName("link"));
+                    var head = document.getElementsByTagName("head")[0];
+                    for (var i = 0; i < sheets.length; ++i) {
+                        var elem = sheets[i];
+                        var parent = elem.parentElement || head;
+                        parent.removeChild(elem);
+                        var rel = elem.rel;
+                        if (elem.href && (typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet")) {
+                            var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+                            elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+                        }
+                        parent.appendChild(elem);
+                    }
+                }
+                var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+                var address = protocol + window.location.host + window.location.pathname + '/ws';
+                var socket = new WebSocket(address);
+                socket.onmessage = function (msg) {
+                    if (msg.data == 'reload') window.location.reload();
+                    else if (msg.data == 'refreshcss') refreshCSS();
+                };
+                if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+                    console.log('Live reload enabled.');
+                    sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+                }
+            })();
+        } else {
+            console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+        }
+        // ]]>
+    </script>
+</body>
+</html>

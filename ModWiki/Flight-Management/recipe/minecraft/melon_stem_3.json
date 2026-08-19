@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "melon stem 3",
+    "ingredients": [
+        "flyconfig:music_disc_hitler",
+        "flyconfig:nuclear_spawn_egg",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:melon_stem_3",
+        "count": 1
+    },
+    "show_notification": true
+}

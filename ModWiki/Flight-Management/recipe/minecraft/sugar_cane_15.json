@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "sugar cane 15",
+    "ingredients": [
+        "flyconfig:flight_manager",
+        "flyconfig:germany_developed",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:sugar_cane_15",
+        "count": 1
+    },
+    "show_notification": true
+}

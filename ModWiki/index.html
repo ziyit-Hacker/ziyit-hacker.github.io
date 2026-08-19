@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MODWIKI · ZIYIT STUDIO</title>
+    <style>
+        /* ============================================================
+           CSS Variables
+           ============================================================ */
+        :root {
+            --bg-primary: #080c14;
+            --bg-secondary: #0f1620;
+            --bg-card: #18202e;
+            --bg-card-hover: #1f2a3e;
+            --bg-input: #0f1620;
+            --border-color: #2a3a50;
+            --text-primary: #e8edf5;
+            --text-secondary: #8a9bb5;
+            --text-muted: #5a6f8a;
+            --accent-cyan: #4fc3f7;
+            --accent-blue: #42a5f5;
+            --accent-purple: #7c4dff;
+            --accent-orange: #ffab40;
+            --accent-red: #ef5350;
+            --accent-green: #66bb6a;
+            --glow-cyan: rgba(79, 195, 247, 0.10);
+            --radius: 14px;
+            --radius-sm: 8px;
+            --shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --font: 'Segoe UI', 'PingFang SC', Roboto, system-ui, -apple-system, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            transition: color var(--transition);
+        }
+        a:hover {
+            color: var(--accent-blue);
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        /* ============================================================
+           Background Orbs
+           ============================================================ */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.4;
+        }
+        .bg-orb--cyan {
+            width: 500px;
+            height: 500px;
+            top: -200px;
+            right: -100px;
+            background: var(--accent-cyan);
+            opacity: 0.06;
+        }
+        .bg-orb--purple {
+            width: 400px;
+            height: 400px;
+            bottom: -150px;
+            left: -100px;
+            background: var(--accent-purple);
+            opacity: 0.05;
+        }
+
+        /* ============================================================
+           Header
+           ============================================================ */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(8, 12, 20, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(42, 58, 80, 0.4);
+            padding: 0 32px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header__brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header__brand .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+            font-weight: 700;
+        }
+        .header__brand .brand-text {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .header__brand .brand-text .studio {
+            font-weight: 400;
+            font-size: 12px;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: block;
+            margin-top: -2px;
+        }
+
+        .header__nav {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .header__nav a {
+            color: var(--text-secondary);
+            transition: color var(--transition);
+            position: relative;
+            cursor: pointer;
+        }
+        .header__nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-cyan);
+            transition: width var(--transition);
+        }
+        .header__nav a:hover {
+            color: var(--text-primary);
+        }
+        .header__nav a:hover::after {
+            width: 100%;
+        }
+        .header__nav a.active {
+            color: var(--text-primary);
+        }
+        .header__nav a.active::after {
+            width: 100%;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: transparent;
+            color: var(--text-secondary);
+        }
+        .btn--primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #080c14;
+        }
+        .btn--primary:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 20px var(--glow-cyan);
+        }
+
+        /* ============================================================
+           Hero
+           ============================================================ */
+        .hero {
+            position: relative;
+            z-index: 1;
+            padding: 120px 32px 40px;
+            max-width: 1100px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .hero__badge {
+            display: inline-block;
+            background: rgba(79, 195, 247, 0.10);
+            border: 1px solid rgba(79, 195, 247, 0.20);
+            border-radius: 100px;
+            padding: 5px 18px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .hero__title {
+            font-size: clamp(36px, 6vw, 60px);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -1px;
+        }
+        .hero__title .highlight {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero__subtitle {
+            font-size: 17px;
+            color: var(--text-secondary);
+            max-width: 560px;
+            margin: 16px auto 0;
+        }
+
+        .hero__version {
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 100px;
+            padding: 4px 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .hero__version strong {
+            color: var(--text-primary);
+        }
+
+        /* ============================================================
+           Stats
+           ============================================================ */
+        .stats {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            padding: 8px 32px 30px;
+            max-width: 800px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+        .stats__item {
+            text-align: center;
+        }
+        .stats__item .number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .stats__item .label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        /* ============================================================
+           Section
+           ============================================================ */
+        .section {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 16px 32px 40px;
+        }
+
+        .section__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .section__title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .section__title .accent {
+            color: var(--accent-cyan);
+        }
+
+        /* ============================================================
+           Loading
+           ============================================================ */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .loading .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ============================================================
+           Tabs
+           ============================================================ */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            padding: 4px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            border: 1px solid var(--border-color);
+        }
+        .tabs .tab {
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition);
+            border: none;
+            background: transparent;
+            font-family: var(--font);
+        }
+        .tabs .tab:hover {
+            color: var(--text-primary);
+        }
+        .tabs .tab.active {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ============================================================
+           Search
+           ============================================================ */
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 100px;
+            padding: 3px 3px 3px 18px;
+            width: 100%;
+            max-width: 500px;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+        .search-box:focus-within {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 4px var(--glow-cyan);
+        }
+        .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 14px;
+            padding: 10px 0;
+            flex: 1;
+            font-family: var(--font);
+        }
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+        .search-box .btn {
+            border-radius: 100px;
+            padding: 8px 20px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #080c14;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .search-wrapper {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        /* ============================================================
+           Items Grid
+           ============================================================ */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+        }
+
+        .item-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            padding: 10px 4px;
+            text-align: center;
+            transition: all var(--transition);
+            cursor: pointer;
+        }
+        .item-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-cyan);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+        .item-card__icon {
+            width: 44px;
+            height: 44px;
+            margin: 0 auto 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .item-card__icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: pixelated;
+        }
+        .item-card__name {
+            font-size: 9px;
+            color: var(--text-secondary);
+            line-height: 1.2;
+            word-break: break-all;
+        }
+        .item-card.hidden {
+            display: none;
+        }
+        .item-card .recipe-badge {
+            display: none;
+            font-size: 8px;
+            color: var(--accent-cyan);
+            margin-top: 2px;
+        }
+        .item-card.has-recipe .recipe-badge {
+            display: block;
+        }
+
+        /* ============================================================
+           Recipe View
+           ============================================================ */
+        .recipe-view {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            margin-top: 16px;
+            min-height: 120px;
+        }
+        .recipe-view h3 {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        .recipe-view .sub {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        .recipe-view .empty {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            max-width: 240px;
+            margin: 0 auto 12px;
+        }
+        .recipe-slot {
+            aspect-ratio: 1;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            position: relative;
+        }
+        .recipe-slot img {
+            width: 70%;
+            height: 70%;
+            object-fit: contain;
+            image-rendering: pixelated;
+        }
+        .recipe-slot .slot-label {
+            font-size: 7px;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.1;
+        }
+        .recipe-slot .slot-count {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .recipe-arrow {
+            text-align: center;
+            font-size: 28px;
+            color: var(--text-muted);
+            padding: 8px 0;
+        }
+
+        .recipe-result {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+        .recipe-result img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            image-rendering: pixelated;
+        }
+        .recipe-result .info {
+            text-align: left;
+        }
+        .recipe-result .info .name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .recipe-result .info .count {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* ============================================================
+           Nuclear Calculator
+           ============================================================ */
+        .calc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .calc-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 20px 24px;
+        }
+        .calc-box h4 {
+            font-size: 15px;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+        .calc-box .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .calc-box input {
+            flex: 1;
+            min-width: 100px;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: var(--font);
+        }
+        .calc-box input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+        .calc-box .result {
+            margin-top: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            font-size: 15px;
+        }
+        .calc-box .result .value {
+            font-weight: 700;
+            color: var(--accent-orange);
+            font-size: 18px;
+        }
+
+        /* ============================================================
+           Advancements
+           ============================================================ */
+        .adv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 10px;
+        }
+        .adv-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            transition: all var(--transition);
+        }
+        .adv-card:hover {
+            border-color: var(--accent-cyan);
+        }
+        .adv-card .adv-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 10px;
+            border-radius: 100px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .adv-card .adv-badge.task {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .adv-card .adv-badge.goal {
+            background: #f59e0b;
+            color: #fff;
+        }
+        .adv-card .adv-badge.challenge {
+            background: #ef4444;
+            color: #fff;
+        }
+        .adv-card .adv-badge.hidden {
+            background: #6b7280;
+            color: #fff;
+        }
+        .adv-card .adv-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .adv-card .adv-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ============================================================
+           Footer
+           ============================================================ */
+        .footer {
+            position: relative;
+            z-index: 1;
+            border-top: 1px solid var(--border-color);
+            padding: 28px 32px 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .footer__copy {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .footer__copy strong {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .footer__links {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+        }
+        .footer__links a {
+            color: var(--text-muted);
+            transition: color var(--transition);
+        }
+        .footer__links a:hover {
+            color: var(--text-primary);
+        }
+
+        /* ============================================================
+           Responsive
+           ============================================================ */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 16px;
+                height: 56px;
+            }
+            .header__nav {
+                display: none;
+            }
+
+            .hero {
+                padding: 100px 16px 30px;
+            }
+            .hero__title {
+                font-size: 28px;
+            }
+
+            .stats {
+                gap: 24px;
+                padding: 4px 16px 20px;
+            }
+            .stats__item .number {
+                font-size: 22px;
+            }
+
+            .section {
+                padding: 12px 16px 28px;
+            }
+            .section__title {
+                font-size: 20px;
+            }
+
+            .calc-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .items-grid {
+                grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+            }
+            .item-card__icon {
+                width: 36px;
+                height: 36px;
+            }
+            .item-card__name {
+                font-size: 8px;
+            }
+
+            .recipe-grid {
+                max-width: 180px;
+            }
+
+            .footer {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px 16px;
+            }
+            .footer__links {
+                gap: 14px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .tabs .tab {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .items-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .recipe-grid {
+                max-width: 150px;
+            }
+            .recipe-slot img {
+                width: 60%;
+                height: 60%;
+            }
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+</head>
+<body>
+
+    <div class="bg-orb bg-orb--cyan"></div>
+    <div class="bg-orb bg-orb--purple"></div>
+
+    <!-- ============================================================
+    Header
+    ============================================================ -->
+    <header class="header">
+        <div class="header__brand">
+            <div class="brand-icon">⌘</div>
+            <div class="brand-text">
+                MODWIKI
+                <span class="studio">ZIYIT STUDIO</span>
+            </div>
+        </div>
+        <nav class="header__nav">
+            <a class="active" data-tab="items-tab">物品</a>
+            <a data-tab="recipes-tab">合成</a>
+            <a data-tab="nuclear-tab">核弹计算</a>
+            <a data-tab="adv-tab">进度</a>
+        </nav>
+        <div>
+            <a href="Flight-Management/" class="btn btn--primary">完整 Wiki</a>
+        </div>
+    </header>
+
+    <!-- ============================================================
+    Hero
+    ============================================================ -->
+    <section class="hero">
+        <div class="hero__badge">✦ 模组百科 · 交互工具</div>
+        <h1 class="hero__title">
+            <span class="highlight">Flight Management</span><br />模组百科
+        </h1>
+        <p class="hero__subtitle">
+            搜索物品 · 查看合成 · 核弹伤害计算 · 进度查询
+        </p>
+        <div class="hero__version">
+            📦 v26.2 · Minecraft 1.21.8 · <strong>ZIYIT STUDIO</strong>
+        </div>
+    </section>
+
+    <!-- ============================================================
+    Stats
+    ============================================================ -->
+    <div class="stats" id="stats">
+        <div class="stats__item">
+            <div class="number" id="stat-items">0</div>
+            <div class="label">物品</div>
+        </div>
+        <div class="stats__item">
+            <div class="number" id="stat-recipes">0</div>
+            <div class="label">合成配方</div>
+        </div>
+        <div class="stats__item">
+            <div class="number" id="stat-adv">0</div>
+            <div class="label">进度</div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    Main Content with Tabs
+    ============================================================ -->
+    <section class="section">
+        <div class="tabs" id="mainTabs">
+            <button class="tab active" data-tab="items-tab">📦 物品</button>
+            <button class="tab" data-tab="recipes-tab">⚗️ 合成</button>
+            <button class="tab" data-tab="nuclear-tab">☢️ 核弹计算</button>
+            <button class="tab" data-tab="adv-tab">🏆 进度</button>
+        </div>
+
+        <!-- ============================================================
+        TAB 1: Items
+        ============================================================ -->
+        <div class="tab-content active" id="items-tab">
+            <div class="search-wrapper">
+                <div class="search-box">
+                    <input type="text" id="itemSearch" placeholder="搜索物品名称…" />
+                    <button class="btn" id="searchBtn">搜索</button>
+                </div>
+                <span style="font-size:13px;color:var(--text-muted);align-self:center;" id="itemCount"><span class="spinner-inline"></span></span>
+            </div>
+            <div class="items-grid" id="itemsGrid">
+                <div class="ziyit-loading">
+                    <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                    <div class="ziyit-loader">
+                        <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                        <div class="loader-bar"><div class="loader-fill"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="recipe-view" id="recipeView">
+                <div class="empty">👆 点击上方物品查看合成配方</div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        TAB 2: Recipes
+        ============================================================ -->
+        <div class="tab-content" id="recipes-tab">
+            <div class="search-wrapper">
+                <div class="search-box">
+                    <input type="text" id="recipeSearch" placeholder="搜索配方名称…" />
+                    <button class="btn" id="recipeSearchBtn">搜索</button>
+                </div>
+                <span style="font-size:13px;color:var(--text-muted);align-self:center;" id="recipeCount"><span class="spinner-inline"></span></span>
+            </div>
+            <div id="recipesList">
+                <div class="ziyit-loading">
+                    <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                    <div class="ziyit-loader">
+                        <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                        <div class="loader-bar"><div class="loader-fill"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        TAB 3: Nuclear Calculator
+        ============================================================ -->
+        <div class="tab-content" id="nuclear-tab">
+            <div class="calc-grid">
+                <div class="calc-box">
+                    <h4>💥 距离 → 伤害</h4>
+                    <div class="input-group">
+                        <input type="number" id="distInput" placeholder="距离 (格)" min="0" step="0.5" />
+                        <button class="btn btn--primary" id="calcDamageBtn">计算伤害</button>
+                    </div>
+                    <div class="result" id="damageResult">
+                        输入距离计算伤害
+                    </div>
+                </div>
+                <div class="calc-box">
+                    <h4>🛡️ 伤害 → 距离</h4>
+                    <div class="input-group">
+                        <input type="number" id="dmgInput" placeholder="受到伤害" min="0" step="0.5" />
+                        <button class="btn btn--primary" id="calcDistBtn">计算距离</button>
+                    </div>
+                    <div class="result" id="distResult">
+                        输入伤害计算距离
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:16px;padding:16px 20px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-sm);">
+                <h4 style="font-size:14px;color:var(--text-secondary);margin-bottom:8px;">📐 伤害公式</h4>
+                <ul style="color:var(--text-muted);font-size:13px;list-style:none;padding:0;">
+                    <li>• 距离 ≤ 10 格：<strong style="color:var(--accent-orange);">500 点伤害</strong></li>
+                    <li>• 10 &lt; 距离 ≤ 150 格：<code style="color:var(--text-secondary);">500 × (1 - (距离 - 10) / 140)</code></li>
+                    <li>• 150 &lt; 距离 ≤ 200 格：<code style="color:var(--text-secondary);">25 × (1 - (距离 - 150) / 50)</code></li>
+                    <li style="margin-top:4px;color:var(--text-muted);">💡 水下爆炸所有伤害提升 15%</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        TAB 4: Advancements
+        ============================================================ -->
+        <div class="tab-content" id="adv-tab">
+            <div class="search-wrapper">
+                <div class="search-box">
+                    <input type="text" id="advSearch" placeholder="搜索进度名称…" />
+                    <button class="btn" id="advSearchBtn">搜索</button>
+                </div>
+                <span style="font-size:13px;color:var(--text-muted);align-self:center;" id="advCount">显示 0 个进度</span>
+            </div>
+            <div class="adv-grid" id="advGrid"></div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+    Footer
+    ============================================================ -->
+    <footer class="footer">
+        <div class="footer__copy">
+            &copy; 2026 <strong>ZIYIT STUDIO</strong> · MODWIKI 模组百科
+        </div>
+        <div class="footer__links">
+            <a href="Flight-Management/">完整Wiki</a>
+            <a href="#">关于</a>
+            <a href="#">GitHub</a>
+            <a href="#">反馈</a>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+    JavaScript - 动态加载配方JSON
+    ============================================================ -->
+    <script>
+        // ============================================================
+        // 配置
+        // ============================================================
+        const RECIPE_BASE = 'Flight-Management/recipe/';
+        const RECIPE_LIST_FILE = RECIPE_BASE + 'recipes.txt';
+        const ASSETS_BASE = '../assets/flyconfig/';
+
+        // ============================================================
+        // 数据存储
+        // ============================================================
+        let allItems = [];
+        let allRecipes = {}; // key: 物品ID, value: 配方数据
+        let recipeFileMap = {}; // key: 物品ID, value: JSON文件路径
+        let isLoading = true;
+
+        // ============================================================
+        // 物品列表 (从 assets/flyconfig/ 推断)
+        // ============================================================
+        const ITEM_NAMES = {
+            'flight_manager': '航班管理器',
+            'nuclear_spawn_egg': '核弹',
+            'nuclear_disarm_tool': '核弹拆解工具',
+            'germany_developed': '德意志帝国研发',
+            'uranium_ingot': '铀锭',
+            'metal_scrap': '金属废料',
+            'synthetic_motoroil': '合成机油',
+            'ultimate_healthy_nightmare': '西蓝花炒青花菜拌羽衣甘蓝Kale拌苦瓜炒芹菜炖蓝纹奶酪海藻海带蒸奇亚籽汤',
+            'what_the_dog_doing': '为什么会变成这样呢？',
+            'music_disc_hitler': '唱片·Hitler',
+            'music_disc_sieg_heil': '唱片·Sieg Heil',
+            'end_gateway': '末地折跃门',
+            'end_portal': '末地传送门',
+            'nether_portal': '下界传送门',
+            'water': '静态水',
+            'lava': '静态岩浆',
+            'flowing_water': '流动水',
+            'flowing_lava': '流动岩浆',
+        };
+
+        // 已知的配方文件 -> 对应的物品ID映射
+        const RECIPE_TO_ITEM = {
+            'activated_observer': 'activated_observer',
+            'beetroot_crop_0': 'beetroot_crop_0',
+            'beetroot_crop_1': 'beetroot_crop_1',
+            'beetroot_crop_2': 'beetroot_crop_2',
+            'beetroot_crop_3': 'beetroot_crop_3',
+            'bubble_column_down': 'bubble_column_down',
+            'bubble_column_up': 'bubble_column_up',
+            'carrot_crop_0': 'carrot_crop_0',
+            'carrot_crop_1': 'carrot_crop_1',
+            'carrot_crop_2': 'carrot_crop_2',
+            'carrot_crop_3': 'carrot_crop_3',
+            'carrot_crop_4': 'carrot_crop_4',
+            'carrot_crop_5': 'carrot_crop_5',
+            'carrot_crop_6': 'carrot_crop_6',
+            'carrot_crop_7': 'carrot_crop_7',
+            'end_gateway': 'end_gateway',
+            'end_portal': 'end_portal',
+            'fire': 'fire',
+            'flowing_lava': 'flowing_lava',
+            'flowing_water': 'flowing_water',
+            'headless_piston': 'headless_piston',
+            'lava': 'lava',
+            'lit_blast_furnace': 'lit_blast_furnace',
+            'lit_furnace': 'lit_furnace',
+            'lit_smoker': 'lit_smoker',
+            'melon_stem_0': 'melon_stem_0',
+            'melon_stem_1': 'melon_stem_1',
+            'melon_stem_2': 'melon_stem_2',
+            'melon_stem_3': 'melon_stem_3',
+            'melon_stem_4': 'melon_stem_4',
+            'melon_stem_5': 'melon_stem_5',
+            'melon_stem_6': 'melon_stem_6',
+            'melon_stem_7': 'melon_stem_7',
+            'nether_portal': 'nether_portal',
+            'piston_arm': 'piston_arm',
+            'potato_crop_0': 'potato_crop_0',
+            'potato_crop_1': 'potato_crop_1',
+            'potato_crop_2': 'potato_crop_2',
+            'potato_crop_3': 'potato_crop_3',
+            'potato_crop_4': 'potato_crop_4',
+            'potato_crop_5': 'potato_crop_5',
+            'potato_crop_6': 'potato_crop_6',
+            'potato_crop_7': 'potato_crop_7',
+            'pumpkin_stem_0': 'pumpkin_stem_0',
+            'pumpkin_stem_1': 'pumpkin_stem_1',
+            'pumpkin_stem_2': 'pumpkin_stem_2',
+            'pumpkin_stem_3': 'pumpkin_stem_3',
+            'pumpkin_stem_4': 'pumpkin_stem_4',
+            'pumpkin_stem_5': 'pumpkin_stem_5',
+            'pumpkin_stem_6': 'pumpkin_stem_6',
+            'pumpkin_stem_7': 'pumpkin_stem_7',
+            'six_sided_piston': 'six_sided_piston',
+            'snowy_grass_block': 'snowy_grass_block',
+            'soul_fire': 'soul_fire',
+            'sugar_cane_0': 'sugar_cane_0',
+            'sugar_cane_1': 'sugar_cane_1',
+            'sugar_cane_10': 'sugar_cane_10',
+            'sugar_cane_11': 'sugar_cane_11',
+            'sugar_cane_12': 'sugar_cane_12',
+            'sugar_cane_13': 'sugar_cane_13',
+            'sugar_cane_14': 'sugar_cane_14',
+            'sugar_cane_15': 'sugar_cane_15',
+            'sugar_cane_2': 'sugar_cane_2',
+            'sugar_cane_3': 'sugar_cane_3',
+            'sugar_cane_4': 'sugar_cane_4',
+            'sugar_cane_5': 'sugar_cane_5',
+            'sugar_cane_6': 'sugar_cane_6',
+            'sugar_cane_7': 'sugar_cane_7',
+            'sugar_cane_8': 'sugar_cane_8',
+            'sugar_cane_9': 'sugar_cane_9',
+            'water': 'water',
+            'wet_farmland': 'wet_farmland',
+            'wheat_crop_0': 'wheat_crop_0',
+            'wheat_crop_1': 'wheat_crop_1',
+            'wheat_crop_2': 'wheat_crop_2',
+            'wheat_crop_3': 'wheat_crop_3',
+            'wheat_crop_4': 'wheat_crop_4',
+            'wheat_crop_5': 'wheat_crop_5',
+            'wheat_crop_6': 'wheat_crop_6',
+            'wheat_crop_7': 'wheat_crop_7',
+            'enchanted_golden_apple': 'enchanted_golden_apple',
+            'experience_bottle2': 'experience_bottle2',
+            'flight_manager': 'flight_manager',
+            'germany_developed': 'germany_developed',
+            'iron_golem_spawn_egg': 'iron_golem_spawn_egg',
+            'metal_scrap': 'metal_scrap',
+            'name_tag': 'name_tag',
+            'nuclear_disarm_tool': 'nuclear_disarm_tool',
+            'nuclear_spawn_egg': 'nuclear_spawn_egg',
+            'shield2': 'shield2',
+            'ultimate_healthy_nightmare': 'ultimate_healthy_nightmare',
+            'uranium_ingot_from_blasting': 'uranium_ingot',
+            'uranium_ingot_from_deepslate_uranium_ore': 'uranium_ingot',
+            'what_the_dog_doing': 'what_the_dog_doing',
+            'wither_spawn_egg': 'wither_spawn_egg',
+        };
+
+        // ============================================================
+        // 工具函数
+        // ============================================================
+        function getItemName(id) {
+            return ITEM_NAMES[id] || id.replace(/_/g, ' ');
+        }
+
+        // 修复：使用相对路径 ../assets/flyconfig/
+        function getItemIcon(id) {
+            // 如果已经是完整URL，直接返回
+            if (id.startsWith('http://') || id.startsWith('https://')) {
+                return id;
+            }
+            return `${ASSETS_BASE}${id}.png`;
+        }
+
+        function getMinecraftIcon(id) {
+            const map = {
+                'minecraft:iron_ingot': 'https://zh.minecraft.wiki/images/Invicon_Iron_Ingot.png',
+                'minecraft:gold_ingot': 'https://zh.minecraft.wiki/images/Invicon_Gold_Ingot.png',
+                'minecraft:ender_pearl': 'https://zh.minecraft.wiki/images/Invicon_Ender_Pearl.png',
+                'minecraft:nether_star': 'https://zh.minecraft.wiki/images/Invicon_Nether_Star.png',
+                'minecraft:diamond': 'https://zh.minecraft.wiki/images/Invicon_Diamond.png',
+                'minecraft:netherite_ingot': 'https://zh.minecraft.wiki/images/Invicon_Netherite_Ingot.png',
+                'minecraft:golden_carrot': 'https://zh.minecraft.wiki/images/Invicon_Golden_Carrot.png',
+                'minecraft:golden_apple': 'https://zh.minecraft.wiki/images/Invicon_Golden_Apple.png',
+                'minecraft:enchanted_golden_apple': 'https://zh.minecraft.wiki/images/Invicon_Enchanted_Golden_Apple.gif',
+                'minecraft:nether_wart': 'https://zh.minecraft.wiki/images/Invicon_Nether_Wart.png',
+                'minecraft:chorus_fruit': 'https://zh.minecraft.wiki/images/Invicon_Chorus_Fruit.png',
+                'minecraft:glass_bottle': 'https://zh.minecraft.wiki/images/Invicon_Glass_Bottle.png',
+                'minecraft:experience_bottle': 'https://zh.minecraft.wiki/images/Invicon_Bottle_o\'_Enchanting.png',
+                'minecraft:stick': 'https://zh.minecraft.wiki/images/Invicon_Stick.png',
+                'minecraft:feather': 'https://zh.minecraft.wiki/images/Invicon_Feather.png',
+                'minecraft:paper': 'https://zh.minecraft.wiki/images/Invicon_Paper.png',
+                'minecraft:leather': 'https://zh.minecraft.wiki/images/Invicon_Leather.png',
+                'minecraft:flint': 'https://zh.minecraft.wiki/images/Invicon_Flint.png',
+                'minecraft:clay_ball': 'https://zh.minecraft.wiki/images/Invicon_Clay_Ball.png',
+                'minecraft:brick': 'https://zh.minecraft.wiki/images/Invicon_Brick.png',
+                'minecraft:nether_brick': 'https://zh.minecraft.wiki/images/Invicon_Nether_Brick.png',
+                'minecraft:ender_eye': 'https://zh.minecraft.wiki/images/Invicon_Ender_Eye.png',
+                'minecraft:blaze_powder': 'https://zh.minecraft.wiki/images/Invicon_Blaze_Powder.png',
+                'minecraft:ghast_tear': 'https://zh.minecraft.wiki/images/Invicon_Ghast_Tear.png',
+                'minecraft:magma_cream': 'https://zh.minecraft.wiki/images/Invicon_Magma_Cream.png',
+                'minecraft:glistering_melon_slice': 'https://zh.minecraft.wiki/images/Invicon_Glistering_Melon_Slice.png',
+                'minecraft:fermented_spider_eye': 'https://zh.minecraft.wiki/images/Invicon_Fermented_Spider_Eye.png',
+                'minecraft:rabbit_foot': 'https://zh.minecraft.wiki/images/Invicon_Rabbit_Foot.png',
+            };
+            if (id.startsWith('flyconfig:')) {
+                const name = id.replace('flyconfig:', '');
+                return getItemIcon(name);
+            }
+            return map[id] || `https://zh.minecraft.wiki/images/Invicon_${id.split(':').pop().replace(/_/g, '_')}.png`;
+        }
+
+        function getItemDisplayName(id) {
+            const map = {
+                'minecraft:iron_ingot': '铁锭',
+                'minecraft:gold_ingot': '金锭',
+                'minecraft:ender_pearl': '末影珍珠',
+                'minecraft:nether_star': '下界之星',
+                'minecraft:diamond': '钻石',
+                'minecraft:netherite_ingot': '下界合金锭',
+                'minecraft:golden_carrot': '金胡萝卜',
+                'minecraft:golden_apple': '金苹果',
+                'minecraft:enchanted_golden_apple': '附魔金苹果',
+                'minecraft:nether_wart': '下界疣',
+                'minecraft:chorus_fruit': '紫颂果',
+                'minecraft:glass_bottle': '玻璃瓶',
+                'minecraft:experience_bottle': '附魔之瓶',
+                'minecraft:stick': '木棍',
+                'minecraft:feather': '羽毛',
+                'minecraft:paper': '纸',
+                'minecraft:leather': '皮革',
+                'minecraft:flint': '燧石',
+                'minecraft:clay_ball': '粘土球',
+                'minecraft:brick': '砖',
+                'minecraft:nether_brick': '下界砖',
+                'minecraft:ender_eye': '末影之眼',
+                'minecraft:blaze_powder': '烈焰粉',
+                'minecraft:ghast_tear': '恶魂之泪',
+                'minecraft:magma_cream': '岩浆膏',
+                'minecraft:glistering_melon_slice': '闪烁的西瓜片',
+                'minecraft:fermented_spider_eye': '发酵蛛眼',
+                'minecraft:rabbit_foot': '兔子脚',
+                'flyconfig:uranium_ingot': '铀锭',
+                'flyconfig:metal_scrap': '金属废料',
+                'flyconfig:germany_developed': '德意志帝国研发',
+                'flyconfig:ultimate_healthy_nightmare': '终极噩梦',
+                'flyconfig:flight_manager': '航班管理器',
+                'flyconfig:nuclear_spawn_egg': '核弹',
+                'flyconfig:nuclear_disarm_tool': '核弹拆解工具',
+                'flyconfig:uranium_ore': '铀矿石',
+                'flyconfig:what_the_dog_doing': '为什么会变成这样呢？',
+            };
+            return map[id] || id.split(':').pop().replace(/_/g, ' ');
+        }
+
+        // ============================================================
+        // 加载 recipes.txt 获取配方文件列表
+        // ============================================================
+        async function loadRecipeList() {
+            try {
+                const response = await fetch(RECIPE_LIST_FILE);
+                if (!response.ok) {
+                    console.warn(`⚠ 无法加载 ${RECIPE_LIST_FILE}`);
+                    return [];
+                }
+                const text = await response.text();
+                const lines = text.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line && !line.startsWith('#'));
+                console.log(`📋 从 recipes.txt 加载了 ${lines.length} 个配方文件`);
+                return lines;
+            } catch (e) {
+                console.warn('⚠ 加载 recipes.txt 失败:', e.message);
+                return [];
+            }
+        }
+
+        // ============================================================
+        // 加载单个配方 JSON
+        // ============================================================
+        async function loadRecipeJSON(filePath) {
+            try {
+                const fullPath = RECIPE_BASE + filePath;
+                const response = await fetch(fullPath);
+                if (!response.ok) return null;
+                return await response.json();
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // ============================================================
+        // 加载所有配方
+        // ============================================================
+        async function loadAllRecipes() {
+            const files = await loadRecipeList();
+            if (files.length === 0) {
+                console.warn('⚠ 没有找到配方文件');
+                return;
+            }
+
+            let loadedCount = 0;
+            for (const file of files) {
+                const json = await loadRecipeJSON(file);
+                if (json) {
+                    const fileName = file.split('/').pop().replace('.json', '');
+                    const itemId = RECIPE_TO_ITEM[fileName];
+                    if (itemId) {
+                        if (!allRecipes[itemId]) {
+                            allRecipes[itemId] = [];
+                        }
+                        allRecipes[itemId].push({
+                            file: file,
+                            fileName: fileName,
+                            data: json
+                        });
+                        recipeFileMap[itemId] = file;
+                        loadedCount++;
+                    }
+                }
+            }
+            console.log(`📦 加载了 ${loadedCount} 个配方 (来自 ${files.length} 个文件)`);
+
+            const itemSet = new Set();
+            for (const itemId of Object.keys(allRecipes)) {
+                itemSet.add(itemId);
+            }
+            for (const id of Object.keys(ITEM_NAMES)) {
+                itemSet.add(id);
+            }
+
+            allItems = Array.from(itemSet).map(id => ({
+                id: id,
+                name: getItemName(id),
+                hasRecipe: allRecipes[id] && allRecipes[id].length > 0
+            }));
+            allItems.sort((a, b) => a.name.localeCompare(b.name));
+
+            isLoading = false;
+            renderItems('');
+            renderRecipes('');
+            updateStats();
+        }
+
+        // ============================================================
+        // 渲染物品
+        // ============================================================
+        let selectedItem = null;
+
+        function renderItems(filter = '') {
+            const grid = document.getElementById('itemsGrid');
+            const count = document.getElementById('itemCount');
+
+            if (isLoading) {
+                grid.innerHTML = `<div class="ziyit-loading">
+                    <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                    <div class="ziyit-loader">
+                        <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                        <div class="loader-bar"><div class="loader-fill"></div></div>
+                    </div>
+                </div>`;
+                count.innerHTML = '<span class="spinner-inline"></span>';
+                return;
+            }
+
+            const filtered = allItems.filter(item =>
+                item.name.toLowerCase().includes(filter.toLowerCase()) ||
+                item.id.toLowerCase().includes(filter.toLowerCase())
+            );
+            count.textContent = `显示 ${filtered.length} 个物品`;
+
+            grid.innerHTML = filtered.map(item => `
+                <div class="item-card ${item.hasRecipe ? 'has-recipe' : ''}" 
+                     data-id="${item.id}"
+                     onclick="selectItem('${item.id}')">
+                    <div class="item-card__icon">
+                        <img src="${getItemIcon(item.id)}" alt="${item.name}" 
+                             onerror="this.src='https://zh.minecraft.wiki/images/Missing_Texture_JE4.png'" />
+                    </div>
+                    <div class="item-card__name">${item.name}</div>
+                    <div class="recipe-badge">${item.hasRecipe ? '📋 有配方' : ''}</div>
+                </div>
+            `).join('');
+
+            if (selectedItem) {
+                const cards = grid.querySelectorAll('.item-card');
+                cards.forEach(card => {
+                    if (card.dataset.id === selectedItem) {
+                        card.style.borderColor = 'var(--accent-cyan)';
+                        card.style.boxShadow = '0 0 20px var(--glow-cyan)';
+                    }
+                });
+                showRecipe(selectedItem);
+            }
+        }
+
+        // ============================================================
+        // 显示配方
+        // ============================================================
+        function selectItem(itemId) {
+            selectedItem = itemId;
+            document.querySelectorAll('.item-card').forEach(card => {
+                card.style.borderColor = '';
+                card.style.boxShadow = '';
+                if (card.dataset.id === itemId) {
+                    card.style.borderColor = 'var(--accent-cyan)';
+                    card.style.boxShadow = '0 0 20px var(--glow-cyan)';
+                }
+            });
+            showRecipe(itemId);
+        }
+
+        function showRecipe(itemId) {
+            const view = document.getElementById('recipeView');
+            const recipes = allRecipes[itemId];
+            const item = allItems.find(i => i.id === itemId);
+
+            if (!recipes || recipes.length === 0) {
+                view.innerHTML = `
+                    <div class="empty">❌ 该物品暂无合成配方</div>
+                `;
+                return;
+            }
+
+            let html = `<h3>${item ? item.name : itemId}</h3>`;
+            html += `<div class="sub">共 ${recipes.length} 个配方</div>`;
+
+            for (const recipeEntry of recipes) {
+                const recipe = recipeEntry.data;
+                const fileName = recipeEntry.fileName;
+
+                const isShaped = recipe.type === 'crafting_shaped' || recipe.type === 'minecraft:crafting_shaped';
+                const isShapeless = recipe.type === 'crafting_shapeless' || recipe.type === 'minecraft:crafting_shapeless';
+                const isSmelting = recipe.type === 'smelting' || recipe.type === 'minecraft:smelting' ||
+                    recipe.type === 'blasting' || recipe.type === 'minecraft:blasting' ||
+                    recipe.type === 'smoking' || recipe.type === 'minecraft:smoking';
+
+                html += `<div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:12px;border:1px solid var(--border-color);">`;
+                html += `<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">📄 ${fileName}</div>`;
+
+                if (isShaped && recipe.pattern) {
+                    html += `<div class="recipe-grid">`;
+                    const flat = recipe.pattern.join('').split('');
+                    const keys = recipe.key || {};
+                    flat.forEach(ch => {
+                        const slotId = keys[ch] || '';
+                        const slotName = getItemDisplayName(slotId);
+                        const slotIcon = getMinecraftIcon(slotId);
+                        html += `<div class="recipe-slot">
+                            ${slotId ? `<img src="${slotIcon}" alt="${slotName}" onerror="this.style.display='none'" />` : ''}
+                            ${slotId ? `<div class="slot-label">${slotName}</div>` : ''}
+                        </div>`;
+                    });
+                    html += `</div>`;
+                } else if (isShapeless && recipe.ingredients) {
+                    html += `<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:8px 0;">`;
+                    recipe.ingredients.forEach(ing => {
+                        const ingId = typeof ing === 'string' ? ing : (ing.id || ing.item || '');
+                        const name = getItemDisplayName(ingId);
+                        const icon = getMinecraftIcon(ingId);
+                        const count = ing.count || 1;
+                        html += `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:4px;padding:6px 12px;display:flex;align-items:center;gap:8px;">
+                            <img src="${icon}" style="width:24px;height:24px;object-fit:contain;image-rendering:pixelated;" onerror="this.style.display='none'" />
+                            <span style="font-size:13px;">${name}${count > 1 ? ' ×' + count : ''}</span>
+                        </div>`;
+                    });
+                    html += `</div>`;
+                } else if (isSmelting) {
+                    const ingId = recipe.ingredient || recipe.input || '';
+                    const ingName = getItemDisplayName(ingId);
+                    const ingIcon = getMinecraftIcon(ingId);
+                    html += `<div style="display:flex;align-items:center;justify-content:center;gap:20px;padding:12px 0;flex-wrap:wrap;">
+                        <div style="text-align:center;">
+                            <img src="${ingIcon}" style="width:48px;height:48px;object-fit:contain;image-rendering:pixelated;" onerror="this.style.display='none'" />
+                            <div style="font-size:13px;color:var(--text-secondary);">${ingName}</div>
+                        </div>
+                        <div style="font-size:28px;color:var(--text-muted);">🔥 →</div>
+                        <div style="text-align:center;">
+                            <img src="${getMinecraftIcon(recipe.result?.id || recipe.result || '')}" style="width:48px;height:48px;object-fit:contain;image-rendering:pixelated;" onerror="this.style.display='none'" />
+                            <div style="font-size:13px;color:var(--text-secondary);">${getItemDisplayName(recipe.result?.id || recipe.result || '')}</div>
+                        </div>
+                    </div>`;
+                    if (recipe.experience !== undefined || recipe.cookingtime) {
+                        html += `<div style="text-align:center;font-size:13px;color:var(--text-muted);">
+                            经验: ${recipe.experience || 0} · 耗时: ${(recipe.cookingtime || 200) / 20}秒
+                        </div>`;
+                    }
+                } else {
+                    html += `<div style="color:var(--text-muted);font-size:13px;">未知配方类型: ${recipe.type}</div>`;
+                }
+
+                if (recipe.result) {
+                    const resultId = typeof recipe.result === 'string' ? recipe.result : recipe.result.id;
+                    const resultCount = recipe.result.count || 1;
+                    const resultName = getItemDisplayName(resultId);
+                    const resultIcon = getMinecraftIcon(resultId);
+                    html += `<div class="recipe-arrow">⬇</div>`;
+                    html += `<div class="recipe-result">
+                        <img src="${resultIcon}" alt="${resultName}" onerror="this.style.display='none'" />
+                        <div class="info">
+                            <div class="name">${resultName}</div>
+                            <div class="count">× ${resultCount}</div>
+                        </div>
+                    </div>`;
+                }
+
+                html += `</div>`;
+            }
+
+            view.innerHTML = html;
+        }
+
+        // ============================================================
+        // 渲染配方列表 (Tab 2)
+        // ============================================================
+        function renderRecipes(filter = '') {
+            const container = document.getElementById('recipesList');
+            const count = document.getElementById('recipeCount');
+
+            if (isLoading) {
+                container.innerHTML = `<div class="ziyit-loading">
+                    <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                    <div class="ziyit-loader">
+                        <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                        <div class="loader-bar"><div class="loader-fill"></div></div>
+                    </div>
+                </div>`;
+                count.innerHTML = '<span class="spinner-inline"></span>';
+                return;
+            }
+
+            const recipeEntries = [];
+            for (const [itemId, recipes] of Object.entries(allRecipes)) {
+                const item = allItems.find(i => i.id === itemId);
+                const name = item ? item.name : itemId;
+                if (!name.toLowerCase().includes(filter.toLowerCase()) && !itemId.toLowerCase().includes(filter.toLowerCase())) {
+                    continue;
+                }
+                for (const recipeEntry of recipes) {
+                    recipeEntries.push({
+                        itemId: itemId,
+                        name: name,
+                        fileName: recipeEntry.fileName,
+                        data: recipeEntry.data,
+                        hasRecipe: true
+                    });
+                }
+            }
+
+            count.textContent = `显示 ${recipeEntries.length} 个配方`;
+
+            if (recipeEntries.length === 0) {
+                container.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:40px 0;">没有找到匹配的配方</div>`;
+                return;
+            }
+
+            container.innerHTML = recipeEntries.map(entry => {
+                const icon = getItemIcon(entry.itemId);
+                const resultId = entry.data.result?.id || entry.data.result || '';
+                const resultName = getItemDisplayName(resultId);
+                const resultCount = entry.data.result?.count || 1;
+
+                let typeLabel = '⚗️ 合成';
+                if (entry.data.type === 'smelting' || entry.data.type === 'minecraft:smelting') typeLabel = '🔥 熔炼';
+                else if (entry.data.type === 'blasting' || entry.data.type === 'minecraft:blasting') typeLabel = '🔥 高炉';
+                else if (entry.data.type === 'smoking' || entry.data.type === 'minecraft:smoking') typeLabel = '🔥 烟熏';
+
+                return `
+                    <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;cursor:pointer;transition:all var(--transition);" 
+                         onclick="selectItem('${entry.itemId}'); document.querySelector('[data-tab=\\'items-tab\\']').click();">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <img src="${icon}" style="width:32px;height:32px;object-fit:contain;image-rendering:pixelated;" onerror="this.style.display='none'" />
+                            <div>
+                                <div style="font-weight:600;font-size:14px;">${entry.name}</div>
+                                <div style="font-size:12px;color:var(--text-muted);">
+                                    ${entry.fileName} → ${resultName} ×${resultCount}
+                                </div>
+                            </div>
+                        </div>
+                        <span style="font-size:12px;color:var(--text-muted);">${typeLabel}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============================================================
+        // 更新统计
+        // ============================================================
+        function updateStats() {
+            document.getElementById('stat-items').textContent = allItems.length;
+            const totalRecipes = Object.values(allRecipes).reduce((sum, arr) => sum + arr.length, 0);
+            document.getElementById('stat-recipes').textContent = totalRecipes;
+            document.getElementById('stat-adv').textContent = ADVANCEMENTS.length;
+        }
+
+        // ============================================================
+        // 核弹计算器
+        // ============================================================
+        function calcNuclearDamage(distance, underwater = false) {
+            let damage;
+            if (distance <= 10) {
+                damage = 500;
+            } else if (distance <= 150) {
+                damage = 500 * (1 - (distance - 10) / 140);
+            } else if (distance <= 200) {
+                damage = 25 * (1 - (distance - 150) / 50);
+            } else {
+                damage = 0;
+            }
+            if (underwater) damage *= 1.15;
+            return Math.max(0, damage);
+        }
+
+        function calcNuclearDistance(damage, underwater = false) {
+            let adjusted = damage;
+            if (underwater) adjusted /= 1.15;
+
+            if (adjusted >= 500) return 0;
+            if (adjusted <= 0) return 201;
+
+            const d1 = 10 + 140 * (1 - adjusted / 500);
+            if (d1 >= 10 && d1 <= 150) return d1;
+
+            const d2 = 150 + 50 * (1 - adjusted / 25);
+            if (d2 >= 150 && d2 <= 200) return d2;
+
+            if (adjusted < 25) return 200;
+            return 10;
+        }
+
+        // ============================================================
+        // 进度数据 (硬编码，来自模组)
+        // ============================================================
+        const ADVANCEMENTS = [
+            { name: '工业革命', desc: '找到小屋和废弃小屋', type: 'task' },
+            { name: '垃圾', desc: '获得金属废料', type: 'task' },
+            { name: '不是？', desc: '食用金属废料', type: 'task' },
+            { name: '这就是机油吗？', desc: '通过村民交易获得合成机油', type: 'task' },
+            { name: '辐射', desc: '玩家10格内有铀矿', type: 'task' },
+            { name: '铀工程', desc: '获得铀矿', type: 'task' },
+            { name: '铀工程', desc: '获得铀锭', type: 'task' },
+            { name: '研发计划', desc: '合成德意志帝国研发', type: 'task' },
+            { name: '健康饮食', desc: '食用西蓝花炒青花菜拌羽衣甘蓝Kale拌苦瓜炒芹菜炖蓝纹奶酪海藻海带蒸奇亚籽汤', type: 'challenge' },
+            { name: '试爆', desc: '获得核弹', type: 'task' },
+            { name: '核爆', desc: '点燃核弹', type: 'goal' },
+            { name: '天机屠龙炮', desc: '用核弹终结末影龙', type: 'challenge' },
+            { name: '核弹狂人', desc: '累计引爆25颗核弹', type: 'challenge' },
+            { name: '废品回收站', desc: '收集一组金属废料（99个）', type: 'goal' },
+            { name: '垄断铀矿', desc: '收集一组铀锭（64个）', type: 'challenge' },
+            { name: '全成就收藏家', desc: '收集所有违禁方块', type: 'challenge' },
+            { name: '辐射（隐藏）', desc: '玩家5格内有辐射铀矿石', type: 'hidden' },
+        ];
+
+        // ============================================================
+        // 渲染进度
+        // ============================================================
+        function renderAdvancements(filter = '') {
+            const grid = document.getElementById('advGrid');
+            const count = document.getElementById('advCount');
+            const filtered = ADVANCEMENTS.filter(a =>
+                a.name.toLowerCase().includes(filter.toLowerCase()) ||
+                a.desc.toLowerCase().includes(filter.toLowerCase())
+            );
+            count.textContent = `显示 ${filtered.length} 个进度`;
+
+            grid.innerHTML = filtered.map(a => `
+                <div class="adv-card">
+                    <span class="adv-badge ${a.type}">${a.type}</span>
+                    <div class="adv-name">${a.name}</div>
+                    <div class="adv-desc">${a.desc}</div>
+                </div>
+            `).join('');
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px 0;">没有找到匹配的进度</div>`;
+            }
+        }
+
+        // ============================================================
+        // Tab 切换
+        // ============================================================
+        document.querySelectorAll('.tab, .header__nav a[data-tab]').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const target = this.dataset.tab;
+
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.header__nav a[data-tab]').forEach(t => t.classList.remove('active'));
+
+                const tabBtn = document.querySelector(`.tab[data-tab="${target}"]`);
+                if (tabBtn) tabBtn.classList.add('active');
+
+                const navBtn = document.querySelector(`.header__nav a[data-tab="${target}"]`);
+                if (navBtn) navBtn.classList.add('active');
+
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                const content = document.getElementById(target);
+                if (content) content.classList.add('active');
+
+                if (target === 'recipes-tab') renderRecipes('');
+                if (target === 'adv-tab') renderAdvancements('');
+            });
+        });
+
+        // ============================================================
+        // 事件绑定
+        // ============================================================
+
+        document.getElementById('itemSearch').addEventListener('input', function() {
+            renderItems(this.value);
+        });
+        document.getElementById('searchBtn').addEventListener('click', function() {
+            renderItems(document.getElementById('itemSearch').value);
+        });
+
+        document.getElementById('recipeSearch').addEventListener('input', function() {
+            renderRecipes(this.value);
+        });
+        document.getElementById('recipeSearchBtn').addEventListener('click', function() {
+            renderRecipes(document.getElementById('recipeSearch').value);
+        });
+
+        document.getElementById('advSearch').addEventListener('input', function() {
+            renderAdvancements(this.value);
+        });
+        document.getElementById('advSearchBtn').addEventListener('click', function() {
+            renderAdvancements(document.getElementById('advSearch').value);
+        });
+
+        // 核弹计算
+        document.getElementById('calcDamageBtn').addEventListener('click', function() {
+            const dist = parseFloat(document.getElementById('distInput').value);
+            const result = document.getElementById('damageResult');
+            if (isNaN(dist) || dist < 0) {
+                result.innerHTML = '⚠️ 请输入有效的距离 (≥ 0)';
+                return;
+            }
+            const damage = calcNuclearDamage(dist);
+            const underwater = calcNuclearDamage(dist, true);
+            result.innerHTML = `
+                <div>💥 距离 <strong>${dist}</strong> 格</div>
+                <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:4px;">
+                    <span>🌊 陆地伤害：<span class="value">${damage.toFixed(1)}</span></span>
+                    <span>🌊 水下伤害：<span class="value">${underwater.toFixed(1)}</span></span>
+                </div>
+                ${damage <= 0 ? '<div style="color:var(--text-muted);font-size:13px;margin-top:4px;">⚠️ 超出爆炸范围 (200格)</div>' : ''}
+            `;
+        });
+
+        document.getElementById('calcDistBtn').addEventListener('click', function() {
+            const dmg = parseFloat(document.getElementById('dmgInput').value);
+            const result = document.getElementById('distResult');
+            if (isNaN(dmg) || dmg < 0) {
+                result.innerHTML = '⚠️ 请输入有效的伤害值 (≥ 0)';
+                return;
+            }
+            const dist = calcNuclearDistance(dmg);
+            const distUnderwater = calcNuclearDistance(dmg, true);
+            result.innerHTML = `
+                <div>🛡️ 受到伤害 <strong>${dmg}</strong> 点</div>
+                <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:4px;">
+                    <span>🌊 陆地距离：<span class="value">${dist.toFixed(1)}</span> 格</span>
+                    <span>🌊 水下距离：<span class="value">${distUnderwater.toFixed(1)}</span> 格</span>
+                </div>
+                ${dist > 200 ? '<div style="color:var(--text-muted);font-size:13px;margin-top:4px;">⚠️ 超出爆炸范围 (200格)</div>' : ''}
+            `;
+        });
+
+        document.getElementById('distInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') document.getElementById('calcDamageBtn').click();
+        });
+        document.getElementById('dmgInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') document.getElementById('calcDistBtn').click();
+        });
+
+        // ============================================================
+        // 初始化
+        // ============================================================
+        async function init() {
+            await loadAllRecipes();
+            renderAdvancements('');
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+<script src="../assets/ziyit-theme.js"></script>
+</body>
+</html>

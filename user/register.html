@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Cache-Control" content="max-age=31536000, immutable">
+    <title>注册ZIYIT账号(中国)</title>
+    <meta name="description" content="注册 ZIYIT 账号，加入 ZIYIT STUDIO 社区。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/register.html">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/blacklist.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <style>
+        /* ===== 注册页样式（DESIGN.md 设计体系，token 化） ===== */
+        body {
+            background: var(--ziyit-bg);
+        }
+
+        .form-container {
+            max-width: 400px;
+            margin: 32px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-container h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--ziyit-text-primary);
+        }
+
+        .form-container a {
+            color: var(--ziyit-primary);
+            text-decoration: none;
+        }
+
+        .form-container a:hover {
+            color: var(--ziyit-primary-dark);
+        }
+
+        .bt {
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
+
+        input {
+            padding: 12px 15px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 4px;
+            background-color: var(--ziyit-bg-card);
+            font-size: 14px;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+            color: var(--ziyit-text-primary);
+        }
+
+        input:hover {
+            border-color: var(--ziyit-text-disabled);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--ziyit-primary);
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.3);
+        }
+
+        button {
+            background-color: var(--ziyit-primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            width: 100%;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        #tip {
+            color: var(--ziyit-danger);
+            font-size: 12px;
+        }
+
+        #tips {
+            margin-top: 16px;
+            font-size: 13px;
+            line-height: 1.8;
+            color: var(--ziyit-text-secondary);
+        }
+
+        #tips strong {
+            color: var(--ziyit-text-primary);
+        }
+
+        #usernameError,
+        #captchaTip {
+            color: var(--ziyit-danger);
+            font-size: 12px;
+        }
+
+        /* 防重复点击提示 */
+        #dupTip {
+            display: none;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--ziyit-warning);
+        }
+
+        /* 注册成功后的邮箱验证提示条 */
+        .verify-tip {
+            display: none;
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--ziyit-success);
+            background: var(--ziyit-primary-light);
+            color: var(--ziyit-text-primary);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .verify-tip strong {
+            color: var(--ziyit-success);
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                width: 90%;
+                padding: 15px;
+            }
+
+            input,
+            select,
+            button {
+                width: 90% !important;
+                font-size: 16px;
+            }
+
+            h1 {
+                font-size: 20px !important;
+            }
+
+            #tips {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()" id="backNavLink">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h1 class="bt">注册ZIYIT</h1>
+
+        <form method="get" autocomplete="off">
+            <div style="margin-bottom: 16px;">
+                <label for="username" class="bt">昵 称</label>
+                <input type="text" id="username" name="username" maxlength="15" autocomplete="off" required>
+                <div id="usernameError" style="display: none;">该用户名已被注册</div>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label for="email" class="bt">邮 箱</label>
+                <input type="email" id="email" name="email" autocomplete="off" placeholder="用于找回密码、注销账号、保留账号等" required>
+                <div id="emailTip" style="color: var(--ziyit-danger); font-size: 12px; margin-top: 4px;">必须填写真实可用邮箱，未填写真实可用邮箱造成的一切后果自负<br>如有QQ账号建议使用更稳定的 QQ 邮箱（QQ号+@qq.com）</div>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label for="password" class="bt">密 码</label>
+                <input type="password" id="password" name="password" minlength="6" maxlength="16"
+                    autocomplete="off" required>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label for="confirmPassword" class="bt">确认密码</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" minlength="6" maxlength="16"
+                    autocomplete="off" required>
+                <div id="confirmPasswordError" style="color: var(--ziyit-danger); font-size: 12px; display: none;">两次输入的密码不一致</div>
+            </div>
+
+            <div id="app"></div>
+            <div id="captchaTip" style="display: none; text-align: center; margin-bottom: 10px;">
+                你是人吗？请参与人机验证</div>
+            <button type="submit" id="registerBtn">注册</button>
+            <div id="dupTip">请勿多次点击注册按钮</div>
+            <div class="verify-tip" id="verifyTip"><strong>注册成功</strong>，邮箱验证邮件已发送，请在30分钟内完成邮箱验证并登录，逾期未验证将被系统自动注销账号。<a href="./">点击登录</a></div>
+        </form>
+
+        <p id="tips">注册后默认为普通用户，升级 VIP 请前往用户中心。如果注册失败可以加管理员QQ<strong>3792662015</strong>。</p>
+    </div>
+    <script src="../assets/ziyit_api.js"></script>
+    <script src="register.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "@noble/curves/nist.js": "https://cdn.jsdelivr.net/npm/@noble/curves@2.2.0/nist.js",
+                "@noble/hashes/sha2.js": "https://cdn.jsdelivr.net/npm/@noble/hashes@2.2.0/sha2.js",
+                "@noble/hashes/hkdf.js": "https://cdn.jsdelivr.net/npm/@noble/hashes@2.2.0/hkdf.js",
+                "@noble/hashes/hmac.js": "https://cdn.jsdelivr.net/npm/@noble/hashes@2.2.0/hmac.js",
+                "@noble/hashes/utils.js": "https://cdn.jsdelivr.net/npm/@noble/hashes@2.2.0/utils.js",
+                "@noble/ciphers/aes.js": "https://cdn.jsdelivr.net/npm/@noble/ciphers@2.2.0/aes.js"
+            }
+        }
+    </script>
+    <script>
+        window.PHANTOM_API_KEY = 'PfwHF-kkg8c-YX6CF-J7Uw1-hv5Dm';
+    </script>
+    <script type="module" src="https://ziyit-hacker.github.io/Human_verification/main.js"></script>
+    <script>
+        let captchaVerified = false;
+        window.addEventListener('phantom:verified', function (e) {
+            captchaVerified = true;
+            document.getElementById('captchaTip').style.display = 'none';
+        });
+    </script>
+
+    <script>
+        // 导航权限过滤（DESIGN.md §4.6.5，公开页模式）：未登录仅保留登录入口与返回，登录后按角色显示
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const loginLink = document.getElementById('loginLink');
+            const backNavLink = document.getElementById('backNavLink');
+            const isAuthPage = !ZIYIT_API.getToken();
+            if (isAuthPage) {
+                navItems.forEach(item => {
+                    // 登录/注册页未登录时：隐藏功能区、图书馆、用户中心等，只显示登录链接与返回
+                    const show = item.contains(loginLink) || item.contains(backNavLink);
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                if (loginLink) loginLink.style.display = 'inline-block';
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                // token 验证失败（已失效）：回到未登录状态，仅显示登录入口与返回
+                navItems.forEach(item => {
+                    const show = item.contains(loginLink) || item.contains(backNavLink);
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                if (loginLink) loginLink.style.display = 'inline-block';
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

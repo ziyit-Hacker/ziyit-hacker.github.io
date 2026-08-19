@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "pumpkin stem 2",
+    "ingredients": [
+        "flyconfig:germany_developed",
+        "flyconfig:ultimate_healthy_nightmare",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:pumpkin_stem_2",
+        "count": 1
+    },
+    "show_notification": true
+}

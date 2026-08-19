@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "melon stem 0",
+    "ingredients": [
+        "flyconfig:ultimate_healthy_nightmare",
+        "flyconfig:what_the_dog_doing",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:melon_stem_0",
+        "count": 1
+    },
+    "show_notification": true
+}

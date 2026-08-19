@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>评分管理 - 只因游戏Backrooms维基</title>
+    <script src="/assets/f12check.js"></script>
+    <script src="/assets/ziyit_api.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans SC", sans-serif; background: #f0f1f3; color: #1f2328; }
+        .container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+        h1 { font-size: 22px; margin: 0 0 16px; }
+        .card { background: #fff; border: 1px solid #e2e5ea; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        .card h2 { font-size: 15px; margin: 0 0 12px; border-bottom: 1px solid #e8eaee; padding-bottom: 8px; }
+        .form-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .form-row input { flex: 1; min-width: 160px; padding: 8px 10px; border: 1px solid #cfd3d9; border-radius: 5px; font-size: 13px; }
+        button { padding: 8px 16px; border: none; border-radius: 6px; background: #0078d4; color: #fff; font-size: 13px; cursor: pointer; }
+        button:hover { background: #0069b9; }
+        button.secondary { background: #f1f2f4; color: #1f2328; border: 1px solid #cfd3d9; }
+        button.danger { background: #d33; }
+        #status { min-height: 18px; font-size: 13px; color: #c33; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { border: 1px solid #e2e5ea; padding: 6px 8px; text-align: left; vertical-align: middle; }
+        th { background: #fafbfc; font-weight: 600; white-space: nowrap; }
+        td.code { font-family: Consolas, monospace; white-space: nowrap; }
+        td .desc { max-width: 240px; word-break: break-all; color: #666; }
+        .num { text-align: center; }
+        .empty { text-align: center; color: #999; padding: 24px 0; }
+        .back { display: inline-block; margin-bottom: 12px; color: #0078d4; text-decoration: none; font-size: 13px; }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a class="back" href="index.html">← 返回首页</a>
+        <h1>评分管理（需 1 级及以上管理员）</h1>
+        <div id="status"></div>
+
+        <div class="card">
+            <h2>添加评分</h2>
+            <div class="form-row">
+                <input id="f-code" placeholder="编号，如 L111 / E2 / O3（自动转大写）">
+                <input id="f-desc" placeholder="可选备注">
+                <input id="f-user" placeholder="指定用户 ID（可选，仅管理员可传）">
+            </div>
+            <button id="btn-add">添加</button>
+        </div>
+
+        <div class="card">
+            <h2>评分列表</h2>
+            <div style="margin-bottom:10px;"><button id="btn-refresh" class="secondary">刷新列表</button></div>
+            <div id="list"></div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            function $(id) { return document.getElementById(id); }
+            var statusEl = $('status');
+
+            function setStatus(msg, ok) {
+                statusEl.textContent = msg || '';
+                statusEl.style.color = ok ? '#2a7d2f' : '#c33';
+            }
+
+            function api() {
+                if (!window.ZIYIT_API) { setStatus('API 组件未加载'); throw new Error('no api'); }
+                return ZIYIT_API;
+            }
+
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
+            function addRating() {
+                var code = ($('f-code').value || '').trim();
+                if (!code) { setStatus('请填写编号'); return; }
+                var body = { code: code };
+                var desc = ($('f-desc').value || '').trim();
+                if (desc) body.description = desc;
+                var uid = ($('f-user').value || '').trim();
+                if (uid) body.userId = Number(uid);
+                setStatus('提交中…');
+                api().request('/ratings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                }).then(function (d) {
+                    setStatus('已添加：' + ((d && d.code) || '') + '（ID ' + (d && d.id) + '）', true);
+                    $('f-code').value = '';
+                    $('f-desc').value = '';
+                    $('f-user').value = '';
+                    refresh();
+                }).catch(function (e) {
+                    setStatus('添加失败：' + ((e && e.message) || '未知错误'));
+                });
+            }
+
+            function refresh() {
+                var list = $('list');
+                list.innerHTML = '<div class="empty">加载中…</div>';
+                setStatus('');
+                api().request('/ratings').then(function (d) {
+                    render(d && d.ratings ? d.ratings : []);
+                }).catch(function (e) {
+                    list.innerHTML = '';
+                    setStatus('加载失败：' + ((e && e.message) || '未知错误') + '（仅管理员可查看）');
+                });
+            }
+
+            function render(ratings) {
+                var list = $('list');
+                if (!ratings.length) { list.innerHTML = '<div class="empty">暂无评分</div>'; return; }
+                var rows = ratings.map(function (r) {
+                    return '<tr>'
+                        + '<td>' + r.id + '</td>'
+                        + '<td class="code">' + esc(r.code) + '</td>'
+                        + '<td><span class="desc">' + esc(r.description) + '</span></td>'
+                        + '<td>' + r.ownerUserId + '</td>'
+                        + '<td class="num">' + (r.upVotes || 0) + '</td>'
+                        + '<td class="num">' + (r.downVotes || 0) + '</td>'
+                        + '<td class="num">' + (r.value || 0) + '</td>'
+                        + '<td>' + esc(r.createdAt || '') + '</td>'
+                        + '<td><button class="danger" data-code="' + esc(r.code) + '">删除</button></td>'
+                        + '</tr>';
+                }).join('');
+                list.innerHTML = '<table><thead><tr>'
+                    + '<th>ID</th><th>编号</th><th>备注</th><th>所属用户</th><th>好评</th><th>差评</th><th>评价值</th><th>创建时间</th><th>操作</th>'
+                    + '</tr></thead><tbody>' + rows + '</tbody></table>';
+                list.querySelectorAll('button[data-code]').forEach(function (b) {
+                    b.addEventListener('click', function () { deleteByCode(b.getAttribute('data-code')); });
+                });
+            }
+
+            function deleteByCode(code) {
+                if (!window.confirm('确定删除编号 ' + code + ' 下的全部评分？')) return;
+                api().request('/ratings/' + encodeURIComponent(code), { method: 'DELETE' }).then(function (d) {
+                    setStatus('已删除' + (d && d.deleted != null ? ' ' + d.deleted + ' 条' : ''), true);
+                    refresh();
+                }).catch(function (e) {
+                    setStatus('删除失败：' + ((e && e.message) || '未知错误'));
+                });
+            }
+
+            $('btn-add').addEventListener('click', addRating);
+            $('f-code').addEventListener('keydown', function (e) { if (e.key === 'Enter') addRating(); });
+            $('btn-refresh').addEventListener('click', refresh);
+
+            refresh();
+        })();
+    </script>
+</body>
+
+</html>

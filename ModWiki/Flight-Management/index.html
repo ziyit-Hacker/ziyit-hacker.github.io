@@ -1,0 +1,2465 @@
+<!DOCTYPE html>
+<html class="client-js skin-theme-clientpref-night ve-available" lang="zh-Hans-CN" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1120">
+    <title>Flight Management 模组 Wiki</title>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E✈%3C/text%3E%3C/svg%3E"
+        type="image/svg+xml">
+    <style>
+        /* === 整体重置 & 颜色变量 === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-base: #e6edf3;
+            --color-emphasized: #f0f6fc;
+            --color-subtle: #8b949e;
+            --background-color-base: #0d1117;
+            --background-color-interactive-subtle: #161b22;
+            --background-color-interactive: #21262d;
+            --border-color-base: #30363d;
+            --border-color-subtle: #30363d;
+            --color-progressive: #58a6ff;
+            --color-progressive--hover: #79c0ff;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            background-color: var(--background-color-base);
+            color: var(--color-base);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        a {
+            color: var(--color-progressive);
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: var(--color-progressive--hover);
+            text-decoration: underline;
+        }
+
+        #content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem 1.5rem 4rem 1.5rem;
+            background: transparent;
+            position: relative;
+        }
+
+        /* === 头部 === */
+        .wiki-header {
+            background: var(--background-color-interactive-subtle);
+            border-bottom: 2px solid var(--border-color-base);
+            padding: 0.75rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(6px);
+            background: rgba(22, 27, 34, 0.92);
+        }
+
+        .wiki-header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .wiki-title h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--color-emphasized);
+        }
+
+        .wiki-title .version {
+            font-size: 0.75rem;
+            background: #238636;
+            color: #fff;
+            padding: 0.1rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .wiki-nav {
+            display: flex;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+        }
+
+        .wiki-nav a {
+            color: var(--color-subtle);
+            padding: 0.3rem 0.9rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .wiki-nav a:hover {
+            background: var(--background-color-interactive);
+            color: var(--color-emphasized);
+            text-decoration: none;
+        }
+
+        .wiki-nav a.active {
+            background: #238636;
+            color: #fff;
+        }
+
+        /* === 卡片 === */
+        .wiki-card {
+            background: var(--background-color-interactive-subtle);
+            border: 1px solid var(--border-color-base);
+            border-radius: 8px;
+            padding: 1.5rem 1.8rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 1.5rem;
+        }
+
+        .wiki-card h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--color-emphasized);
+            border-bottom: 1px solid var(--border-color-base);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .wiki-card h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--color-emphasized);
+            margin: 1.4rem 0 0.6rem 0;
+            padding-left: 0.5rem;
+            border-left: 3px solid #238636;
+        }
+
+        .wiki-card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-emphasized);
+            margin: 1rem 0 0.4rem 0;
+        }
+
+        .wiki-card p {
+            color: var(--color-base);
+            margin-bottom: 0.6rem;
+        }
+
+        .wiki-card ul {
+            margin: 0.5rem 0 0.8rem 1.2rem;
+            color: var(--color-base);
+        }
+
+        .wiki-card ul li {
+            margin-bottom: 0.2rem;
+        }
+
+        /* === 表格 === */
+        .wikitable {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.8rem 0 1.2rem 0;
+            font-size: 0.9rem;
+            background: var(--background-color-base);
+            border: 1px solid var(--border-color-base);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .wikitable th {
+            background: var(--background-color-interactive);
+            color: var(--color-emphasized);
+            padding: 0.5rem 0.8rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color-base);
+            font-weight: 600;
+        }
+
+        .wikitable td {
+            padding: 0.4rem 0.8rem;
+            border-bottom: 1px solid var(--border-color-subtle);
+            color: var(--color-base);
+        }
+
+        .wikitable tr:last-child td {
+            border-bottom: none;
+        }
+
+        .wikitable tr:hover td {
+            background: #1c2128;
+        }
+
+        /* === 标签 === */
+        .badge {
+            display: inline-block;
+            padding: 0.1rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: #6b7280;
+            color: #fff;
+        }
+
+        .badge-epic {
+            background: #8b5cf6;
+        }
+
+        .badge-rare {
+            background: #3b82f6;
+        }
+
+        .badge-uncommon {
+            background: #22c55e;
+        }
+
+        .badge-common {
+            background: #6b7280;
+        }
+
+        .badge-challenge {
+            background: #ef4444;
+        }
+
+        .badge-goal {
+            background: #f59e0b;
+        }
+
+        .badge-task {
+            background: #3b82f6;
+        }
+
+        .badge-hidden {
+            background: #6b7280;
+        }
+
+        .item-id {
+            display: inline-block;
+            background: #0d1117;
+            color: var(--color-progressive);
+            padding: 0.1rem 0.6rem;
+            border-radius: 4px;
+            font-family: 'Consolas', 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid var(--border-color-base);
+        }
+
+        /* === 合成配方可视化 === */
+        .mcui {
+            display: inline-block;
+            background: #1c2128;
+            border: 2px solid #30363d;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin: 6px 0;
+            font-size: 0;
+            white-space: nowrap;
+        }
+
+        .mcui .mcui-input {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .mcui .mcui-row {
+            display: flex;
+            gap: 2px;
+            margin: 2px 0;
+        }
+
+        .mcui .invslot {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            background: #0d1117;
+            border: 2px solid #30363d;
+            border-radius: 2px;
+            position: relative;
+            text-align: center;
+            line-height: 36px;
+        }
+
+        .mcui .invslot img {
+            max-width: 32px;
+            max-height: 32px;
+            vertical-align: middle;
+            image-rendering: pixelated;
+        }
+
+        .mcui .invslot img.loading {
+            opacity: 0.3;
+        }
+
+        .mcui .invslot img.error {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+
+        .mcui .invslot .invslot-stacksize {
+            position: absolute;
+            bottom: 0;
+            right: 2px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 1px 1px 0 #000;
+            line-height: 1;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .mcui .mcui-arrow {
+            display: inline-block;
+            vertical-align: middle;
+            font-size: 24px;
+            color: var(--color-subtle);
+            padding: 0 8px;
+        }
+
+        .mcui .mcui-output {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .mcui .invslot-large {
+            width: 48px;
+            height: 48px;
+            line-height: 48px;
+        }
+
+        .mcui .invslot-large img {
+            max-width: 40px;
+            max-height: 40px;
+        }
+
+        .mcui .mcui-label {
+            display: block;
+            font-size: 12px;
+            color: var(--color-subtle);
+            margin-top: 4px;
+            white-space: normal;
+            text-align: center;
+        }
+
+        .recipe-box {
+            background: var(--background-color-base);
+            border: 1px solid var(--border-color-base);
+            border-radius: 6px;
+            padding: 0.8rem 1.2rem;
+            margin: 0.6rem 0 1rem 0;
+        }
+
+        .recipe-box .label {
+            color: var(--color-subtle);
+            font-weight: 600;
+            display: inline-block;
+            min-width: 80px;
+        }
+
+        .advancement-box,
+        .structure-box {
+            background: var(--background-color-base);
+            border-left: 3px solid #238636;
+            padding: 0.6rem 1rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+        }
+
+        .structure-box {
+            border-left-color: #f59e0b;
+        }
+
+        .advancement-box .badge,
+        .structure-box .badge {
+            margin-right: 0.4rem;
+        }
+
+        .warning-box {
+            background: #1c1a0d;
+            border: 1px solid #6b5a2a;
+            border-radius: 6px;
+            padding: 0.6rem 1rem;
+            margin: 0.6rem 0;
+            color: #d4c5a0;
+        }
+
+        .info-box {
+            background: #0d1a2d;
+            border: 1px solid #1a3a6b;
+            border-radius: 6px;
+            padding: 0.6rem 1rem;
+            margin: 0.6rem 0;
+            color: #8ab4f8;
+        }
+
+        .back-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #238636;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s;
+            z-index: 999;
+        }
+
+        .back-top:hover {
+            background: #2ea043;
+            transform: translateY(-3px);
+        }
+
+        .wiki-footer {
+            background: var(--background-color-interactive-subtle);
+            border-top: 1px solid var(--border-color-base);
+            padding: 1.2rem 0;
+            text-align: center;
+            color: var(--color-subtle);
+            font-size: 0.85rem;
+            margin-top: 2rem;
+        }
+
+        .wiki-footer strong {
+            color: var(--color-emphasized);
+        }
+
+        .recipe-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .recipe-group {
+            border-bottom: 1px solid var(--border-color-subtle);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .recipe-group:last-child {
+            border-bottom: none;
+        }
+
+        .recipe-group .group-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--color-emphasized);
+            margin: 0.8rem 0 0.4rem 0;
+            padding-left: 0.5rem;
+            border-left: 3px solid #238636;
+        }
+
+        @media (max-width: 768px) {
+            .wiki-header-inner {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+            }
+
+            .wiki-nav {
+                justify-content: center;
+            }
+
+            #content {
+                padding: 0.8rem 0.8rem 3rem 0.8rem;
+            }
+
+            .wiki-card {
+                padding: 1rem;
+            }
+
+            .wikitable {
+                font-size: 0.75rem;
+            }
+
+            .wikitable th,
+            .wikitable td {
+                padding: 0.3rem 0.5rem;
+            }
+
+            .mcui {
+                transform: scale(0.8);
+                transform-origin: left top;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .wiki-title h1 {
+                font-size: 1.2rem;
+            }
+
+            .wiki-nav a {
+                font-size: 0.75rem;
+                padding: 0.2rem 0.6rem;
+            }
+
+            .mcui {
+                transform: scale(0.65);
+                transform-origin: left top;
+            }
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../../assets/ziyit-theme.css">
+</head>
+
+<body>
+    <header class="wiki-header">
+        <div class="wiki-header-inner">
+            <div class="wiki-title">
+                <h1>Flight Management <span class="version">v26.2</span></h1>
+            </div>
+            <nav class="wiki-nav">
+                <a href="..\" class="active">模组主页</a>
+                <a href="#intro" class="active">简介</a>
+                <a href="#items">物品</a>
+                <a href="#headless_piston">无头活塞</a>
+                <a href="#recipes">合成</a>
+                <a href="#nuclear">核弹</a>
+                <a href="#disarm">拆解工具</a>
+                <a href="#world">世界生成</a>
+                <a href="#advancements">进度</a>
+                <a href="#sounds">音效</a>
+                <a href="#mixins">Mixins</a>
+                <a href="#trades">交易</a>
+            </nav>
+        </div>
+    </header>
+
+    <div id="content">
+        <div id="bodyContent" class="vector-body">
+            <div id="mw-content-text" class="mw-body-content">
+                <div class="mw-content-ltr mw-parser-output">
+
+                    <!-- ===== 简介 ===== -->
+                    <section class="wiki-card" id="intro">
+                        <h2>模组简介</h2>
+                        <p><strong>Flight Management</strong> 是一个为 <strong>Minecraft 1.21.8</strong> 开发的 Fabric 模组，由
+                            ZIYIT Studio 开发。</p>
+                        <p style="margin-top:0.6rem;">
+                            <span class="badge badge-epic">版本 26.2</span>
+                            <span class="badge badge-rare">Fabric</span>
+                            <span class="badge badge-common">1.21.8</span>
+                        </p>
+                        <p><strong>依赖：</strong>Fabric API（必须安装）</p>
+                        <p><strong>模组ID：</strong><span class="item-id">flight-management</span></p>
+                        <p><strong>主类：</strong><code>io.minecraft.flyconfig.FlightManagement</code></p>
+                        <div class="warning-box">⚠️ 本模组包含核弹、辐射矿石、违禁方块等高风险内容，请在游玩前了解相关风险。</div>
+                    </section>
+
+                    <!-- ===== 物品 ===== -->
+                    <section class="wiki-card" id="items">
+                        <h2>物品列表</h2>
+
+                        <h3>基础材料</h3>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>物品</th>
+                                    <th>物品ID</th>
+                                    <th>稀有度</th>
+                                    <th>最大堆叠</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>金属废料</td>
+                                    <td><span class="item-id">flyconfig:metal_scrap</span></td>
+                                    <td><span class="badge badge-common">普通</span></td>
+                                    <td>99</td>
+                                </tr>
+                                <tr>
+                                    <td>合成机油</td>
+                                    <td><span class="item-id">flyconfig:synthetic_motoroil</span></td>
+                                    <td><span class="badge badge-uncommon">罕见</span></td>
+                                    <td>16</td>
+                                </tr>
+                                <tr>
+                                    <td>铀锭</td>
+                                    <td><span class="item-id">flyconfig:uranium_ingot</span></td>
+                                    <td><span class="badge badge-uncommon">罕见</span></td>
+                                    <td>64</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="info-box">
+                            <strong>铀锭效果：</strong>手持铀锭时，玩家持续获得恶心、虚弱、失明、中毒效果（各持续100 ticks，等级0）。<br>
+                            <strong>合成机油：</strong>在 26.1 版本移除了合成配方，目前仅能通过村民交易获得（见「村民交易」章节）。
+                        </div>
+
+                        <h3>核心物品</h3>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>物品</th>
+                                    <th>物品ID</th>
+                                    <th>稀有度</th>
+                                    <th>最大堆叠</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>航班管理器</td>
+                                    <td><span class="item-id">flyconfig:flight_manager</span></td>
+                                    <td><span class="badge badge-rare">稀有</span></td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td>德意志帝国研发</td>
+                                    <td><span class="item-id">flyconfig:germany_developed</span></td>
+                                    <td><span class="badge badge-epic">史诗</span></td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <td>核弹</td>
+                                    <td><span class="item-id">flyconfig:nuclear_spawn_egg</span></td>
+                                    <td><span class="badge badge-epic">史诗</span></td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td>核弹拆解工具</td>
+                                    <td><span class="item-id">flyconfig:nuclear_disarm_tool</span></td>
+                                    <td><span class="badge badge-epic">史诗</span></td>
+                                    <td>1</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="info-box">
+                            <strong>航班管理器：</strong>带有死亡保护效果（<code>DeathProtectionComponent.TOTEM_OF_UNDYING</code>），相当于不死图腾。<br>
+                            <strong>核弹：</strong>手持时持续获得中毒效果（40 ticks，等级0）。
+                        </div>
+
+                        <h3>食物</h3>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>物品</th>
+                                    <th>物品ID</th>
+                                    <th>稀有度</th>
+                                    <th>最大堆叠</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>西蓝花炒青花菜拌羽衣甘蓝 Kale拌苦瓜炒芹菜炖蓝纹奶酪海藻海带蒸奇亚籽汤</td>
+                                    <td><span class="item-id">flyconfig:ultimate_healthy_nightmare</span></td>
+                                    <td><span class="badge badge-epic">史诗</span></td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td>为什么会变成这样呢？</td>
+                                    <td><span class="item-id">flyconfig:what_the_dog_doing</span></td>
+                                    <td><span class="badge badge-epic">史诗</span></td>
+                                    <td>1</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>西蓝花炒青花菜拌羽衣甘蓝 Kale拌苦瓜炒芹菜炖蓝纹奶酪海藻海带蒸奇亚籽汤 效果</h4>
+                        <div class="recipe-box">
+                            <p>食用后 <strong>清除所有状态效果</strong>，然后施加以下效果：</p>
+                            <ul>
+                                <li><strong>反胃</strong> — 200 ticks (10秒)，等级 CCL V</li>
+                                <li><strong>速度</strong> — 5100 ticks (255秒)，等级 I</li>
+                                <li><strong>急迫</strong> — 5100 ticks，等级 III</li>
+                                <li><strong>力量</strong> — 5100 ticks，等级 V</li>
+                                <li><strong>瞬间治疗</strong> — 5100 ticks，等级 CCL V</li>
+                                <li><strong>跳跃提升</strong> — 5100 ticks，等级 II</li>
+                                <li><strong>生命恢复</strong> — 5100 ticks，等级 III</li>
+                                <li><strong>抗性提升</strong> — 5100 ticks，等级 II</li>
+                                <li><strong>抗火</strong> — 5100 ticks，等级 V</li>
+                                <li><strong>水下呼吸</strong> — 5100 ticks，等级 V</li>
+                                <li><strong>隐身</strong> — 500 ticks (25秒)，等级 CCL V</li>
+                                <li><strong>伤害吸收</strong> — 5100 ticks，等级 X</li>
+                                <li><strong>饱和</strong> — 5100 ticks，等级 II</li>
+                                <li><strong>幸运</strong> — 5100 ticks，等级 II</li>
+                                <li><strong>缓降</strong> — 1000 ticks (50秒)，等级 I</li>
+                                <li><strong>潮涌能量</strong> — 5100 ticks，等级 I</li>
+                                <li><strong>海豚的恩惠</strong> — 5100 ticks，等级 II</li>
+                                <li><strong>村庄英雄</strong> — 5100 ticks，等级 I</li>
+                            </ul>
+                        </div>
+
+                        <h4>为什么会变成这样呢？ 效果</h4>
+                        <div class="recipe-box">
+                            <p>食用后 <strong>清除所有状态效果</strong>，然后施加 <strong>38 种状态效果</strong>（持续 200 ticks，等级 0）。</p>
+                        </div>
+
+                        <h3>音乐唱片</h3>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>物品</th>
+                                    <th>物品ID</th>
+                                    <th>稀有度</th>
+                                    <th>长度</th>
+                                    <th>比较器输出</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>音乐唱片 - Heil Hitler</td>
+                                    <td><span class="item-id">flyconfig:music_disc_sieg_heil</span></td>
+                                    <td><span class="badge badge-rare">稀有</span></td>
+                                    <td>179秒</td>
+                                    <td>8</td>
+                                </tr>
+                                <tr>
+                                    <td>音乐唱片 - Hitler</td>
+                                    <td><span class="item-id">flyconfig:music_disc_hitler</span></td>
+                                    <td><span class="badge badge-rare">稀有</span></td>
+                                    <td>251秒</td>
+                                    <td>7</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>矿石方块</h3>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>方块</th>
+                                    <th>物品ID</th>
+                                    <th>硬度</th>
+                                    <th>亮度</th>
+                                    <th>掉落物</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>铀矿石</td>
+                                    <td><span class="item-id">flyconfig:uranium_ore</span></td>
+                                    <td>40.0</td>
+                                    <td>7</td>
+                                    <td>自身</td>
+                                </tr>
+                                <tr>
+                                    <td>深板岩铀矿石</td>
+                                    <td><span class="item-id">flyconfig:deepslate_uranium_ore</span></td>
+                                    <td>45.0</td>
+                                    <td>7</td>
+                                    <td>自身</td>
+                                </tr>
+                                <tr>
+                                    <td>辐射铀矿石</td>
+                                    <td><span class="item-id">flyconfig:radiated_uranium_ore</span></td>
+                                    <td>40.0</td>
+                                    <td>7</td>
+                                    <td><strong>无掉落</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>深板岩辐射铀矿石</td>
+                                    <td><span class="item-id">flyconfig:radiated_deepslate_uranium_ore</span></td>
+                                    <td>45.0</td>
+                                    <td>7</td>
+                                    <td><strong>无掉落</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="info-box">
+                            <strong>辐射矿石效果：</strong>辐射铀矿石和深板岩辐射铀矿石对 <strong>5 格半径</strong> 内的玩家持续施加凋零、反胃、虚弱效果（各 200
+                            ticks，等级0）。<br>
+                            触碰或踩踏矿石也会触发效果，并触发进度 <strong>「辐射」</strong>（玩家5格内有假铀矿）。
+                        </div>
+
+                        <div class="info-box">
+                            <strong>普通铀矿石效果：</strong>对 <strong>10 格半径</strong> 内的玩家持续施加凋零、反胃、虚弱效果（各 200 ticks，等级0）。<br>
+                            触碰或踩踏矿石也会触发效果，并触发进度 <strong>「辐射」</strong>（玩家10格内有铀矿）。
+                        </div>
+
+                        <h3>非法方块</h3>
+                        <p>以下方块无法通过正常途径获取，只能通过本模组的合成配方获得。</p>
+
+                        <h4>基础非法方块</h4>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>方块</th>
+                                    <th>物品ID</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>覆雪草方块</td>
+                                    <td><span class="item-id">flyconfig:snowy_grass_block</span></td>
+                                    <td>放置时 <code>snowy=true</code></td>
+                                </tr>
+                                <tr>
+                                    <td>下界传送门</td>
+                                    <td><span class="item-id">flyconfig:nether_portal</span></td>
+                                    <td>放置时不生成传送门框架</td>
+                                </tr>
+                                <tr>
+                                    <td>末地传送门</td>
+                                    <td><span class="item-id">flyconfig:end_portal</span></td>
+                                    <td>放置时不生成传送门框架</td>
+                                </tr>
+                                <tr>
+                                    <td>末地折跃门</td>
+                                    <td><span class="item-id">flyconfig:end_gateway</span></td>
+                                    <td>用于末地主岛与副岛之间传送</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>流体非法方块</h4>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>方块</th>
+                                    <th>物品ID</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>静态水</td>
+                                    <td><span class="item-id">flyconfig:water</span></td>
+                                    <td><code>level=15</code>（完全水位）</td>
+                                </tr>
+                                <tr>
+                                    <td>静态岩浆</td>
+                                    <td><span class="item-id">flyconfig:lava</span></td>
+                                    <td><code>level=15</code>（完全岩浆位）</td>
+                                </tr>
+                                <tr>
+                                    <td>流动水</td>
+                                    <td><span class="item-id">flyconfig:flowing_water</span></td>
+                                    <td>流动状态</td>
+                                </tr>
+                                <tr>
+                                    <td>流动岩浆</td>
+                                    <td><span class="item-id">flyconfig:flowing_lava</span></td>
+                                    <td>流动状态</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>气泡柱非法方块</h4>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>方块</th>
+                                    <th>物品ID</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>上行气泡柱</td>
+                                    <td><span class="item-id">flyconfig:bubble_column_up</span></td>
+                                    <td><code>drag=false</code>，向上推动实体</td>
+                                </tr>
+                                <tr>
+                                    <td>下行气泡柱</td>
+                                    <td><span class="item-id">flyconfig:bubble_column_down</span></td>
+                                    <td><code>drag=true</code>，向下拉动实体</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>熔炉非法方块</h4>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>方块</th>
+                                    <th>物品ID</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>燃烧的熔炉</td>
+                                    <td><span class="item-id">flyconfig:lit_furnace</span></td>
+                                    <td><code>lit=true</code>，无需燃料</td>
+                                </tr>
+                                <tr>
+                                    <td>燃烧的高炉</td>
+                                    <td><span class="item-id">flyconfig:lit_blast_furnace</span></td>
+                                    <td><code>lit=true</code>，无需燃料</td>
+                                </tr>
+                                <tr>
+                                    <td>燃烧的烟熏炉</td>
+                                    <td><span class="item-id">flyconfig:lit_smoker</span></td>
+                                    <td><code>lit=true</code>，无需燃料</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>活塞非法方块</h4>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>方块</th>
+                                    <th>物品ID</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>激活的侦测器</td>
+                                    <td><span class="item-id">flyconfig:activated_observer</span></td>
+                                    <td><code>powered=true</code>，持续输出红石信号</td>
+                                </tr>
+                                <tr>
+                                    <td>六面活塞</td>
+                                    <td><span class="item-id">flyconfig:six_sided_piston</span></td>
+                                    <td>普通活塞，收藏品</td>
+                                </tr>
+                                <tr>
+                                    <td>无头活塞</td>
+                                    <td><span class="item-id">flyconfig:headless_piston</span></td>
+                                    <td>活塞头 <code>short=false</code></td>
+                                </tr>
+                                <tr>
+                                    <td>活塞臂</td>
+                                    <td><span class="item-id">flyconfig:piston_arm</span></td>
+                                    <td>活塞头 <code>short=true</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>其他非法方块</h4>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>方块</th>
+                                    <th>物品ID</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>湿润耕地</td>
+                                    <td><span class="item-id">flyconfig:wet_farmland</span></td>
+                                    <td><code>moisture=7</code>（最大湿度）</td>
+                                </tr>
+                                <tr>
+                                    <td>火焰</td>
+                                    <td><span class="item-id">flyconfig:fire</span></td>
+                                    <td>可放置的火焰</td>
+                                </tr>
+                                <tr>
+                                    <td>灵魂火</td>
+                                    <td><span class="item-id">flyconfig:soul_fire</span></td>
+                                    <td>可放置的灵魂火</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>农作物非法方块</h4>
+                        <p>所有生长阶段均可放置：</p>
+                        <ul>
+                            <li><strong>小麦</strong> — 阶段 0-7（8个阶段）</li>
+                            <li><strong>胡萝卜</strong> — 阶段 0-7（8个阶段）</li>
+                            <li><strong>马铃薯</strong> — 阶段 0-7（8个阶段）</li>
+                            <li><strong>甜菜根</strong> — 阶段 0-3（4个阶段）</li>
+                            <li><strong>西瓜茎</strong> — 阶段 0-7（8个阶段）</li>
+                            <li><strong>南瓜茎</strong> — 阶段 0-7（8个阶段）</li>
+                            <li><strong>甘蔗</strong> — 阶段 0-15（16个阶段）</li>
+                        </ul>
+                    </section>
+
+                    <!-- ===== 无头活塞教程 ===== -->
+                    <section class="wiki-card" id="headless_piston">
+                        <h2>无头活塞教程</h2>
+
+                        <div class="warning-box">
+                            ⚠️ 本文章包含利用 <strong>MC-27056</strong> 实现的内容。<br>
+                            此漏洞未必对所有版本有效。被修复后，下文所述的信息将不再适用。<br>
+                            请慎重对待。
+                        </div>
+
+                        <div class="info-box">
+                            📖 本教程所述内容仅适用于 <strong>Java版</strong>。<br>
+                            在基岩版中也有无头活塞，但难以获得和利用，只能通过在创造模式中对伸出的活塞使用 <kbd>Ctrl</kbd> + 选取方块获取到一个可以放出无头活塞的带有
+                            <strong>（+DATA）</strong> 的方块物品，放下后会立刻收回。
+                        </div>
+
+                        <h3>目录</h3>
+                        <ul>
+                            <li><a href="#headless_theory">通用获取理论</a></li>
+                            <li><a href="#headless_practice">实践方案</a></li>
+                            <li><a href="#headless_properties">性质</a></li>
+                            <li><a href="#headless_uses">用途</a></li>
+                            <li><a href="#headless_history">漏洞历史</a></li>
+                        </ul>
+
+                        <h3 id="headless_theory">通用获取理论</h3>
+
+                        <h4>1. 破坏活塞头的移动活塞</h4>
+                        <p>一个伸出的活塞由两个方块组成：<strong>活塞基部</strong>和<strong>活塞头</strong>。只要其中之一被破坏，活塞整体就会被破坏。</p>
+                        <p>但推出过程中的活塞转由活塞基部和保存着活塞头数据的 <strong>“移动的活塞”方块</strong>
+                            组成。若在推出时可利用的2游戏刻内破坏保存着活塞头数据的“移动的活塞”方块，即可保留伸出的无头活塞基部。</p>
+                        <div class="info-box">
+                            💡 <strong>关键点：</strong>TNT必须在活塞伸展的<strong>同一游戏刻</strong>爆炸，才有可能在不摧毁底座的情况下摧毁头部。
+                        </div>
+
+                        <h4>2. 更改活塞头朝向</h4>
+                        <p>活塞头被破坏时仅会破坏自己尾部指向的同朝向活塞基座。若通过特殊手段将已伸出的活塞的活塞头转向至其他朝向后破坏活塞头，活塞基座将不会受到牵连。</p>
+
+                        <h3 id="headless_practice">实践方案</h3>
+
+                        <h4>使用爆炸</h4>
+                        <p>正在推出的活塞由 <strong>“移动的活塞”方块</strong>
+                            组成，其方块实体内保存着活塞基部和活塞头的数据，可以通过严密操纵的爆炸来只炸掉储存着活塞头的“移动的活塞”方块而保留存储活塞基部的“移动的活塞”方块。</p>
+                        <p>为了只炸掉活塞头，玩家需要构造出一个活塞伸出与爆炸发生位于同一游戏刻的装置。如使用TNT或TNT矿车时，这可以在点燃的4秒后再激活活塞。爆炸的威力也必须精准地控制，可以在爆炸点与活塞之间放一些方块吸收爆炸的强度。
+                        </p>
+
+                        <h5>方法1：使用命令方块（简单测试）</h5>
+                        <div class="recipe-box">
+                            <p><span class="label">命令：</span></p>
+                            <pre
+                                style="background:#0d1117;padding:0.8rem;border-radius:4px;color:#e6edf3;overflow-x:auto;">
+/setblock ~1 ~ ~ command_block{Command:"/setblock ~ ~1 ~ piston[facing=east] replace"}
+/setblock ~1 ~ ~1 command_block{Command:"/summon tnt ~6.5 ~1 ~-1 {Fuse:0,NoGravity:1b}"}
+/setblock ~ ~ ~ lever[facing=west]</pre>
+                            <p><span class="label">操作：</span>启动拉杆</p>
+                            <div class="warning-box">
+                                ⚠️ 命令方块需要先放置并激活才能执行命令。
+                            </div>
+                        </div>
+
+                        <h5>方法2：生存模式装置</h5>
+                        <p>这种方法可以制造出两个相互垂直且朝向同一方块的无头活塞。</p>
+                        <ol>
+                            <li>放置两个相互垂直的活塞，并且都朝向你想要破坏的方块。在图中，活塞朝向的方块的正上方标记了一个荧石。</li>
+                            <li>在离活塞斜向三个方块远的地方，放置激活铁轨。图中用铁块来表明位置。</li>
+                            <li>黑曜石从激活铁轨后面开始放置，一直延伸到最近的活塞。</li>
+                            <li>把拉杆放在激活铁轨后面的黑曜石上。</li>
+                            <li>将5个中继器从拉杆中引出，在该链的前面放置一个红石导体，再用5个中继器朝着活塞放置。将所有这些延迟设置为最大。</li>
+                            <li>在这个中继器链的末端，放置一个红石导体。再在最近的活塞后面也放置一个红石导体。把一个红石线放这两个方块之间。</li>
+                            <li>把两个圆石墙放在活塞朝向的那个空气方块的其余两侧。</li>
+                            <li>把TNT矿车放置在激活铁轨上并拉动拉杆。往后站，一个活塞头会被炸掉。重要的是你现在不要关闭拉杆。</li>
+                            <li>把一个红石块放在这个无头活塞的上方。关掉拉杆。</li>
+                            <li>在两个活塞之间放置一个红石导体。红石粉将会同时向两个活塞提供信号。</li>
+                            <li>再次重复步骤7-9。</li>
+                            <li>现在，你有了两个无头活塞，清除周围空间，只保留无头活塞和红石块。</li>
+                        </ol>
+
+                        <h5>方法3：使用末地水晶</h5>
+                        <p>也可以使用末地水晶的爆炸，炸掉储存着活塞头的“移动的活塞”方块。</p>
+                        <p>可以如下图放置，拉下拉杆即可完成。也可以向右扩展，放置更多的活塞和红石粉，以一次性获得多个无头活塞。</p>
+
+                        <h5>方法4：使用潜影盒</h5>
+                        <p>点燃TNT，右键朝左的潜影盒使它完全打开，从而把TNT推出约半格距离。之后要在爆炸前的那一瞬间拉下黑曜石下方的拉杆，就可以制造出无头活塞。</p>
+
+                        <h4>使用其他无头活塞</h4>
+                        <p>一个无头活塞被面前伸出的另一个活塞产生的活塞头“移动的活塞”更新时，会破坏该“移动的活塞”并找回自己的活塞头，导致面前推出的活塞成为无头活塞（详见下方 <a
+                                href="#headless_properties">性质</a> 中“吞噬一切”与“收活塞头”）。</p>
+
+                        <h4>使用作弊</h4>
+                        <ul>
+                            <li>使用调试棒将活塞的 <code>extended</code> 状态调整为 <code>true</code>，活塞就变为无头活塞。</li>
+                            <li>使用调试棒将活塞头的 <code>facing</code> 状态调为面向与基座不同的方向，并在确保基座被激活的情况下将其打碎，将得到无头活塞。</li>
+                        </ul>
+
+                        <h3 id="headless_properties">性质</h3>
+                        <p>有头活塞“收活塞头”和“强制瞬推”影响的是自己的头，“吞噬一切”仅能在活塞头收回后吞噬空气。</p>
+
+                        <h4>保持不变</h4>
+                        <p>只要无头活塞保持激活，就永远不会有活塞头。</p>
+
+                        <h4>收活塞头</h4>
+                        <p>若另一个活塞将头伸到无头活塞面前，当无头活塞在未收到信号的状态下被更新，它会将面前的活塞头视为自己的并收回，另一个活塞会掉落。</p>
+
+                        <h4>吞噬一切</h4>
+                        <p>无头普通活塞、或前方二格的位置没有可拉动方块（包括黏液块）的无头黏性活塞，在未被激活的状态下收到方块更新，会直接删除前方的方块（变为空气），并进行收回动作并在2游戏刻后收回到位，恢复为正常活塞。此特性也被部分玩家用于破除基岩或末地传送门。
+                        </p>
+
+                        <h4>直接恢复</h4>
+                        <p>前方非活塞头的方块在被活塞推动时不会被破坏或者不能被活塞推动、并且前方二格的位置有可拉动方块（包括黏液块）的无头黏性活塞，在未被激活的状态下收到方块更新，会进行收回动作而不影响前方方块，并在2游戏刻后收回到位，恢复为正常活塞。
+                        </p>
+
+                        <h4>正常收回</h4>
+                        <p>前方的方块在推动时会被破坏或是空气、并且前方二格的位置有可拉动方块（包括可拉动的黏液块）的无头黏性活塞，在未被激活的状态下收到方块更新，会正常拉回方块，且前方的方块变为掉落物。</p>
+
+                        <h4>强制瞬推</h4>
+                        <p>黏性无头活塞，在前方是一个“移动的活塞”方块、前方二格是一个可拉动的方块（包括黏液块）时，在未被激活的状态下收到方块更新，会迫使前方的“移动的活塞”方块瞬间到位，并进行收回动作并在2游戏刻后收回到位，恢复为正常活塞。
+                        </p>
+
+                        <h4>延伸用法</h4>
+                        <h5>强制瞬推</h5>
+                        <p>帮助拉下拉杆，在2游戏刻后石头到位。</p>
+
+                        <h5>换头手术</h5>
+                        <p>拉下拉杆，左边的活塞头部恢复，右边的活塞头部消失。</p>
+                        <p><strong>原理：</strong>右边的活塞伸出时，更新到左边的活塞，左边的活塞吞噬掉右边活塞的储存着活塞头的“移动的活塞”方块，并恢复正常。从而右边的活塞头部消失。</p>
+
+                        <h3 id="headless_uses">用途</h3>
+                        <p>无头活塞的最佳用途是来破坏方块，包括 <strong>基岩</strong>。详见 <a href="#nuclear">核弹</a> 章节的方块破坏机制。</p>
+                        <div class="info-box">
+                            💡 <strong>提示：</strong>结合核弹的方块转化机制，无头活塞可以用于更精确的基岩破坏。
+                        </div>
+
+                        <h3 id="headless_history">漏洞历史</h3>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>漏洞ID</th>
+                                    <th>描述</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>MC-272193</td>
+                                    <td>当我试图用黏液块推动两个或更多火球时，活塞变成了无头活塞</td>
+                                    <td>已解决</td>
+                                </tr>
+                                <tr>
+                                    <td>MC-264666</td>
+                                    <td>利用活塞和TNT破碎基岩</td>
+                                    <td>已解决</td>
+                                </tr>
+                                <tr>
+                                    <td>MC-227170</td>
+                                    <td>基岩可以被破坏</td>
+                                    <td>已解决</td>
+                                </tr>
+                                <tr>
+                                    <td>MC-194754</td>
+                                    <td>基岩能够通过故障活塞被破坏</td>
+                                    <td>已解决</td>
+                                </tr>
+                                <tr>
+                                    <td>MC-188220</td>
+                                    <td>破碎基岩</td>
+                                    <td>已解决</td>
+                                </tr>
+                                <tr>
+                                    <td>MC-106660</td>
+                                    <td>“piston_extension”可以被TNT或TNT弹药摧毁</td>
+                                    <td>已解决</td>
+                                </tr>
+                                <tr>
+                                    <td>MC-166900</td>
+                                    <td>你可以破坏基岩</td>
+                                    <td>已解决</td>
+                                </tr>
+                                <tr>
+                                    <td>MC-132404</td>
+                                    <td>活塞头爆裂导致活塞无法收回</td>
+                                    <td>已解决</td>
+                                </tr>
+                                <tr>
+                                    <td>MC-77611</td>
+                                    <td>爆炸可导致活塞头损坏</td>
+                                    <td>已解决</td>
+                                </tr>
+                                <tr>
+                                    <td>MC-108342</td>
+                                    <td>活塞头不存在及用活塞破碎基岩的解释</td>
+                                    <td>已解决</td>
+                                </tr>
+                                <tr>
+                                    <td>MC-105454</td>
+                                    <td>Minecraft 活塞在下界顶部出现了 bug</td>
+                                    <td>已解决</td>
+                                </tr>
+                                <tr>
+                                    <td>MC-96106</td>
+                                    <td>活塞带固定块和红石电路，piston_head消失</td>
+                                    <td>已解决</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>MC-27056</strong></td>
+                                    <td><strong>无头活塞核心漏洞</strong></td>
+                                    <td><span style="color:#e6edf3;">未解决</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="info-box">
+                            📌 <strong>总结：</strong>无头活塞是一个利用 <strong>MC-27056</strong> 漏洞产生的异常方块状态，自 Minecraft 1.6.2
+                            起存在，至今未被完全修复。它可以用于破坏基岩等不可破坏方块，是许多高级红石机械和基岩破坏装置的核心组件。
+                        </div>
+                    </section>
+
+                    <!-- ===== 合成配方（由JS动态生成） ===== -->
+                    <section class="wiki-card" id="recipes">
+                        <h2>合成配方</h2>
+                        <div id="recipe-container" class="recipe-container"></div>
+                    </section>
+
+                    <!-- ===== 核弹 ===== -->
+                    <section class="wiki-card" id="nuclear">
+                        <h2>核弹</h2>
+                        <p><strong>实体ID：</strong><span class="item-id">flyconfig:nuclear</span></p>
+                        <p><strong>实体类：</strong><code>io.minecraft.flyconfig.entity.custom.NuclearEntity</code></p>
+
+                        <h3>基础属性</h3>
+                        <ul>
+                            <li><strong>最大生命值：</strong>9999</li>
+                            <li><strong>移动速度：</strong>0（不可移动）</li>
+                            <li><strong>抗击退：</strong>1.0（完全抗击退）</li>
+                            <li><strong>尺寸：</strong>0.8 × 1.5 格</li>
+                            <li><strong>无敌：</strong>无法被伤害</li>
+                            <li><strong>火焰免疫：</strong>是</li>
+                            <li><strong>不可推动：</strong>是</li>
+                        </ul>
+
+                        <h3>引信与倒计时</h3>
+                        <ul>
+                            <li><strong>引信时间：</strong>300 ticks（15秒）</li>
+                            <li><strong>点燃方式：</strong>使用打火石或火焰弹右键点击</li>
+                            <li><strong>每 20 ticks（1秒）：</strong>向 <strong>100 格</strong> 内玩家发送警告</li>
+                            <li><strong>每 10 ticks（0.5秒）：</strong>播放核爆音效</li>
+                            <li><strong>每 5 ticks（0.25秒）：</strong>对 <strong>15 格</strong> 内玩家施加凋零效果</li>
+                        </ul>
+
+                        <h3>爆炸参数</h3>
+                        <ul>
+                            <li><strong>方块破坏半径：</strong>75 格</li>
+                            <li><strong>实体伤害半径：</strong>150 格</li>
+                            <li><strong>警告消息半径：</strong>100 格</li>
+                            <li><strong>核爆音效半径：</strong>200 格</li>
+                            <li><strong>水下增强：</strong>所有半径和威力提升 15%</li>
+                        </ul>
+
+                        <h3>伤害计算</h3>
+                        <div class="recipe-box">
+                            <ul>
+                                <li><strong>距离 ≤ 10 格：</strong>造成 <strong>500 点伤害</strong></li>
+                                <li><strong>10 &lt; 距离 ≤ 150 格：</strong><code>伤害 = 500 × (1 - (距离 - 10) / 140)</code>
+                                </li>
+                                <li><strong>150 &lt; 距离 ≤ 200 格：</strong><code>伤害 = 25 × (1 - (距离 - 150) / 50)</code>
+                                </li>
+                            </ul>
+                            <p><strong>水下爆炸：</strong>所有伤害值提升 15%</p>
+                            <p><strong>视线阻挡：</strong>阻挡方块（基岩、铁砧、屏障、命令方块、结构方块、拼图方块、光源方块、传送门方块）阻挡伤害和方块破坏</p>
+                        </div>
+
+                        <!-- ===== 核弹伤害计算器 ===== -->
+                        <h3>核弹伤害计算器</h3>
+                        <div class="recipe-box" style="background:var(--background-color-interactive-subtle);">
+                            <div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-end;">
+                                <div style="flex:1;min-width:180px;">
+                                    <label
+                                        style="display:block;color:var(--color-subtle);font-size:0.85rem;margin-bottom:0.3rem;">输入距离（格）</label>
+                                    <input type="number" id="nuclear-distance" value="50" min="0" max="200"
+                                        style="width:100%;padding:0.5rem 0.8rem;background:var(--background-color-base);color:var(--color-base);border:1px solid var(--border-color-base);border-radius:4px;font-size:1rem;">
+                                </div>
+                                <div style="flex:1;min-width:180px;">
+                                    <label
+                                        style="display:block;color:var(--color-subtle);font-size:0.85rem;margin-bottom:0.3rem;">输入伤害值</label>
+                                    <input type="number" id="nuclear-damage" value="446" min="0" max="500"
+                                        style="width:100%;padding:0.5rem 0.8rem;background:var(--background-color-base);color:var(--color-base);border:1px solid var(--border-color-base);border-radius:4px;font-size:1rem;">
+                                </div>
+                                <div>
+                                    <button id="nuclear-calc-btn"
+                                        style="padding:0.5rem 1.5rem;background:#238636;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:1rem;">计算</button>
+                                </div>
+                            </div>
+                            <div id="nuclear-result"
+                                style="margin-top:1rem;padding:0.8rem 1rem;background:var(--background-color-base);border-radius:4px;border:1px solid var(--border-color-base);min-height:3rem;">
+                                <p style="margin:0;"><strong>计算结果：</strong></p>
+                                <div id="nuclear-result-content" style="margin-top:0.3rem;"></div>
+                            </div>
+                            <div style="margin-top:0.5rem;font-size:0.8rem;color:var(--color-subtle);">
+                                💡 距离 ≤ 10格：500伤害 | 距离 10-150格：线性递减 | 距离 150-200格：线性递减至0
+                            </div>
+                        </div>
+
+                        <!-- 伤害计算器JS -->
+                        <script>
+                            (function () {
+                                const distInput = document.getElementById('nuclear-distance');
+                                const dmgInput = document.getElementById('nuclear-damage');
+                                const btn = document.getElementById('nuclear-calc-btn');
+                                const resultContent = document.getElementById('nuclear-result-content');
+
+                                const HEART_URL = 'https://zh.minecraft.wiki/images/Heart_%28icon%29.png';
+                                const HALF_HEART_URL = 'https://zh.minecraft.wiki/images/Half_Heart_%28icon%29.png';
+
+                                function renderHearts(damage) {
+                                    const hearts = damage / 2;
+                                    const fullHearts = Math.floor(hearts);
+                                    const hasHalf = (hearts - fullHearts) >= 0.5;
+                                    let html = '';
+                                    const maxDisplay = 500;
+
+                                    const displayFull = Math.min(fullHearts, maxDisplay);
+                                    for (let i = 0; i < displayFull; i++) {
+                                        html += `<img src="${HEART_URL}" style="width:16px;height:16px;vertical-align:middle;" alt="心">`;
+                                    }
+
+                                    if (hasHalf && displayFull < maxDisplay) {
+                                        html += `<img src="${HALF_HEART_URL}" style="width:16px;height:16px;vertical-align:middle;" alt="半心">`;
+                                    }
+
+                                    if (fullHearts > maxDisplay) {
+                                        html += ` <span style="color:var(--color-subtle);font-size:0.85rem;">+${(fullHearts - maxDisplay).toFixed(1)}</span>`;
+                                    }
+
+                                    if (fullHearts === 0 && !hasHalf) {
+                                        html = `<span style="color:var(--color-subtle);font-size:0.85rem;">0</span>`;
+                                    }
+                                    return html;
+                                }
+
+                                function calcDamage(dist, underwater) {
+                                    let damage = 0;
+                                    if (dist <= 10) {
+                                        damage = 500;
+                                    } else if (dist <= 150) {
+                                        damage = 500 * (1 - (dist - 10) / 140);
+                                    } else if (dist <= 200) {
+                                        damage = 25 * (1 - (dist - 150) / 50);
+                                    } else {
+                                        damage = 0;
+                                    }
+                                    if (damage < 0) damage = 0;
+                                    if (underwater) damage *= 1.15;
+                                    return Math.round(damage * 100) / 100;
+                                }
+
+                                function calcDistance(damage, underwater) {
+                                    let low = 0, high = 200;
+                                    let target = damage;
+                                    if (underwater) target /= 1.15;
+                                    if (target >= 500) return 0;
+                                    if (target <= 0) return 200;
+                                    for (let i = 0; i < 100; i++) {
+                                        let mid = (low + high) / 2;
+                                        let d = calcDamage(mid, false);
+                                        if (d > target) {
+                                            low = mid;
+                                        } else {
+                                            high = mid;
+                                        }
+                                    }
+                                    return Math.round((low + high) / 2 * 100) / 100;
+                                }
+
+                                function updateResult(dist, damage, underwater) {
+                                    let html = '';
+                                    const actualDist = parseFloat(dist) || 0;
+                                    const actualDamage = parseFloat(damage) || 0;
+
+                                    if (actualDist >= 0 && actualDist <= 200) {
+                                        const dmg = calcDamage(actualDist, underwater);
+                                        const isUnderwater = underwater ? '（水下 +15%）' : '';
+                                        const heartsHtml = renderHearts(dmg);
+                                        html += `<p style="margin:0.2rem 0;"><strong>距离 ${actualDist} 格：</strong>造成 <span style="color:#FF5555;font-weight:bold;">${dmg}</span> 点伤害 ${isUnderwater}</p>`;
+                                        html += `<p style="margin:0.2rem 0;font-size:0.9rem;color:var(--color-subtle);">${heartsHtml}</p>`;
+                                    } else if (actualDist > 200) {
+                                        html += `<p style="margin:0.2rem 0;color:var(--color-warning);">距离超过200格，不受伤害</p>`;
+                                    }
+
+                                    if (actualDamage > 0 && actualDamage <= 500) {
+                                        const dist2 = calcDistance(actualDamage, underwater);
+                                        const isUnderwater2 = underwater ? '（水下 +15%）' : '';
+                                        html += `<p style="margin:0.2rem 0;"><strong>造成 ${actualDamage} 点伤害：</strong>距离约 <span style="color:#58a6ff;font-weight:bold;">${dist2}</span> 格 ${isUnderwater2}</p>`;
+                                    }
+
+                                    if (!html) {
+                                        html = `<p style="margin:0;color:var(--color-subtle);">请输入有效数值</p>`;
+                                    }
+                                    resultContent.innerHTML = html;
+                                }
+
+                                function doCalc() {
+                                    const dist = parseFloat(distInput.value) || 0;
+                                    const dmg = parseFloat(dmgInput.value) || 0;
+                                    const underwater = false;
+                                    updateResult(dist, dmg, underwater);
+                                }
+
+                                btn.addEventListener('click', doCalc);
+                                distInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') doCalc(); });
+                                dmgInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') doCalc(); });
+                                setTimeout(doCalc, 100);
+                            })();
+                        </script>
+
+                        <h3>方块破坏与转化</h3>
+                        <div class="info-box">
+                            <p><strong>不可破坏方块：</strong>基岩、铁砧（含变种）、屏障、命令方块（所有类型）、结构方块、结构空位、拼图方块、光源方块、下界传送门、末地传送门、末地折跃门
+                            </p>
+                        </div>
+
+                        <h4>矿石转化</h4>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>原方块</th>
+                                    <th>转化后</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>钻石矿石</td>
+                                    <td>辐射铀矿石</td>
+                                </tr>
+                                <tr>
+                                    <td>铁矿石</td>
+                                    <td>辐射铀矿石</td>
+                                </tr>
+                                <tr>
+                                    <td>金矿石</td>
+                                    <td>辐射铀矿石</td>
+                                </tr>
+                                <tr>
+                                    <td>铜矿石</td>
+                                    <td>辐射铀矿石</td>
+                                </tr>
+                                <tr>
+                                    <td>绿宝石矿石</td>
+                                    <td>辐射铀矿石</td>
+                                </tr>
+                                <tr>
+                                    <td>煤矿石</td>
+                                    <td>辐射铀矿石</td>
+                                </tr>
+                                <tr>
+                                    <td>深板岩钻石矿石</td>
+                                    <td>深板岩辐射铀矿石</td>
+                                </tr>
+                                <tr>
+                                    <td>深板岩铁矿石</td>
+                                    <td>深板岩辐射铀矿石</td>
+                                </tr>
+                                <tr>
+                                    <td>深板岩金矿石</td>
+                                    <td>深板岩辐射铀矿石</td>
+                                </tr>
+                                <tr>
+                                    <td>深板岩铜矿石</td>
+                                    <td>深板岩辐射铀矿石</td>
+                                </tr>
+                                <tr>
+                                    <td>深板岩绿宝石矿石</td>
+                                    <td>深板岩辐射铀矿石</td>
+                                </tr>
+                                <tr>
+                                    <td>深板岩煤矿石</td>
+                                    <td>深板岩辐射铀矿石</td>
+                                </tr>
+                                <tr>
+                                    <td>远古残骸</td>
+                                    <td>深板岩辐射铀矿石</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>方块转化</h4>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>原方块</th>
+                                    <th>转化后</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>泥土</td>
+                                    <td>缠根泥土</td>
+                                </tr>
+                                <tr>
+                                    <td>草方块</td>
+                                    <td>缠根泥土</td>
+                                </tr>
+                                <tr>
+                                    <td>耕地</td>
+                                    <td>缠根泥土</td>
+                                </tr>
+                                <tr>
+                                    <td>土径</td>
+                                    <td>缠根泥土</td>
+                                </tr>
+                                <tr>
+                                    <td>灰化土</td>
+                                    <td>缠根泥土</td>
+                                </tr>
+                                <tr>
+                                    <td>菌丝</td>
+                                    <td>缠根泥土</td>
+                                </tr>
+                                <tr>
+                                    <td>石头</td>
+                                    <td>圆石</td>
+                                </tr>
+                                <tr>
+                                    <td>深板岩</td>
+                                    <td>圆石</td>
+                                </tr>
+                                <tr>
+                                    <td>花岗岩</td>
+                                    <td>圆石</td>
+                                </tr>
+                                <tr>
+                                    <td>闪长岩</td>
+                                    <td>圆石</td>
+                                </tr>
+                                <tr>
+                                    <td>安山岩</td>
+                                    <td>圆石</td>
+                                </tr>
+                                <tr>
+                                    <td>方解石</td>
+                                    <td>圆石</td>
+                                </tr>
+                                <tr>
+                                    <td>凝灰岩</td>
+                                    <td>圆石</td>
+                                </tr>
+                                <tr>
+                                    <td>滴水石块</td>
+                                    <td>苍白苔藓块</td>
+                                </tr>
+                                <tr>
+                                    <td>滴水石锥</td>
+                                    <td>苍白苔藓块</td>
+                                </tr>
+                                <tr>
+                                    <td>泥巴</td>
+                                    <td>苍白苔藓块</td>
+                                </tr>
+                                <tr>
+                                    <td>粘土</td>
+                                    <td>苍白苔藓块</td>
+                                </tr>
+                                <tr>
+                                    <td>沙子</td>
+                                    <td>苍白苔藓块</td>
+                                </tr>
+                                <tr>
+                                    <td>砂砾</td>
+                                    <td>苍白苔藓块</td>
+                                </tr>
+                                <tr>
+                                    <td>雪</td>
+                                    <td>苍白苔藓块</td>
+                                </tr>
+                                <tr>
+                                    <td>雪块</td>
+                                    <td>苍白苔藓块</td>
+                                </tr>
+                                <tr>
+                                    <td>苔藓块</td>
+                                    <td>苍白苔藓块</td>
+                                </tr>
+                                <tr>
+                                    <td>珊瑚块</td>
+                                    <td>失活珊瑚块</td>
+                                </tr>
+                                <tr>
+                                    <td>珊瑚</td>
+                                    <td>失活珊瑚块</td>
+                                </tr>
+                                <tr>
+                                    <td>珊瑚扇</td>
+                                    <td>失活珊瑚块</td>
+                                </tr>
+                                <tr>
+                                    <td>树叶</td>
+                                    <td>苍白橡树树叶</td>
+                                </tr>
+                                <tr>
+                                    <td>原木</td>
+                                    <td>苍白橡树原木</td>
+                                </tr>
+                                <tr>
+                                    <td>木头</td>
+                                    <td>苍白橡树原木</td>
+                                </tr>
+                                <tr>
+                                    <td>花</td>
+                                    <td>空气（移除）</td>
+                                </tr>
+                                <tr>
+                                    <td>草</td>
+                                    <td>空气（移除）</td>
+                                </tr>
+                                <tr>
+                                    <td>蕨</td>
+                                    <td>空气（移除）</td>
+                                </tr>
+                                <tr>
+                                    <td>灌木</td>
+                                    <td>空气（移除）</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>火焰放置</h3>
+                        <p>爆炸后在 <strong>150 格</strong> 半径内放置火焰（水下不放置）。</p>
+
+                        <h3>进度触发</h3>
+                        <ul>
+                            <li>点燃核弹 → 进度 <strong>「核爆」</strong></li>
+                            <li>核弹击杀末影龙 → 进度 <strong>「天机屠龙炮」</strong></li>
+                        </ul>
+                    </section>
+
+                    <!-- ===== 核弹拆解工具 ===== -->
+                    <section class="wiki-card" id="disarm">
+                        <h2>核弹拆解工具</h2>
+                        <p><strong>物品ID：</strong><span class="item-id">flyconfig:nuclear_disarm_tool</span></p>
+
+                        <h3>使用方式</h3>
+                        <ul>
+                            <li>对着核弹 <strong>右键点击</strong> 开始拆解</li>
+                            <li>需要 <strong>按住右键 300 ticks（15 秒）</strong> 完成</li>
+                            <li>拆解过程中必须 <strong>保持距离 ≤ 3 格</strong></li>
+                            <li>核弹 <strong>不能进入倒计时状态</strong></li>
+                        </ul>
+
+                        <h3>拆解流程</h3>
+                        <ul>
+                            <li><strong>开始：</strong>「§e正在拆解核弹... 请按住右键15秒」</li>
+                            <li><strong>进度：</strong>每秒显示剩余秒数</li>
+                            <li><strong>成功：</strong>核弹被移除，回收 1 个核弹物品，显示「§a✓ 核弹拆解成功！已回收核弹物品」</li>
+                            <li><strong>失败：</strong>目标消失、核弹进入倒计时、距离过远</li>
+                        </ul>
+                    </section>
+
+                    <!-- ===== 世界生成 ===== -->
+                    <section class="wiki-card" id="world">
+                        <h2>世界生成</h2>
+
+                        <h3>结构</h3>
+                        <div class="structure-box">
+                            <h4>小屋</h4>
+                            <p><span class="label">结构ID：</span><span class="item-id">flyconfig:cottage</span></p>
+                            <p><span class="label">间距：</span>128 格，分离度 64 格</p>
+                            <p><span class="label">生物生成：</span>幻术师、掠夺者、鹦鹉</p>
+                        </div>
+
+                        <div class="structure-box">
+                            <h4>废弃小屋</h4>
+                            <p><span class="label">结构ID：</span><span class="item-id">flyconfig:cottage_old</span></p>
+                            <p><span class="label">间距：</span>128 格，分离度 64 格</p>
+                            <p><span class="label">生物生成：</span>幻术师、掠夺者、鹦鹉</p>
+                        </div>
+
+                        <h3>矿石生成</h3>
+                        <div class="structure-box">
+                            <h4>铀矿石</h4>
+                            <p><span class="label">矿脉大小：</span>2 个矿石</p>
+                            <p><span class="label">每区块矿脉数：</span>1 条</p>
+                            <p><span class="label">生成高度：</span>Y=-55 到 Y=32</p>
+                            <p><span class="label">群系：</span>所有主世界群系</p>
+                        </div>
+                    </section>
+
+                    <!-- ===== 进度 ===== -->
+                    <section class="wiki-card" id="advancements">
+                        <h2>进度</h2>
+
+                        <h3>发展进度</h3>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-task">任务</span> <strong>工业革命</strong> — 找到小屋和废弃小屋</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-task">任务</span> <strong>垃圾</strong> — 获得金属废料</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-task">任务</span> <strong>不是？</strong> — 食用金属废料</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-task">任务</span> <strong>这就是机油吗？</strong> — 通过村民交易获得合成机油</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-task">任务</span> <strong>辐射</strong> — 玩家10格内有铀矿</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-task">任务</span> <strong>铀工程</strong> — 获得铀矿</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-task">任务</span> <strong>铀工程</strong> — 获得铀锭</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-task">任务</span> <strong>研发计划</strong> — 合成德意志帝国研发</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-challenge">挑战</span> <strong>健康饮食</strong> — 食用西蓝花炒青花菜拌羽衣甘蓝
+                                Kale拌苦瓜炒芹菜炖蓝纹奶酪海藻海带蒸奇亚籽汤</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-task">任务</span> <strong>试爆</strong> — 获得核弹</p>
+                        </div>
+
+                        <h3>核弹相关</h3>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-goal">目标</span> <strong>核爆</strong> — 点燃核弹</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-challenge">挑战</span> <strong>天机屠龙炮</strong> — 用核弹终结末影龙</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-challenge">挑战</span> <strong>核弹狂人</strong> — 累计引爆25颗核弹</p>
+                        </div>
+
+                        <h3>收集进度</h3>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-goal">目标</span> <strong>废品回收站</strong> — 收集一组金属废料（99个）</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-challenge">挑战</span> <strong>垄断铀矿</strong> — 收集一组铀锭（64个）</p>
+                        </div>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-challenge">挑战</span> <strong>全成就收藏家</strong> — 收集所有违禁方块</p>
+                        </div>
+
+                        <h3>隐藏进度</h3>
+                        <div class="advancement-box">
+                            <p><span class="badge badge-hidden">隐藏</span> <strong>辐射</strong> — 玩家5格内有辐射铀矿石</p>
+                        </div>
+                    </section>
+
+                    <!-- ===== 音效 ===== -->
+                    <section class="wiki-card" id="sounds">
+                        <h2>音效</h2>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>音效ID</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="item-id">flyconfig:nuclear</span></td>
+                                    <td>核爆音效，范围 200 格</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="item-id">flyconfig:skeleton_notfound</span></td>
+                                    <td>骷髅丢失目标</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="item-id">flyconfig:skeleton_found</span></td>
+                                    <td>骷髅获得目标</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="item-id">flyconfig:block_fuhrer_break</span></td>
+                                    <td>Führer方块破坏</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="item-id">flyconfig:block_fuhrer_step</span></td>
+                                    <td>走在Führer方块上</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="item-id">flyconfig:block_fuhrer_place</span></td>
+                                    <td>Führer方块放置</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="item-id">flyconfig:block_fuhrer_hit</span></td>
+                                    <td>敲击Führer方块</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="item-id">flyconfig:block_fuhrer_fall</span></td>
+                                    <td>落在Führer方块上</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="item-id">flyconfig:fuhrer_lectern</span></td>
+                                    <td>讲台交互</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="item-id">flyconfig:music_disc.siegheil</span></td>
+                                    <td>唱片 - Heil Hitler</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="item-id">flyconfig:music_disc.hitler</span></td>
+                                    <td>唱片 - Hitler</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <!-- ===== Mixins ===== -->
+                    <section class="wiki-card" id="mixins">
+                        <h2>Mixin 修改</h2>
+
+                        <h3>ArrowEntityMixin</h3>
+                        <div class="recipe-box">
+                            <p><strong>目标：</strong><code>ArrowEntity</code></p>
+                            <p><strong>效果：</strong>骷髅射出的箭命中玩家时：</p>
+                            <ul>
+                                <li>取消原版伤害</li>
+                                <li>造成 <strong>Float.MAX_VALUE</strong> 伤害（秒杀）</li>
+                                <li>死亡消息：<code>玩家名 被 骷髅名 预瞄用7.49秒的时间击败了</code></li>
+                            </ul>
+                        </div>
+
+                        <h3>DeathMessageMixin</h3>
+                        <div class="recipe-box">
+                            <p><strong>目标：</strong><code>DamageSource</code></p>
+                            <p><strong>效果：</strong>被骷髅箭击杀时显示自定义死亡消息。</p>
+                        </div>
+
+                        <h3>FuelRegistryMixin</h3>
+                        <div class="recipe-box">
+                            <p><strong>目标：</strong><code>FuelRegistry</code></p>
+                            <p><strong>效果：</strong>添加 <strong>合成机油</strong> 作为燃料。</p>
+                            <p><span class="label">燃烧时间：</span>25600 ticks（可烧炼 1280 个物品）</p>
+                        </div>
+
+                        <h3>PlayerEntityMixin</h3>
+                        <div class="recipe-box">
+                            <p><strong>目标：</strong><code>PlayerEntity</code></p>
+                            <p><strong>效果：</strong>添加 <code>poemLoopMode</code> 标记字段。</p>
+                        </div>
+                    </section>
+
+                    <!-- ===== 村民交易 ===== -->
+                    <section class="wiki-card" id="trades">
+                        <h2>村民交易</h2>
+                        <p>模组为 <strong>盔甲匠</strong> 添加了以下交易：</p>
+                        <table class="wikitable">
+                            <thead>
+                                <tr>
+                                    <th>等级</th>
+                                    <th>类型</th>
+                                    <th>交易内容</th>
+                                    <th>最大次数</th>
+                                    <th>经验</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td rowspan="2">2</td>
+                                    <td>出售</td>
+                                    <td>7 绿宝石 → 1 金属废料</td>
+                                    <td>32</td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td>收购</td>
+                                    <td>1 金属废料 → 1 绿宝石</td>
+                                    <td>30</td>
+                                    <td>5</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>加工</td>
+                                    <td>11 金属废料 + 15 绿宝石 → 1 合成机油</td>
+                                    <td>12</td>
+                                    <td>14</td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="2">4</td>
+                                    <td>出售</td>
+                                    <td>48 绿宝石 → 1 合成机油</td>
+                                    <td>16</td>
+                                    <td>16</td>
+                                </tr>
+                                <tr>
+                                    <td>收购</td>
+                                    <td>1 合成机油 → 1 绿宝石</td>
+                                    <td>16</td>
+                                    <td>15</td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="2">5</td>
+                                    <td>出售</td>
+                                    <td>42 绿宝石 → 1 合成机油</td>
+                                    <td>16</td>
+                                    <td>16</td>
+                                </tr>
+                                <tr>
+                                    <td>收购</td>
+                                    <td>1 合成机油 → 1 绿宝石</td>
+                                    <td>16</td>
+                                    <td>15</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="info-box">
+                            <strong>注意：</strong>合成机油在 26.1 版本移除了合成配方，目前只能通过村民交易（等级3加工交易）获得。
+                        </div>
+                    </section>
+
+                    <!-- ===== 标签 ===== -->
+                    <section class="wiki-card" id="tags">
+                        <h2>标签</h2>
+                        <ul>
+                            <li><span class="item-id">#minecraft:mineable/pickaxe</span> — 所有铀矿石</li>
+                            <li><span class="item-id">#minecraft:needs_diamond_tool</span> — 所有铀矿石</li>
+                            <li><span class="item-id">#flyconfig:has_structure/cottage</span> — 小屋生成群系</li>
+                            <li><span class="item-id">#flyconfig:has_structure/cottage_old</span> — 废弃小屋生成群系</li>
+                        </ul>
+                    </section>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+    <footer class="wiki-footer">
+        <p>© 2026 ZIYIT Studio &nbsp;|&nbsp; <strong>Flight Management</strong> &nbsp;|&nbsp; Minecraft 1.21.8</p>
+        <p style="font-size: 0.75rem; color: #6b7280;">本Wiki为模组文档，与Mojang Studios无关</p>
+        <p style="font-size: 0.75rem; color: #6b7280;">基于模组源码 v26.2 生成</p>
+    </footer>
+
+    <script>
+        // ============================================================
+        // 导航栏滚动高亮
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function () {
+            const navLinks = document.querySelectorAll('.wiki-nav a');
+            const sections = [];
+
+            // 收集所有section
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && href.startsWith('#')) {
+                    const target = document.querySelector(href);
+                    if (target) {
+                        sections.push({
+                            id: href.substring(1),
+                            element: target,
+                            link: link
+                        });
+                    }
+                }
+            });
+
+            // 滚动时更新高亮
+            function updateActiveNav() {
+                let currentSection = null;
+                let currentOffset = -Infinity;
+
+                sections.forEach(section => {
+                    const rect = section.element.getBoundingClientRect();
+                    // 当元素顶部在视口顶部或以上时，认为它在视口中
+                    if (rect.top <= 100) {
+                        if (rect.top > currentOffset) {
+                            currentOffset = rect.top;
+                            currentSection = section;
+                        }
+                    }
+                });
+
+                // 如果没有任何section在视口中，使用第一个
+                if (!currentSection && sections.length > 0) {
+                    currentSection = sections[0];
+                }
+
+                // 更新导航高亮
+                sections.forEach(section => {
+                    if (section === currentSection) {
+                        section.link.classList.add('active');
+                    } else {
+                        section.link.classList.remove('active');
+                    }
+                });
+            }
+
+            // 监听滚动事件
+            window.addEventListener('scroll', updateActiveNav, { passive: true });
+            window.addEventListener('resize', updateActiveNav, { passive: true });
+
+            // 初始调用
+            updateActiveNav();
+
+            // 点击导航链接时平滑滚动
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    if (href && href.startsWith('#')) {
+                        e.preventDefault();
+                        const target = document.querySelector(href);
+                        if (target) {
+                            const headerHeight = document.querySelector('.wiki-header').offsetHeight || 60;
+                            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight - 10;
+                            window.scrollTo({
+                                top: targetPosition,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        // ============================================================
+        // MC颜色代码解析 - 遍历整个body解析所有§代码
+        // ============================================================
+
+        // 颜色映射
+        const COLOR_MAP = {
+            '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
+            '4': '#AA0000', '5': '#AA00AA', '6': '#FFAA00', '7': '#AAAAAA',
+            '8': '#555555', '9': '#5555FF', 'a': '#55FF55', 'b': '#55FFFF',
+            'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
+        };
+
+        // 格式映射
+        const FORMAT_MAP = {
+            'l': 'font-weight:bold;',
+            'o': 'font-style:italic;',
+            'n': 'text-decoration:underline;',
+            'm': 'text-decoration:line-through;'
+        };
+
+        // 解析MC文本
+        function parseMCText(text) {
+            if (!text || !text.includes('§')) return text;
+
+            let result = '';
+            let i = 0;
+            let currentColor = '';
+            let currentFormat = '';
+            let inSpan = false;
+
+            function buildStyle() {
+                let style = '';
+                if (currentColor) style += `color:${currentColor};`;
+                style += currentFormat;
+                return style;
+            }
+
+            while (i < text.length) {
+                if (text[i] === '§' && i + 1 < text.length) {
+                    const code = text[i + 1].toLowerCase();
+                    i += 2;
+
+                    if (code === 'r') {
+                        if (inSpan) {
+                            result += '</span>';
+                            inSpan = false;
+                        }
+                        currentColor = '';
+                        currentFormat = '';
+                    } else if (COLOR_MAP[code] !== undefined) {
+                        if (inSpan) {
+                            result += '</span>';
+                            inSpan = false;
+                        }
+                        currentColor = COLOR_MAP[code];
+                        result += `<span style="${buildStyle()}">`;
+                        inSpan = true;
+                    } else if (FORMAT_MAP[code] !== undefined) {
+                        if (!inSpan) {
+                            result += `<span style="">`;
+                            inSpan = true;
+                        } else {
+                            result += '</span>';
+                        }
+                        currentFormat += FORMAT_MAP[code];
+                        result += `<span style="${buildStyle()}">`;
+                    } else {
+                        result += '§' + code;
+                    }
+                } else {
+                    if (!inSpan && (currentColor || currentFormat)) {
+                        result += `<span style="${buildStyle()}">`;
+                        inSpan = true;
+                    }
+                    result += text[i];
+                    i++;
+                }
+            }
+
+            if (inSpan) {
+                result += '</span>';
+            }
+
+            return result;
+        }
+
+        // ============================================================
+        // 遍历整个body解析所有文本节点
+        // ============================================================
+        function parseAllMCText() {
+            // 获取body中所有文本节点
+            const walker = document.createTreeWalker(
+                document.body,
+                NodeFilter.SHOW_TEXT,
+                {
+                    acceptNode: function (node) {
+                        // 跳过script和style标签内的文本
+                        const parent = node.parentElement;
+                        if (parent && (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE' || parent.tagName === 'CODE')) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        // 只处理包含§的文本
+                        if (node.textContent && node.textContent.includes('§')) {
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                        return NodeFilter.FILTER_REJECT;
+                    }
+                }
+            );
+
+            const nodesToReplace = [];
+            let node;
+            while (node = walker.nextNode()) {
+                nodesToReplace.push(node);
+            }
+
+            // 从后往前替换，避免影响遍历
+            for (let i = nodesToReplace.length - 1; i >= 0; i--) {
+                const textNode = nodesToReplace[i];
+                const parent = textNode.parentElement;
+                if (parent) {
+                    const parsed = parseMCText(textNode.textContent);
+                    const span = document.createElement('span');
+                    span.innerHTML = parsed;
+                    // 复制原有属性
+                    parent.replaceChild(span, textNode);
+                }
+            }
+        }
+
+        // ============================================================
+        // 页面加载完成后执行
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function () {
+            parseAllMCText();
+        });
+    </script>
+
+    <script>
+        // ============================================================
+        // 动态加载配方和翻译 - 从服务器读取JSON文件
+        // ============================================================
+
+        // ============================================================
+        // 配置
+        // ============================================================
+        const PATHS = {
+            lang: './lang/',
+            recipe: './recipe/'
+        };
+
+        // ============================================================
+        // 数据存储
+        // ============================================================
+        const data = {
+            translations: {},
+            crafting: {},
+            smelting: []
+        };
+
+        // ============================================================
+        // 加载JSON文件
+        // ============================================================
+        async function loadJSON(path) {
+            try {
+                const response = await fetch(path);
+                if (!response.ok) {
+                    console.warn(`⚠ 无法加载: ${path} (${response.status})`);
+                    return null;
+                }
+                return await response.json();
+            } catch (e) {
+                console.warn(`⚠ 加载失败: ${path}`, e.message);
+                return null;
+            }
+        }
+
+        // ============================================================
+        // 加载配方文件列表（从 recipes.txt）
+        // ============================================================
+        async function loadRecipeList() {
+            try {
+                const response = await fetch(PATHS.recipe + 'recipes.txt');
+                if (!response.ok) {
+                    console.warn(`⚠ 无法加载 recipes.txt (${response.status})`);
+                    return [];
+                }
+                const text = await response.text();
+                const lines = text.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line && !line.startsWith('#'));
+                console.log(`📋 从 recipes.txt 加载了 ${lines.length} 个配方文件`);
+                return lines;
+            } catch (e) {
+                console.warn(`⚠ 加载 recipes.txt 失败:`, e.message);
+                return [];
+            }
+        }
+
+        // ============================================================
+        // 加载翻译
+        // ============================================================
+        async function loadTranslations() {
+            console.log('📖 加载翻译文件...');
+            const mcLang = await loadJSON(PATHS.lang + 'mc.json');
+            const modLang = await loadJSON(PATHS.lang + 'mod.json');
+            const merged = {};
+            if (mcLang) Object.assign(merged, mcLang);
+            if (modLang) Object.assign(merged, modLang);
+            data.translations = merged;
+            console.log(`📖 翻译加载完成，共 ${Object.keys(merged).length} 项`);
+            return merged;
+        }
+
+        // ============================================================
+        // 获取翻译 - item.flyconfig.xxx 和 item.minecraft.xxx
+        // ============================================================
+        function t(id) {
+            if (!id) return '';
+            let transKey = '';
+            if (id.startsWith('flyconfig:')) {
+                transKey = `item.flyconfig.${id.replace('flyconfig:', '')}`;
+            } else if (id.startsWith('minecraft:')) {
+                transKey = `item.minecraft.${id.replace('minecraft:', '')}`;
+            } else {
+                return id.replace(/_/g, ' ');
+            }
+            if (data.translations && data.translations[transKey]) {
+                return data.translations[transKey];
+            }
+            const parts = id.split(':');
+            return parts[parts.length - 1].replace(/_/g, ' ');
+        }
+
+        // ============================================================
+        // 获取物品图标URL - 仅用于原版物品，模组物品使用自定义路径
+        // ============================================================
+        function getItemIcon(id) {
+            const MISSING = "https://zh.minecraft.wiki/images/Missing_Texture_JE4.png";
+            if (!id) return MISSING;
+
+            // ============================================================
+            // 特殊方块贴图映射（优先匹配）
+            // ============================================================
+            const specialBlockMap = {
+                'flyconfig:snowy_grass_block': 'https://zh.minecraft.wiki/images/Snowy_Grass_Block_%28without_snow%29_JE6.png',
+                'flyconfig:activated_observer': 'https://zh.minecraft.wiki/images/Invicon_Observer.png',
+                'flyconfig:fire': 'https://zh.minecraft.wiki/images/Invicon_Fire.gif',
+                'flyconfig:soul_fire': 'https://zh.minecraft.wiki/images/Invicon_Soul_Fire.gif'
+            };
+
+            // 检查是否在特殊映射中
+            if (specialBlockMap[id]) {
+                return specialBlockMap[id];
+            }
+
+            // 模组物品使用自定义路径
+            if (id.startsWith('flyconfig:')) {
+                const name = id.replace('flyconfig:', '');
+                return `../../assets/flyconfig/${name}.png`;
+            }
+
+            // 原版物品使用Minecraft Wiki
+            const base = id.replace('minecraft:', '');
+            const specialMap = {
+                'comparator': 'Redstone_Comparator',
+                'repeater': 'Redstone_Repeater',
+                'redstone_block': 'Block_of_Redstone',
+                'netherite_block': 'Block_of_Netherite',
+                'gold_block': 'Block_of_Gold',
+                'iron_block': 'Block_of_Iron',
+                'experience_bottle': 'Bottle_o\'_Enchanting',
+                'iron_golem_spawn_egg': 'Iron_Golem_Spawn_Egg_Revision_2',
+                'wither_spawn_egg': 'Wither_Spawn_Egg_Revision_2'
+            };
+            const gifItems = ['enchanted_golden_apple'];
+            let name = specialMap[base] || base.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('_');
+            if (gifItems.includes(base)) return `https://zh.minecraft.wiki/images/Invicon_${name}.gif`;
+            return `https://zh.minecraft.wiki/images/Invicon_${name}.png`;
+        }
+
+        // ============================================================
+        // 加载所有配方
+        // ============================================================
+        async function loadAllRecipes() {
+            console.log('📦 加载合成配方...');
+
+            const fileList = await loadRecipeList();
+
+            if (fileList.length === 0) {
+                console.warn('⚠ 没有找到配方文件列表');
+                return;
+            }
+
+            for (const relPath of fileList) {
+                const url = PATHS.recipe + relPath;
+                const json = await loadJSON(url);
+                if (json) {
+                    const fileName = relPath.split('/').pop().replace('.json', '');
+                    json._filePath = relPath;
+                    json._fileName = fileName;
+                    data.crafting[fileName] = json;
+                    console.log(`  ✓ 加载配方: ${relPath}`);
+                }
+            }
+
+            // 自动识别并分离熔炼配方
+            for (const [key, recipe] of Object.entries(data.crafting)) {
+                const isSmelting = recipe.type === 'smoking' ||
+                    recipe.type === 'blasting' ||
+                    recipe.type === 'minecraft:smoking' ||
+                    recipe.type === 'minecraft:blasting';
+                const hasCookingTime = recipe.cookingtime !== undefined;
+                const hasExperience = recipe.experience !== undefined;
+                if (isSmelting || (hasCookingTime && hasExperience)) {
+                    data.smelting.push(recipe);
+                    console.log(`  🔥 识别为熔炼配方: ${key}`);
+                }
+            }
+
+            // 从 crafting 中移除熔炼配方
+            for (const recipe of data.smelting) {
+                if (recipe._fileName) {
+                    delete data.crafting[recipe._fileName];
+                }
+            }
+
+            console.log(`📦 配方加载完成，共 ${Object.keys(data.crafting).length} 个合成配方，${data.smelting.length} 个熔炼配方`);
+        }
+
+        // ============================================================
+        // 渲染合成配方
+        // ============================================================
+        function renderCraftingRecipe(key, recipe) {
+            const resultId = recipe.result.id;
+            const resultName = t(resultId);
+            const resultIcon = getItemIcon(resultId);
+            const resultCount = recipe.result.count || 1;
+            let html = `<div class="recipe-box">`;
+            html += `<h4 style="margin-top:0;">${t(key)}</h4>`;
+            const isShaped = recipe.type === 'crafting_shaped' || recipe.type === 'minecraft:crafting_shaped';
+            html += `<p><span class="label">合成方式：</span>${isShaped ? '有序合成' : '无序合成'}</p>`;
+            if (isShaped) {
+                const rows = recipe.pattern;
+                const keyMap = recipe.key || {};
+                html += `<div class="mcui"><span class="mcui-input">`;
+                for (let r = 0; r < rows.length; r++) {
+                    html += `<span class="mcui-row">`;
+                    for (let c = 0; c < rows[r].length; c++) {
+                        const ch = rows[r][c];
+                        if (ch === ' ') {
+                            html += `<span class="invslot"></span>`;
+                        } else {
+                            const itemId = keyMap[ch];
+                            if (itemId) {
+                                const name = t(itemId);
+                                const icon = getItemIcon(itemId);
+                                html += `<span class="invslot"><img src="${icon}" alt="${name}" title="${name}" onerror="this.src='https://zh.minecraft.wiki/images/Missing_Texture_JE4.png'"></span>`;
+                            } else {
+                                html += `<span class="invslot"></span>`;
+                            }
+                        }
+                    }
+                    html += `</span>`;
+                }
+                html += `</span><span class="mcui-arrow">→</span><span class="mcui-output">`;
+                html += `<span class="invslot invslot-large"><img src="${resultIcon}" alt="${resultName}" title="${resultName}" onerror="this.src='https://zh.minecraft.wiki/images/Missing_Texture_JE4.png'">`;
+                if (resultCount > 1) html += `<span class="invslot-stacksize">${resultCount}</span>`;
+                html += `</span></span><div class="mcui-label">${resultName}${resultCount > 1 ? ' ×' + resultCount : ''}</div></div>`;
+            } else {
+                const ingredients = recipe.ingredients || [];
+                html += `<p><span class="label">材料：</span>`;
+                const items = ingredients.map(id => {
+                    const name = t(id);
+                    const icon = getItemIcon(id);
+                    return `<img src="${icon}" style="width:24px;height:24px;vertical-align:middle;" title="${name}" onerror="this.src='https://zh.minecraft.wiki/images/Missing_Texture_JE4.png'"> ${name}`;
+                });
+                html += items.join(' + ');
+                html += `</p>`;
+                html += `<p><span class="label">结果：</span><img src="${resultIcon}" style="width:24px;height:24px;vertical-align:middle;" title="${resultName}" onerror="this.src='https://zh.minecraft.wiki/images/Missing_Texture_JE4.png'"> ${resultName}${resultCount > 1 ? ' ×' + resultCount : ''}</p>`;
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        // ============================================================
+        // 渲染所有配方
+        // ============================================================
+        function renderAllRecipes() {
+            const container = document.getElementById('recipe-container');
+            if (!container) return;
+            let html = '';
+            html += `<div class="recipe-group"><div class="group-title">合成配方</div>`;
+            for (const [key, recipe] of Object.entries(data.crafting)) {
+                html += renderCraftingRecipe(key, recipe);
+            }
+            html += `</div>`;
+            if (data.smelting.length > 0) {
+                html += `<div class="recipe-group"><div class="group-title">熔炼配方</div>`;
+                html += `<table class="wikitable"><thead><tr><th>配方</th><th>方式</th><th>材料</th><th>结果</th><th>时间</th><th>经验</th></tr></thead><tbody>`;
+                for (const recipe of data.smelting) {
+                    const ingredientId = recipe.ingredient;
+                    const ingredientName = t(ingredientId);
+                    const ingredientIcon = getItemIcon(ingredientId);
+                    const resultId = recipe.result.id;
+                    const resultName = t(resultId);
+                    const resultIcon = getItemIcon(resultId);
+                    const resultCount = recipe.result.count || 1;
+                    let typeName = '';
+                    if (recipe.type === 'smoking' || recipe.type === 'minecraft:smoking') {
+                        typeName = '烟熏炉';
+                    } else if (recipe.type === 'blasting' || recipe.type === 'minecraft:blasting') {
+                        typeName = '高炉';
+                    } else {
+                        typeName = recipe.type || '';
+                    }
+                    const timeSec = (recipe.cookingtime / 20).toFixed(1);
+                    html += `<tr>
+                <td>${t(recipe._fileName) || ''}</td>
+                <td>${typeName}</td>
+                <td><img src="${ingredientIcon}" style="width:24px;height:24px;vertical-align:middle;" title="${ingredientName}" onerror="this.src='https://zh.minecraft.wiki/images/Missing_Texture_JE4.png'"> ${ingredientName}</td>
+                <td><img src="${resultIcon}" style="width:24px;height:24px;vertical-align:middle;" title="${resultName}" onerror="this.src='https://zh.minecraft.wiki/images/Missing_Texture_JE4.png'"> ${resultName} ×${resultCount}</td>
+                <td>${timeSec}秒</td>
+                <td>${recipe.experience}</td>
+            </tr>`;
+                }
+                html += `</tbody></table></div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        // ============================================================
+        // 初始化
+        // ============================================================
+        async function init() {
+            console.log('🚀 开始初始化...');
+            await loadTranslations();
+            await loadAllRecipes();
+            renderAllRecipes();
+            console.log('✅ 初始化完成！');
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+<script src="../../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

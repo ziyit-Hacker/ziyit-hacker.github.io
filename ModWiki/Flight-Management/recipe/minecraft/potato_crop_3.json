@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "potato crop 3",
+    "ingredients": [
+        "flyconfig:music_disc_sieg_heil",
+        "flyconfig:music_disc_hitler",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:potato_crop_3",
+        "count": 1
+    },
+    "show_notification": true
+}

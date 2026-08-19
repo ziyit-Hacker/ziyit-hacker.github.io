@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏用户信息 - 只因游戏</title>
+    <link rel="icon" href="./assets/ziyit.png" type="image/x-icon">
+    <script src="./assets/f12check.js"></script>
+    <script src="./assets/blacklist.js"></script>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0;
+            list-style: none;
+        }
+
+        a {
+            text-decoration: none;
+            color: #66e656;
+        }
+
+        p {
+            color: black;
+        }
+
+        ul li {
+            display: inline-block;
+            line-height: 35px;
+        }
+
+        li a {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        li p {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .bid {
+            color: #f25767;
+        }
+
+        .tit {
+            color: black;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 5px 0;
+        }
+
+        .line {
+            width: 1px;
+            height: 12px;
+            background-color: #f3a707;
+        }
+
+        a:hover {
+            color: #ff8000;
+        }
+
+        h1 {
+            width: 100%;
+            background-color: var(--ziyit-primary-light);
+            color: var(--ziyit-text-primary);
+            text-align: center;
+            font-size: 50px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .visible {
+            display: inline-block !important;
+        }
+
+        /* 用户信息区域样式 */
+        #brui strong {
+            display: inline-block;
+            margin: 0 5px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        /* 经验值样式 */
+        #brui strong:nth-child(1) {
+            background-color: rgba(75, 192, 192, 0.7);
+            color: #2d3748;
+            border-left: 3px solid #2b6cb0;
+        }
+
+        /* SAM值样式 */
+        #brui strong:nth-child(3) {
+            background-color: rgba(245, 158, 11, 0.7);
+            color: #2d3748;
+            border-left: 3px solid #c05621;
+        }
+
+        /* 生命值样式 */
+        #brui strong:nth-child(5) {
+            background-color: rgba(239, 68, 68, 0.7);
+            color: #2d3748;
+            border-left: 3px solid #9b2c2c;
+        }
+
+        /* 饱食度样式 */
+        #brui strong:nth-child(7) {
+            background-color: rgba(16, 185, 129, 0.7);
+            color: #2d3748;
+            border-left: 3px solid #065f46;
+        }
+
+        /* 所在层级样式 */
+        #brui strong:nth-child(9) {
+            background-color: rgba(139, 92, 246, 0.7);
+            color: #2d3748;
+            border-left: 3px solid #5b21b6;
+        }
+
+        /* 代理AI样式 */
+        #brui strong:nth-child(11) {
+            background-color: rgba(59, 130, 246, 0.7);
+            color: #2d3748;
+            border-left: 3px solid #1e40af;
+        }
+
+        /* 背包物品样式 */
+        #brui strong:nth-child(13) {
+            background-color: rgba(156, 163, 175, 0.7);
+            color: #2d3748;
+            border-left: 3px solid #4b5563;
+        }
+    </style>
+    <style>
+        @media (max-width: 768px) {
+            .line {
+                display: none;
+            }
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="./assets/ziyit-theme.css">
+</head>
+
+<body>
+    <h1>游戏用户信息</h1>
+    <script>
+        // 获取cookie值的函数
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+            return null;
+        }
+
+        // 检查用户权限
+        function checkUserPermission() {
+            const authToken = getCookie('authToken') || localStorage.getItem('authToken');
+            if (!authToken) {
+                alert('请先登录以访问该页面');
+                window.location.href = './';
+                return;
+            }
+        }
+
+        // 页面加载时检查权限
+        document.addEventListener('DOMContentLoaded', checkUserPermission);
+    </script>
+    <hr>
+    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu">
+                <li><a href="./user">返回用户中心</a></li>
+                <li><a href="javascript:history.back()">返回</a></li>
+                <li class="line"></li>
+                <li><a href="./backrooms/normal-levels/">查看层级列表</a></li>
+                <li class="line"></li>
+                <li><a href="./backrooms/">查看ZTG后室列表</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const authToken = getCookie('authToken') || localStorage.getItem('authToken');
+        console.log('User authToken:', authToken);
+
+        if (!authToken) {
+            console.log('未找到authToken');
+            alert('请先登录');
+            window.location.href = '/';
+        }
+
+        const tokenParts = authToken.split('-');
+        if (tokenParts[tokenParts.length - 1] !== 'True') {
+            console.log('authToken验证失败:', tokenParts);
+            alert('您不是ZTG用户，无法访问此页面');
+            window.location.href = '/';
+        }
+        console.log('验证通过，开始匹配用户数据');
+        const [_, username] = authToken.split('-');
+        const lines = text.split('\n');
+    </script>
+
+    <div id="brui">
+        <strong><span style="color: black;">经验(经验/等级): <span id="expDisplay">0/0</span></span></strong>
+        <span> </span>
+        <strong><span style="color: black;">SAM: <span id="samDisplay">0</span></span></strong>
+        <span> </span>
+        <strong><span style="color: black;">生命值(当前生命值/最大生命值): <span id="hpDisplay">0/0</span></span></strong>
+        <span> </span>
+        <strong><span style="color: black;">饱食度(饱和度/饱食度): <span id="satietyDisplay">0/0</span></span></strong>
+        <span> </span>
+        <strong><span style="color: black;">所在层级: <span id="Levels">Frontrooms</span></span></strong>
+        <span> </span>
+        <strong><span style="color: black;">代理AI: <span id="DefaultAI">/</span></span></strong>
+        <span> </span>
+        <strong><span style="color: black;">背包物品: <span id="Backpack">/</span></span></strong>
+    </div>
+
+    <style>
+        #brui strong {
+            display: inline-block;
+            margin: 0 5px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        #brui strong:nth-child(1) {
+            background-color: rgba(75, 192, 192, 0.7);
+            color: #2d3748;
+            border-left: 3px solid #2b6cb0;
+        }
+    </style>
+
+    <div style="margin: 30px auto; max-width: 1120px;" id="privilege">
+        <h2 style="text-align: center; color: black; margin-bottom: 20px;">游戏特权</h2>
+        <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+            <div
+                style="width: 300px; background: rgba(255,255,255,0.1); padding: 20px; margin: 10px; border-radius: 8px;">
+                <h3 style="color: #132251;">快速查看</h3>
+                <p style="color: black;">您的所有信息您都可以第一时间查看</p>
+            </div>
+            <div
+                style="width: 300px; background: rgba(255,255,255,0.1); padding: 20px; margin: 10px; border-radius: 8px;">
+                <h3 style="color: #132251;">快速游玩</h3>
+                <p style="color: black;">想什么时候玩就什么时候玩</p>
+            </div>
+            <div
+                style="width: 300px; background: rgba(255,255,255,0.1); padding: 20px; margin: 10px; border-radius: 8px;">
+                <h3 style="color: #132251;">AI托管</h3>
+                <p style="color: black;">交给AI托管，自动挂机操作</p>
+            </div>
+        </div>
+    </div>
+
+    <footer style="background: var(--ziyit-bg-card); border-top: 1px solid var(--ziyit-border); padding: 20px; margin-top: 50px;">
+        <div style="max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap;">
+            <div style="width: 300px; margin-bottom: 20px;">
+                <h3 style="color: var(--ziyit-text-primary);">关于我们</h3>
+                <p style="color: var(--ziyit-text-secondary);">只因科技致力于提供优质的游戏服务和体验</p>
+            </div>
+            <div style="width: 300px; margin-bottom: 20px;">
+                <h3 style="color: var(--ziyit-text-primary);">联系方式</h3>
+                <a href="mailto:ziyitstudio@qq.com" style="color: var(--ziyit-text-secondary);">邮箱: ziyitstudio@qq.com</a>
+                <br>
+                <a href="tel:13258227085" style="color: var(--ziyit-text-secondary);">手机号: 13258227085</a>
+            </div>
+            <div style="width: 300px; margin-bottom: 20px;">
+                <h3 style="color: var(--ziyit-text-primary);">关注我们</h3>
+                <a href="https://space.bilibili.com/3546981356013833"
+                    style="color: var(--ziyit-primary); margin-right: 10px;">哔哩哔哩</a>
+                <p style="color: var(--ziyit-primary);">QQ: 3950140506</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 从ztg.txt读取数据并匹配当前用户
+        fetch('ztg.txt')
+            .then(response => response.text())
+            .then(text => {
+                const lines = text.split('\n');
+                const [_, username] = authToken.split('-');
+                
+                for (const line of lines) {
+                    const [lineUsername, exp, sam, hp, satiety, level, ai, backpack] = line.split(' - ');
+                    if (lineUsername.trim() === username.trim()) {
+
+                        // 检查NO DATA情况
+                        if (exp === 'NO DATA' || sam === 'NO DATA' || hp === 'NO DATA' || satiety === 'NO DATA') {
+                            alert('数据在数据转移或服务器更新时被破坏');
+                            console.error('数据在数据转移或服务器更新时被破坏，用户数据为:', line);
+                        }
+
+                        // 检查SAM值
+                        const samValue = parseInt(sam);
+                        if (samValue < 50) {
+                            alert('SAM值过低请立即饮用杏仁水');
+                            console.log('SAM值过低', line);
+                        }
+
+                        // 创建美观的提示框
+                        const alertDiv = document.createElement('div');
+                        alertDiv.style.position = 'fixed';
+                        alertDiv.style.top = '20px';
+                        alertDiv.style.left = '50%';
+                        alertDiv.style.transform = 'translateX(-50%)';
+                        alertDiv.style.padding = '15px 25px';
+                        alertDiv.style.backgroundColor = '#ffeb3b';
+                        alertDiv.style.color = '#000';
+                        alertDiv.style.borderRadius = '5px';
+                        alertDiv.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+                        alertDiv.style.zIndex = '1000';
+                        alertDiv.style.animation = 'fadeIn 0.5s';
+                        alertDiv.innerHTML = '数据已从ZTG服务器迁移至ZIYIT根服务器，如出现数据错误或数据为NO DATA和其他问题请联系管理员';
+                        document.body.appendChild(alertDiv);
+                        
+                        // 5秒后自动消失
+                        setTimeout(() => {
+                            alertDiv.style.animation = 'fadeOut 0.5s';
+                            setTimeout(() => alertDiv.remove(), 500);
+                        }, 5000);
+
+                        // 填充数据
+                        document.getElementById('expDisplay').textContent = exp;
+                        document.getElementById('samDisplay').textContent = sam;
+                        document.getElementById('hpDisplay').textContent = hp;
+                        document.getElementById('satietyDisplay').textContent = satiety;
+                        document.getElementById('Levels').textContent = level;
+                        document.getElementById('DefaultAI').textContent = ai;
+                        document.getElementById('Backpack').textContent = backpack;
+                        break;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('读取ztg.txt出错:', error);
+            });
+    </script>
+    <p class="tit">&copy;2026 ZIYIT <strong>版权所有，侵权必究</strong></p>
+<script src="./assets/ziyit-theme.js"></script>
+</body>
+
+<style>
+    /* 链接 */
+    a {
+        color: #8b4513;
+        transition: all 0.3s ease;
+        padding: 5px 10px;
+        border-radius: 3px;
+    }
+
+    a:hover {
+        color: #a0522d;
+        background-color: rgba(139, 69, 19, 0.1);
+        text-shadow: 0 0 2px rgba(139, 69, 19, 0.3);
+    }
+
+    /* 标题 */
+    h1,
+    h2,
+    h3 {
+        color: #111;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        margin: 15px 0;
+    }
+
+    /* 用户信息区域 */
+    #brui {
+        background-color: rgba(245, 230, 66, 0.7);
+        padding: 15px;
+        border-radius: 5px;
+        border-left: 3px solid #8b4513;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        margin: 20px 0;
+    }
+
+    /* 游戏特权卡片 */
+    div[style*="background: rgba(255,255,255,0.1)"] {
+        background: rgba(245, 230, 66, 0.5) !important;
+        border: 1px solid #d4c93d;
+        transition: all 0.3s ease;
+    }
+
+    div[style*="background: rgba(255,255,255,0.1)"]:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+        #brui strong {
+            display: block;
+            margin: 5px 0;
+        }
+    }
+
+    * {
+        cursor: default !important;
+    }
+
+    a,
+    [onclick],
+    [href],
+    button,
+    input,
+    textarea,
+    select {
+        cursor: pointer !important;
+    }
+
+    #brui strong {
+        transition: all 0.3s ease;
+    }
+
+    #brui strong:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    footer {
+        transition: all 0.3s ease;
+    }
+
+    footer:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    #brui {
+        transition: all 0.3s ease;
+    }
+
+    #brui:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+</style>
+
+</html>

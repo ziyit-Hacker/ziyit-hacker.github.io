@@ -1,0 +1,23 @@
+{
+  "type": "crafting_shaped",
+  "category": "redstone",
+  "group": "NUCLEAR",
+  "show_notification": true,
+  "key": {
+    "#": "flyconfig:germany_developed",
+    "*": "flyconfig:synthetic_motoroil",
+    "&": "minecraft:diamond",
+    "A": "flyconfig:flight_manager",
+    "B": "minecraft:redstone_block",
+    "C": "minecraft:netherite_block"
+  },
+  "pattern": [
+    "&#&",
+    "*B&",
+    "AC&"
+  ],
+  "result": {
+    "id": "flyconfig:nuclear_spawn_egg",
+    "count": 1
+  }
+}

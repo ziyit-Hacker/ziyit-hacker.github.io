@@ -1,0 +1,1152 @@
+﻿<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cn" lang="cn">
+
+<head>
+    <title>加入网站 - The Backrooms中文维基</title>
+    <link rel="icon" href="../../assets/ziyit.png">
+    <script src="../../assets/f12check.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/init.combined.js"></script>
+    <script type="text/javascript">
+        var URL_HOST = 'www.wikidot.com';
+        var URL_DOMAIN = 'wikidot.com';
+        var USE_SSL = true;
+        var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
+        // global request information
+
+        var WIKIREQUEST = {};
+        WIKIREQUEST.info = {};
+
+        WIKIREQUEST.info.domain = "backrooms-wiki-cn.wikidot.com";
+        WIKIREQUEST.info.siteId = 4716348;
+        WIKIREQUEST.info.siteUnixName = "backrooms-wiki-cn";
+        WIKIREQUEST.info.categoryId = 40786780;
+        WIKIREQUEST.info.themeId = 1;
+        WIKIREQUEST.info.requestPageName = "system:join";
+        OZONE.request.timestamp = 1767611506;
+        OZONE.request.date = new Date();
+        WIKIREQUEST.info.lang = 'cn';
+        WIKIREQUEST.info.pageUnixName = "system:join";
+        WIKIREQUEST.info.pageId = 1312481495;
+        WIKIREQUEST.info.lang = "cn";
+        OZONE.lang = "cn";
+        var isUAMobile = !!/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    </script>
+
+    <script type="text/javascript">
+        require.config({
+            baseUrl: URL_STATIC + '/common--javascript',
+            paths: {
+                'jquery.ui': 'jquery-ui.min',
+                'jquery.form': 'jquery.form'
+            }
+        });
+    </script>
+
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <meta name="theme-color" content="#35B1A4" />
+    <meta name="og:type" content="article" />
+    <meta name="description" content="后室文档公共数据库——你曾经来过这里。" />
+    <meta name="og:site_name" content="The Backrooms 中文维基" />
+    <meta name="og:image" content="https://backrooms-oversight-cn.wdfiles.com/local--files/bml-emojis-1/bml_04.png" />
+    <meta name="og:locale" content="zh-cn" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta http-equiv="content-language" content="cn" />
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/WIKIDOT.combined.js"></script>
+
+
+    <style type="text/css" id="internal-style">
+        @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
+        @import url(https://github.backroomswiki.cn/Old_BHL/css/liminal-impact.css);
+    </style>
+
+    <meta name="msapplication-TileColor" content="#000000" />
+
+    <link rel="alternate" type="application/wiki" title="Edit this page"
+        href="javascript:WIKIDOT.page.listeners.editClick()" />
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-18234656-1']);
+        _gaq.push(['_setDomainName', 'none']);
+        _gaq.push(['_setAllowLinker', true]);
+        _gaq.push(['_trackPageview']);
+
+        _gaq.push(['old._setAccount', 'UA-68540-5']);
+        _gaq.push(['old._setDomainName', 'none']);
+        _gaq.push(['old._setAllowLinker', true]);
+        _gaq.push(['old._trackPageview']);
+
+        _gaq.push(['userTracker._setAccount', 'UA-290379544-1']);
+        _gaq.push(['userTracker._trackPageview']);
+    </script>
+
+    <script type="text/javascript">
+        window.google_analytics_uacct = 'UA-18234656-1';
+        window.google_analytics_domain_name = 'none';
+    </script>
+
+    <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" acync=""></script>
+    <script>
+        var OneSignal = window.OneSignal || [];
+        OneSignal.push(function () {
+            OneSignal.init({
+                appId: null,
+            });
+        });
+    </script>
+
+    <style>
+        /* Confirm box by OptimisticLucio
+Original code from https://scp-wiki.wikidot.com/system:join */
+        .confirm-wrapper,
+        .confirm-wrapper>li {
+            list-style: none;
+            display: contents;
+        }
+
+        .confirm-wrapper>li.folded .applybox {
+            display: none;
+        }
+
+        .confirm-wrapper>li.unfolded .applybox {
+            display: block;
+        }
+
+        .confirm-wrapper>li>.foldable-list-container.confirm {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.25em;
+            cursor: pointer;
+        }
+
+        .confirm-wrapper>li>.foldable-list-container.confirm a {
+            display: block;
+            position: relative;
+            width: 1.25rem;
+            min-width: 1.25rem;
+            height: 1.25rem;
+            border: solid 0.1rem grey;
+            font-size: 0;
+            margin-right: 1.25rem;
+        }
+
+        .confirm-wrapper>li.unfolded>.foldable-list-container.confirm a {
+            border-color: currentColor;
+            box-shadow: 0 0 0 0.1rem currentColor;
+        }
+
+        .confirm-wrapper>li.unfolded>.foldable-list-container.confirm a::before,
+        .confirm-wrapper>li.unfolded>.foldable-list-container.confirm a::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            width: 25%;
+            transform-origin: left top;
+            background: currentColor;
+        }
+
+        .confirm-wrapper>li.unfolded>.foldable-list-container.confirm a::before {
+            top: 85%;
+            left: 36%;
+            height: 145%;
+            transform: rotate(-135deg);
+        }
+
+        .confirm-wrapper>li.unfolded>.foldable-list-container.confirm a::after {
+            top: 50%;
+            left: 0%;
+            height: 40%;
+            transform: rotate(-45deg);
+        }
+
+        #membership-apply-box .error-block {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #membership-apply-box .error-block::after {
+            content: "\A如果你看到了这行提示，且仍未加入站点，你可能遭遇到了以下情况：\A　1. 你的申请书未经查验；\A　2. 你的申请书已被拒绝。\A请在确认你被拒绝的情况下，点击页面右上角“我的账户”->“消息”->“申请书”，并将其内被拒绝的申请书删除，随后重新申请。";
+            white-space: pre-wrap;
+        }
+
+        /* 添加渐变过渡效果 */
+        #membership-apply-box p,
+        #membership-by-apply-form {
+            transition: opacity 0.5s ease-in-out, max-height 0.5s ease-in-out, transform 0.5s ease-in-out;
+            overflow: hidden;
+        }
+
+        #membership-apply-box p {
+            max-height: 100px;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #membership-apply-box p.hidden {
+            opacity: 0;
+            max-height: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+        }
+
+        #membership-by-apply-form {
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        #membership-by-apply-form.visible {
+            max-height: 500px;
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--modules/js/list/ListPagesModule.js"></script>
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--modules/js/membership/MembershipApplyModule.js"></script>
+</head>
+
+<body id="html-body">
+    
+
+    <div id="skrollr-body">
+        <a name="page-top"></a>
+        <div id="container-wrap-wrap">
+            <div id="container-wrap">
+                <div id="container">
+                    <div id="header">
+                        <h1><a href="../"><span>The Backrooms中文维基</span></a></h1>
+
+                        <h2><span>你曾经来过这里</span></h2>
+<div style="position: absolute; right: 10px; top: 10px; text-align: center;">
+        <div id="userInfo" style="color: black; font-size: 18px;">
+            <strong><span id="usernameDisplay">您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a></span></strong>
+            <br>
+            <strong><span id="userTypeDisplay"></span></strong>
+        </div>
+    </div>
+    <script>
+        // 获取Cookie值的函数
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // 从user.json获取用户权限信息的函数（The Backrooms维基本地权限体系）
+        async function getUserPermission(username) {
+            try {
+                const response = await fetch('/backrooms/user.json');
+                const userData = await response.json();
+
+                const usernameIndex = userData.Username.indexOf(username);
+                if (usernameIndex !== -1) {
+                    const permission = userData.Permission[usernameIndex];
+                    return { permission };
+                }
+                return null;
+            } catch (error) {
+                console.error('读取用户权限信息失败:', error);
+                return null;
+            }
+        }
+
+        // 页面加载完成后执行登录状态检测（用户名来自后端账号，权限来自user.json）
+        document.addEventListener('DOMContentLoaded', async function () {
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const userTypeDisplay = document.getElementById('userTypeDisplay');
+
+            // 延迟获取表单元素，确保DOM完全加载
+            setTimeout(() => {
+                const membershipApplyBox = document.getElementById('membership-apply-box');
+                const membershipApplyForm = document.getElementById('membership-by-apply-form');
+
+                if (!ZIYIT_API.getToken()) {
+                    if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';
+                    if (userTypeDisplay) userTypeDisplay.textContent = '';
+                    // 未登录时显示登录提示，隐藏申请表单
+                    if (membershipApplyBox) {
+                        const loginPrompt = membershipApplyBox.querySelector('p');
+                        if (loginPrompt) loginPrompt.classList.remove('hidden');
+                    }
+                    if (membershipApplyForm) membershipApplyForm.style.display = 'none';
+                } else {
+                    ZIYIT_API.currentUser().then(async function (user) {
+                        if (usernameDisplay) usernameDisplay.textContent = user.username;
+                        if (userTypeDisplay) {
+                            try {
+                                userTypeDisplay.textContent = await ZIYIT_API.userType() || (ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户');
+                            } catch (e) {
+                                userTypeDisplay.textContent = ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户';
+                            }
+                        }
+
+                        // 已登录时隐藏登录提示，显示申请表单
+                        if (membershipApplyBox) {
+                            const loginPrompt = membershipApplyBox.querySelector('p');
+                            if (loginPrompt) loginPrompt.classList.add('hidden');
+                        }
+                        if (membershipApplyForm) membershipApplyForm.style.display = 'block';
+                    }).catch(function () {
+                        if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';
+                        if (userTypeDisplay) userTypeDisplay.textContent = '';
+                        if (membershipApplyBox) {
+                            const loginPrompt = membershipApplyBox.querySelector('p');
+                            if (loginPrompt) loginPrompt.classList.remove('hidden');
+                        }
+                        if (membershipApplyForm) membershipApplyForm.style.display = 'none';
+                    });
+                }
+            }, 100); // 延迟100ms确保DOM完全加载
+        });
+
+        // 获取管理员列表的函数
+        async function loadAdminList() {
+            try {
+                const response = await fetch('/backrooms/user.json');
+                const userData = await response.json();
+                
+                // 筛选出管理员（Adminstrator和Admin权限的用户）
+                const adminUsers = [];
+                const adminEmails = [];
+                for (let i = 0; i < userData.Permission.length; i++) {
+                    if (userData.Permission[i] === 'Administrator' || userData.Permission[i] === 'Admin') {
+                        adminUsers.push(userData.Username[i]);
+                        adminEmails.push(userData.Email[i]);
+                    }
+                }
+                
+                // 找到管理员列表显示位置
+                const adminListSpan = document.getElementById('adminList');
+                if (adminListSpan && adminUsers.length > 0) {
+                    // 创建管理员列表HTML
+                    let adminListHTML = '';
+                    adminUsers.forEach((admin, index) => {
+                        if (index > 0) {
+                            adminListHTML += '、';
+                        }
+                        const email = adminEmails[index];
+                        const emailText = email !== '[NO DATA]' ? email : '暂无邮箱';
+                        // 添加mailto链接，点击会跳转到邮箱
+                        adminListHTML += `<a href="mailto:${email}" title="邮箱: ${emailText}" class="admin-name">${admin}</a>`;
+                    });
+                    
+                    adminListSpan.innerHTML = adminListHTML;
+                }
+            } catch (error) {
+                console.error('读取管理员列表失败:', error);
+                // 如果读取失败，显示默认管理员列表
+                const adminListSpan = document.getElementById('adminList');
+                if (adminListSpan) {
+                    adminListSpan.innerHTML = '<a href="mailto:ziyitstudio@qq.com" title="邮箱: ziyitstudio@qq.com" class="admin-name">Minecraft_zy227</a>、<a href="mailto:ziyitstudio@qq.com" title="邮箱: ziyitstudio@qq.com" class="admin-name">19866824404</a>';
+                }
+            }
+        }
+
+        // 初始化出生日期选择框
+        function initializeBirthDateSelectors() {
+            const yearSelect = document.getElementById('birth-year');
+            const monthSelect = document.getElementById('birth-month');
+            const daySelect = document.getElementById('birth-day');
+            
+            if (!yearSelect || !monthSelect || !daySelect) return;
+            
+            // 初始化年份选择框（从1900年到当前年份）
+            const currentYear = new Date().getFullYear();
+            for (let year = currentYear; year >= 1900; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year + '年';
+                yearSelect.appendChild(option);
+            }
+            
+            // 初始化月份选择框
+            for (let month = 1; month <= 12; month++) {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month + '月';
+                monthSelect.appendChild(option);
+            }
+            
+            // 月份变化时更新日期选择框
+            monthSelect.addEventListener('change', updateDaySelector);
+            yearSelect.addEventListener('change', updateDaySelector);
+        }
+        
+        // 更新日期选择框
+        function updateDaySelector() {
+            const yearSelect = document.getElementById('birth-year');
+            const monthSelect = document.getElementById('birth-month');
+            const daySelect = document.getElementById('birth-day');
+            
+            if (!yearSelect || !monthSelect || !daySelect) return;
+            
+            const year = parseInt(yearSelect.value);
+            const month = parseInt(monthSelect.value);
+            
+            if (!year || !month) {
+                daySelect.innerHTML = '<option value="">选择日期</option>';
+                return;
+            }
+            
+            // 计算该月的天数
+            const daysInMonth = new Date(year, month, 0).getDate();
+            
+            // 清空日期选择框
+            daySelect.innerHTML = '<option value="">选择日期</option>';
+            
+            // 填充日期
+            for (let day = 1; day <= daysInMonth; day++) {
+                const option = document.createElement('option');
+                option.value = day;
+                option.textContent = day + '日';
+                daySelect.appendChild(option);
+            }
+        }
+
+        // 验证身份证号码的函数
+        function validateIdCard(idCard) {
+            // 检查长度是否为12位
+            if (idCard.length !== 12) {
+                return { valid: false, error: '您的申请书未通过机械识别' };
+            }
+            
+            // 检查是否包含字母
+            if (!/^\d+$/.test(idCard)) {
+                return { valid: false, error: '您的申请书未通过机械识别' };
+            }
+            
+            // 提取出生日期信息（第一个数字不管，后面8个数字是出生日期）
+            const year = parseInt(idCard.substring(1, 5));
+            const month = parseInt(idCard.substring(5, 7));
+            const day = parseInt(idCard.substring(7, 9));
+            
+            // 验证日期是否有效
+            const birthDate = new Date(year, month - 1, day);
+            if (birthDate.getFullYear() !== year || 
+                birthDate.getMonth() !== month - 1 || 
+                birthDate.getDate() !== day) {
+                return { valid: false, error: '您的申请书未通过机械识别' };
+            }
+            
+            // 检查是否超过120年
+            const currentYear = new Date().getFullYear();
+            if (currentYear - year > 120) {
+                return { valid: false, error: '您的申请书未通过机械识别' };
+            }
+            
+            // 提取性别信息（第11位，奇数为男，偶数为女）
+            const genderDigit = parseInt(idCard.substring(10, 11));
+            const gender = genderDigit % 2 === 0 ? 'female' : 'male';
+            
+            return {
+                valid: true,
+                birthDate: birthDate,
+                gender: gender,
+                year: year,
+                month: month,
+                day: day
+            };
+        }
+
+        // 验证申请书格式和年龄的函数
+        function validateApplicationFormat(text) {
+            // 检查是否以分号分隔格式
+            const parts = text.split('；');
+            if (parts.length < 2) {
+                return { valid: false, error: '您的申请书未通过机械识别' };
+            }
+            
+            // 验证年龄部分
+            const agePart = parts[0].trim();
+            const age = parseInt(agePart);
+            
+            if (isNaN(age) || age < 17) {
+                return { valid: false, error: '您的申请书未通过机械识别' };
+            }
+            
+            return { valid: true, age: age };
+        }
+
+        // 验证身份证年龄与申请书填写年龄是否一致的函数
+        function validateAgeConsistency(idCardValidation, formatValidation) {
+            // 计算身份证对应的实际年龄
+            const currentDate = new Date();
+            const birthDate = idCardValidation.birthDate;
+            
+            // 计算年龄（实岁）
+            let ageFromIdCard = currentDate.getFullYear() - birthDate.getFullYear();
+            const monthDiff = currentDate.getMonth() - birthDate.getMonth();
+            
+            // 如果当前月份小于出生月份，或者月份相同但日期小于出生日期，则年龄减1
+            if (monthDiff < 0 || (monthDiff === 0 && currentDate.getDate() < birthDate.getDate())) {
+                ageFromIdCard--;
+            }
+            
+            // 比较身份证年龄和申请书填写年龄
+            const ageFromApplication = formatValidation.age;
+            
+            // 允许±1岁的误差（考虑到生日可能刚过或即将到来）
+            if (Math.abs(ageFromIdCard - ageFromApplication) > 1) {
+                return { 
+                    valid: false, 
+                    error: `您的申请书未通过机械识别` 
+                };
+            }
+            
+            return { 
+                valid: true, 
+                idCardAge: ageFromIdCard, 
+                applicationAge: ageFromApplication 
+            };
+        }
+
+        // 读取暗号文件的函数
+        async function readCodeWords() {
+            try {
+                const response = await fetch('/backrooms/暗号');
+                const text = await response.text();
+                // 按行分割并过滤空行
+                const words = text.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0);
+                return words;
+            } catch (error) {
+                console.error('读取暗号文件失败:', error);
+                // 如果读取失败，返回默认的暗号词语
+                return ['安全', '稳定', '规则', '遵守', '文明'];
+            }
+        }
+
+        // 验证申请书是否包含暗号词语的函数
+        function validateApplicationContent(text, codeWords) {
+            return codeWords.every(word => text.includes(word));
+        }
+
+        // 复制文本到剪贴板的函数
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                return true;
+            } catch (err) {
+                console.error('复制失败:', err);
+                return false;
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        // 获取超级管理员邮箱的函数
+        async function getSuperAdminEmail() {
+            try {
+                const response = await fetch('/backrooms/user.json');
+                const userData = await response.json();
+                
+                // 查找超级管理员（Adminstrator权限的用户）
+                for (let i = 0; i < userData.Permission.length; i++) {
+                    if (userData.Permission[i] === 'Administrator' && userData.Email[i] !== '[NO DATA]') {
+                        return userData.Email[i];
+                    }
+                }
+                
+                // 如果没有找到超级管理员，返回默认邮箱
+                return 'ziyitstudio@qq.com';
+            } catch (error) {
+                console.error('获取超级管理员邮箱失败:', error);
+                return 'ziyitstudio@qq.com';
+            }
+        }
+
+        // 检查是否在限制期内
+        function isSubmissionLimited() {
+            const lastSubmissionTime = getCookie('lastSubmissionTime');
+            if (!lastSubmissionTime) return false;
+            
+            const currentTime = new Date().getTime();
+            const timeDiff = currentTime - parseInt(lastSubmissionTime);
+            
+            return timeDiff < 60000; // 1分钟限制
+        }
+
+        // 设置提交限制
+        function setSubmissionLimit() {
+            const currentTime = new Date().getTime();
+            document.cookie = `lastSubmissionTime=${currentTime}; max-age=60; path=/`; // 60秒过期
+        }
+
+        // 检查必读页面阅读次数的函数
+        function checkRequiredReadings() {
+            const readCounts = JSON.parse(localStorage.getItem('docReadCounts') || '{}');
+            const requiredPages = ['./site-rules.html', './criticism-policy.html'];
+            
+            // 检查每个必读页面的阅读次数是否都超过3次
+            for (const page of requiredPages) {
+                const count = readCounts[page] || 0;
+                if (count < 3) {
+                    return {
+                        valid: false,
+                        message: `你还需要熟看必读的页面哟~喵~\n\n当前阅读情况：\n${requiredPages.map(p => {
+                            const c = readCounts[p] || 0;
+                            return `${p.replace('./', '').replace('.html', '')}: ${c}次`;
+                        }).join('\n')}\n\n请确保每个必读页面都阅读超过3次后再提交申请。`
+                    };
+                }
+            }
+            
+            return { valid: true };
+        }
+
+        // 为确认按钮添加点击事件处理程序
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化出生日期选择框
+            initializeBirthDateSelectors();
+            
+            const confirmButton = document.getElementById('mba-apply');
+            const applicationTextarea = document.getElementById('membership-by-apply-text');
+            const idCardInput = document.getElementById('id-card-input');
+            
+            if (confirmButton && applicationTextarea && idCardInput) {
+                confirmButton.addEventListener('click', async function() {
+                    // 检查是否在限制期内
+                    if (isSubmissionLimited()) {
+                        alert('请过一会再次提交申请');
+                        return;
+                    }
+                    
+                    // 首先检查必读页面阅读次数
+                    const readingCheck = checkRequiredReadings();
+                    if (!readingCheck.valid) {
+                        alert(readingCheck.message);
+                        return;
+                    }
+                    
+                    const applicationText = applicationTextarea.value.trim();
+                    const idCard = idCardInput.value.trim();
+                    
+                    if (!applicationText) {
+                        alert('请填写申请书内容！');
+                        return;
+                    }
+                    
+                    if (!idCard) {
+                        alert('请输入身份证号码！');
+                        return;
+                    }
+                    
+                    // 验证身份证号码
+                    const idCardValidation = validateIdCard(idCard);
+                    if (!idCardValidation.valid) {
+                        setSubmissionLimit();
+                        alert('您的申请书未通过机械识别');
+                        return;
+                    }
+                    
+                    // 验证申请书格式和年龄
+                    const formatValidation = validateApplicationFormat(applicationText);
+                    if (!formatValidation.valid) {
+                        setSubmissionLimit();
+                        alert('您的申请书未通过机械识别');
+                        return;
+                    }
+                    
+                    // 读取暗号词语
+                    const codeWords = await readCodeWords();
+                    
+                    // 验证申请书是否包含暗号词语
+                    const containsCodeWord = validateApplicationContent(applicationText, codeWords);
+                    
+                    if (!containsCodeWord) {
+                        setSubmissionLimit();
+                        alert('您的申请书未通过机械识别');
+                        return;
+                    }
+                    
+                    // 所有验证通过，处理申请书
+                    const copySuccess = copyToClipboard(applicationText);
+                    
+                    if (copySuccess) {
+                        // 获取超级管理员邮箱并打开邮件客户端
+                        const superAdminEmail = await getSuperAdminEmail();
+                        const mailtoLink = `mailto:${superAdminEmail}?subject=成员资格申请&body=申请书内容已复制到剪贴板，请粘贴到邮件正文中。`;
+                        
+                        // 打开邮件客户端
+                        window.location.href = mailtoLink;
+                        
+                        // 显示提示信息
+                        alert('申请书内容已复制到剪贴板！\n邮件客户端已打开，请将申请书内容粘贴到邮件正文中并发送。');
+                    } else {
+                        alert('复制申请书内容失败，请手动复制内容并发送邮件。');
+                    }
+                });
+            }
+        });
+    </script>
+                        <div id="top-bar">
+                            <div class="top-bar">
+                                <ul>
+                                    <li>图书馆
+                                        <ul>
+                                            <li><a href="./normal-levels/">层级</a></li>
+                                            <li><a href="./sub-layers/">子区集</a></li>
+                                            <li><a href="./entities/">实体</a></li>
+                                            <li><a href="./objects/">物品</a></li>
+                                            <li><a href="./phenomena/">现象</a></li>
+                                            <li><a href="./groups-list">团体</a></li>
+                                        </ul>
+                                    </li>
+
+                                    <li>更多
+                                        <ul>
+                                            <li><a href="javascript:history.back()">返回上一步</a></li>
+                                            <li><a href="../">返回首页</a></li>
+                                            <li><a href="./">返回主站</a></li>
+                                            <li><a href="./Deployment">部署时刻表</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="mobile-top-bar">
+                                <div class="open-menu">
+                                    <p><a href="#side-bar">≡</a></p>
+                                </div>
+                                <ul>
+                                    <li>图书馆
+                                        <ul>
+                                            <li><a href="./normal-levels/">层级</a></li>
+                                            <li><a href="./sub-layers/">子区集</a></li>
+                                            <li><a href="./entities/">实体</a></li>
+                                            <li><a href="./objects/">物品</a></li>
+                                            <li><a href="./phenomena/">现象</a></li>
+                                            <li><a href="./groups-list">团体</a></li>
+                                        </ul>
+                                    </li>
+
+                                    <li>更多
+                                        <ul>
+                                            <li><a href="javascript:history.back()">返回上一步</a></li>
+                                            <li><a href="../">返回首页</a></li>
+                                            <li><a href="./">返回主站</a></li>
+                                            <li><a href="./Deployment">部署时刻表</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div id="header-extra-div-1"><span></span></div>
+                        <div id="header-extra-div-2"><span></span></div>
+                        <div id="header-extra-div-3"><span></span></div>
+                    </div>
+
+                    <div id="content-wrap">
+                        <div id="main-content">
+                            <div id="action-area-top"></div>
+                            <div id="page-title">
+                                加入网站
+                            </div>
+                            <div id="page-content">
+                                <script type="text/javascript"
+                                    src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/yahooui/tabview-min.js"></script>
+                                <div id="wiki-tabview-fe9cec0bebfc828c00de2c9db9f602a7" class="yui-navset">
+                                    <ul class="yui-nav">
+                                        <li class="selected"><a href="javascript:;"><em>说明</em></a></li>
+                                        <li><a href="javascript:;"><em>提交申请书</em></a></li>
+                                        <li><a href="javascript:;"><em>International</em></a></li>
+                                    </ul>
+                                    <div class="yui-content">
+                                        <div id="wiki-tab-0-0">
+                                            <h3 id="toc0"><span>申请书的撰写有一定要求，不要发送根本没按要求来的申请书。</span></h3>
+                                            <p>在你申请加入本站前，请先仔细阅读<a
+                                                    href="./必读/site-rules">站规</a>。你还需要清楚地了解其他带有<tt>必读</tt>标签的各篇文章的内容（在<a
+                                                    href="./必读/"
+                                                    target="_blank">这里</a>可以找到它们的<strong>列表</strong>）。认真听取其中的建议，并且遵守其中提及的规则。<a
+                                                    href="https://backrooms-wiki-cn.wikidot.com/guide-hub">指导中心</a>也是你的重要参考。</p>
+                                            <p>另外，我们希望成员具有成人或接近成人应有的谈吐和行为举止（这也会在申请书中考察），因此进入本站的最低年龄是17周岁。注意这里的17周岁指的是根据你身份证号上的出生日期推算而得的<strong>实岁</strong>，而不是各地计算方式不同的虚岁。<strong>17周岁是我们的年龄底线，我们不会为此开任何特例。也不要谎报年龄，别抱有侥幸心理。</strong>
+                                            </p>
+                                            <p><strong>提交措辞明显低龄的申请书，例如包含角色扮演等，将导致你的申请书被拒绝。若今后你更改申请并成功加入本站，行为举止也将会受到管理团队的密切关注。</strong>
+                                            </p>
+                                            <p>阅读完上述文章并确定自己符合入站条件后，请点击“提交申请书”分页提交你的申请书。</p>
+                                        </div>
+                                        <div id="wiki-tab-0-1" style="display:none">
+                                            <div style="text-align: center;">
+                                                <p><strong>填写申请书之前，请再三确认你清楚这是一个含有严肃的题材和讨论内容的成人向网站，并且确保你将遵守<a
+                                                            href="./必读/site-rules">本站站规</a>，且你清楚地了解<tt>必读</tt>页面中所指出的各项信息。</strong>
+                                                </p>
+                                            </div>
+                                            <p>你需要在你的申请书中包含以下内容：</p>
+                                            <ul>
+                                                <li>你的年龄。不必注明你的出生日期。<strong>任何谎报年龄的行为一旦被站务发现，涉事人员将被立即解除成员资格并封禁到其年龄达到入站要求为止。</strong>特别注意，在你进入站点之后，若你在讨论区或个人资料等处明显暴露出你的年龄不符合要求，我们会解除你的成员资格并封禁。
+                                                </li>
+                                            </ul>
+                                            <ul>
+                                                <li>在标签为<tt>必读</tt>的页面（<a href="./必读/"
+                                                        target="_blank">页面列表</a>）中存在的暗号。请花一点时间认真阅读它们，熟悉它们并自觉遵守将很大程度上降低你入站后在本站被提醒/警告/移除资格的风险。我们明确指出了哪句话是暗号，且说明了暗号有几段，因此<strong>请不要主观地推测某句话是暗号</strong>。另外的，如果在有明文规定的情况下依然违规，将可能怀疑入站的有效性。
+                                                </li>
+                                            </ul>
+                                            <div class="blockquote">
+                                                <div class="image-container floatleft"><img
+                                                        src="https://backrooms-oversight-cn.wdfiles.com/local--files/bml-emojis-1/bml_02.png"
+                                                        height="119px" width="100px" alt="bml_02.png" class="image" />
+                                                </div>
+                                                <h4 id="toc1"><span>友情提示</span></h4>
+                                                <div style="clear:both; height: 0px; font-size: 1px"></div>
+                                                <div class="image-container floatright"><img
+                                                        src="https://backrooms-oversight-cn.wdfiles.com/local--files/bml-emojis-1/bml_04.png"
+                                                        height="119px" width="100px" alt="bml_04.png" class="image" />
+                                                </div>
+                                                <p>我们设置暗号的目的只是为了确保你有认真阅读过<tt>必读</tt>页面的所有内容。这几个页面里包含了你在加入后室中文社区后应当了解和遵守的重要事项，所以请花点时间通读它们，以便更好地维护站内的社区氛围和创作体验。如果你在看完所有必读页面以后仍然没有发现暗号，那么请你保持耐心，再逐行逐句地仔细找找看，没有那么难的！
+                                                </p>
+                                            </div>
+                                            <ul>
+                                                <li>你加入网站的理由（可选）。无需过于详细，简单地告诉我们你入站之后想要做什么就可以了。你可以不在申请书中附上自己的理由，但我们很建议你这么做。
+                                                </li>
+                                            </ul>
+                                            <hr />
+                                            <p>不按照格式或不符合入站条件而提交的申请书会被直接拒绝。</p>
+                                            <p>特别注意，在你发送申请书之前，一定要注意以下几点：</p>
+                                            <ul>
+                                                <li>请给出完整的暗号，它不一定只有一段，也不一定会有多段，但我们<strong>明确</strong>地写出了暗号有多少段，请通读给定的文章全文来给出你的答复；另外，暗号会时常更新——躺在你记事本里的那段完美申请书被拒绝了？看看是不是暗号没更新。
+                                                </li>
+                                            </ul>
+                                            <ul>
+                                                <li>请不要给我们发送<em>“求给过”“我喜欢后室”“我是XX写手，我想为后室创作文章”“我已经申请了十几次了为什么还不给我过”</em>这种申请书，你知道这<strong>没用</strong>的，那何苦发呢？
+                                                </li>
+                                            </ul>
+                                            <p>我们期待你的申请书尽可能地采取以下格式，或与其同等清楚：</p>
+                                            <blockquote>
+                                                <p>[年龄]；暗号是：[暗号]；[入站理由（可选）]。</p>
+                                            </blockquote>
+                                            <h2 id="toc2"><span>申请书正文</span></h2>
+                                            <p>请于此处填写申请书。你需要先勾选以下的承诺文本，才能填写入站申请书。<strong>不要在你没完成这行字的指令或达到这行字的要求的情况下勾选它，我们会知道的。</strong>
+                                            </p>
+                                            <ul class="confirm-wrapper">
+                                                <li class="folded">
+                                                    <div class="foldable-list-container confirm"><a
+                                                            href="javascript:;">yes</a>
+                                                        <div class="disclaimer">
+                                                            <p>我确认已完整阅读“必读”的各篇文章，年龄符合要求，遵守本站政策规范。</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="applybox">
+                                                        <div id="membership-apply-box">
+                                                            <p>
+                                                                您必须拥有 ZIYIT 账户并登入，才能申请成员资格。 </p>
+                                                            <table id="asdfghjkl" style="margin: 1em auto">
+                                                                <tr>
+                                                                    <td style="text-align: center; padding: 1em">
+                                                                        <div
+                                                                            style="font-size: 180%; font-weight: bold;">
+                                                                            <a href="/user/">登入</a>
+                                                                        </div>
+                                                                        <p>
+                                                                            若您已有 ZIYIT 账户 </p>
+                                                                    </td>
+                                                                    <td style="padding: 1em; font-size: 140%">
+                                                                        或 </td>
+                                                                    <td style="text-align: center; padding: 1em">
+                                                                        <div
+                                                                            style="font-size: 180%; font-weight: bold;">
+                                                                            <a href="/user/register">建立一个新账户</a>
+                                                                        </div>
+                                                                        <p>
+                                                                            这很值得，而且它是免费的 </p>
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+
+                                                            <form id="membership-by-apply-form" style="display: none;">
+                                                                <table class="form">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td>
+                                                                                身份证号码(6-17位):
+                                                                            </td>
+                                                                            <td>
+                                                                                <input type="text" id="id-card-input" maxlength="12" placeholder="请输入身份证号码第6-17位">
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td>
+                                                                                出生日期:
+                                                                            </td>
+                                                                            <td>
+                                                                                <select id="birth-year">
+                                                                                    <option value="">选择年份</option>
+                                                                                </select>
+                                                                                <select id="birth-month">
+                                                                                    <option value="">选择月份</option>
+                                                                                </select>
+                                                                                <select id="birth-day">
+                                                                                    <option value="">选择日期</option>
+                                                                                </select>
+                                                                                <select id="gender">
+                                                                                    <option value="">选择性别</option>
+                                                                                    <option value="male">男</option>
+                                                                                    <option value="female">女</option>
+                                                                                </select>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td>
+                                                                                申请书正文:
+                                                                            </td>
+                                                                            <td>
+                                                                                <textarea name="comment" rows="5"
+                                                                                    cols="50"
+                                                                                    id="membership-by-apply-text"></textarea>
+                                                                                <div class="sub"
+                                                                                    style="text-align: center;">
+                                                                                    (尚余<span
+                                                                                        id="membership-by-apply-text-left">200</span>个字符)
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+
+                                                                <div class="buttons">
+                                                                    <input id="mba-apply" type="button" value="确认">
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                            <h2 id="toc3"><span>备注</span></h2>
+                                            <ul>
+                                                <li>我们会尽可能地在48小时内通过或驳回你的申请书。在超过72小时无回应的情况下，你可以首先在您的邮箱确认你申请书的状态，你的申请可能在未被通知的情况下被通过或驳回。
+                                                    <ul>
+                                                        <li>如果这没有解决你的问题，请向以下管理员中的任意一名寻求帮助：
+                                                            <span id="adminList">
+                                                                <!--自动从user.json读取管理员列表-->
+                                                            </span>
+                                                            。如果一段时间后仍没有答复，请放宽心，可能他临时有别的事要办，直接向其他管理员寻求帮助即可。
+                                                        </li>
+                                                        <li>请你<strong>礼貌地</strong>向管理员寻求帮助。十分无礼的私信将<strong>不会</strong>得到回复，且可能视情况使你失去入站的资格或甚至抢先一步被封禁。
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                                <li>申请书只有网站的管理员能看见，而且会在其被通过或驳回后<strong>在管理员端自动删除</strong>。你可能在查看了申请书后仍在账号旁看见一个跳动的括号数字，这是Wikidot的问题，你必须删除这条申请书才能去掉它。申请书无法留档，当然，如果你坚持的话，也可以选择截图留念。
+                                                </li>
+                                                <li>如果你的申请书被驳回（declined）了，<strong>你随时都可以重新申请</strong>。但请注意，尽管可能存在误批或误拒的情况，但通常我们并不会无理由地驳回你的申请书；<strong>请不要多次发送完全一样的申请书，多次误批的情况基本不会出现。</strong>
+                                                    <ul>
+                                                        <li>通常情况下，请不要给管理员发送“我的申请书是XXX，为什么它被拒绝了”这样的私信，我们<strong>不会</strong>告诉你具体的拒绝原因。
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div id="wiki-tab-0-2" style="display:none">
+                                            <p>If you are reading this, you are likely a non-Chinese speaker from
+                                                another Backrooms-related site. Welcome! We are pleased to have you as
+                                                our guest. However, there's something you need to be aware of before
+                                                joining. Please make sure you've read this page thoroughly before
+                                                submitting an application.</p>
+                                            <hr />
+                                            <h5 id="toc4"><span>Requirements</span></h5>
+                                            <p>As a guest, to join the site, you have to:</p>
+                                            <ul>
+                                                <li>be at least 17 years old;</li>
+                                                <li>have posted at least 2 valid pages on another backrooms site<sup
+                                                        class="footnoteref"><a id="footnoteref-1" href="javascript:;"
+                                                            class="footnoteref"
+                                                            onclick="WIKIDOT.page.utils.scrollToReference('footnote-1')">1</a></sup>;
+                                                </li>
+                                                <li>be able to communicate in English or Chinese<sup
+                                                        class="footnoteref"><a id="footnoteref-2" href="javascript:;"
+                                                            class="footnoteref"
+                                                            onclick="WIKIDOT.page.utils.scrollToReference('footnote-2')">2</a></sup>.
+                                                </li>
+                                            </ul>
+                                            <p>If you believe you meet these requirements, you now need to familiarize
+                                                yourself with some regulations of our site.</p>
+                                            <h5 id="toc5"><span>Site rules for guests</span></h5>
+                                            <ol>
+                                                <li><strong>No role-playing.</strong> The backrooms are not real. This
+                                                    is a collaborative fiction project.</li>
+                                                <li><strong>No insulting, no trolling, no harassment.</strong> Jokes are
+                                                    appreciated, but they should be made with respect for others. Any
+                                                    conflicts among site members will be addressed seriously. If you
+                                                    feel harassed, please reach out to the staff.</li>
+                                                <li><strong>Post in both English and Chinese if needed.</strong> The
+                                                    majority of our members does not speak languages other than Chinese.
+                                                    To make yourself understood and others less confused, you are
+                                                    discouraged to post any content purely in English. <em>You can
+                                                        attach the translation (by machine) to your original English
+                                                        post. Post in both English and Chinese to help people
+                                                        understand!</em></li>
+                                                <li><strong>No posting non-Chinese or roughly translated pages.</strong>
+                                                    Cold-posting machine-translated or English pages is not okay.
+                                                    <em>You may not post any pages that is not written in Chinese. You
+                                                        can only post comments the way mentioned in rule 3.</em> If you
+                                                    violate this rule, your page will be immediately deleted and receive
+                                                    a warning.
+                                                </li>
+                                                <li><strong>No replying admin’s post.</strong> If you see “职员帖” (meaning
+                                                    “staff’s post”) in the title of a post, do not reply. Otherwise, you
+                                                    will be given a warning. If you’re confused, especially when you are
+                                                    mentioned in the post, contact the staff.</li>
+                                                <li><strong>No controversial topics.</strong> This is a fiction project,
+                                                    so the main focus is writing. Discussions on sensitive topics such
+                                                    as gender, LGBT, and general politics is strongly discouraged, as it
+                                                    often results in discord. Participants engaging in controversial
+                                                    discussions will receive warnings or face potential bans, depending
+                                                    on the circumstances. It's essential to note our <em>no-harassment
+                                                        policy</em> which prohibits insults directed towards any
+                                                    marginalized groups, including LGBT individuals, various genders,
+                                                    religious communities, and others. We care about the minority
+                                                    groups. It is also a safeguard for all of us to ban such sensitive
+                                                    subjects.</li>
+                                                <li><strong>Think before you vote.</strong> As a member, you can upvote
+                                                    or downvote any page. It is reasonable to vote for translated pages
+                                                    whose original version was written in languages you understand.
+                                                    However, when assessing original Chinese articles, exercise caution.
+                                                    Machine-translated versions often diverge significantly from the
+                                                    original, so please refrain from basing judgments solely on
+                                                    translations. Such voters will receive a warning once confirmed.
+                                                </li>
+                                            </ol>
+                                            <h5 id="toc6"><span>Reminders, warnings, and bans.</span></h5>
+                                            <p>Like other members, individuals who violate the rules will be subject to
+                                                disciplinary action, including reminders, warnings, and bans.</p>
+                                            <ul>
+                                                <li>Reminders: If you're reminded by the staff, it indicates a minor
+                                                    violation of less strict rules. Take it as a gentle nudge to
+                                                    exercise more caution.</li>
+                                                <li>Warnings: If you receive a warning, that means you have violate some
+                                                    serious rules. Warnings are recorded, and accumulating three or more
+                                                    will result in a temporary ban.</li>
+                                                <li>Bans: Violating significant rules repeatedly or receiving enough
+                                                    warnings will lead to a ban. The duration depends on the severity of
+                                                    the situation.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <script type="text/javascript">
+                                    //<![CDATA[
+                                    OZONE.dom.onDomReady(function () {
+                                        var tabViewfe9cec0bebfc828c00de2c9db9f602a7 = new YAHOO.widget.TabView('wiki-tabview-fe9cec0bebfc828c00de2c9db9f602a7');
+                                    }, "dummy-ondomready-block");
+
+                                    //]]>
+                                </script>
+
+
+                                <div class="footnotes-footer">
+                                    <div class="title">脚注</div>
+                                    <div class="footnote-footer" id="footnote-1"><a href="javascript:;"
+                                            onclick="WIKIDOT.page.utils.scrollToReference('footnoteref-1')">1</a>.
+                                        "valid" means these pages have not been deleted because of low rating
+                                        and any other reasons, which is usually greenlit or considered as qualified in
+                                        other ways.</div>
+                                    <div class="footnote-footer" id="footnote-2"><a href="javascript:;"
+                                            onclick="WIKIDOT.page.utils.scrollToReference('footnoteref-2')">2</a>. If
+                                        you can speak Chinese, joining the site by regular means might be a better
+                                        choice</div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="dummy-ondomready-block" style="display: none;"></div>
+    <script type="text/javascript">
+        (function () {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+
+<style>
+    /* 生存难度容器居中 */
+    .sd-container {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 调整内容包装器 */
+    #content-wrap {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    /* 管理员名字悬浮样式 */
+    .admin-name {
+        cursor: pointer;
+        position: relative;
+        transition: all 0.3s ease;
+        color: inherit; /* 继承父元素颜色 */
+        text-decoration: none; /* 移除下划线 */
+    }
+
+    .admin-name:hover {
+        color: #007bff;
+        text-decoration: underline; /* 悬浮时显示下划线 */
+    }
+
+    /* 自定义悬浮提示样式 */
+    .admin-name[title] {
+        position: relative;
+    }
+
+    .admin-name[title]:hover::after {
+        content: attr(title);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        white-space: nowrap;
+        z-index: 1000;
+        pointer-events: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .admin-name[title]:hover::before {
+        content: '';
+        position: absolute;
+        bottom: calc(100% - 5px);
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        pointer-events: none;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    }
+</style>
+
+</html>

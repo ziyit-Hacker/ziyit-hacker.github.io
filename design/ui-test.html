@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>ZIYIT UI 设计体系测试页 v1.9</title>
+    <script>
+        /* 主题初始化（置于 head：避免切换主题时页面闪烁）
+           data-theme     = 实际生效的配色（light / dark），驱动全部 CSS
+           data-theme-pref= 用户偏好（light / dark / auto），驱动控件高亮
+           偏好以 cookie（ziyit-theme）持久化，有效期 1 年 */
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' ||
+                (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <style>
+        /* ============ 设计 Token（DESIGN.md §2） ============ */
+        :root {
+            --ziyit-primary: #0078d4;
+            --ziyit-primary-dark: #005a9e;
+            --ziyit-primary-light: #e8f3fb;
+            --ziyit-accent: #66e656;
+            --ziyit-accent-dark: #28a745;
+            --ziyit-info: #12b7f5;
+            --ziyit-warning: #f3a707;
+            --ziyit-danger: #f25767;
+            --ziyit-success: #28a745;
+            --ziyit-text-primary: #333333;
+            --ziyit-text-secondary: #666666;
+            --ziyit-text-disabled: #999999;
+            --ziyit-text-inverse: #ffffff;
+            --ziyit-border: #dddddd;
+            --ziyit-border-light: #eeeeee;
+            --ziyit-bg: #f5f5f5;
+            --ziyit-bg-card: #ffffff;
+            --ziyit-bg-hover: #f0f7fc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            font-size: 15px; line-height: 1.6; color: var(--ziyit-text-primary);
+            background: var(--ziyit-bg);
+        }
+        a { color: var(--ziyit-primary); text-decoration: none; transition: color .2s; }
+        a:hover { color: var(--ziyit-primary-dark); }
+
+        .page { max-width: 1200px; margin: 0 auto; padding: 0 20px 60px; }
+        .section { margin-top: 48px; }
+        .section > h2 {
+            font-size: 22px; line-height: 1.4; font-weight: 600; color: var(--ziyit-text-primary);
+            padding-bottom: 8px; border-bottom: 2px solid var(--ziyit-primary);
+            margin-bottom: 20px;
+        }
+        .section > p.desc { font-size: 13px; color: var(--ziyit-text-secondary); margin-bottom: 16px; }
+        .panel { background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border-light); border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+        .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+        .row.vtop { align-items: flex-start; }
+        .row + .row { margin-top: 16px; }
+        .caption { font-size: 13px; color: var(--ziyit-text-secondary); width: 100%; }
+        code {
+            font-family: Consolas, "Courier New", monospace; font-size: 13px;
+            background: #f0f0f0; padding: 2px 6px; border-radius: 4px;
+        }
+
+        /* ============ Hero（品牌渐变，DESIGN.md §2.3） ============ */
+        .hero {
+            background: linear-gradient(135deg, #0078d4, #005a9e);
+            color: #fff; padding: 56px 20px 40px; text-align: center; margin-bottom: 0;
+        }
+        .hero h1 { font-size: 36px; line-height: 1.3; font-weight: 700; }
+        .hero p { font-size: 15px; opacity: .9; margin-top: 12px; }
+        .hero .tag { display: inline-block; margin-top: 20px; padding: 4px 14px; border-radius: 20px; background: rgba(255,255,255,.18); font-size: 13px; }
+
+        /* ============ 色彩色板 ============ */
+        .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+        .swatch { border: 1px solid var(--ziyit-border-light); border-radius: 8px; overflow: hidden; background: var(--ziyit-bg-card); }
+        .swatch .block { height: 64px; }
+        .swatch .info { padding: 8px 12px; font-size: 12px; color: var(--ziyit-text-secondary); }
+        .swatch .info b { display: block; font-size: 13px; color: var(--ziyit-text-primary); }
+
+        /* ============ 排版 ============ */
+        .type-sample { display: flex; align-items: baseline; gap: 16px; padding: 10px 0; border-bottom: 1px dashed var(--ziyit-border-light); }
+        .type-sample .lbl { font-size: 12px; color: var(--ziyit-text-disabled); width: 130px; flex-shrink: 0; }
+
+        /* ============ 按钮（DESIGN.md §4.1） ============ */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 15px;
+            padding: 8px 20px; transition: background .2s, transform .1s, box-shadow .2s;
+            font-family: inherit; line-height: 1.2;
+        }
+        .btn:focus { box-shadow: 0 0 0 3px var(--ziyit-primary-light); outline: none; }
+        .btn:active { transform: scale(.98); }
+        .btn-lg { height: 44px; padding: 0 32px; font-size: 16px; border-radius: 8px; }
+        .btn-sm { height: 28px; padding: 0 16px; font-size: 13px; }
+        .btn-primary { background: var(--ziyit-primary); color: #fff; }
+        .btn-primary:hover { background: var(--ziyit-primary-dark); }
+        .btn-secondary { background: var(--ziyit-bg-card); color: var(--ziyit-primary); border: 1px solid var(--ziyit-primary); }
+        .btn-secondary:hover { background: var(--ziyit-primary-light); }
+        .btn-text { background: transparent; color: var(--ziyit-primary); }
+        .btn-text:hover { background: var(--ziyit-primary-light); }
+        .btn-danger { background: var(--ziyit-danger); color: #fff; }
+        .btn-danger:hover { background: #d93a4d; }
+        .btn-success { background: var(--ziyit-success); color: #fff; }
+        .btn-success:hover { background: #218838; }
+        .btn:disabled { background: #cccccc !important; color: #999999 !important; cursor: not-allowed; border-color: transparent !important; }
+        .spinner {
+            width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4);
+            border-top-color: #fff; border-radius: 50%; display: inline-block;
+            animation: spin .7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ============ 表单（DESIGN.md §4.2-4.4） ============ */
+        .form-group { margin-bottom: 16px; }
+        /* 输入框标签：仅作用于无 class 的 label，避免覆盖 .switch/.check/.radio 组件的自身 display */
+        .form-group label:not([class]) { display: block; font-size: 13px; color: var(--ziyit-text-secondary); margin-bottom: 8px; }
+        .input, .select {
+            width: 100%; max-width: 360px; height: 36px; padding: 0 12px;
+            border: 1px solid var(--ziyit-border); border-radius: 6px; font-size: 15px;
+            font-family: inherit; outline: none; color: var(--ziyit-text-primary);
+            background: var(--ziyit-bg-card); /* 跟随主题：深色模式下避免白底 */
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .input:focus, .select:focus { border-color: var(--ziyit-primary); box-shadow: 0 0 0 3px var(--ziyit-primary-light); }
+        .input.error { border-color: var(--ziyit-danger); }
+        .input.success { border-color: var(--ziyit-success); }
+        .input:disabled, .select:disabled { background: #f5f5f5; color: var(--ziyit-text-disabled); cursor: not-allowed; }
+        .field-msg { font-size: 13px; margin-top: 6px; }
+        .field-msg.error { color: var(--ziyit-danger); }
+        .field-msg.ok { color: var(--ziyit-success); }
+
+        .check, .radio { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; min-height: 44px; margin-right: 20px; }
+        .check input, .radio input { width: 16px; height: 16px; accent-color: var(--ziyit-primary); }
+        /* ============ 开关 Switch（DESIGN.md §4.4） ============ */
+        /* 形态：胶囊形框架（短边半圆弧）——关闭：内部透明 + 蓝框；开启：内部蓝 + 白框；禁用：内部灰 + 蓝框 */
+        .switch {
+            position: relative; display: inline-flex; align-items: center; gap: 8px;
+            cursor: pointer; min-height: 44px; margin-right: 20px; font-size: 15px;
+            user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        /* 输入框视觉隐藏但保留焦点，保证键盘可操作（display:none 会丢失焦点） */
+        .switch input {
+            position: absolute; width: 1px; height: 1px; margin: 0;
+            opacity: 0; overflow: hidden; clip: rect(0 0 0 0);
+        }
+        .switch .track {
+            display: inline-block;                       /* span 默认 inline，显式块级化 width/height 才生效（否则宽度塌陷为 0） */
+            width: 52px; min-width: 52px; height: 24px;  /* 长度 52px 标准规格，短边半圆弧；高度保持 24px */
+            border-radius: 12px;
+            background: transparent;                      /* 关：内部透明 */
+            border: 2px solid var(--ziyit-primary);       /* 关：边框蓝 */
+            position: relative; flex-shrink: 0;
+            transition: background .25s, border-color .25s, box-shadow .2s;
+        }
+        .switch .track::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: var(--ziyit-primary);             /* 透明芯上的圆点用主色保证可见 */
+            transition: left .25s cubic-bezier(.4, 0, .2, 1), background .25s;
+        }
+        .switch input:checked + .track {
+            background: var(--ziyit-primary);             /* 开：内部蓝 */
+            border-color: var(--ziyit-text-inverse);      /* 开：边框白 */
+        }
+        .switch input:checked + .track::after {
+            left: 30px;                                   /* 圆点精准滑动到右侧 */
+            background: var(--ziyit-text-inverse);        /* 蓝芯上的圆点用白色 */
+        }
+        .switch:hover .track { box-shadow: 0 0 0 2px var(--ziyit-primary-light); }
+        .switch input:focus-visible + .track { box-shadow: 0 0 0 3px var(--ziyit-primary-light); }
+        /* 禁用：内部灰、边框保持蓝 */
+        .switch input:disabled + .track { background: var(--ziyit-border); cursor: not-allowed; }
+        .switch input:disabled + .track::after { background: var(--ziyit-bg-card); }
+        .switch input:disabled ~ .switch-label { color: var(--ziyit-text-disabled); }
+        .switch .switch-label { transition: color .2s; }
+        /* 小号开关（紧凑场景） */
+        .switch-sm .track { display: inline-block; width: 40px; min-width: 40px; height: 18px; border-radius: 9px; }
+        .switch-sm .track::after { width: 12px; height: 12px; top: 1px; left: 1px; }
+        .switch-sm input:checked + .track::after { left: 23px; }
+
+        /* ============ 卡片（DESIGN.md §4.5） ============ */
+        .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .card {
+            background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border-light);
+            border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+            transition: box-shadow .2s, transform .2s;
+        }
+        .card h3 { font-size: 18px; line-height: 1.5; font-weight: 600; margin-bottom: 8px; }
+        .card p { font-size: 15px; color: var(--ziyit-text-secondary); }
+        .card .actions { margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px; }
+        .card.clickable { cursor: pointer; }
+        .card.clickable:hover { box-shadow: 0 4px 12px rgba(0,0,0,.12); transform: translateY(-2px); }
+
+        /* ============ 导航（DESIGN.md §4.6） ============ */
+        .topbar { background: var(--ziyit-bg-card); border-bottom: 1px solid var(--ziyit-border-light); padding: 0 20px; height: 56px; display: flex; align-items: center; gap: 32px; }
+        .topbar .logo { font-size: 18px; font-weight: 700; color: var(--ziyit-text-primary); display: flex; align-items: center; gap: 8px; }
+        .logo-mark { width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #0078d4, #005a9e); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; }
+        .topbar nav { display: flex; gap: 4px; flex: 1; }
+        .topbar nav a { padding: 6px 14px; border-radius: 6px; color: var(--ziyit-text-primary); font-size: 15px; }
+        .topbar nav a:hover { color: var(--ziyit-primary); background: var(--ziyit-bg-hover); }
+        .topbar nav a.active { color: var(--ziyit-primary); background: var(--ziyit-primary-light); font-weight: 600; }
+        .topbar .user { display: flex; align-items: center; gap: 8px; }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--ziyit-primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+
+        .layout-demo { display: flex; gap: 16px; align-items: stretch; }
+        .sidebar { width: 220px; background: var(--ziyit-bg); border-radius: 8px; padding: 12px; flex-shrink: 0; }
+        .sidebar .group { font-size: 12px; color: var(--ziyit-text-disabled); padding: 8px 12px 4px; }
+        .sidebar .item { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border-radius: 6px; font-size: 14px; cursor: pointer; transition: background .2s, color .2s; }
+        .sidebar .item:hover { background: var(--ziyit-bg-hover); }
+        .sidebar .item.active { background: var(--ziyit-primary); color: #fff; }
+
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown .trigger { cursor: pointer; }
+        .dropdown-menu {
+            position: absolute; top: 100%; left: 0; margin-top: 4px; min-width: 180px;
+            background: var(--ziyit-bg-card); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.12);
+            padding: 6px; display: none; z-index: 10;
+        }
+        .dropdown:hover .dropdown-menu { display: block; }
+        .dropdown-menu a { display: block; padding: 8px 12px; border-radius: 6px; font-size: 14px; color: var(--ziyit-text-primary); }
+        .dropdown-menu a:hover { background: var(--ziyit-bg-hover); color: var(--ziyit-primary); }
+        .dropdown-menu .sep { height: 1px; background: var(--ziyit-border-light); margin: 6px 4px; }
+
+        .mobile-nav { display: none; }
+        @media (max-width: 768px) {
+            .topbar nav { display: none; }
+            .mobile-nav { display: block; }
+            .layout-demo { flex-direction: column; }
+            .sidebar { width: 100%; }
+        }
+
+        /* ============ 页面级导航（参照 index.html .site-nav 结构，DESIGN.md §4.6） ============ */
+        /* 明暗双主题自适应：浅色白底深字、深色深底浅字，下拉菜单随主题切换 */
+        .site-nav { position: relative; background: var(--ziyit-bg-card); border-bottom: 1px solid var(--ziyit-border); }
+        .site-nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 16px; padding: 0 16px; height: 52px; }
+        .site-nav-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ziyit-text-primary); font-weight: 700; font-size: 16px; text-decoration: none; }
+        .site-nav-menu { display: flex; align-items: center; margin: 0; padding: 0; list-style: none; }
+        .site-nav-menu > li { position: relative; margin: 0 2px; }
+        .site-nav-menu > li > a, .site-nav-menu > .has-sub { display: block; padding: 8px 14px; border-radius: 6px; color: var(--ziyit-text-primary); font-size: 14px; text-decoration: none; cursor: pointer; transition: color .2s, background .2s; }
+        .site-nav-menu > li > a:hover, .site-nav-menu > .has-sub:hover { color: var(--ziyit-primary); background: var(--ziyit-bg-hover); }
+        .site-nav-menu .line { width: 1px; height: 20px; background: var(--ziyit-border); margin: 0 10px; }
+        /* 二级下拉（hover 展开） */
+        .site-nav-menu ul { display: none; position: absolute; top: 100%; left: 0; margin-top: 6px; min-width: 190px; padding: 6px; background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); border-radius: 8px; box-shadow: 0 8px 20px rgba(0, 0, 0, .18); list-style: none; z-index: 20; }
+        .site-nav-menu > li:hover > ul { display: block; }
+        /* 桥接 li 与下拉面板之间 6px 空隙：鼠标移入时 hover 不中断，可正常点击下拉项 */
+        .site-nav-menu ul::before { content: ''; position: absolute; top: -6px; left: 0; right: 0; height: 6px; }
+        .site-nav-menu ul a { display: block; padding: 8px 12px; border-radius: 6px; color: var(--ziyit-text-primary); font-size: 13px; text-decoration: none; transition: color .2s, background .2s; }
+        .site-nav-menu ul a:hover { color: var(--ziyit-primary); background: var(--ziyit-bg-hover); }
+        /* 移动端：汉堡按钮 + 折叠菜单 */
+        .site-nav-toggle { display: none; background: none; border: 0; color: var(--ziyit-text-primary); font-size: 22px; line-height: 1; padding: 4px 8px; cursor: pointer; }
+        @media (max-width: 768px) {
+            .site-nav-toggle { display: block; }
+            .site-nav-menu { display: none; flex-direction: column; align-items: stretch; position: absolute; top: 52px; left: 0; right: 0; background: var(--ziyit-bg-card); border-bottom: 1px solid var(--ziyit-border); padding: 8px 16px 16px; box-shadow: 0 8px 20px rgba(0, 0, 0, .18); }
+            .site-nav-menu.open { display: flex; }
+            .site-nav-menu > li { margin: 0; }
+            .site-nav-menu .line { display: none; }
+            .site-nav-menu ul { position: static; margin: 4px 0 4px 14px; box-shadow: none; background: transparent; }
+            .site-nav-menu ul::before { display: none; }
+            .site-nav-menu.open ul { display: block; }
+        }
+
+        /* ============ 模态框（DESIGN.md §4.7） ============ */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100;
+            display: none; align-items: center; justify-content: center; padding: 16px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--ziyit-bg-card); border-radius: 8px; width: 90%; max-width: 480px; padding: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.2); animation: fadeUp .2s ease;
+        }
+        .modal h3 { font-size: 22px; line-height: 1.4; font-weight: 600; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .modal .close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--ziyit-text-secondary); line-height: 1; padding: 4px; }
+        .modal .close:hover { color: var(--ziyit-text-primary); }
+        .modal .body { font-size: 15px; color: var(--ziyit-text-secondary); margin-bottom: 20px; }
+        .modal .foot { display: flex; justify-content: flex-end; gap: 8px; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+        /* ============ 表格（DESIGN.md §4.8） ============ */
+        .table-wrap { border: 1px solid var(--ziyit-border-light); border-radius: 8px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        thead th { background: var(--ziyit-bg); color: var(--ziyit-text-secondary); font-size: 13px; font-weight: 400; text-align: left; padding: 10px 12px; height: 40px; }
+        tbody td { padding: 12px; height: 44px; border-top: 1px solid var(--ziyit-border-light); }
+        tbody tr:nth-child(even) { background: #fafafa; }
+        tbody tr:hover { background: var(--ziyit-bg-hover); }
+        tbody td .ops { display: flex; gap: 8px; justify-content: flex-end; }
+
+        /* ============ 标签与徽章（DESIGN.md §4.10） ============ */
+        .tag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; font-size: 13px; margin-right: 8px; }
+        .tag.vip { background: var(--ziyit-accent); color: #fff; }
+        .tag.ban { background: #fdecee; color: var(--ziyit-danger); }
+        .tag.normal { background: var(--ziyit-bg); color: var(--ziyit-text-secondary); }
+        .tag.primary { background: var(--ziyit-primary-light); color: var(--ziyit-primary); }
+        .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 50%; background: var(--ziyit-primary); color: #fff; font-size: 12px; }
+
+        /* ============ 分页（DESIGN.md §4.11） ============ */
+        .pagination { display: flex; gap: 4px; align-items: center; }
+        .pagination button { width: 32px; height: 32px; border: none; border-radius: 6px; background: transparent; color: var(--ziyit-text-primary); font-size: 14px; cursor: pointer; transition: background .2s, color .2s; }
+        .pagination button:hover { background: var(--ziyit-bg-hover); }
+        .pagination button.active { background: var(--ziyit-primary); color: #fff; }
+        .pagination button:disabled { color: var(--ziyit-text-disabled); cursor: not-allowed; background: transparent; }
+
+        /* ============ 加载（DESIGN.md §4.12） ============ */
+        /* 主加载指示器：ZIYIT 品牌主题 + Cloudflare 风格左右滑动加载条 */
+        .ziyit-loader { text-align: center; }
+        .ziyit-loader .loader-title {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            font-size: 20px; font-weight: 700; letter-spacing: 6px;
+            color: var(--ziyit-primary); margin-bottom: 12px;
+        }
+        .ziyit-loader .loader-logo { width: 22px; height: 22px; object-fit: contain; }
+        .ziyit-loader .loader-bar {
+            width: 300px; height: 4px; border-radius: 2px;
+            background: var(--ziyit-primary-light); overflow: hidden;
+            position: relative; margin: 0 auto;
+        }
+        .ziyit-loader .loader-fill {
+            position: absolute; top: 0; left: 0; width: 35%; height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--ziyit-primary), var(--ziyit-primary-dark));
+            animation: loaderSlide 2s infinite;
+        }
+        /* 往返滑动，每次行程滑出轨道完全消失后停留 0.1s 再折返：
+           去程 0→45% 时间（左外→滑过轨道→右外消失）→ 停留 0.1s(45→50%)
+           回程 50→95% 时间（右外→滑回→左外消失）→ 停留 0.1s(95→100%)，循环
+           速度与拉伸联动：速度:拉伸 = 7.5%:2.5%（3:1），速度越快滑块被拉得越长
+           基准宽 35%，行程速度 45%→100%（增量 55%）→ 拉伸 55%×(2.5/7.5)≈18.3%
+           最大宽 35%+18.3%≈53.3%，scaleX 最大 = 53.3/35 ≈ 1.524
+           停留段（45→50% / 95→100%）速度归零 → 缩回 35%
+           cubic-bezier(0.33,0.45,0.67,0)：起点斜率 1.35(=45%) → 终点斜率 3(=100%) */
+        @keyframes loaderSlide {
+            0%   { transform: translateX(-100%) scaleX(1);    animation-timing-function: cubic-bezier(0.33, 0.45, 0.67, 0); }
+            45%  { transform: translateX(260%)  scaleX(1.524); }
+            50%  { transform: translateX(260%)  scaleX(1);    animation-timing-function: cubic-bezier(0.33, 0.45, 0.67, 0); }
+            95%  { transform: translateX(-100%) scaleX(1.524); }
+            100% { transform: translateX(-100%) scaleX(1); }
+        }
+        .skeleton { background: #ececec; border-radius: 6px; animation: pulse 1.2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+        .skeleton-line { height: 14px; margin-bottom: 10px; }
+
+        /* ============ 空状态（DESIGN.md §4.13） ============ */
+        .empty { text-align: center; padding: 40px 20px; }
+        .empty .icon { font-size: 48px; color: #cccccc; }
+        .empty .icon img { width: 48px; height: 48px; object-fit: contain; }
+        .empty h4 { font-size: 16px; font-weight: 600; margin: 12px 0 4px; color: var(--ziyit-text-primary); }
+        .empty p { font-size: 13px; color: var(--ziyit-text-secondary); margin-bottom: 16px; }
+
+        /* ============ Toast（DESIGN.md §4.9） ============ */
+        #toast-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+        .toast {
+            display: flex; align-items: center; gap: 8px; background: rgba(51,51,51,.92); color: #fff;
+            padding: 10px 20px; border-radius: 6px; font-size: 14px; pointer-events: auto;
+            border-left: 4px solid var(--ziyit-info); animation: fadeUp .2s ease; max-width: 360px;
+        }
+        .toast.ok { border-left-color: var(--ziyit-success); }
+        .toast.err { border-left-color: var(--ziyit-danger); }
+        .toast .x { background: none; border: none; color: rgba(255,255,255,.7); cursor: pointer; font-size: 14px; margin-left: 8px; }
+
+        /* ============ 图标尺寸 ============ */
+        .icons { display: flex; gap: 32px; align-items: flex-end; flex-wrap: wrap; }
+        .icons .ic { text-align: center; color: var(--ziyit-primary); }
+        .icons .ic span { display: block; font-size: 12px; color: var(--ziyit-text-secondary); margin-top: 6px; }
+
+        /* ============ 阴影层级 ============ */
+        .elev { padding: 16px; border-radius: 8px; background: var(--ziyit-bg-card); text-align: center; font-size: 13px; color: var(--ziyit-text-secondary); }
+        .e1 { box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+        .e2 { box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+        .e3 { box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+
+        footer { text-align: center; font-size: 12px; color: var(--ziyit-text-secondary); padding: 24px 0 40px; }
+
+        /* ============ 深色模式（DESIGN.md §2.4 / §4.14） ============ */
+        /* 仅交换中性色 token 与功能性浅底，品牌主色保持不变 */
+        [data-theme="dark"] {
+            --ziyit-bg: #16181d;
+            --ziyit-bg-card: #1f2229;
+            --ziyit-bg-hover: #262a33;
+            --ziyit-text-primary: #e6e6e6;
+            --ziyit-text-secondary: #a8adb8;
+            --ziyit-text-disabled: #6b7078;
+            --ziyit-border: #3a3f48;
+            --ziyit-border-light: #2c3038;
+            --ziyit-primary-light: rgba(0, 120, 212, .18);
+            color-scheme: dark; /* 原生控件（输入框/下拉/滚动条等）随主题渲染 */
+        }
+        /* 深色模式下仍需修正的硬编码浅色 */
+        [data-theme="dark"] code { background: #2a2e36; color: #c9d1d9; }
+        [data-theme="dark"] tbody tr:nth-child(even) { background: #23262d; }
+        [data-theme="dark"] .input:disabled, [data-theme="dark"] .select:disabled { background: #23262d; }
+        [data-theme="dark"] .skeleton { background: #2a2e36; }
+        [data-theme="dark"] .empty .icon { color: #4a4f58; }
+        [data-theme="dark"] .tag.ban { background: rgba(242, 87, 103, .14); color: #f08997; }
+        [data-theme="dark"] .tag.normal { background: #23262d; }
+        [data-theme="dark"] .hero { background: linear-gradient(135deg, #0b4d80, #07385f); }
+
+        /* ============ 主题切换（DESIGN.md §4.14） ============ */
+        .theme-switch { display: inline-flex; align-items: center; gap: 4px; padding: 4px; background: var(--ziyit-bg); border: 1px solid var(--ziyit-border-light); border-radius: 8px; }
+        .theme-opt {
+            display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px;
+            border: none; border-radius: 6px; background: transparent; font-family: inherit;
+            color: var(--ziyit-text-secondary); font-size: 14px; cursor: pointer;
+            transition: background .2s, color .2s;
+        }
+        .theme-opt svg { width: 16px; height: 16px; flex-shrink: 0; }
+        .theme-opt:hover { background: var(--ziyit-bg-hover); color: var(--ziyit-text-primary); }
+        .theme-opt.active { background: var(--ziyit-primary); color: #fff; }
+        .theme-opt:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ziyit-primary-light); }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition: none !important; animation: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 页面级导航（参照 index.html .top-bar 结构，DESIGN.md §4.6） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <a class="site-nav-brand" href="../index.html"><span class="logo-mark">Z</span>ZIYIT</a>
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu">
+                <li class="has-sub">功能区
+                    <ul>
+                        <li><a href="../download/">下载</a></li>
+                        <li><a href="../move/">更多</a></li>
+                        <li><a href="../search">搜索</a></li>
+                        <li><a href="../music/">音乐</a></li>
+                        <li><a href="../Translator">巨硬翻译</a></li>
+                        <li><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line"></li>
+                <li class="has-sub">开发者
+                    <ul>
+                        <li><a href="../developers/">日志</a></li>
+                        <li><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line"></li>
+                <li class="has-sub">图书馆
+                    <ul>
+                        <li><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li><a href="../backrooms/">Backrooms Wiki</a></li>
+                    </ul>
+                </li>
+                <li class="line"></li>
+                <li><a href="../user">用户中心</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ===== Hero：品牌渐变（§2.3） ===== -->
+    <div class="hero">
+        <h1>ZIYIT STUDIO UI 设计体系</h1>
+        <p>DESIGN.md v1.1 · 全站视觉与交互标准 · 控件测试页</p>
+        <span class="tag">科技 · 创造 · 无限可能</span>
+    </div>
+
+    <div class="page">
+
+        <!-- ===== 色彩系统 ===== -->
+        <div class="section" id="color">
+            <h2>2. 色彩系统</h2>
+            <p class="desc">品牌主色、强调色、功能色与中性色 Token（DESIGN.md §2）。</p>
+            <div class="swatches">
+                <div class="swatch"><div class="block" style="background:#0078d4"></div><div class="info"><b>--ziyit-primary</b>#0078d4 · 主色</div></div>
+                <div class="swatch"><div class="block" style="background:#005a9e"></div><div class="info"><b>--ziyit-primary-dark</b>#005a9e · 主色深</div></div>
+                <div class="swatch"><div class="block" style="background:#e8f3fb"></div><div class="info"><b>--ziyit-primary-light</b>#e8f3fb · 主色浅底</div></div>
+                <div class="swatch"><div class="block" style="background:#66e656"></div><div class="info"><b>--ziyit-accent</b>#66e656 · 强调</div></div>
+                <div class="swatch"><div class="block" style="background:#28a745"></div><div class="info"><b>--ziyit-accent-dark</b>#28a745 · 强调深</div></div>
+                <div class="swatch"><div class="block" style="background:#12b7f5"></div><div class="info"><b>--ziyit-info</b>#12b7f5 · 信息</div></div>
+                <div class="swatch"><div class="block" style="background:#f3a707"></div><div class="info"><b>--ziyit-warning</b>#f3a707 · 警告</div></div>
+                <div class="swatch"><div class="block" style="background:#f25767"></div><div class="info"><b>--ziyit-danger</b>#f25767 · 错误</div></div>
+                <div class="swatch"><div class="block" style="background:#28a745"></div><div class="info"><b>--ziyit-success</b>#28a745 · 成功</div></div>
+                <div class="swatch"><div class="block" style="background:#333333"></div><div class="info"><b>--ziyit-text-primary</b>#333333 · 主文字</div></div>
+                <div class="swatch"><div class="block" style="background:#666666"></div><div class="info"><b>--ziyit-text-secondary</b>#666666 · 次要</div></div>
+                <div class="swatch"><div class="block" style="background:#999999"></div><div class="info"><b>--ziyit-text-disabled</b>#999999 · 禁用</div></div>
+                <div class="swatch"><div class="block" style="background:#dddddd"></div><div class="info"><b>--ziyit-border</b>#dddddd · 边框</div></div>
+                <div class="swatch"><div class="block" style="background:#eeeeee"></div><div class="info"><b>--ziyit-border-light</b>#eeeeee · 浅边</div></div>
+                <div class="swatch"><div class="block" style="background:#f5f5f5;border-bottom:1px solid #eee"></div><div class="info"><b>--ziyit-bg</b>#f5f5f5 · 页面背景</div></div>
+                <div class="swatch"><div class="block" style="background:#f0f7fc"></div><div class="info"><b>--ziyit-bg-hover</b>#f0f7fc · 悬停底</div></div>
+            </div>
+            <div class="row" style="margin-top:20px">
+                <span class="caption">标准品牌渐变（Hero / Banner）：</span>
+                <div style="width:320px;height:48px;border-radius:8px;background:linear-gradient(135deg,#0078d4,#005a9e)"></div>
+                <div style="width:320px;height:48px;border-radius:8px;background:linear-gradient(135deg,#ffffff,#f0f7fc);border:1px solid #eee"></div>
+            </div>
+        </div>
+
+        <!-- ===== 排版 ===== -->
+        <div class="section" id="type">
+            <h2>3. 排版层级</h2>
+            <p class="desc">字号 / 行高 / 字重规范（DESIGN.md §3）。</p>
+            <div class="panel">
+                <div class="type-sample"><span class="lbl">Display · 36px</span><span style="font-size:36px;line-height:1.3;font-weight:700">科技 · 创造 · 无限可能</span></div>
+                <div class="type-sample"><span class="lbl">H1 · 28px/700</span><h1 style="font-size:28px;line-height:1.4;font-weight:700">下载中心</h1></div>
+                <div class="type-sample"><span class="lbl">H2 · 22px/600</span><h2 style="font-size:22px;line-height:1.4;font-weight:600">区块标题示例</h2></div>
+                <div class="type-sample"><span class="lbl">H3 · 18px/600</span><h3 style="font-size:18px;line-height:1.5;font-weight:600">卡片标题示例</h3></div>
+                <div class="type-sample"><span class="lbl">正文 · 15px</span><p style="font-size:15px;line-height:1.6">这是默认正文样式，用于主要内容的阅读与描述，行高保持 1.6 以获得良好可读性。</p></div>
+                <div class="type-sample"><span class="lbl">辅助 · 13px</span><span style="font-size:13px;line-height:1.5;color:var(--ziyit-text-secondary)">辅助文字：时间戳、说明、元信息示例</span></div>
+                <div class="type-sample"><span class="lbl">小字 · 12px</span><span style="font-size:12px;line-height:1.4;color:var(--ziyit-text-disabled)">© 2026 ZIYIT STUDIO</span></div>
+            </div>
+        </div>
+
+        <!-- ===== 按钮 ===== -->
+        <div class="section" id="buttons">
+            <h2>4.1 按钮</h2>
+            <p class="desc">五种类型 × 三种规格 + 禁用 + 加载态（DESIGN.md §4.1）。</p>
+            <div class="panel">
+                <div class="row"><span class="caption">类型：</span></div>
+                <div class="row">
+                    <button class="btn btn-primary">主按钮</button>
+                    <button class="btn btn-secondary">次按钮</button>
+                    <button class="btn btn-text">文字按钮</button>
+                    <button class="btn btn-danger">危险按钮</button>
+                    <button class="btn btn-success">成功按钮</button>
+                </div>
+                <div class="row"><span class="caption">规格（大号 44px / 默认 36px / 小号 28px）：</span></div>
+                <div class="row">
+                    <button class="btn btn-primary btn-lg">大号按钮</button>
+                    <button class="btn btn-primary">默认按钮</button>
+                    <button class="btn btn-primary btn-sm">小号按钮</button>
+                </div>
+                <div class="row"><span class="caption">禁用与加载态：</span></div>
+                <div class="row">
+                    <button class="btn btn-primary" disabled>禁用主按钮</button>
+                    <button class="btn btn-danger" disabled>禁用危险按钮</button>
+                    <button class="btn btn-primary" id="btnLoading" onclick="demoLoading(this)"><span class="spinner"></span>加载中…</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 表单 ===== -->
+        <div class="section" id="form">
+            <h2>4.2-4.4 表单控件</h2>
+            <p class="desc">输入框状态、下拉、复选框 / 单选框 / 开关（DESIGN.md §4.2-4.4）。</p>
+            <div class="panel">
+                <div class="row vtop" style="gap:40px">
+                    <div style="flex:1;min-width:280px">
+                        <div class="form-group"><label for="i-default">默认输入框</label><input class="input" id="i-default" placeholder="请输入内容" style="max-width:360px"></div>
+                        <div class="form-group"><label for="i-err">错误状态</label><input class="input error" id="i-err" value="12345"><div class="field-msg error">请输入正确的邮箱地址</div></div>
+                        <div class="form-group"><label for="i-ok">成功状态</label><input class="input success" id="i-ok" value="ziyit@example.com"><div class="field-msg ok">校验通过</div></div>
+                        <div class="form-group"><label for="i-dis">禁用状态</label><input class="input" id="i-dis" value="不可编辑" disabled></div>
+                    </div>
+                    <div style="flex:1;min-width:280px">
+                        <div class="form-group"><label for="sel">下拉选择</label>
+                            <select class="select" id="sel" style="max-width:360px">
+                                <option>中文</option><option>英文</option><option>日语</option><option>德语</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><span class="caption" style="display:block;margin-bottom:8px">复选框 / 单选框：</span>
+                            <label class="check"><input type="checkbox" checked>记住登录状态</label>
+                            <label class="check"><input type="checkbox">接收更新通知</label>
+                        </div>
+                        <div class="form-group"><label class="radio"><input type="radio" name="r" checked>自动更新</label>
+                            <label class="radio"><input type="radio" name="r">手动更新</label>
+                        </div>
+                        <div class="form-group"><span class="caption" style="display:block;margin-bottom:8px">开关（点击 / 键盘 Tab+Space 均可切换；右侧中文文本为功能用途说明，控件内部不含文字）：</span>
+                            <label class="switch" data-name="自动更新"><input type="checkbox" id="sw-auto" checked><span class="track"></span><span class="switch-label">自动更新</span></label>
+                            <label class="switch" data-name="接收通知"><input type="checkbox" id="sw-notify"><span class="track"></span><span class="switch-label">接收通知</span></label>
+                            <label class="switch"><input type="checkbox" disabled><span class="track"></span><span class="switch-label">夜间模式</span></label>
+                        </div>
+                        <div class="form-group"><span class="caption" style="display:block;margin-bottom:8px">功能联动：关闭"自动更新"后，下方输入框自动禁用</span>
+                            <label for="i-update" class="field-msg" style="display:block;margin-bottom:6px;color:var(--ziyit-text-secondary);font-size:13px">更新间隔（分钟）</label>
+                            <input class="input" id="i-update" value="30" style="max-width:360px">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 卡片 ===== -->
+        <div class="section" id="cards">
+            <h2>4.5 卡片</h2>
+            <p class="desc">普通卡片与可点击卡片（DESIGN.md §4.5）。</p>
+            <div class="cards">
+                <div class="card">
+                    <h3>Release Control</h3>
+                    <p>系统工具与 MOD / DLC 下载中心，支持授权验证与自动更新。</p>
+                    <div class="actions"><button class="btn btn-primary btn-sm">进入</button></div>
+                </div>
+                <div class="card">
+                    <h3>人机验证</h3>
+                    <p>基于密钥校验的安全验证服务，保护你的应用免受滥用。</p>
+                    <div class="actions"><button class="btn btn-secondary btn-sm">查看文档</button></div>
+                </div>
+                <div class="card clickable" onclick="showToast('ok','点击了可交互卡片')">
+                    <h3>ModWiki</h3>
+                    <p>Minecraft 模组维基百科（可点击卡片：hover 抬升）。</p>
+                    <div class="actions"><span style="font-size:13px;color:var(--ziyit-primary)">了解更多 →</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 导航 ===== -->
+        <div class="section" id="nav">
+            <h2>4.6 导航</h2>
+            <p class="desc">顶部导航 / 侧边栏 / 下拉菜单 / 移动端折叠（DESIGN.md §4.6）。</p>
+            <div class="panel" style="padding:0;overflow:hidden">
+                <div class="topbar">
+                    <div class="logo"><span class="logo-mark">Z</span>ZIYIT STUDIO</div>
+                    <nav>
+                        <a class="active" href="#">首页</a>
+                        <a href="#">下载</a>
+                        <a href="#">音乐</a>
+                        <a href="#">搜索</a>
+                        <div class="dropdown">
+                            <a href="#">功能区 ▾</a>
+                            <div class="dropdown-menu">
+                                <a href="#">用户中心</a>
+                                <a href="#">更多工具</a>
+                                <div class="sep"></div>
+                                <a href="#">管理后台</a>
+                            </div>
+                        </div>
+                    </nav>
+                    <div class="user"><span class="avatar">管</span><span style="font-size:14px">管理员</span></div>
+                </div>
+                <div style="padding:16px 20px">
+                    <div class="layout-demo">
+                        <div class="sidebar">
+                            <div class="group">管理</div>
+                            <div class="item active">音乐管理</div>
+                            <div class="item">用户管理</div>
+                            <div class="item">API Key</div>
+                            <div class="item">日志查看</div>
+                            <div class="group">其他</div>
+                            <div class="item">返回</div>
+                        </div>
+                        <div style="flex:1;border:1px dashed var(--ziyit-border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--ziyit-text-disabled);min-height:180px">内容区（桌面端显示侧边栏，≤768px 自动单列）</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 模态框 ===== -->
+        <div class="section" id="modal">
+            <h2>4.7 模态框</h2>
+            <p class="desc">打开演示：遮罩淡入 + 面板上移淡入；Esc / 遮罩 / 取消关闭（DESIGN.md §4.7）。</p>
+            <div class="panel">
+                <div class="row">
+                    <button class="btn btn-primary" onclick="openModal('normal')">打开普通模态框</button>
+                    <button class="btn btn-danger" onclick="openModal('danger')">打开危险确认框</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 表格 ===== -->
+        <div class="section" id="table">
+            <h2>4.8 表格</h2>
+            <p class="desc">表头 / 斑马纹 / 行悬停 / 操作列（DESIGN.md §4.8）。</p>
+            <div class="panel">
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>用户名</th><th>角色</th><th>状态</th><th>注册时间</th><th style="text-align:right">操作</th></tr></thead>
+                        <tbody>
+                            <tr><td>Minecraft_zy227</td><td><span class="tag vip">VIP</span></td><td>正常</td><td>2025-06-12</td><td><div class="ops"><button class="btn btn-text btn-sm">编辑</button><button class="btn btn-text btn-sm" style="color:var(--ziyit-danger)">删除</button></div></td></tr>
+                            <tr><td>ziyit_user</td><td><span class="tag normal">普通</span></td><td>正常</td><td>2026-01-03</td><td><div class="ops"><button class="btn btn-text btn-sm">编辑</button><button class="btn btn-text btn-sm" style="color:var(--ziyit-danger)">删除</button></div></td></tr>
+                            <tr><td>test_104</td><td><span class="tag normal">普通</span></td><td><span class="tag ban">已封禁</span></td><td>2026-03-21</td><td><div class="ops"><button class="btn btn-text btn-sm">解封</button><button class="btn btn-text btn-sm" style="color:var(--ziyit-danger)">删除</button></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row" style="justify-content:space-between;margin-top:16px">
+                    <span style="font-size:13px;color:var(--ziyit-text-secondary)">共 104 条记录</span>
+                    <div class="pagination">
+                        <button disabled>«</button><button class="active">1</button><button>2</button><button>3</button><button>…</button><button>20</button><button>»</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 标签与徽章 ===== -->
+        <div class="section" id="tags">
+            <h2>4.10 标签与徽章</h2>
+            <p class="desc">VIP / 封禁 / 普通 / 主色标签 与 计数徽章（DESIGN.md §4.10）。</p>
+            <div class="panel">
+                <div class="row">
+                    <span class="tag vip">VIP</span>
+                    <span class="tag ban">已封禁</span>
+                    <span class="tag normal">普通</span>
+                    <span class="tag primary">DLC</span>
+                    <span>消息</span><span class="badge">12</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 加载 ===== -->
+        <div class="section" id="loading">
+            <h2>4.12 加载指示器</h2>
+            <p class="desc">主加载指示器/ 骨架屏 / 按钮加载（DESIGN.md §4.12）。</p>
+            <div class="panel">
+                <div class="row">
+                    <div class="ziyit-loader">
+                        <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                        <div class="loader-bar"><div class="loader-fill"></div></div>
+                    </div>
+                    <button class="btn btn-secondary" id="btnSkeleton" onclick="toggleSkeleton(this)">显示骨架屏</button>
+                </div>
+                <div id="skeletonArea" style="display:none;margin-top:16px;max-width:400px">
+                    <div class="skeleton skeleton-line" style="width:40%"></div>
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line" style="width:80%"></div>
+                    <div class="skeleton skeleton-line" style="width:60%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 空状态 ===== -->
+        <div class="section" id="empty">
+            <h2>4.13 空状态</h2>
+            <p class="desc">无数据引导，必须提供下一步动作（DESIGN.md §4.13）。</p>
+            <div class="panel">
+                <div class="empty">
+                    <div class="icon"><img src="../assets/scr.ico" alt="搜索"></div>
+                    <h4>未找到匹配的 MOD</h4>
+                    <p>试试更换关键词，或浏览全部 MOD</p>
+                    <button class="btn btn-primary">浏览全部 MOD</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 主题切换 ===== -->
+        <div class="section" id="theme">
+            <h2>4.14 主题切换</h2>
+            <p class="desc">浅色 / 深色 / 跟随系统（DESIGN.md §4.14）。偏好自动保存至 cookie（key：ziyit-theme，有效期 1 年），刷新后保持；"跟随系统"实时响应系统设置。</p>
+            <div class="panel">
+                <div class="row">
+                    <div class="theme-switch" role="radiogroup" aria-label="主题切换">
+                        <button type="button" class="theme-opt active" data-theme-opt="light" role="radio" aria-checked="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                            浅色
+                        </button>
+                        <button type="button" class="theme-opt" data-theme-opt="dark" role="radio" aria-checked="false">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                            深色
+                        </button>
+                        <button type="button" class="theme-opt" data-theme-opt="auto" role="radio" aria-checked="false">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                            跟随系统
+                        </button>
+                    </div>
+                </div>
+                <div class="row"><span class="caption" id="theme-desc">当前：浅色模式</span></div>
+                <div class="row"><span class="caption">实现要点：① 仅交换中性色 token，品牌主色不变；② 深色模式同时修正 code / 表格斑马纹 / 禁用输入框 / 骨架屏等硬编码浅色；③ 监听 <code>prefers-color-scheme</code>，系统切换时"跟随系统"模式自动响应。</span></div>
+            </div>
+        </div>
+
+        <!-- ===== Toast ===== -->
+        <div class="section" id="toast">
+            <h2>4.9 Toast 提示</h2>
+            <p class="desc">成功 / 错误 / 信息，自动消失，替代 alert()（DESIGN.md §4.9）。</p>
+            <div class="panel">
+                <div class="row">
+                    <button class="btn btn-success" onclick="showToast('ok','保存成功')">成功 Toast</button>
+                    <button class="btn btn-danger" onclick="showToast('err','网络连接失败，请重试')">错误 Toast</button>
+                    <button class="btn btn-secondary" onclick="showToast('info','该操作需要管理员权限')">信息 Toast</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 图标 ===== -->
+        <div class="section" id="icons">
+            <h2>5. 图标系统</h2>
+            <p class="desc">线性风格，四档尺寸（DESIGN.md §5）。</p>
+            <div class="panel">
+                <div class="icons">
+                    <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8"/><path d="M12 12v8"/></svg><span>16px · 行内</span></div>
+                    <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8"/><path d="M12 12v8"/></svg><span>24px · 按钮</span></div>
+                    <div class="ic"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8"/><path d="M12 12v8"/></svg><span>32px · 标题</span></div>
+                    <div class="ic"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#cccccc"><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8"/><path d="M12 12v8"/></svg><span>48px · 空态</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 阴影 ===== -->
+        <div class="section" id="elevation">
+            <h2>7. 深度与层级</h2>
+            <p class="desc">Elevation 1-3 阴影系统（DESIGN.md §7）。</p>
+            <div class="row">
+                <div class="elev e1" style="flex:1">Elevation 1<br>卡片默认</div>
+                <div class="elev e2" style="flex:1">Elevation 2<br>下拉 / 悬浮</div>
+                <div class="elev e3" style="flex:1">Elevation 3<br>模态框</div>
+            </div>
+        </div>
+
+        <footer>© 2026 ZIYIT STUDIO · 设计体系测试页 v1.9 · 本页 noindex</footer>
+    </div>
+
+    <!-- ===== 模态框 ===== -->
+    <div class="modal-overlay" id="modal-normal">
+        <div class="modal">
+            <h3>编辑用户信息 <button class="close" onclick="closeModal('modal-normal')">×</button></h3>
+            <div class="body">
+                <div class="form-group"><label for="m-name">用户名</label><input class="input" id="m-name" value="Minecraft_zy227"></div>
+                <div class="form-group"><label for="m-role">角色</label>
+                    <select class="select" id="m-role"><option>VIP</option><option>普通</option><option>管理员</option></select>
+                </div>
+            </div>
+            <div class="foot">
+                <button class="btn btn-secondary" onclick="closeModal('modal-normal')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('modal-normal');showToast('ok','用户信息已保存')">确认保存</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="modal-danger">
+        <div class="modal">
+            <h3>确认删除用户 <button class="close" onclick="closeModal('modal-danger')">×</button></h3>
+            <div class="body">删除后该用户将无法登录，此操作不可撤销。确定要删除用户 <b>test_104</b> 吗？</div>
+            <div class="foot">
+                <button class="btn btn-secondary" onclick="closeModal('modal-danger')">取消</button>
+                <button class="btn btn-danger" onclick="closeModal('modal-danger');showToast('err','该用户已被删除')">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-box"></div>
+
+    <script>
+        // ===== 模态框：Esc 关闭 =====
+        function openModal(id) { document.getElementById('modal-' + id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        });
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.classList.remove('active'); });
+        });
+
+        // ===== Toast =====
+        function showToast(type, text) {
+            var box = document.getElementById('toast-box');
+            var t = document.createElement('div');
+            t.className = 'toast ' + (type === 'ok' ? 'ok' : type === 'err' ? 'err' : '');
+            t.innerHTML = text + '<button class="x" onclick="this.parentNode.remove()">×</button>';
+            box.appendChild(t);
+            while (box.children.length > 3) box.removeChild(box.firstChild);
+            setTimeout(function () { t.remove(); }, type === 'ok' ? 2000 : 4000);
+        }
+
+        // ===== 按钮加载演示 =====
+        function demoLoading(btn) {
+            var html = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner"></span>提交中…';
+            btn.disabled = true;
+            setTimeout(function () {
+                btn.innerHTML = html;
+                btn.disabled = false;
+                showToast('ok', '操作成功');
+            }, 1500);
+        }
+
+        // ===== 骨架屏演示 =====
+        function toggleSkeleton(btn) {
+            var area = document.getElementById('skeletonArea');
+            if (area.style.display === 'none') {
+                area.style.display = 'block';
+                btn.textContent = '隐藏骨架屏';
+            } else {
+                area.style.display = 'none';
+                btn.textContent = '显示骨架屏';
+            }
+        }
+
+        // ===== 页面导航：移动端汉堡菜单折叠 =====
+        (function () {
+            var toggle = document.querySelector('.site-nav-toggle');
+            if (!toggle) return;
+            toggle.addEventListener('click', function () {
+                var menu = document.querySelector('.site-nav-menu');
+                if (menu) menu.classList.toggle('open');
+            });
+        })();
+
+        // ===== 主题切换（浅色 / 深色 / 跟随系统，DESIGN.md §4.14） =====
+        // cookie 读写工具（偏好 key: ziyit-theme，有效期 1 年）
+        function getCookie(name) {
+            var m = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
+            return m ? decodeURIComponent(m[1]) : '';
+        }
+        function setCookie(name, value, days) {
+            var d = new Date();
+            d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+            document.cookie = name + '=' + encodeURIComponent(value) + '; path=/; expires=' + d.toUTCString();
+        }
+        var themeMedia = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+        // 根据偏好解析实际配色：auto 跟随系统
+        function resolveTheme(pref) {
+            return (pref === 'dark' || (pref === 'auto' && themeMedia && themeMedia.matches)) ? 'dark' : 'light';
+        }
+        function applyTheme(pref) {
+            document.documentElement.setAttribute('data-theme', resolveTheme(pref));
+            document.documentElement.setAttribute('data-theme-pref', pref);
+            updateThemeUI();
+        }
+        function setTheme(pref) {
+            try { setCookie('ziyit-theme', pref, 365); } catch (e) { }
+            applyTheme(pref);
+        }
+        function updateThemeUI() {
+            var pref = document.documentElement.getAttribute('data-theme-pref') || 'auto';
+            document.querySelectorAll('.theme-opt').forEach(function (b) {
+                var on = b.getAttribute('data-theme-opt') === pref;
+                b.classList.toggle('active', on);
+                b.setAttribute('aria-checked', on ? 'true' : 'false');
+            });
+            var resolved = document.documentElement.getAttribute('data-theme');
+            var name = resolved === 'dark' ? '深色模式' : '浅色模式';
+            var desc = document.getElementById('theme-desc');
+            if (desc) desc.textContent = pref === 'auto' ? '当前偏好：跟随系统（系统为' + name + '）' : '当前偏好：' + name;
+        }
+        document.querySelectorAll('.theme-opt').forEach(function (b) {
+            b.addEventListener('click', function () { setTheme(b.getAttribute('data-theme-opt')); });
+        });
+        // 系统主题变化时，"跟随系统"模式自动响应（其他偏好不受影响）
+        if (themeMedia) {
+            themeMedia.addEventListener('change', function () {
+                var pref = document.documentElement.getAttribute('data-theme-pref') || 'auto';
+                if (pref === 'auto') applyTheme(pref);
+            });
+        }
+        updateThemeUI();
+
+        // ===== 开关演示：切换反馈 + 功能联动（标签为固定功能用途文本，不做状态翻转） =====
+        document.querySelectorAll('.switch input').forEach(function (input) {
+            input.addEventListener('change', function () {
+                var name = input.closest('.switch').getAttribute('data-name') || '开关';
+                showToast(input.checked ? 'ok' : 'info', name + '：' + (input.checked ? '已开启' : '已关闭'));
+            });
+        });
+        // 联动示例：自动更新开关控制输入框禁用状态
+        var swAuto = document.getElementById('sw-auto');
+        var iUpdate = document.getElementById('i-update');
+        if (swAuto && iUpdate) {
+            var syncUpdate = function () { iUpdate.disabled = !swAuto.checked; };
+            swAuto.addEventListener('change', syncUpdate);
+            syncUpdate();
+        }
+    </script>
+</body>
+</html>

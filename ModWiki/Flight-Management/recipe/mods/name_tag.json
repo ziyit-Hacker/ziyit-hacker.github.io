@@ -1,0 +1,14 @@
+{
+    "type": "crafting_shapeless",
+    "category": "redstone",
+    "group": "name_tag",
+    "ingredients": [
+        "minecraft:paper",
+        "minecraft:iron_nugget"
+    ],
+    "result": {
+        "id": "minecraft:name_tag",
+        "count": 1
+    },
+    "show_notification": true
+}

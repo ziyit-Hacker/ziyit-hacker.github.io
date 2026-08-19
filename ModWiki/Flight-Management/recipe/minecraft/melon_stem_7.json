@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "melon stem 7",
+    "ingredients": [
+        "flyconfig:metal_scrap",
+        "flyconfig:synthetic_motoroil",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:melon_stem_7",
+        "count": 1
+    },
+    "show_notification": true
+}

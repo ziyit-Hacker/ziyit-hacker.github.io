@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>音乐分享 - ZIYIT STUDIO</title>
+    <meta name="description" content="ZIYIT STUDIO 在线音乐分享与播放列表。">
+    <meta name="keywords" content="ZIYIT,音乐,在线播放,歌单">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/music/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ZIYIT STUDIO">
+    <meta property="og:title" content="音乐分享 - ZIYIT STUDIO">
+    <meta property="og:description" content="ZIYIT STUDIO 在线音乐分享与播放列表。">
+    <meta property="og:url" content="https://ziyit-hacker.github.io/music/">
+    <meta property="og:image" content="https://ziyit-hacker.github.io/assets/ziyit.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="音乐分享 - ZIYIT STUDIO">
+    <meta name="twitter:description" content="ZIYIT STUDIO 在线音乐分享与播放列表。">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "音乐分享 - ZIYIT STUDIO",
+        "url": "https://ziyit-hacker.github.io/music/",
+        "description": "ZIYIT STUDIO 在线音乐分享与播放列表。"
+    }
+    </script>
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/blacklist.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./index.css">
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+</head>
+
+<body>
+    <!-- <marquee style="background-color: yellow;">
+        <strong>
+            <span
+                style="color: red;">本页面现处于测试阶段!!!如发现bug请将bug描述邮件发送到ziyitstudio@qq.com。如果想投稿音乐请将音乐的文件或者的音乐在bilibili的视频的url或音乐的文件链接和歌词一起发送到邮箱3779502017@qq.com。</span>
+        </strong>
+    </marquee> -->
+    <script>
+        function checkUserPermission() {
+            if (!ZIYIT_API.getToken()) {
+                alert('请先登录以访问该页面');
+                window.location.href = '../';
+                return;
+            }
+
+            const hideAdmin = function () {
+                const adminLink = document.querySelector('[data-role="admin"]');
+                if (adminLink) {
+                    adminLink.style.display = 'none';
+                }
+                const adminstrElements = document.querySelectorAll('[data-role="adminstr"]');
+                adminstrElements.forEach(element => {
+                    element.style.display = 'none';
+                });
+            };
+
+            ZIYIT_API.currentUser().then(function (user) {
+                const isAdmin = user && (user.username === 'Minecraft_zy227' || user.role === 'admin' || user.is_ztg === true || user.is_ztg === 1 || user.is_ztg === '1');
+                if (!isAdmin) {
+                    hideAdmin();
+                }
+            }).catch(function () {
+                hideAdmin();
+            });
+        }
+
+        function Development() {
+            // 获取开发者工具链接
+            const devLink = document.getElementById('development');
+            if (devLink) {
+                devLink.addEventListener('click', function (e) {
+                    e.preventDefault(); // 阻止默认链接行为
+
+                    // 1. 先禁用f12check.js的功能
+                    disableF12Check();
+
+                    // 2. 短暂延迟后触发开发者工具
+                    setTimeout(() => {
+                        // 尝试触发F12快捷键
+                        const event = new KeyboardEvent('keydown', {
+                            key: 'F12',
+                            code: 'F12',
+                            keyCode: 123,
+                            which: 123,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        document.dispatchEvent(event);
+
+                        // 3. 重新启用f12check.js
+                        setTimeout(() => {
+                            enableF12Check();
+                        }, 1000);
+
+                    }, 100);
+
+                    // 显示提示信息
+                    alert('开发者工具已临时启用，请在1秒内按F12');
+                });
+            }
+        }
+
+        // 禁用f12check.js功能
+        function disableF12Check() {
+            // 移除所有事件监听器
+            document.removeEventListener('keydown', window.f12CheckKeydownHandler);
+            document.removeEventListener('contextmenu', window.f12CheckContextmenuHandler);
+
+            // 恢复console功能
+            if (window.originalConsole) {
+                window.console = window.originalConsole;
+            }
+        }
+
+        // 启用f12check.js功能
+        function enableF12Check() {
+            // 重新添加事件监听器
+            document.addEventListener('keydown', window.f12CheckKeydownHandler);
+            document.addEventListener('contextmenu', window.f12CheckContextmenuHandler);
+
+            // 重新应用console限制
+            Object.defineProperty(window, 'console', {
+                value: new Proxy(console, {
+                    get(target, prop) {
+                        if (['log', 'debug', 'info', 'error'].includes(prop)) {
+                            return function () { };
+                        }
+                        return target[prop];
+                    }
+                })
+            });
+        }
+
+        // 保存原始的f12check.js事件处理器
+        function initF12CheckHandlers() {
+            // 保存原始的事件处理器
+            window.f12CheckKeydownHandler = function (e) {
+                if (e.key === 'F12' ||
+                    (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key))) {
+                    e.preventDefault();
+                    return false;
+                }
+            };
+
+            window.f12CheckContextmenuHandler = function (e) {
+                e.preventDefault();
+                return false;
+            };
+
+            // 保存原始console
+            window.originalConsole = console;
+        }
+
+        // 初始化时保存原始处理器
+        document.addEventListener('DOMContentLoaded', initF12CheckHandlers);
+
+        // 页面加载时调用检查权限函数
+        document.addEventListener('DOMContentLoaded', checkUserPermission);
+        document.addEventListener('DOMContentLoaded', Development);
+    </script>
+    <a href="javascript:history.back()">返回</a>
+    <hr>
+    <h1>欢迎来到 只因科技 - 音乐 界面</h1>
+    <h2>您可以选择任意一首歌在线聆听。</h2>
+    <a data-role="adminstr" href="./admin">管理员后台</a><br data-role="admin">
+    <a data-role="adminstr" href="#" id="development">开发者工具</a>
+    <hr>
+
+    <!-- 音乐播放器 -->
+    <div class="music-player">
+        <div class="player-container">
+            <div class="player-main">
+                <div class="player-info">
+                    <div class="current-song">请选择一首歌曲</div>
+                    <div class="player-status">暂停中</div>
+                </div>
+
+                <!-- 视频播放器容器 -->
+                <div id="video-container" class="video-container hidden">
+                    <video id="video-player" preload="metadata"
+                        style="width: 100%; border-radius: 8px; border: 3px solid #0078d4; box-shadow: 0 0 20px rgba(0, 120, 212, 0.5);"></video>
+                    <iframe id="bilibili-player"
+                        style="width: 100%; height: 400px; border-radius: 8px; border: 3px solid #0078d4; box-shadow: 0 0 20px rgba(0, 120, 212, 0.5); display: none;"></iframe>
+                </div>
+
+                <div class="progress-container">
+                    <span class="current-time" id="current-time">**:**</span>
+                    <div class="progress-bar">
+                        <div class="progress" id="progress"></div>
+                    </div>
+                    <span class="total-time" id="total-time">**:**</span>
+                </div>
+
+                <div class="player-controls">
+                    <button class="player-btn" id="prev-btn">◀◀</button>
+                    <button class="player-btn" id="play-btn">▶</button>
+                    <button class="player-btn" id="next-btn">▶▶</button>
+                </div>
+
+                <div class="more">
+                    <div id="share-container">
+                        <button id="share-link-btn" class="share-btn">分享链接</button>
+                        <button id="share-wechat-btn" class="share-btn">分享至微信</button>
+                        <button id="share-qq-btn" class="share-btn">分享至QQ</button>
+                    </div>
+                    <div class="video-div">
+                        <button id="video" class="video-btn hidden">观看视频</button>
+                    </div>
+                </div>
+
+                <audio id="audio-player" preload="metadata"></audio>
+            </div>
+        </div>
+    </div>
+
+    <div class="lyrics-container">
+        <div class="lyrics-header">歌词</div>
+        <div class="lyrics-content" id="lyrics-content">暂无歌词</div>
+    </div>
+
+    <!-- 导出音乐链接功能 -->
+    <div class="export-link-container"
+        style="background-color: rgba(255, 255, 255, 0.9); border-radius: 10px; padding: 15px; margin: 20px auto; max-width: 500px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
+        <div class="export-header"
+            style="font-size: 16px; font-weight: bold; color: #333; margin-bottom: 12px; text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
+            导出音乐链接
+        </div>
+        <div class="export-controls" style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
+            <select id="export-music-select"
+                style="flex: 1; padding: 6px 8px; border: 1px solid #0078d4; border-radius: 4px; outline: none; font-size: 13px; height: 34px; max-width: 300px;">
+                <option value="">请选择要导出的音乐</option>
+            </select>
+            <button id="export-link-btn"
+                style="background-color: #0078d4; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; height: 34px; white-space: nowrap;">
+                生成链接
+            </button>
+        </div>
+        <div class="export-result" id="export-result" style="display: none;">
+            <div style="margin-bottom: 8px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 4px; font-size: 13px;">分享链接:</label>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                    <input type="text" id="exported-link" readonly
+                        style="flex: 1; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f9f9f9; font-size: 12px; height: 30px;">
+                    <button id="copy-link-btn"
+                        style="background-color: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; height: 30px;">
+                        复制
+                    </button>
+                </div>
+            </div>
+            <div style="font-size: 11px; color: #666; line-height: 1.3;">
+                <p style="margin: 4px 0; font-weight: bold;">链接说明:</p>
+                <ul style="margin: 3px 0; padding-left: 16px;">
+                    <li>此链接可直接分享给其他用户</li>
+                    <li>VIP音乐链接仅限VIP用户访问</li>
+                    <li>普通用户访问VIP链接将只能试听15秒</li>
+                    <li>链接有效期：永久有效</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 音乐列表 -->
+    <div id="search" style="text-align: center; margin: 20px auto; max-width: 600px;">
+        <form method="get" style="display: flex;" autocomplete="off">
+            <label for="search-input" style="font-size: 24px; color: #1b222e"><strong>搜索音乐: </strong></label>
+            <input type="text" id="search-input" name="q" placeholder="搜索..."
+                style="flex: 1; padding: 10px; font-size: 16px; border: 1px solid #0078d4; border-radius: 100px 0 0 100px; outline: none;">
+            <button type="submit" id="search-button"
+                style="padding: 10px 15px; background-color: #0078d4; color: white; border: none; border-radius: 0 100px 100px 0; cursor: pointer; width: auto;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"
+                    style="vertical-align: middle;">
+                    <path
+                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                </svg>
+            </button>
+        </form>
+    </div>
+
+    <ul class="music-list" id="music-list">
+        <!-- 音乐列表将通过JavaScript动态生成 -->
+    </ul>
+
+    <p>&copy;2026&nbsp;&nbsp;ZIYIT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>版权所有，侵权必究</strong></p>
+
+    <!-- 下载队列显示 -->
+    <div class="download-queue" id="download-queue">
+        <div class="queue-header">下载队列 (0/0)</div>
+        <div id="queue-items"></div>
+    </div>
+
+    <script src=".\index.js"></script>
+<script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

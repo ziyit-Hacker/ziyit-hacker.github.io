@@ -1,0 +1,20 @@
+{
+  "type": "crafting_shaped",
+  "category": "redstone",
+  "group": "flight_manager",
+  "show_notification": true,
+  "key": {
+    "H": "flyconfig:synthetic_motoroil",
+    "Z": "flyconfig:metal_scrap",
+    "X": "minecraft:elytra"
+  },
+  "pattern": [
+    "H H",
+    "ZXZ",
+    "HHH"
+  ],
+  "result": {
+    "id": "flyconfig:flight_manager",
+    "count": 1
+  }
+}

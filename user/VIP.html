@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <title>升级VIP会员——ZIYIT(中国)</title>
+    <meta name="description" content="ZIYIT VIP 会员自助申请与升级。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/VIP.html">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/blacklist.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <style>
+        /* ===== VIP 升级页样式（DESIGN.md 设计体系，token 化） ===== */
+        body {
+            background: var(--ziyit-bg);
+        }
+
+        .form-container {
+            max-width: 500px;
+            margin: 32px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-container h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--ziyit-text-primary);
+        }
+
+        .form-container a {
+            color: var(--ziyit-primary);
+            text-decoration: none;
+        }
+
+        .form-container a:hover {
+            color: var(--ziyit-primary-dark);
+        }
+
+        .bt {
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
+
+        .vip-tip {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: rgba(243, 167, 7, .16);
+            border: 1px solid var(--ziyit-warning);
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.8;
+            color: var(--ziyit-text-primary);
+        }
+
+        .vip-info {
+            margin-bottom: 16px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            color: var(--ziyit-text-primary);
+        }
+
+        .vip-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+        }
+
+        .vip-info-row + .vip-info-row {
+            border-top: 1px solid var(--ziyit-border);
+        }
+
+        .vip-info .lbl {
+            color: var(--ziyit-text-secondary);
+        }
+
+        textarea#vipMailBody {
+            width: 100%;
+            margin-top: 8px;
+            padding: 10px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 4px;
+            font-size: 13px;
+            resize: vertical;
+            box-sizing: border-box;
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+        }
+
+        .vip-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background-color: var(--ziyit-primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        #mailBtn {
+            flex: 1;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--ziyit-success);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        #mailBtn:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        #errorMsg {
+            color: var(--ziyit-danger);
+            margin-top: 16px;
+            display: none;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                width: 90%;
+                padding: 15px;
+            }
+
+            input,
+            select,
+            button {
+                width: 90% !important;
+                font-size: 16px;
+            }
+
+            h1 {
+                font-size: 20px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h1 class="bt">升级VIP会员</h1>
+
+        <a href="javascript:history.back()" id="upback">返回</a>
+
+        <div class="vip-tip">
+            本站暂未接入在线支付。请将下方信息<b>通过邮件发送给站长</b>，审核通过后由管理员为您开通 VIP。发送后请耐心等待。
+        </div>
+
+        <div class="vip-info">
+            <div class="vip-info-row"><span class="lbl">用户ID</span><b id="vipUserId"><span class="spinner-inline"></span></b></div>
+            <div class="vip-info-row"><span class="lbl">用户名</span><b id="vipUsername"><span class="spinner-inline"></span></b></div>
+            <div class="vip-info-row"><span class="lbl">当前类型</span><b id="vipType"><span class="spinner-inline"></span></b></div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label for="vipMailBody" class="bt">邮件内容（已自动生成，可补充后复制或一键发送）</label>
+            <textarea id="vipMailBody" rows="8"></textarea>
+        </div>
+
+        <div class="vip-actions">
+            <button onclick="copyMailBody()" id="copyBtn" style="flex: 1;">复制邮件内容</button>
+            <a id="mailBtn" href="#" target="_blank">打开邮箱发送</a>
+        </div>
+
+        <div id="errorMsg"></div>
+
+        <div class="form-footer">
+            <a href=".\register" id="register">没有账号？点这里注册！</a>
+        </div>
+    </div>
+    <script src="../assets/ziyit_api.js"></script>
+    <script>
+        // VIP 升级：邮件联系站长人工开通（用户信息以 ZIYIT 后端为准）
+        var adminEmail = 'ziyitstudio@qq.com';
+        var currentVipUser = null;
+
+        function formatNow() {
+            var d = new Date();
+            var p = function (n) { return n < 10 ? '0' + n : '' + n; };
+            return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+        }
+
+        // 自动生成包含用户ID、用户名的邮件内容
+        function buildMailBody(user) {
+            var lines = [
+                'VIP升级申请（人工审核）',
+                '',
+                '用户ID：' + (user.userId != null ? user.userId : '-'),
+                '用户名：' + (user.username || '-'),
+                '申请时间：' + formatNow(),
+                '',
+                '请站长审核后为我开通 VIP，谢谢。'
+            ];
+            return lines.join('\n');
+        }
+
+        function updateMailUI() {
+            var body = buildMailBody(currentVipUser);
+            document.getElementById('vipMailBody').value = body;
+            var mailBtn = document.getElementById('mailBtn');
+            mailBtn.href = 'mailto:' + adminEmail + '?subject=' + encodeURIComponent('VIP升级申请 - ' + (currentVipUser.username || '')) + '&body=' + encodeURIComponent(body);
+        }
+
+        function copyMailBody() {
+            var ta = document.getElementById('vipMailBody');
+            var text = ta.value;
+            var errorMsg = document.getElementById('errorMsg');
+            errorMsg.style.display = 'none';
+            function done() {
+                var b = document.getElementById('copyBtn');
+                b.textContent = '已复制';
+                setTimeout(function () { b.textContent = '复制邮件内容'; }, 2000);
+            }
+            function fallback() {
+                try {
+                    ta.select();
+                    ta.setSelectionRange(0, text.length);
+                    if (document.execCommand('copy')) { done(); return; }
+                    throw new Error('copy failed');
+                } catch (e) {
+                    errorMsg.textContent = '复制失败，请手动选择文本框内容复制';
+                    errorMsg.style.display = 'block';
+                }
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done, fallback);
+            } else {
+                fallback();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!ZIYIT_API.getToken()) {
+                alert('请先登录 ZIYIT 账号后再申请升级 VIP');
+                window.location.href = './';
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                currentVipUser = user;
+                document.getElementById('vipUserId').textContent = user.userId != null ? user.userId : '-';
+                document.getElementById('vipUsername').textContent = user.username || '-';
+                var isVip = ZIYIT_API.isVip(user);
+                document.getElementById('vipType').textContent = isVip ? 'VIP用户' : '普通用户';
+                if (isVip) {
+                    document.getElementById('errorMsg').textContent = '您已是 VIP 用户，无需重复申请。';
+                    document.getElementById('errorMsg').style.color = 'var(--ziyit-success)';
+                    document.getElementById('errorMsg').style.display = 'block';
+                    document.getElementById('copyBtn').disabled = true;
+                    document.getElementById('mailBtn').style.pointerEvents = 'none';
+                    document.getElementById('mailBtn').style.opacity = '0.5';
+                }
+                updateMailUI();
+            }).catch(function (err) {
+                alert('获取用户信息失败：' + ((err && err.message) || '请重新登录'));
+                ZIYIT_API.clearToken();
+                window.location.href = './';
+            });
+        });
+    </script>
+
+    <script>
+        // 导航权限过滤（DESIGN.md §4.6.5，需登录页模式）：未登录全部隐藏，登录后按角色显示
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                const loginLink = document.getElementById('loginLink');
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

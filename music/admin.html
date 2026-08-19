@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>音乐管理系统 - 管理员后台</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="ZIYIT 管理员后台，请勿公开分享。">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <!-- <script src="../assets/f12check.js"></script> -->
+    <script src="../assets/blacklist.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./admin.css">
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+</head>
+
+<body>
+    <div class="admin-container">
+        <!-- 头部导航 -->
+        <header class="admin-header">
+            <div class="header-top">
+                <h1 class="admin-title">音乐管理系统</h1>
+                <div class="user-info">
+                    <div class="user-avatar">AD</div>
+                    <div>
+                        <div class="user-name">管理员</div>
+                        <div class="user-role" id="user-role">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-songs">0</div>
+                    <div class="stat-label">总歌曲数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="playing-song">-</div>
+                    <div class="stat-label">当前播放</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="online-users">1</div>
+                    <div class="stat-label">在线用户</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="system-status">正常</div>
+                    <div class="stat-label">系统状态</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <div class="admin-content">
+            <!-- 侧边栏 -->
+            <aside class="sidebar">
+                <ul class="sidebar-menu">
+                    <li class="menu-item active" data-section="music-management" data-level="1">
+                        <span>🎵</span> 音乐管理
+                    </li>
+                    <li class="menu-item" data-section="user-management" data-level="4">
+                        <span>👥</span> 用户管理
+                    </li>
+                    <li class="menu-item" data-section="admin-management" data-level="1">
+                        <span>🛡️</span> 管理员管理
+                    </li>
+                    <li class="menu-item" data-section="guide-console" data-level="1">
+                        <span>🛎️</span> 在线客服
+                    </li>
+                    <li class="menu-item" data-section="api-key-management" data-level="3">
+                        <span>🔑</span> API Key 管理
+                    </li>
+                    <li class="menu-item" data-section="mod-management" data-level="3">
+                        <span>📦</span> MOD / DLC 管理
+                    </li>
+                    <li class="menu-item" data-section="rc-key-management" data-level="3">
+                        <span>🔐</span> RC 软件密钥
+                    </li>
+                    <li class="menu-item" data-section="backrooms-members" data-level="2">
+                        <span>🌌</span> 后室成员管理
+                    </li>
+                    <li class="menu-item" data-section="log-viewer" data-level="3" onclick="window.location.href = '../developers/'">
+                        <span>📋</span> 日志查看
+                    </li>
+                    <li class="menu-item" data-level="1" onclick="window.location.href = 'javascript:history.back()'">
+                        <span>🔙</span> 返回
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- 主内容区 -->
+            <main class="main-content">
+                <!-- 音乐管理 -->
+                <section id="music-management" class="content-section active">
+                    <!-- 音乐播放器 -->
+                    <section class="music-player-admin">
+                        <div class="player-header">
+                            <h2 class="player-title">音乐播放控制</h2>
+                            <div class="player-status" id="player-status">暂停中</div>
+                        </div>
+
+                        <div class="player-info">
+                            <div class="current-song" id="current-song">请选择一首歌曲</div>
+                        </div>
+
+                        <div class="progress-container">
+                            <span class="time-display" id="current-time">00:00</span>
+                            <div class="progress-bar">
+                                <div class="progress" id="progress"></div>
+                            </div>
+                            <span class="time-display" id="total-time">00:00</span>
+                        </div>
+
+                        <div class="player-controls">
+                            <button class="control-btn" id="prev-btn">◀◀</button>
+                            <button class="control-btn" id="play-btn">▶</button>
+                            <button class="control-btn" id="next-btn">▶▶</button>
+                        </div>
+
+                        <audio id="audio-player" preload="metadata"></audio>
+                    </section>
+
+                    <!-- 歌词显示 -->
+                    <section class="lyrics-admin">
+                        <div class="lyrics-header">
+                            <span>歌词内容</span>
+                            <span class="lyrics-info" id="lyrics-info">未加载</span>
+                            <div class="lrc-controls">
+                                <button class="lrc-btn" id="edit-lyrics-btn">编辑歌词</button>
+                                <button class="lrc-btn" id="save-lyrics-btn" style="display: none;">保存歌词</button>
+                                <button class="lrc-btn" id="start-lrc-conversion">开始LRC转换</button>
+                                <button class="lrc-btn" id="download-lrc" disabled>下载LRC文件</button>
+                                <span class="lrc-status" id="lrc-status">准备就绪</span>
+                            </div>
+                        </div>
+                        <div class="lyrics-content" id="lyrics-content">
+                            请选择歌曲以显示歌词内容...
+                        </div>
+                        <div class="lyrics-controls" id="lyrics-controls" style="display: none;">
+                            <button class="cancel-btn" id="cancel-edit-btn">取消编辑</button>
+                            <button class="save-btn" id="confirm-save-btn">确认保存</button>
+                        </div>
+                        <div class="lrc-conversion-panel" id="lrc-conversion-panel" style="display: none;">
+                            <div class="lrc-panel-header">
+                                <h3>LRC歌词转换</h3>
+                                <div class="lrc-progress">
+                                    <span>当前行: <span id="current-line-index">0</span>/<span
+                                            id="total-lines">0</span></span>
+                                    <span>当前时间: <span id="current-time-display">00:00.00</span></span>
+                                </div>
+                            </div>
+                            <div class="lrc-control-buttons">
+                                <button class="lrc-action-btn" id="next-line-btn">下一行歌词</button>
+                                <button class="lrc-action-btn" id="reset-lrc-btn">重置转换</button>
+                            </div>
+                            <div class="lrc-preview">
+                                <h4>LRC预览:</h4>
+                                <textarea id="lrc-preview-content" readonly></textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 音乐列表 -->
+                    <section class="music-list-admin">
+                        <div class="list-header">
+                            <h2>音乐库管理</h2>
+                            <div class="search-container">
+                                <input type="text" class="search-input" id="search-input" placeholder="搜索歌曲...">
+                                <button class="search-btn" id="search-button">
+                                    <svg width="16" height="16" viewBox="0 0 16 16">
+                                        <path
+                                            d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="music-items" id="music-list">
+                            <!-- 音乐列表将通过JavaScript动态生成 -->
+                        </div>
+                    </section>
+                </section>
+
+                <!-- 用户管理 -->
+                <section id="user-management" class="content-section">
+                    <div class="section-header">
+                        <h2>用户管理</h2>
+                        <button class="user-btn success" id="add-user-btn">添加用户</button>
+                    </div>
+
+                    <div class="user-controls">
+                        <input type="text" class="user-search" id="user-search" placeholder="搜索用户名 / ID / IP / 角色 / 状态...">
+                        <button class="user-btn" id="refresh-users">刷新列表</button>
+                        <button class="user-btn danger" id="export-users">导出数据</button>
+                    </div>
+
+                    <div class="user-stats">
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="total-users">0</div>
+                            <div class="user-stat-label">总用户数</div>
+                        </div>
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="vip-users">0</div>
+                            <div class="user-stat-label">VIP用户</div>
+                        </div>
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="normal-users">0</div>
+                            <div class="user-stat-label">普通用户</div>
+                        </div>
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="online-user-count">1</div>
+                            <div class="user-stat-label">在线用户</div>
+                        </div>
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="blacklist-users">0</div>
+                            <div class="user-stat-label">黑名单用户</div>
+                        </div>
+                    </div>
+
+                    <div class="user-list" id="user-list">
+                        <div class="skeleton-list">
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ip-manage">
+                        <div class="section-header">
+                            <h2>IP 封禁管理</h2>
+                        </div>
+                        <div class="user-controls">
+                            <input type="text" class="user-search" id="ip-ban-input" placeholder="输入要封禁的 IP...">
+                            <input type="text" class="user-search" id="ip-reason-input" placeholder="原因（可选）" style="max-width: 180px;">
+                            <input type="text" class="user-search" id="ip-ban-duration" placeholder="封禁时长(分钟,留空=永久)" style="max-width: 190px;">
+                            <button class="user-btn danger" id="admin-ban-ip-btn">封禁 IP</button>
+                            <button class="user-btn" id="admin-unban-ip-btn">解封 IP</button>
+                            <button class="user-btn" id="refresh-ip-bans">刷新封禁列表</button>
+                        </div>
+                        <div class="user-stats" id="ip-ban-stats">
+                            <div class="user-stat-card">
+                                <div class="user-stat-number" id="ip-ban-count">0</div>
+                                <div class="user-stat-label">封禁总数</div>
+                            </div>
+                        </div>
+                        <div class="user-list" id="ip-ban-list">
+                            <p style="padding: 20px; color: var(--ziyit-text-secondary);">点击"刷新封禁列表"查看已封禁的 IP</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- API Key 管理 -->
+                <section id="api-key-management" class="content-section">
+                    <div class="section-header">
+                        <h2>API Key 管理</h2>
+                        <button class="user-btn success" id="add-api-key-btn">创建 API Key</button>
+                    </div>
+                    <div class="user-controls">
+                        <input type="text" class="user-search" id="api-key-search" placeholder="搜索 API Key / 用户ID / 用户名...">
+                        <button class="user-btn" id="refresh-api-keys">刷新列表</button>
+                    </div>
+                    <div class="user-list" id="api-key-list">
+                        <div class="skeleton-list">
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MOD / DLC 管理 -->
+                <section id="mod-management" class="content-section">
+                    <div class="section-header">
+                        <h2>MOD / DLC 管理</h2>
+                        <button class="user-btn success" id="add-mod-btn">添加 MOD</button>
+                    </div>
+                    <div class="user-controls">
+                        <input type="text" class="user-search" id="mod-search" placeholder="搜索名称 / ID / 作者 / 内容...">
+                        <button class="user-btn" id="refresh-mods">刷新列表</button>
+                    </div>
+                    <div class="user-stats">
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="mod-total">0</div>
+                            <div class="user-stat-label">MOD 总数</div>
+                        </div>
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="mod-dlc-count">0</div>
+                            <div class="user-stat-label">DLC 数</div>
+                        </div>
+                    </div>
+                    <div class="user-list" id="mod-list">
+                        <div class="skeleton-list">
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- RC 软件密钥管理 -->
+                <section id="rc-key-management" class="content-section">
+                    <div class="section-header">
+                        <h2>RC 软件密钥管理</h2>
+                    </div>
+                    <div class="user-controls">
+                        <input type="text" class="user-search" id="rc-key-search" placeholder="搜索用户名 / 密钥 / ID...">
+                        <button class="user-btn" id="refresh-rc-keys">刷新列表</button>
+                    </div>
+                    <div class="user-list" id="rc-key-list">
+                        <div class="skeleton-list">
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="system-settings" class="content-section">
+                    <div class="section-header">
+                        <h2>系统设置</h2>
+                    </div>
+                    <p>系统设置功能开发中...</p>
+                </section>
+
+                <section id="log-viewer" class="content-section">
+                    <div class="section-header">
+                        <h2>日志查看</h2>
+                    </div>
+                    <p>日志查看功能开发中...</p>
+                </section>
+
+                <section id="permission-management" class="content-section">
+                    <div class="section-header">
+                        <h2>权限管理</h2>
+                    </div>
+                    <p>权限管理功能开发中...</p>
+                </section>
+
+                <!-- 管理员管理（仅4级） -->
+                <section id="admin-management" class="content-section">
+                    <div class="section-header">
+                        <h2>管理员管理</h2>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="user-btn" id="broadcast-btn" style="display: none;">📢 全局消息</button>
+                            <button class="user-btn" id="admin-chat-btn">💬 私聊</button>
+                            <button class="user-btn success" id="add-admin-btn">添加管理员</button>
+                        </div>
+                    </div>
+                    <div class="user-controls">
+                        <input type="text" class="user-search" id="admin-search" placeholder="搜索用户名 / ID / 等级...">
+                        <button class="user-btn" id="refresh-admins">刷新列表</button>
+                    </div>
+                    <div class="user-stats">
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="admin-total">0</div>
+                            <div class="user-stat-label">管理员总数</div>
+                        </div>
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="admin-super-count">1</div>
+                            <div class="user-stat-label">超级管理员(4级)</div>
+                        </div>
+                    </div>
+                    <div class="user-list" id="admin-list">
+                        <p style="padding: 20px; color: var(--ziyit-text-secondary);">加载中...</p>
+                    </div>
+                </section>
+
+                <!-- 在线客服控制台（任意管理员） -->
+                <section id="guide-console" class="content-section">
+                    <div class="section-header">
+                        <h2>在线客服</h2>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="user-btn" id="guide-console-refresh">刷新队列</button>
+                        </div>
+                    </div>
+                    <div class="chat-layout" style="height: 540px; flex: none;">
+                        <div class="chat-sessions" id="guide-inbox-list">
+                            <div class="chat-empty">正在获取待接入会话…</div>
+                        </div>
+                        <div class="chat-main">
+                            <div class="chat-title" id="guide-console-title">选择一个会话开始接待</div>
+                            <div class="chat-messages" id="guide-console-messages">
+                                <div class="chat-empty">暂无消息</div>
+                            </div>
+                            <div class="chat-input-row">
+                                <textarea class="form-input chat-input" id="guide-console-input" rows="2"
+                                    placeholder="输入回复，Enter 发送（Shift+Enter 换行）"></textarea>
+                                <button class="user-btn chat-end-btn" id="guide-console-end">结束对话</button>
+                                <button class="user-btn success chat-send-btn" id="guide-console-send">回复</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 客服名单管理（仅超级管理员可见） -->
+                    <div id="guide-agents-panel" class="guide-agents-panel"
+                        style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08);">
+                        <div class="section-header" style="margin-bottom:10px;">
+                            <h3>客服名单管理</h3>
+                            <button class="user-btn" id="guide-agents-refresh">刷新名单</button>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-bottom:10px;">
+                            <input type="number" class="form-input" id="guide-agent-add-id" placeholder="用户ID"
+                                style="flex:1; min-width:0;">
+                            <button class="user-btn success" id="guide-agent-add-btn">添加客服</button>
+                        </div>
+                        <div class="user-list" id="guide-agents-list" style="max-height:220px; overflow-y:auto;">
+                            <p style="padding:16px; color:var(--ziyit-text-secondary);">加载中...</p>
+                        </div>
+                        <p style="padding:6px 2px; color:var(--ziyit-text-secondary); font-size:12px;">说明：仅名单内客服可接收/回复转人工消息（超级管理员自动兜底）。转人工优先分配给在线客服。</p>
+                    </div>
+                </section>
+
+                <!-- 后室成员管理（2级查看/3级编辑） -->
+                <section id="backrooms-members" class="content-section">
+                    <div class="section-header">
+                        <h2>后室成员管理</h2>
+                        <button class="user-btn" id="refresh-backrooms-members">刷新列表</button>
+                    </div>
+                    <div class="user-controls">
+                        <input type="text" class="user-search" id="backrooms-member-search" placeholder="搜索 ID / 类型 / 邮箱...">
+                    </div>
+                    <div class="user-stats">
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="member-total">0</div>
+                            <div class="user-stat-label">成员总数</div>
+                        </div>
+                    </div>
+                    <div class="user-list" id="backrooms-member-list">
+                        <p style="padding: 20px; color: var(--ziyit-text-secondary);">加载中...</p>
+                    </div>
+                    <p style="padding: 8px 2px; color: var(--ziyit-text-secondary); font-size: 13px;">🔒 Adminstrator 类型成员不可编辑（仅 3级及以上可修改 Admin/Member 类型）。</p>
+                </section>
+
+                <!-- 日志查看跳转外部页面 -->
+            </main>
+        </div>
+
+        <!-- 系统信息 -->
+        <footer class="system-info">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">服务器时间:</span>
+                    <span class="info-value" id="server-time">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">内存使用:</span>
+                    <span class="info-value" id="memory-usage">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">CPU负载:</span>
+                    <span class="info-value" id="cpu-load">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">磁盘使用:</span>
+                    <span class="info-value" id="disk-usage">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">网络带宽:</span>
+                    <span class="info-value" id="network-speed">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">最后更新:</span>
+                    <span class="info-value" id="last-update">-</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 用户编辑模态框 -->
+    <div class="modal" id="user-modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modal-title">编辑用户</div>
+            <form id="user-form">
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" class="form-input" id="edit-username" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" class="form-input" id="edit-email" placeholder="user@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">用户类型</label>
+                    <select class="form-select" id="edit-role" required>
+                        <option value="UR">普通用户</option>
+                        <option value="ZC">VIP用户</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">重置密码</label>
+                    <input type="password" class="form-input" id="edit-password" placeholder="留空则不修改（MD5 提交）">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="user-btn danger" id="cancel-edit">取消</button>
+                    <button type="submit" class="user-btn success">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加用户模态框 -->
+    <div class="modal" id="add-user-modal">
+        <div class="modal-content">
+            <div class="modal-header">添加用户</div>
+            <form id="add-user-form">
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" class="form-input" id="add-username" maxlength="15" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" class="form-input" id="add-email" placeholder="user@example.com（可留空）">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" class="form-input" id="add-password" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="user-btn danger" id="cancel-add-user">取消</button>
+                    <button type="submit" class="user-btn success">创建</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 删除用户模态框 -->
+    <div class="modal" id="delete-user-modal">
+        <div class="modal-content">
+            <div class="modal-header">删除用户</div>
+            <p style="margin: 10px 0; font-size: 14px; color: var(--ziyit-text-secondary);">删除用户 <b id="del-username"></b>（ID: <span id="del-userid"></span>）</p>
+            <div class="form-group">
+                <label class="form-label">删除方式</label>
+                <label style="display: block; margin: 6px 0;"><input type="radio" name="delMode" value="grace" checked> 15 天宽限期删除（用户可在此期间取消，到期后删除）</label>
+                <label style="display: block; margin: 6px 0;"><input type="radio" name="delMode" value="immediate"> 立即强制删除（不可恢复）</label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn danger" id="cancel-delete-user">取消</button>
+                <button type="button" class="user-btn danger" id="confirm-delete-user" style="background: var(--ziyit-danger);">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登录记录模态框 -->
+    <div class="modal" id="login-history-modal">
+        <div class="modal-content">
+            <div class="modal-header">登录记录</div>
+            <div class="form-group">
+                <label class="form-label" id="lh-user-label">用户登录记录</label>
+            </div>
+            <div id="login-history-list" style="max-height: 340px; overflow-y: auto; font-size: 13px;"></div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn danger" id="cancel-login-history">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户 DLC 管理模态框 -->
+    <div class="modal" id="dlc-modal">
+        <div class="modal-content">
+            <div class="modal-header">DLC 管理</div>
+            <div class="form-group">
+                <label class="form-label" id="dlc-user-label">用户 DLC</label>
+            </div>
+            <div id="dlc-list" style="max-height: 240px; overflow-y: auto; font-size: 13px; margin-bottom: 12px;"></div>
+            <div class="form-group">
+                <label class="form-label">授予 DLC</label>
+                <select class="form-input" id="dlc-grant-select">
+                    <option value="">请选择要授予的 DLC...</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn success" id="confirm-grant-dlc">授予</button>
+                <button type="button" class="user-btn danger" id="cancel-dlc">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建 API Key 模态框 -->
+    <div class="modal" id="api-key-modal">
+        <div class="modal-content">
+            <div class="modal-header">创建 API Key</div>
+            <div class="form-group">
+                <label class="form-label">用户ID</label>
+                <input type="number" class="form-input" id="apikey-userid" placeholder="为用户创建 API Key 的用户ID" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn danger" id="cancel-api-key">取消</button>
+                <button type="button" class="user-btn success" id="confirm-api-key">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑 API Key 模态框 -->
+    <div class="modal" id="api-key-edit-modal">
+        <div class="modal-content">
+            <div class="modal-header">编辑 API Key</div>
+            <div class="form-group">
+                <label class="form-label">API Key</label>
+                <input type="text" class="form-input" id="apikey-edit-key" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">状态</label>
+                <select class="form-select" id="apikey-edit-status">
+                    <option value="active">active（启用）</option>
+                    <option value="disabled">disabled（禁用）</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">每月限制（-1 = 无限）</label>
+                <input type="number" class="form-input" id="apikey-edit-limit" placeholder="-1 或 N">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn danger" id="cancel-api-key-edit">取消</button>
+                <button type="button" class="user-btn success" id="confirm-api-key-edit">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOD 添加/编辑模态框 -->
+    <div class="modal" id="mod-modal">
+        <div class="modal-content">
+            <div class="modal-header" id="mod-modal-title">添加 MOD</div>
+            <div class="form-group">
+                <label class="form-label">MOD 名称</label>
+                <input type="text" class="form-input" id="mod-name" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">描述</label>
+                <input type="text" class="form-input" id="mod-description">
+            </div>
+            <div class="form-group">
+                <label class="form-label">作者（用户）</label>
+                <select class="form-input" id="mod-author"></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">版本（逗号分隔，如 1.0.0,1.0.1）</label>
+                <input type="text" class="form-input" id="mod-versions" placeholder="1.0.0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">文件 URL</label>
+                <input type="text" class="form-input" id="mod-file-url" placeholder="/downloads/xxx.rcm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">类型</label>
+                <select class="form-select" id="mod-is-dlc">
+                    <option value="false">MOD</option>
+                    <option value="true">DLC</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn danger" id="cancel-mod">取消</button>
+                <button type="button" class="user-btn success" id="confirm-mod">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加 RC 软件密钥模态框 -->
+    <div class="modal" id="key-add-modal">
+        <div class="modal-content">
+            <div class="modal-header" id="key-add-title">添加 RC 软件密钥</div>
+            <div class="form-group">
+                <label class="form-label">用户</label>
+                <input type="text" class="form-input" id="key-userinfo" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">密钥哈希 (keyHash)</label>
+                <input type="text" class="form-input" id="key-hash" placeholder="密钥哈希" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">权限</label>
+                <select class="form-select" id="key-permission">
+                    <option value="Pr">Pr</option>
+                    <option value="Or">Or</option>
+                    <option value="Tr">Tr</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">有效期（天）</label>
+                <input type="number" class="form-input" id="key-valid-days" value="365">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn danger" id="cancel-key-add">取消</button>
+                <button type="button" class="user-btn success" id="confirm-key-add">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加管理员模态框（仅4级） -->
+    <div class="modal" id="admin-add-modal">
+        <div class="modal-content">
+            <div class="modal-header">添加管理员</div>
+            <div class="form-group">
+                <label class="form-label">用户ID</label>
+                <input type="text" class="form-input" id="admin-add-userId" placeholder="要添加为管理员的用户ID" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">等级</label>
+                <select class="form-select" id="admin-add-level">
+                    <option value="3">3 - 高级管理员</option>
+                    <option value="2">2 - 中级管理员</option>
+                    <option value="1">1 - 初级管理员</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn danger" id="cancel-admin-add">取消</button>
+                <button type="button" class="user-btn success" id="confirm-admin-add">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑管理员模态框（仅4级） -->
+    <div class="modal" id="admin-edit-modal">
+        <div class="modal-content">
+            <div class="modal-header">编辑管理员</div>
+            <div class="form-group">
+                <label class="form-label">用户名</label>
+                <input type="text" class="form-input" id="admin-edit-username" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">等级</label>
+                <select class="form-select" id="admin-edit-level">
+                    <option value="4">4 - 超级管理员（仅 ID=1）</option>
+                    <option value="3">3 - 高级管理员</option>
+                    <option value="2">2 - 中级管理员</option>
+                    <option value="1">1 - 初级管理员</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn danger" id="cancel-admin-edit">取消</button>
+                <button type="button" class="user-btn success" id="confirm-admin-edit">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 升级用户模态框（仅4级） -->
+    <div class="modal" id="promote-user-modal">
+        <div class="modal-content">
+            <div class="modal-header">升级用户</div>
+            <div class="form-group">
+                <label class="form-label">用户名</label>
+                <input type="text" class="form-input" id="promote-username" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">升级类型</label>
+                <select class="form-select" id="promote-type">
+                    <option value="vip">升级为 VIP 用户</option>
+                    <option value="admin">升级为管理员（type=admin）</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn danger" id="cancel-promote-user">取消</button>
+                <button type="button" class="user-btn success" id="confirm-promote-user">确认升级</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理员私聊模态框（任意管理员） -->
+    <div class="modal" id="admin-chat-modal">
+        <div class="modal-content chat-modal-content">
+            <div class="modal-header chat-modal-header">
+                <span>💬 管理员私聊</span>
+                <button type="button" class="user-btn" id="chat-close">关闭</button>
+            </div>
+            <div class="chat-layout">
+                <div class="chat-sessions" id="chat-sessions"></div>
+                <div class="chat-main">
+                    <div class="chat-title" id="chat-title">选择一个会话开始聊天</div>
+                    <div class="chat-messages" id="chat-messages"></div>
+                    <div class="chat-input-row">
+                        <textarea class="form-input chat-input" id="chat-input" rows="2"
+                            placeholder="输入消息，Enter 发送（Shift+Enter 换行）"></textarea>
+                        <button class="user-btn success chat-send-btn" id="chat-send-btn">发送</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全局消息模态框（2级+） -->
+    <div class="modal" id="admin-broadcast-modal">
+        <div class="modal-content">
+            <div class="modal-header">📢 全局消息</div>
+            <div class="form-group">
+                <label class="form-label">消息内容</label>
+                <textarea class="form-input" id="broadcast-content" rows="4"
+                    placeholder="输入要广播给下级管理员的消息..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">接收范围</label>
+                <div class="user-type normal" id="broadcast-range" style="width: fit-content;">-</div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn danger" id="cancel-broadcast">取消</button>
+                <button type="button" class="user-btn success" id="confirm-broadcast">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="./admin.js"></script>
+<script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "sugar cane 10",
+    "ingredients": [
+        "flyconfig:nuclear_spawn_egg",
+        "flyconfig:nuclear_disarm_tool",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:sugar_cane_10",
+        "count": 1
+    },
+    "show_notification": true
+}

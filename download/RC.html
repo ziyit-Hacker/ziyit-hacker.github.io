@@ -1,0 +1,3258 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Release Control | 专业进程管理工具</title>
+    <meta name="description" content="Release Control 是 ZIYIT STUDIO 推出的专业 Windows 进程管理工具，支持 MOD/DLC 扩展、许可证授权与安全沙箱。">
+    <meta name="keywords" content="Release Control,ZIYIT,进程管理,Windows,系统工具,MOD,DLC,授权">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/download/RC.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ZIYIT STUDIO">
+    <meta property="og:title" content="Release Control | 专业进程管理工具">
+    <meta property="og:description" content="Release Control 是 ZIYIT STUDIO 推出的专业 Windows 进程管理工具，支持 MOD/DLC 扩展、许可证授权与安全沙箱。">
+    <meta property="og:url" content="https://ziyit-hacker.github.io/download/RC.html">
+    <meta property="og:image" content="https://ziyit-hacker.github.io/assets/ziyit.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Release Control | 专业进程管理工具">
+    <meta name="twitter:description" content="Release Control 是 ZIYIT STUDIO 推出的专业 Windows 进程管理工具，支持 MOD/DLC 扩展与许可证授权。">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Release Control",
+        "url": "https://ziyit-hacker.github.io/download/RC.html",
+        "description": "ZIYIT STUDIO 推出的专业 Windows 进程管理工具，支持 MOD/DLC 扩展、许可证授权与安全沙箱。",
+        "operatingSystem": "Windows",
+        "applicationCategory": "UtilitiesApplication",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "CNY"
+        }
+    }
+    </script>
+    <link rel="icon" href=".\RC.ico" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/blacklist.js"></script>
+    <script src="../assets/auto_f5.js"></script>
+    <script src="../assets/Cookie.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <style>
+        @import url('https://use.fontawesome.com/releases/v5.11.2/css/all.css');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background: var(--ziyit-bg);
+            color: var(--ziyit-text-primary);
+            line-height: 1.6;
+        }
+
+        .navbar {
+            /* iOS 毛玻璃：半透明背景 + backdrop 模糊 */
+            background: rgba(255, 255, 255, 0.72);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            padding: 0.75rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #1e293b, #3b82f6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: white;
+        }
+
+        .nav-logo-icon-clean {
+            background: none;
+            padding: 0;
+        }
+
+        .nav-logo-img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav-logo-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--ziyit-text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #3b82f6;
+        }
+
+        .nav-back {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: var(--ziyit-bg-hover);
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--ziyit-text-secondary);
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--ziyit-border);
+            color: var(--ziyit-text-primary);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 2rem 1rem;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--ziyit-bg-card) 0%, var(--ziyit-bg-hover) 100%);
+            border-radius: 32px;
+            padding: 2.5rem 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--ziyit-border);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0f172a, #2563eb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero .tagline {
+            font-size: 1.2rem;
+            color: var(--ziyit-text-secondary);
+            margin-bottom: 1rem;
+            border-left: 4px solid #3b82f6;
+            padding-left: 1rem;
+        }
+
+        .hero-desc {
+            margin-top: 1.2rem;
+            color: var(--ziyit-text-primary);
+        }
+
+        .badge-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .badge {
+            background: var(--ziyit-primary-light);
+            color: var(--ziyit-primary);
+            padding: 0.3rem 0.9rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .two-columns {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .info-panel {
+            flex: 1.3;
+            background: var(--ziyit-bg-card);
+            border-radius: 24px;
+            padding: 1.8rem;
+            border: 1px solid var(--ziyit-border);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .info-panel h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--ziyit-text-primary);
+            border-bottom: 2px solid var(--ziyit-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--ziyit-border-light);
+            font-size: 0.95rem;
+        }
+
+        .feature-list li::before {
+            content: "▹";
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .sys-req {
+            flex: 0.9;
+            background: var(--ziyit-bg-card);
+            border-radius: 24px;
+            padding: 1.8rem;
+            border: 1px solid var(--ziyit-border);
+        }
+
+        .sys-req h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--ziyit-text-primary);
+        }
+
+        .req-item {
+            margin-bottom: 1rem;
+        }
+
+        .req-label {
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .req-desc {
+            color: var(--ziyit-text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .section {
+            background: var(--ziyit-bg-card);
+            border-radius: 24px;
+            padding: 1.8rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--ziyit-border);
+        }
+
+        .section h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--ziyit-text-primary);
+            border-bottom: 2px solid var(--ziyit-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .section h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem;
+            color: #2563eb;
+        }
+
+        .section p {
+            margin-bottom: 0.8rem;
+            color: var(--ziyit-text-primary);
+        }
+
+        .version-rule {
+            background: linear-gradient(135deg, var(--ziyit-bg-card), var(--ziyit-bg-hover));
+            border-radius: 24px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--ziyit-border);
+        }
+
+        .version-rule h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--ziyit-text-primary);
+            border-bottom: 2px solid var(--ziyit-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .version-rule ul {
+            list-style: none;
+            padding-left: 1rem;
+        }
+
+        .version-rule li {
+            padding: 0.4rem 0;
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            border-bottom: 1px solid var(--ziyit-border-light);
+            font-size: 0.95rem;
+        }
+
+        .version-rule li::before {
+            content: "•";
+            color: #3b82f6;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .version-rule-code {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .update-log {
+            background: var(--ziyit-bg-card);
+            border-radius: 24px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--ziyit-border);
+        }
+
+        .update-log h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--ziyit-text-primary);
+            border-bottom: 2px solid var(--ziyit-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .update-log-content {
+            font-family: 'Segoe UI', 'Microsoft YaHei', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--ziyit-text-primary);
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .update-log-content h1,
+        .update-log-content h2,
+        .update-log-content h3,
+        .update-log-content h4,
+        .update-log-content h5,
+        .update-log-content h6 {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--ziyit-text-primary);
+        }
+
+        .update-log-content h1 {
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--ziyit-border);
+            padding-bottom: 0.3rem;
+        }
+
+        .update-log-content h2 {
+            font-size: 1.5rem;
+        }
+
+        .update-log-content h3 {
+            font-size: 1.3rem;
+        }
+
+        .update-log-content h4 {
+            font-size: 1.1rem;
+        }
+
+        .update-log-content code {
+            background: var(--ziyit-bg-hover);
+            padding: 0.2rem 0.4rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .update-log-content pre {
+            background: var(--ziyit-bg-hover);
+            padding: 1rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 0.5rem 0;
+        }
+
+        .update-log-content blockquote {
+            border-left: 4px solid #3b82f6;
+            padding-left: 1rem;
+            color: var(--ziyit-text-secondary);
+            margin: 0.5rem 0;
+        }
+
+        .update-log-content ul,
+        .update-log-content ol {
+            padding-left: 2rem;
+            margin: 0.5rem 0;
+        }
+
+        .update-log-content table {
+            border-collapse: collapse;
+            margin: 0.5rem 0;
+        }
+
+        .update-log-content th,
+        .update-log-content td {
+            border: 1px solid var(--ziyit-border);
+            padding: 0.5rem;
+        }
+
+        .update-log-content img {
+            max-width: 100%;
+        }
+
+        .update-log-content input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+
+        .faq-item {
+            margin-bottom: 1.2rem;
+            border-bottom: 1px solid var(--ziyit-border-light);
+            padding-bottom: 1rem;
+        }
+
+        .faq-question {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--ziyit-text-primary);
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-question:hover {
+            color: #3b82f6;
+        }
+
+        .faq-question i {
+            transition: transform 0.2s;
+        }
+
+        .faq-answer {
+            display: none;
+            padding-left: 1rem;
+            color: var(--ziyit-text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .faq-answer.active {
+            display: block;
+        }
+
+        .version-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .section-title {
+            font-weight: 600;
+        }
+
+        .version-switch {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--ziyit-bg-hover);
+            padding: 0.25rem;
+            border-radius: 40px;
+        }
+
+        .version-btn {
+            background: transparent;
+            border: none;
+            padding: 0.4rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--ziyit-text-secondary);
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .version-btn.active {
+            background: #1e293b;
+            color: white;
+        }
+
+        .card {
+            background: var(--ziyit-bg-card);
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid var(--ziyit-border);
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            background: var(--ziyit-bg-hover);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--ziyit-border-light);
+        }
+
+        .card-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem 1.2rem;
+            background: var(--ziyit-bg-hover);
+            color: var(--ziyit-text-primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--ziyit-border);
+        }
+
+        td {
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid var(--ziyit-border-light);
+            vertical-align: middle;
+        }
+
+        .version {
+            font-family: monospace;
+            font-weight: 700;
+            color: #2563eb;
+        }
+
+        .filename {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--ziyit-text-primary);
+        }
+
+        .sha256 {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: var(--ziyit-text-secondary);
+            word-break: break-all;
+            max-width: 320px;
+        }
+
+        .download-btn {
+            background: #1e293b;
+            color: white;
+            text-decoration: none;
+            padding: 0.45rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-block;
+            cursor: pointer;
+            border: none;
+        }
+
+        .download-btn:hover {
+            background: #0f172a;
+            transform: translateY(-1px);
+        }
+
+        .snapshot-badge {
+            background: #fef3c7;
+            color: #b45309;
+            font-size: 0.65rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            margin-left: 0.6rem;
+        }
+
+        .copy-btn {
+            background: var(--ziyit-primary-light);
+            border: none;
+            color: var(--ziyit-primary);
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem 1rem 1.5rem;
+            color: var(--ziyit-text-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--ziyit-border);
+            margin-top: 2rem;
+        }
+
+        .footer-link {
+            margin-top: 6px;
+        }
+
+        hr {
+            margin: 1rem 0;
+            border: 0;
+            height: 1px;
+            background: var(--ziyit-border);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-container {
+            background: var(--ziyit-bg-card);
+            width: 90%;
+            max-width: 1000px;
+            height: auto;
+            max-height: 85vh;
+            border-radius: 28px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 1.2rem 1.8rem;
+            border-bottom: 1px solid var(--ziyit-border);
+            font-weight: 700;
+            font-size: 1.3rem;
+            background: var(--ziyit-bg-hover);
+            border-radius: 28px 28px 0 0;
+            flex-shrink: 0;
+        }
+
+        .modal-body {
+            padding: 1.5rem 1.8rem;
+            overflow-y: auto;
+            flex: 1 1 auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--ziyit-text-primary);
+            min-height: 200px;
+        }
+
+        .modal-body h3 {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .modal-body p {
+            margin-bottom: 0.7rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.8rem;
+            border-top: 1px solid var(--ziyit-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            background: var(--ziyit-bg-card);
+            border-radius: 0 0 28px 28px;
+            flex-shrink: 0;
+        }
+
+        .btn-accept {
+            background: #1e293b;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.6rem;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-decline {
+            background: var(--ziyit-bg-hover);
+            color: var(--ziyit-text-primary);
+            border: none;
+            padding: 0.6rem 1.6rem;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+
+        .infomark::before {
+            content: "\f05a";
+            font-weight: 900;
+            font-family: "Font Awesome 5 Free";
+        }
+
+        .penmark::before {
+            content: "\f304";
+            font-weight: 900;
+            font-family: "Font Awesome 5 Free";
+        }
+
+        .moremark::after {
+            content: "\f2f6";
+            font-weight: 900;
+            font-family: "Font Awesome 5 Free";
+        }
+
+        .import::after {
+            content: "\f1d8";
+            font-weight: 900;
+            font-family: "Font Awesome 5 Free";
+        }
+
+        .noPublish {
+            float: left;
+            color: red;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .noPublish::before {
+            content: "\f071";
+            font-weight: 900;
+            font-family: "Font Awesome 5 Free";
+            color: rgb(var(--dark-accent));
+        }
+
+        .noPublish::after {
+            content: "该版本未发布";
+            font-family: 'Microsoft YaHei UI';
+            color: rgb(var(--dark-accent));
+        }
+
+        .snapshot-badge::after {
+            content: "最新快照版本";
+            font-family: 'Microsoft YaHei';
+            color: rgb(var(--dark-accent));
+        }
+
+        .badge::after {
+            content: "最新版本";
+            font-family: 'Microsoft YaHei';
+            color: rgb(var(--dark-accent));
+        }
+
+        .internalTesting::before {
+            content: "\f0c3";
+            font-weight: 900;
+            font-family: "Font Awesome 5 Free";
+            color: rgb(var(--dark-accent));
+        }
+
+        .internalTesting::after {
+            content: "该版本为内部测试版本";
+            font-family: 'Microsoft YaHei UI';
+            color: rgb(var(--dark-accent));
+        }
+
+        .badge {
+            background: red;
+            color: white;
+            font-size: 0.65rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            margin-left: 0.6rem;
+        }
+
+        .versionLast::before {
+            content: "\f071";
+            font-weight: 900;
+            font-family: "Font Awesome 5 Free";
+            color: rgb(var(--dark-accent));
+        }
+
+        .versionLast::after {
+            content: "本软件目前只有26.2之后的安装包";
+            font-family: 'Microsoft YaHei';
+            color: rgb(var(--dark-accent));
+        }
+
+        .versionLast {
+            background: red;
+            color: white;
+            font-size: 0.65rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            margin-left: 0.6rem;
+        }
+
+        .note-stable {
+            background: var(--ziyit-primary-light);
+            padding: 1rem;
+            border-left: 5px solid var(--ziyit-primary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--ziyit-text-secondary);
+        }
+
+        .code-block-wrapper {
+            position: relative;
+            margin: 1rem 0;
+            border-radius: 12px;
+            background: #1b1b1c;
+            transition: all 0.3s ease;
+        }
+
+        .code-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #2c2c2e;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            border-bottom: 1px solid #3a3a3c;
+        }
+
+        .code-title {
+            margin-right: auto;
+            font-size: 0.75rem;
+            color: #60a5fa;
+            font-family: monospace;
+            background: #1b1b1c;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+        }
+
+        .code-copy-btn,
+        .code-expand-btn {
+            background: #3a3a3c;
+            border: none;
+            color: #e2e8f0;
+            padding: 0.2rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .code-copy-btn:hover,
+        .code-expand-btn:hover {
+            background: #4a4a4c;
+            transform: translateY(-1px);
+        }
+
+        .code-block-wrapper pre {
+            margin: 0 !important;
+            padding: 1rem !important;
+            overflow-x: auto;
+            background: #1b1b1c;
+        }
+
+        .code-block-wrapper pre code {
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: #e2e8f0;
+            background: #1b1b1c;
+        }
+
+        .code-block-wrapper.expanded {
+            max-height: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            th,
+            td {
+                padding: 0.7rem 0.8rem;
+            }
+
+            .sha256 {
+                max-width: 130px;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .navbar {
+                padding: 0.5rem 1rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+        }
+
+        .permission-tr {
+            background: #fef3c7;
+            color: #d97706;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin: 0 0.1rem;
+            display: inline-block;
+        }
+
+        .permission-or {
+            background: var(--ziyit-primary-light);
+            color: var(--ziyit-primary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin: 0 0.1rem;
+            display: inline-block;
+        }
+
+        .permission-pr {
+            background: #e9d5ff;
+            color: #7c3aed;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin: 0 0.1rem;
+            display: inline-block;
+        }
+
+        td.yes {
+            text-align: center;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        td.no {
+            text-align: center;
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .hidden {
+            display: none;
+        }
+
+        /* ---- 深色模式适配 ---- */
+        /* 顶栏深色毛玻璃 */
+        [data-theme="dark"] .navbar {
+            background: rgba(31, 34, 41, 0.72);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        /* hero 标题的深色渐变在深色背景下不可见，改为浅色渐变 */
+        [data-theme="dark"] .hero h1 {
+            background: linear-gradient(135deg, #e2e8f0, #60a5fa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent !important;
+        }
+        /* 深色下代码块 chip 提亮边框，保持可辨识 */
+        [data-theme="dark"] .version-rule-code {
+            background: #2a2e36;
+            color: #e2e8f0;
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+</head>
+
+<body>
+
+    <div class="navbar">
+        <div class="nav-logo">
+            <div class="nav-logo-icon nav-logo-icon-clean">
+                <img src="./RC.ico" alt="RC" class="nav-logo-img">
+            </div>
+            <span class="nav-logo-text">Release Control</span>
+        </div>
+        <div class="nav-links">
+            <div class="nav-back">
+                <button class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i> 返回上一页</button>
+                <button class="back-btn" onclick="window.location.href='../'"><i class="fas fa-home"></i> 返回主页</button>
+                <button class="back-btn" onclick="window.location.href='./'"><i class="fas fa-download"></i>
+                    下载主页</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="hero">
+            <h1>Release Control</h1>
+            <div class="tagline">企业级 Windows 进程管理 · 安全审计 · 深度系统优化</div>
+            <p class="hero-desc">Release Control 是 ZIYIT STUDIO 专为 IT
+                专业人员、安全运维及高级用户打造的下一代系统进程管理套件。提供毫秒级进程监控、递归树状终止、自启项深度扫描、Hosts 分区编辑、智能进程守护等 50+
+                高级特性。软件采用双服务器冗余验证机制，支持离线/在线许可证模式。</p>
+        </div>
+
+        <div class="two-columns">
+            <div class="info-panel">
+                <h3>核心功能矩阵</h3>
+                <ul class="feature-list">
+                    <li>实时进程树状视图 (PID / 会话ID / 内存工作集 / 线程数 / 句柄数 / CPU 时间 / IO 读写)</li>
+                    <li>批量终止与递归终止进程树 (强制结束顽固进程及其所有子进程，支持白名单保护)</li>
+                    <li>可配置后台守护监控：自动检测并终止特定进程名，支持声音与桌面提醒，支持正则匹配</li>
+                    <li>开机自启动项全面管理：注册表 Run / RunOnce / 启动目录 / 计划任务 / 服务项 / Winlogon</li>
+                    <li>Hosts 文件可视化分区编辑器 (支持锁定关键分区，防止恶意篡改及权限重置，一键还原)</li>
+                    <li>全局本地化语言架构 (内置 110+ 语言显示名称，动态切换无需重启，支持自定义翻译)</li>
+                    <li>开发者调试面板：实时日志流 (Debug/Info/Warning/Error/Fatal)，强制保存日志，模拟各级日志输出</li>
+                    <li>许可证双重校验 (在线+离线)，剩余有效期精确到秒，支持服务器冗余切换，防篡改加密存储</li>
+                    <li>多源更新引擎 (主服务器+备用服务器+GitHub镜像)，自动检测新版本并显示详细更新日志(Markdown渲染)</li>
+                    <li>系统托盘集成 (最小化至托盘、开机自启后隐藏主窗口、一键唤醒、自定义快捷键)</li>
+                    <li>进程详细信息弹窗：包含模块列表、环境变量、父进程关系、性能趋势图、网络连接状态</li>
+                    <li>软件/硬件环境检测：自动识别虚拟机环境、沙箱检测、反调试技术 (增强反分析能力)</li>
+                    <li>进程性能实时图表：CPU 占用率历史曲线、内存占用曲线、IO 速率监控</li>
+                    <li>进程依赖分析：查看进程加载的 DLL 模块、数字签名验证、文件属性详情</li>
+                    <li>系统服务管理器：查看/启动/停止 Windows 服务，支持服务依赖关系展示</li>
+                    <li>网络连接监控：查看进程对应的 TCP/UDP 连接、端口占用、远程地址</li>
+                </ul>
+            </div>
+            <div class="sys-req">
+                <h3>运行环境与部署要求</h3>
+                <div class="req-item"><span class="req-label">操作系统</span>
+                    <div class="req-desc">Windows 10 (20H2+), Windows 11, Windows Server 2022/2026, Windows 8.1 (部分兼容)
+                    </div>
+                </div>
+                <div class="req-item"><span class="req-label">架构支持</span>
+                    <div class="req-desc">x64 (原生优化) / x86 (兼容模式) / ARM64 (实验性支持)</div>
+                </div>
+                <div class="req-item"><span class="req-label">必要权限</span>
+                    <div class="req-desc">推荐以管理员身份运行，以获取完整进程信息、Hosts 写入及服务管理权限；普通用户模式仅限查看</div>
+                </div>
+                <div class="req-item"><span class="req-label">磁盘占用</span>
+                    <div class="req-desc">安装包 ≈ 52 MB，运行时日志可配置上限 (默认 1 GiB 滚动，支持按大小/按时间分割)</div>
+                </div>
+                <div class="req-item"><span class="req-label">内存占用</span>
+                    <div class="req-desc">空闲状态 ≈ 35 MB，完整监控模式 ≈ 60 MB</div>
+                </div>
+                <hr>
+                <div class="req-item"><span class="req-label">授权模式</span>
+                    <div class="req-desc">商业闭源软件 · 基于 License 文件激活 (支持试用授权7天/30天/1年及永久授权，禁止未授权二次分发)</div>
+                </div>
+                <div class="req-item"><span class="req-label">技术栈核心</span>
+                    <div class="req-desc">Python 3.13 + Tkinter 8.6 + psutil 6.1 + pywin32 308 + Pillow 11.1 + pystray
+                        0.19 + requests 2.32</div>
+                </div>
+                <div class="req-item"><span class="req-label">安全标准</span>
+                    <div class="req-desc">所有网络通信强制 TLS 1.2+，产品密钥存储使用 PBKDF2-HMAC-SHA256 派生加密，日志自动脱敏，防内存 dump</div>
+                </div>
+                <div class="req-item"><span class="req-label">兼容性</span>
+                    <div class="req-desc">支持 Windows Defender 排除列表配置，通过主流杀软认证 (360、火绒、卡巴斯基、Defender)</div>
+                </div>
+                <div class="req-item"><span class="req-label">bug提交、软件下载</span>
+                    <div class="req-desc">支持在github进行bug提交，软件下载等操作，连接<a
+                            href="https://github.com/ziyit-Hacker/Release_control">https://github.com/ziyit-Hacker/Release_control</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="version-rule">
+            <h3><i class="fas fa-code-branch"></i> 版本号规则</h3>
+            <ul>
+                <li><strong>正式版格式</strong>：<code class="version-rule-code">[年份].[Drop序号]</code> 或 <code
+                        class="version-rule-code">[年份].[Drop序号].[修订版]</code>
+                    <br><span style="color:var(--ziyit-text-secondary); font-size:0.85rem;">示例：26.2、26.3</span>
+                </li>
+                <li><strong>快照版格式</strong>：<code class="version-rule-code">[年份].[Drop序号]-snapshot-[周次]</code>
+                    <br><span style="color:var(--ziyit-text-secondary); font-size:0.85rem;">示例：26.3-snapshot-26W12A（2026年第12周A版）</span>
+                </li>
+                <li><strong>版本号组成</strong>：
+                    <br><span style="color:var(--ziyit-text-secondary); font-size:0.85rem;">年份：主版本号基准（如26代表2026年）</span>
+                    <br><span style="color:var(--ziyit-text-secondary); font-size:0.85rem;">Drop序号：该年份内的主要发布序号</span>
+                    <br><span style="color:var(--ziyit-text-secondary); font-size:0.85rem;">修订版：补丁或小版本更新</span>
+                    <br><span style="color:var(--ziyit-text-secondary); font-size:0.85rem;">周次：快照版对应的ISO周数 + 版本标识(A/B/C)</span>
+                </li>
+                <li><strong>版本比较规则</strong>：
+                    <br><span style="color:var(--ziyit-text-secondary); font-size:0.85rem;">正式版按数字大小比较，快照版按主版本+周次比较</span>
+                    <br><span style="color:var(--ziyit-text-secondary); font-size:0.85rem;">快照版版本号高于同期的正式版（包含最新功能）</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="update-log">
+            <h3><i class="fas fa-history"></i> 更新日志</h3>
+            <div id="updateLogContent" class="update-log-content">
+                <div class="ziyit-loading">
+                    <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                    <div class="ziyit-loader">
+                        <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                        <div class="loader-bar"><div class="loader-fill"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>产品详细介绍</h3>
+            <p><strong>Release Control</strong> 是一款面向专业用户、系统管理员、安全运维人员以及企业IT部门的下一代 Windows 系统进程管理与深度优化工具。与 Windows
+                操作系统自带的任务管理器不同，Release Control 提供了更深层次的系统访问能力、更丰富的进程信息维度以及更灵活的自动化管理策略。软件从底层采用 <strong>psutil</strong> 和
+                <strong>pywin32</strong> 双引擎驱动，能够绕过部分系统限制，获取被常规工具隐藏或限制访问的进程信息。
+            </p>
+
+            <h4>1. 进程监控与详细信息展示</h4>
+            <p>在进程监控方面，Release Control 实现了毫秒级的刷新频率，用户可自定义监控间隔（最低 0.1 秒，最高 60 秒）。进程列表支持多种数据维度的实时展示：进程 ID (PID)、进程名称、CPU
+                占用率（百分比）、内存占用（MB）、进程状态（运行中/挂起/停止/僵尸）、启动时间、运行时长等。</p>
+            <p>进程列表支持强大的过滤和搜索功能：用户可按进程名搜索、按翻译后的中文名搜索、按 PID 精确搜索。排序方面，支持按 PID（升序/降序）、按进程名（字母顺序）、按 CPU
+                利用率（高低）、按内存利用率（高低）、按启动时间（先后）等多种排序方式，点击列标题即可切换排序方向，上方会显示 ↑ 或 ↓ 箭头指示当前排序状态。</p>
+
+            <h4>2. 进程终止与进程树管理</h4>
+            <p>进程终止功能是 Release Control
+                的核心优势之一。除了常规的单进程终止外，软件支持<strong>递归终止进程树</strong>——即当用户终止一个父进程时，系统会自动递归扫描并终止该进程的所有子进程、孙进程及更深层级的后代进程。这一功能对于清理恶意软件簇、彻底结束游戏反作弊系统残留进程、终止臃肿软件套件的所有相关进程等场景极为有用。
+            </p>
+            <p>同时，软件内置了<strong>进程保护白名单机制</strong>。用户可以将关键系统进程（如
+                csrss.exe、winlogon.exe、lsass.exe、services.exe、svchost.exe
+                等）加入保护列表，当尝试终止这些进程时，软件会弹出二次确认警告，防止误操作导致系统蓝屏或崩溃。白名单支持通配符（如 *.exe）和正则表达式匹配。</p>
+
+            <h4>3. 后台守护监控模式</h4>
+            <p>后台守护监控模式是 Release Control 区别于同类产品的重要杀手级特性。用户可配置一个或多个进程名称（支持通配符 * 和正则表达式匹配），软件将在后台持续扫描系统进程列表（扫描间隔可自定义，最低
+                0.5 秒，最高 3600 秒）。一旦检测到目标进程出现，立即执行用户预设的动作序列，包括但不限于：</p>
+            <ul>
+                <li>终止该进程</li>
+                <li>递归终止该进程的完整进程树</li>
+                <li>记录日志到日志文件</li>
+                <li>发送 Windows 桌面通知</li>
+                <li>播放系统提示音效</li>
+                <li>执行外部脚本或程序</li>
+            </ul>
+            <p>这一功能可广泛应用于：网吧环境下的游戏进程管理（自动查杀破解工具）、企业内禁止运行某些娱乐软件（如游戏、视频客户端）、家长控制未成年人运行特定程序、服务器进程保活（自动重启挂掉的进程）等场景。监控统计信息会实时显示每个进程被查杀的次数，方便用户评估监控效果。
+            </p>
+
+            <h4>4. 开机自启动项全面管理</h4>
+            <p>开机自启动项管理模块提供了对 Windows 系统所有自启动位置的<strong>全面覆盖</strong>，包括但不限于以下位置：</p>
+            <ul>
+                <li>当前用户注册表 Run 项（HKCU\Software\Microsoft\Windows\CurrentVersion\Run）</li>
+                <li>本地机器注册表 Run 项（HKLM\Software\Microsoft\Windows\CurrentVersion\Run）</li>
+                <li>RunOnce 项（一次性启动，下次开机自动删除）</li>
+                <li>用户启动目录（%USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup）</li>
+                <li>公共启动目录（%PROGRAMDATA%\Microsoft\Windows\Start Menu\Programs\StartUp）</li>
+                <li>计划任务（所有与登录/启动相关的计划任务）</li>
+                <li>Windows 服务（设置为自动启动的服务项）</li>
+                <li>Winlogon Shell 项</li>
+                <li>AppInit_DLLs（全局 DLL 注入点）</li>
+                <li>启动文件夹快捷方式</li>
+            </ul>
+            <p>每个自启动项均可独立启用/禁用/删除，软件还会对可疑的自启动项进行风险提示（如：无数字签名、文件路径指向临时目录、文件本体已不存在等），帮助用户识别潜在的恶意软件或流氓软件。</p>
+
+            <h4>5. Hosts 文件分区编辑器</h4>
+            <p>Hosts 文件编辑器采用了创新的<strong>分区管理模式</strong>。用户可以将 Hosts 文件中的域名解析记录划分为多个逻辑分区，例如：</p>
+            <ul>
+                <li>系统默认分区（Windows 系统自带规则）</li>
+                <li>广告屏蔽分区（自定义的广告域名屏蔽列表）</li>
+                <li>开发测试分区（本地开发环境域名映射）</li>
+                <li>内网解析分区（公司内网域名解析）</li>
+                <li>家长控制分区（屏蔽不良网站）</li>
+            </ul>
+            <p>每个分区可以单独锁定，防止被其他程序或用户意外修改。这种设计使得多用户协作或多人管理同一台设备时，可以各自维护自己的分区而不会互相干扰。软件还提供了 Hosts
+                文件的实时备份与一键还原功能，即使发生误操作也可快速恢复到之前的状态。对于需要批量添加大量域名解析的场景，支持从文本文件导入记录，也支持导出当前配置到文件进行跨设备迁移。</p>
+
+            <h4>6. 许可证与授权管理系统</h4>
+            <p>许可证与授权管理系统是 Release Control 的安全基石，采用<strong>RSA + AES 双重加密</strong>技术保护用户授权信息。软件启动后会首先检查本地是否存在 license
+                文件，若不存在则弹出激活窗口要求用户输入用户名和产品密钥。</p>
+            <p>产品密钥通过 MD5 哈希 + Base64 编码进行加密传输，服务器端存储的是哈希值而非明文，即使服务器配置文件泄露也无法逆向获得用户原始密钥。软件支持两种授权模式：</p>
+            <ul>
+                <li><strong>在线验证模式</strong>：每次启动时连接 RCL 验证服务器，实时校验密钥有效性和剩余天数</li>
+                <li><strong>离线模式</strong>：当服务器不可达时（网络故障、服务器维护等），自动切换到离线模式，使用本地缓存的许可证信息继续运行</li>
+            </ul>
+            <p>授权信息中包含用户名、加密密钥、授权天数、注册时间戳，通过计算已使用天数来判定是否过期。当授权剩余天数小于 3
+                天时，软件会在启动时提醒用户及时续期；当授权过期时，软件将拒绝启动并引导用户进入重新激活流程。整个授权验证过程全程加密传输，有效防止中间人攻击和本地文件篡改。</p>
+
+            <h4>7. 更新检测机制</h4>
+            <p>更新检测机制采用了<strong>多服务器冗余架构</strong>，确保即使主服务器出现故障也能正常检测更新。主服务器地址为 https://ziyit-hacker.github.io，备用服务器地址为
+                https://github.com/ziyit-Hacker/Update。</p>
+            <p>软件启动后会在后台线程中静默检测最新版本，通过读取服务器上的 Update.inf
+                文件获取最新版本号，并与当前版本进行比较。检测逻辑支持正式版与快照版的版本号智能比较（按数字大小和周次排序）。若发现新版本，弹出更新对话框并以 Markdown
+                格式渲染显示详细的更新日志（包含新功能列表、Bug
+                修复说明、已知问题等）。用户可选择立即下载（打开浏览器跳转到下载页面）或稍后提醒。更新检测支持手动触发（通过菜单栏“检查更新”按钮）和自动检测（可配置开关）两种方式。</p>
+
+            <h4>8. 日志系统</h4>
+            <p>日志系统是软件可维护性的重要保障。Release Control 支持五级日志输出：</p>
+            <ul>
+                <li><strong>DEBUG</strong>：详细的调试信息，用于开发者和高级用户排查问题</li>
+                <li><strong>INFO</strong>：常规运行信息，记录程序正常操作流程</li>
+                <li><strong>WARNING</strong>：警告级别，表示潜在问题但不影响核心功能</li>
+                <li><strong>ERROR</strong>：错误级别，表示功能执行失败但程序可继续运行</li>
+                <li><strong>FUCK</strong>：致命错误级别，触发后程序会立即闪退并保存崩溃现场日志</li>
+            </ul>
+            <p>用户可以在设置中灵活配置需要记录的日志级别。日志文件默认存储在软件目录下的 logs 文件夹中，文件命名格式为 RC-logs-Part{序号}.log，每个日志文件的大小上限可配置（默认 1
+                GiB），超出上限后自动轮转创建新的日志文件。日志写入模式支持两种：<strong>缓冲模式</strong>（内存中缓存日志，达到 150 条或达到时间间隔后再批量写入磁盘，IO
+                性能更优）和<strong>实时模式</strong>（每条日志立即写入磁盘，便于实时监控）。开发者模式下，用户可以通过调试面板实时查看日志流、强制保存当前日志缓冲区、清除日志缓冲区、以及模拟生成各级别测试日志。
+            </p>
+
+            <h4>9. 多语言支持</h4>
+            <p>多语言支持是 Release Control
+                面向全球用户的重要特性。软件内置了全球主要语言的支持，包括但不限于：中文简体、中文繁体（台湾/香港）、英语（美国/英国/澳大利亚/加拿大/印度等变体）、日语、韩语、德语、法语、西班牙语（西班牙/墨西哥/阿根廷等）、葡萄牙语（葡萄牙/巴西）、俄语、阿拉伯语（多个国家变体）、印地语、意大利语、荷兰语、波兰语、土耳其语、越南语、泰语等。
+            </p>
+            <p>用户可以通过设置菜单中的语言选择对话框实时切换界面语言，<strong>无需重启软件</strong>即可生效。软件还支持自定义翻译，高级用户可以修改语言 JSON 文件来适配自己的偏好或补充缺失的翻译条目。
+            </p>
+
+            <h4>10. 开发者调试模式</h4>
+            <p>开发者调试模式为软件测试和问题排查提供了强大工具。开启开发者模式需要输入 ZIYIT 官网管理员凭证进行身份验证，防止普通用户误入。</p>
+            <p>进入开发者模式后，用户可以通过独立的调试面板实时查看系统运行状态：</p>
+            <ul>
+                <li>当前系统总进程数</li>
+                <li>系统内存使用率（已用/总计，百分比）</li>
+                <li>CPU 使用率（百分比）</li>
+                <li>日志缓冲区当前大小（条数）</li>
+            </ul>
+            <p>调试面板中还提供了多个测试功能按钮：强制保存日志（立即将缓冲区中的日志写入磁盘）、清除日志缓冲区、生成 DEBUG 级别测试日志、生成 INFO 级别测试日志、生成 WARNING 级别测试日志、生成
+                ERROR 级别测试日志、模拟 FUCK 级别致命错误退出。这些功能极大地方便了开发者在不同场景下验证软件的行为和日志系统的正确性。</p>
+
+            <h4>11. 系统托盘集成</h4>
+            <p>系统托盘集成大幅提升了软件的使用体验和便捷性。用户可以在设置中配置以下行为：</p>
+            <ul>
+                <li><strong>关闭按钮行为</strong>：点击窗口关闭按钮时是直接退出程序，还是最小化到系统托盘</li>
+                <li><strong>开机自启行为</strong>：开机自启动时是正常显示主窗口，还是自动隐藏到系统托盘</li>
+            </ul>
+            <p>托盘图标支持右键菜单，包含：显示主窗口、退出程序、重启软件、检查更新、卸载产品密钥等常用选项。软件最小化到托盘后，后台守护监控模式仍然继续生效，不会因为窗口隐藏而停止工作。</p>
+
+            <h4>12. 性能优化</h4>
+            <p>性能优化方面，Release Control 采用了<strong>多线程异步处理架构</strong>。进程列表刷新、图标加载、日志写入、网络请求等耗时操作均在后台线程中执行，确保主界面 UI
+                始终保持流畅响应，不会出现卡顿或假死现象。</p>
+            <p>进程图标缓存机制避免了重复提取相同进程的图标造成的性能损耗。树形控件的虚拟滚动技术使得即使系统中有上千个进程时也能保持平滑滚动。软件启动速度经过深度优化，通过将日志写入改为异步队列 +
+                批量写入模式，启动时间从最初的 8 秒大幅降低至 2 秒以内（在良好网络环境下）。</p>
+
+            <h4>13. 安全性防护</h4>
+            <p>安全性方面，软件采取了多项防护措施：</p>
+            <ul>
+                <li><strong>反调试技术</strong>：通过检测开发者工具（F12）、右键菜单屏蔽、控制台劫持等方式防止恶意用户通过浏览器调试器破解软件或绕过授权验证</li>
+                <li><strong>产品密钥加密保护</strong>：密钥通过 MD5 哈希后 Base64 编码传输，服务器端存储的是哈希值而非明文，即使服务器配置文件泄露也无法逆向获得用户原始密钥</li>
+                <li><strong>日志自动脱敏</strong>：在记录日志时会自动过滤可能包含敏感信息的字段（如完整路径中的用户名、IP 地址等）</li>
+                <li><strong>防内存提取</strong>：软件在运行时会对关键数据结构（如许可证信息、解密后的密钥等）进行加密存储，防止通过内存 dump 方式提取敏感数据</li>
+                <li><strong>通信加密</strong>：所有网络请求均强制使用 TLS 1.2+ 加密传输</li>
+            </ul>
+
+            <h4>14. 版本发布策略</h4>
+            <p>软件发布采用<strong>双通道策略</strong>：</p>
+            <ul>
+                <li><strong>正式版（Stable）</strong>：经过完整的测试周期和兼容性验证，稳定性高，经过充分的内测和公测，适合生产环境部署和企业使用</li>
+                <li><strong>快照版（Snapshot）</strong>：基于最新代码自动构建，包含最新的功能特性和 Bug 修复，但可能包含未充分测试的代码，适合开发者和测试人员抢先体验新功能</li>
+            </ul>
+            <p>每个发布版本都提供 SHA256 哈希值供用户校验文件完整性，防止下载过程中文件被恶意篡改或损坏。用户可使用 Windows 自带的 certutil 命令或第三方工具进行校验。</p>
+
+            <h4>15. 版本号规则</h4>
+            <p>正式版格式为 <strong>[年份].[Drop序号]</strong> 或 <strong>[年份].[Drop序号].[修订版]</strong>（示例：26.2、26.3）。快照版格式为
+                <strong>[年份].[Drop序号]-snapshot-[周次]</strong>（示例：26.3-snapshot-26W12A）。年份代表主版本号基准（如 26 代表 2026
+                年），Drop序号代表该年份内的主要发布序号，修订版代表补丁或小版本更新，周次代表快照版对应的 ISO 标准周数及版本标识字母（A/B/C）。
+            </p>
+
+            <h4>16. 技术支持与售后服务</h4>
+            <p>用户可通过以下方式获得技术支持：发送邮件至 <strong>ziyitstudio@qq.com</strong>，或访问官方网站
+                <strong>https://ziyit-hacker.github.io</strong> 提交反馈，或在 GitHub 仓库中提交 Issue。报告 Bug 时，请提供以下信息以便快速定位和修复问题：
+            </p>
+            <ul>
+                <li>软件版本号（如 26.4-snapshot-26W18A）</li>
+                <li>操作系统版本（Windows 10/11，具体 Build 号）</li>
+                <li>详细的错误描述和重现步骤</li>
+                <li>日志文件（位于软件目录下的 logs 文件夹中）</li>
+                <li>截图或录屏（如适用）</li>
+            </ul>
+            <p>对于企业用户，还可签订年度维护合同，获得定制化开发、专属技术支持、远程协助等增值服务。</p>
+
+            <h4>17. 未来发展规划</h4>
+            <p>Release Control 将持续迭代更新，计划在后续版本中增加以下功能：</p>
+            <ul>
+                <li><strong>远程进程管理</strong>：通过局域网或互联网远程管理多台设备的进程状态，支持批量操作和集中监控</li>
+                <li><strong>进程行为分析</strong>：基于 Windows ETW（Event Tracing for Windows）的事件追踪，分析进程行为模式，识别可疑活动</li>
+                <li><strong>沙箱环境执行</strong>：在隔离的沙箱环境中执行可疑进程，分析其行为而不影响真实系统</li>
+                <li><strong>安全日志集成接口</strong>：与主流 EDR/SIEM 系统（如 Elastic Security、Splunk、Wazuh）集成，提供标准化的日志输出格式</li>
+                <li><strong>命令行版本（无界面模式）</strong>：支持通过命令行参数执行进程查询、终止等操作，方便集成到自动化脚本和 CI/CD 流程中</li>
+                <li><strong>进程性能趋势图表增强</strong>：提供更丰富的历史数据可视化图表，支持导出为图片或 CSV 格式</li>
+                <li><strong>更多语言支持</strong>：持续增加更多小语种的支持，进一步扩大全球用户覆盖范围</li>
+                <li><strong>进程网络连接监控</strong>：显示每个进程的 TCP/UDP 网络连接详情，包括本地端口、远程地址、连接状态等</li>
+                <li><strong>进程模块/DLL 分析</strong>：查看进程加载的所有 DLL 模块，支持数字签名验证和模块路径定位</li>
+            </ul>
+            <p>我们欢迎用户提供功能建议和反馈意见，共同将 Release Control 打造成更强大、更易用的系统管理工具。</p>
+        </div>
+    
+        <div class="section" id="mod-doc-section">
+            <h3><i class="fas fa-book"></i> 开发者文档 (MOD/DLC)</h3>
+            <div id="mod-doc-content" class="update-log-content">
+                <div class="ziyit-loading">
+                    <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                    <div class="ziyit-loader">
+                        <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                        <div class="loader-bar"><div class="loader-fill"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="mod-download-section">
+            <h3><i class="fas fa-box-open"></i> MOD / DLC 下载中心</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
+                <p style="color: var(--ziyit-text-secondary); font-size: 0.85rem; margin: 0;">列表与下载数据均来自服务器，需要登录 ZIYIT 账号后才能加载</p>
+                <button id="mod-submit-btn" style="background:#1e293b;color:#fff;border:none;padding:0.45rem 1.2rem;border-radius:40px;font-size:0.8rem;cursor:pointer;font-weight:500;white-space:nowrap;">+ 上传我的 MOD</button>
+            </div>
+            <div id="mod-login-tip" style="display: none; background: rgba(245, 158, 11, 0.15); border-left: 5px solid #f59e0b; padding: 0.8rem 1rem; margin-bottom: 1rem; font-size: 0.9rem;">
+                未登录，<a href="../user/" style="color: #2563eb; text-decoration: none; font-weight: 600;">请先登录</a>后再下载 MOD/DLC
+            </div>
+            <div id="mod-offline-tip" style="display: none; background: rgba(239, 68, 68, 0.15); border-left: 5px solid #ef4444; padding: 0.8rem 1rem; margin-bottom: 1rem; font-size: 0.9rem;">
+                服务器离线，无法加载 MOD/DLC 列表
+            </div>
+            <div id="mod-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;"></div>
+        </div>
+
+        <!-- 上传我的 MOD 模态框 -->
+        <div id="modSubmitModal" class="modal-overlay">
+            <div class="modal-container" style="max-width:520px;">
+                <div class="modal-header">上传我的 MOD</div>
+                <div class="modal-body">
+                    <p style="color:var(--ziyit-text-secondary); margin-bottom:1rem;">提交后需管理员审核，作者将以你的账号自动记录。文件请先上传到可直链下载的地址（如网盘 / 对象存储）。</p>
+                    <div style="margin-bottom:1rem;">
+                        <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">MOD 名称 *</label>
+                        <input type="text" id="submit-mod-name" placeholder="例如：Process Optimizer"
+                            style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;">
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">文件下载链接 *</label>
+                        <input type="text" id="submit-mod-url" placeholder="https://.../xxx.rcm"
+                            style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;">
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">版本号 *</label>
+                        <input type="text" id="submit-mod-version" placeholder="例如：1.0.0"
+                            style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="submit-mod-cancel" style="background:var(--ziyit-border);color:var(--ziyit-text-primary);border:none;padding:0.5rem 1.4rem;border-radius:40px;font-size:0.85rem;cursor:pointer;font-weight:500;">取消</button>
+                    <button id="submit-mod-confirm" style="background:#1e293b;color:#fff;border:none;padding:0.5rem 1.4rem;border-radius:40px;font-size:0.85rem;cursor:pointer;font-weight:500;">提交</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3><i class="fas fa-table"></i> 功能权限表</h3>
+            <div class="card">
+                <div class="card-header">
+                    <h2>各版本功能权限对照</h2>
+                    <p style="color: var(--ziyit-text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">
+                        <span class="permission-tr">Tr 试用版</span> - 基础功能，适合体验<br>
+                        <span class="permission-or">Or 普通版</span> - 日常使用，包含大部分实用功能<br>
+                        <span class="permission-pr">Pr 专业版</span> - 完整功能，包含高级系统操作
+                    </p>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: var(--ziyit-bg-card); border-bottom: 2px solid var(--ziyit-border);">
+                                <th style="text-align: left; padding: 1rem 1.2rem; font-weight: 600;">功能分类</th>
+                                <th style="text-align: left; padding: 1rem 1.2rem; font-weight: 600;">具体功能</th>
+                                <th style="text-align: center; padding: 1rem 1.2rem; font-weight: 600;">Tr</th>
+                                <th style="text-align: center; padding: 1rem 1.2rem; font-weight: 600;">Or</th>
+                                <th style="text-align: center; padding: 1rem 1.2rem; font-weight: 600;">Pr</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">进程管理</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程管理</td>
+                                <td style="padding: 0.8rem 1.2rem;">查看进程列表</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程管理</td>
+                                <td style="padding: 0.8rem 1.2rem;">刷新进程列表</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程管理</td>
+                                <td style="padding: 0.8rem 1.2rem;">搜索进程</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程管理</td>
+                                <td style="padding: 0.8rem 1.2rem;">结束选中进程</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程管理</td>
+                                <td style="padding: 0.8rem 1.2rem;">结束进程树</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程管理</td>
+                                <td style="padding: 0.8rem 1.2rem;">清除选择</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程管理</td>
+                                <td style="padding: 0.8rem 1.2rem;">导出进程列表</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程管理</td>
+                                <td style="padding: 0.8rem 1.2rem;">进程详情查看</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程管理</td>
+                                <td style="padding: 0.8rem 1.2rem;">复制进程名</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程管理</td>
+                                <td style="padding: 0.8rem 1.2rem;">进程列表排序</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">进程高级控制</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程高级控制</td>
+                                <td style="padding: 0.8rem 1.2rem;">设置进程优先级</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程高级控制</td>
+                                <td style="padding: 0.8rem 1.2rem;">设置CPU亲和性</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程高级控制</td>
+                                <td style="padding: 0.8rem 1.2rem;">进程挂起/恢复</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程高级控制</td>
+                                <td style="padding: 0.8rem 1.2rem;">进程延迟操作</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程高级控制</td>
+                                <td style="padding: 0.8rem 1.2rem;">进程资源限制</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程高级控制</td>
+                                <td style="padding: 0.8rem 1.2rem;">进程分析</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">进程翻译</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程翻译</td>
+                                <td style="padding: 0.8rem 1.2rem;">编辑进程中文名</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">进程翻译</td>
+                                <td style="padding: 0.8rem 1.2rem;">删除进程翻译</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">监控功能</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">监控功能</td>
+                                <td style="padding: 0.8rem 1.2rem;">监控管理器</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">监控功能</td>
+                                <td style="padding: 0.8rem 1.2rem;">进程白名单</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">历史记录</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">历史记录</td>
+                                <td style="padding: 0.8rem 1.2rem;">进程历史图表</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">历史记录</td>
+                                <td style="padding: 0.8rem 1.2rem;">搜索历史</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">系统工具</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">系统工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">开机自启动管理</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">系统工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">Hosts文件管理</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">系统工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">内存清理</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">系统工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">实时性能图表</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">系统工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">网络连接查看器</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">文件工具</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">文件工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">ZIP密码破解</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">文件工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">字典生成器</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">文件工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">文件破坏工具</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">文件工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">文件加密(.rce生成)</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">文件工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">文件解密(.rce读取)</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">文件工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">恢复密钥解密</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">文件工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">命令行参数关联</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">通信工具</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">通信工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">加密对话系统</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">通信工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">消息发送器</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">二维码工具</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">二维码工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">二维码生成</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">二维码工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">二维码扫描</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">二维码工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">PDF417机票码生成</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">二维码工具</td>
+                                <td style="padding: 0.8rem 1.2rem;">PDF417机票码扫描</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                            </tr>
+
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">程序控制</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">程序控制</td>
+                                <td style="padding: 0.8rem 1.2rem;">重启程序</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">程序控制</td>
+                                <td style="padding: 0.8rem 1.2rem;">退出程序</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">程序控制</td>
+                                <td style="padding: 0.8rem 1.2rem;">系统托盘</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">程序控制</td>
+                                <td style="padding: 0.8rem 1.2rem;">全局快捷键</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">更新与设置</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">更新与设置</td>
+                                <td style="padding: 0.8rem 1.2rem;">检查更新</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">更新与设置</td>
+                                <td style="padding: 0.8rem 1.2rem;">设置</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">更新与设置</td>
+                                <td style="padding: 0.8rem 1.2rem;">语言切换</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">更新与设置</td>
+                                <td style="padding: 0.8rem 1.2rem;">查看日志目录</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">帮助与信息</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">帮助与信息</td>
+                                <td style="padding: 0.8rem 1.2rem;">关于</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">帮助与信息</td>
+                                <td style="padding: 0.8rem 1.2rem;">帮助</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">帮助与信息</td>
+                                <td style="padding: 0.8rem 1.2rem;">EULA</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">帮助与信息</td>
+                                <td style="padding: 0.8rem 1.2rem;">许可证信息</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">帮助与信息</td>
+                                <td style="padding: 0.8rem 1.2rem;">卸载许可证</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+
+                            <tr style="background: var(--ziyit-bg-card);">
+                                <td colspan="5" style="padding: 0.8rem 1.2rem; font-weight: 700;">其他</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">其他</td>
+                                <td style="padding: 0.8rem 1.2rem;">开发者模式</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                                <td class="no">✗</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem 1.2rem;">其他</td>
+                                <td style="padding: 0.8rem 1.2rem;">彩蛋</td>
+                                <td class="no">✗</td>
+                                <td class="yes">✓</td>
+                                <td class="yes">✓</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="note-stable" style="margin-top: 1rem;">
+                    <p>✓ 表示该版本支持该功能；✗ 表示不支持。开发者模式需要 ZIYIT 官网超管账号验证，与许可证等级无关。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3><i class="fas fa-tags"></i> 授权与收费标准</h3>
+            <div class="card">
+                <div class="card-header">
+                    <h2>版本授权价格方案</h2>
+                    <p style="color: var(--ziyit-text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">
+                        所有价格均为人民币(CNY)计价。普通版(Or)与专业版(Pr)均需通过官方渠道获取授权，试用版(Tr)免费。
+                    </p>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: var(--ziyit-bg-card); border-bottom: 2px solid var(--ziyit-border);">
+                                <th style="text-align: left; padding: 1rem 1.2rem; font-weight: 600;">版本类型</th>
+                                <th style="text-align: left; padding: 1rem 1.2rem; font-weight: 600;">授权时长</th>
+                                <th style="text-align: left; padding: 1rem 1.2rem; font-weight: 600;">价格 (CNY)</th>
+                                <th style="text-align: left; padding: 1rem 1.2rem; font-weight: 600;">备注</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid var(--ziyit-bg-card);">
+                                <td style="padding: 0.8rem 1.2rem; font-weight: 600; background-color: var(--ziyit-bg-hover);">试用版
+                                    (Trial)</td>
+                                <td style="padding: 0.8rem 1.2rem;">通常为 7天 / 30 / inf 天</td>
+                                <td style="padding: 0.8rem 1.2rem; color: #10b981; font-weight: bold;">免费</td>
+                                <td style="padding: 0.8rem 1.2rem; color: var(--ziyit-text-secondary);">通过互联网免费获取试用密钥以及26.6版本的个人试用版，功能受限
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--ziyit-bg-card);">
+                                <td style="padding: 0.8rem 1.2rem; font-weight: 600; background-color: var(--ziyit-bg-hover);"
+                                    rowspan="5">普通版 (Ordinary)</td>
+                                <td style="padding: 0.8rem 1.2rem;">1 天</td>
+                                <td style="padding: 0.8rem 1.2rem;">1.00 元</td>
+                                <td style="padding: 0.8rem 1.2rem; color: var(--ziyit-text-secondary);">适合短期体验</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--ziyit-bg-card);">
+                                <td style="padding: 0.8rem 1.2rem;">15 天</td>
+                                <td style="padding: 0.8rem 1.2rem;">14.67 元</td>
+                                <td style="padding: 0.8rem 1.2rem; color: var(--ziyit-text-secondary);">约合 0.98元/天</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--ziyit-bg-card);">
+                                <td style="padding: 0.8rem 1.2rem;">1 个月</td>
+                                <td style="padding: 0.8rem 1.2rem;">27.00 元</td>
+                                <td style="padding: 0.8rem 1.2rem; color: var(--ziyit-text-secondary);">月度订阅，高性价比</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--ziyit-bg-card);">
+                                <td style="padding: 0.8rem 1.2rem;">2 个月</td>
+                                <td style="padding: 0.8rem 1.2rem;">48.00 元</td>
+                                <td style="padding: 0.8rem 1.2rem; color: var(--ziyit-text-secondary);">约合 0.80元/天</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--ziyit-bg-card);">
+                                <td style="padding: 0.8rem 1.2rem;">1 年</td>
+                                <td style="padding: 0.8rem 1.2rem;">244.25 元</td>
+                                <td style="padding: 0.8rem 1.2rem; color: var(--ziyit-text-secondary);">年度授权，约合 0.67元/天，最优惠</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--ziyit-bg-card);">
+                                <td style="padding: 0.8rem 1.2rem; font-weight: 600; background-color: var(--ziyit-bg-hover);"
+                                    rowspan="5">专业版 (Professional)</td>
+                                <td style="padding: 0.8rem 1.2rem;">1 天</td>
+                                <td style="padding: 0.8rem 1.2rem;">2.00 元</td>
+                                <td style="padding: 0.8rem 1.2rem; color: var(--ziyit-text-secondary);">包含所有专业功能</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--ziyit-bg-card);">
+                                <td style="padding: 0.8rem 1.2rem;">15 天</td>
+                                <td style="padding: 0.8rem 1.2rem;">29.34 元</td>
+                                <td style="padding: 0.8rem 1.2rem; color: var(--ziyit-text-secondary);">专业版15天授权</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--ziyit-bg-card);">
+                                <td style="padding: 0.8rem 1.2rem;">1 个月</td>
+                                <td style="padding: 0.8rem 1.2rem;">54.00 元</td>
+                                <td style="padding: 0.8rem 1.2rem; color: var(--ziyit-text-secondary);">专业版月度订阅</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--ziyit-bg-card);">
+                                <td style="padding: 0.8rem 1.2rem;">2 个月</td>
+                                <td style="padding: 0.8rem 1.2rem;">96.00 元</td>
+                                <td style="padding: 0.8rem 1.2rem; color: var(--ziyit-text-secondary);">专业版双月授权</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--ziyit-bg-card);">
+                                <td style="padding: 0.8rem 1.2rem;">1 年</td>
+                                <td style="padding: 0.8rem 1.2rem;">488.50 元</td>
+                                <td style="padding: 0.8rem 1.2rem; color: var(--ziyit-text-secondary);">专业版年度授权，享受优先技术支持</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="note-stable" style="margin-top: 1.5rem; background: var(--ziyit-primary-light); border-left-color: var(--ziyit-primary);">
+                    <p><strong>📧 获取密钥及付款方式</strong><br>
+                        请通过邮箱 <strong><a href="mailto:ziyitstudio@qq.com"
+                                style="color: #2563eb; text-decoration: none;">ziyitstudio@qq.com</a></strong>
+                        联系我们，<strong>说明您需要的版本类型（普通版/专业版）和授权时长</strong>。我们将回复您当期付款二维码（支持微信/支付宝），完成支付后即可为您生成专属产品密钥。<br>
+                        <span style="font-size: 0.85rem; color: var(--ziyit-text-secondary);">💡 提示：企业批量采购或长期合作可享额外折扣，请邮件详询。</span>
+                    </p>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--ziyit-text-secondary); margin-top: 1rem; text-align: center;">*
+                    所有价格单位为人民币（CNY），最终解释权归 ZIYIT STUDIO 所有。试用版功能限制详见上方“功能权限表”。</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>常见问题解答 (FAQ)</h3>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>1. Release Control 是什么？主要功能有哪些？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Release Control 是一款专业的 Windows
+                        系统进程管理工具，主要功能包括：进程实时监控与终止、递归终止进程树、后台守护监控（自动查杀指定进程）、开机自启动项全面管理、Hosts
+                        文件分区编辑器、进程搜索（支持PID/进程名/翻译名）、进程列表排序（PID/CPU/内存/启动时间）、多语言支持、许可证验证、系统托盘集成、开发者调试模式等。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>2. 软件是否需要管理员权限运行？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>推荐以管理员身份运行 Release Control，以获得完整的进程信息和系统访问权限。在管理员模式下，您可以终止任何进程、修改 Hosts
+                        文件、编辑开机自启动项等。如果以普通用户模式运行，则只能查看进程信息，无法执行终止操作或修改系统配置。软件会在启动时自动检测权限并给出提示。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>3. 如何获取产品密钥？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>您可以通过官方渠道联系 ZIYIT STUDIO
+                        获取产品密钥。软件激活时，在激活窗口中输入用户名和产品密钥即可完成激活。每个产品密钥仅限单用户使用，禁止共享。B站会不定期发布福利密钥，请关注官方账号获取最新消息。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>4. 试用期是多久？过期后怎么办？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>软件支持多种授权模式：30天试用授权、1年商业授权等。当授权剩余天数小于3天时，软件会在启动时提醒用户续期；当授权过期后，软件将拒绝启动并引导用户进入重新激活流程，输入新的产品密钥即可继续使用。
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>5. 软件是否支持离线使用？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>支持。Release Control
+                        采用双重验证机制：在线验证和离线模式。当软件无法连接到验证服务器时（如网络故障或服务器维护），会自动切换到离线模式，使用本地缓存的许可证信息继续运行。离线模式下，软件的核心功能（进程管理、监控、自启动项管理等）均可正常使用。
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>6. 后台守护监控模式是什么？如何使用？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>守护监控模式是软件的特色功能，用户可配置一个或多个进程名称（支持通配符和正则表达式），软件将在后台持续扫描系统进程列表，一旦检测到目标进程出现，立即执行用户预设的动作（终止进程、终止进程树、记录日志、发送桌面通知、播放声音提示等）。监控间隔可自定义（最低0.5秒），广泛应用于网吧游戏管理、企业软件管控、家长控制等场景。
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>7. 如何搜索进程？支持哪些搜索方式？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>软件支持三种搜索方式：按进程名搜索、按翻译后的中文名搜索、按PID精确搜索。搜索结果会实时显示在进程列表中。搜索历史会自动保存，方便下次快速调用。快捷键 Ctrl+F 可快速定位到搜索框。
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>8. 进程列表支持哪些排序方式？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>进程列表支持多种排序方式：按PID（升序/降序）、按进程名（字母顺序）、按CPU利用率（高低）、按内存利用率（高低）、按启动时间（先后）。点击列标题即可切换排序方向，列标题上方会显示 ↑ 或 ↓
+                        箭头指示当前排序状态。默认按PID升序排列。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>9. 什么是递归终止进程树？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>递归终止进程树是指当用户终止一个父进程时，系统会自动递归扫描并终止该进程的所有子进程、孙进程及更深层级的后代进程。这一功能对于清理恶意软件簇、彻底结束游戏反作弊系统残留进程、终止臃肿软件套件的所有相关进程等场景极为有用。
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>10. 白名单功能有什么用？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>白名单功能可以保护关键系统进程不被误终止。用户可以将重要进程（如 csrss.exe、winlogon.exe、lsass.exe、svchost.exe
+                        等）加入白名单，当尝试终止这些进程时，软件会弹出二次确认警告，防止误操作导致系统蓝屏或崩溃。白名单支持通配符和正则表达式匹配。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>11. 软件支持哪些语言？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Release Control
+                        内置了全球主要语言的支持，包括中文简体、中文繁体、英语、日语、韩语、德语、法语、西班牙语、葡萄牙语、俄语、阿拉伯语、印地语、意大利语、荷兰语、波兰语、土耳其语、越南语、泰语等110多种语言变体。用户可以通过设置菜单中的语言选择对话框实时切换界面语言，无需重启软件。
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>12. 如何查看进程的详细信息？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>双击进程列表中的任意一行（除选择列和进程名列外），即可弹出进程详细信息窗口，显示包括：进程ID、进程名称、中文名称、进程状态、CPU使用率、内存占用、启动时间等。双击进程名列可以快速复制进程的原始文件名到剪贴板。
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>13. 如何校验下载文件的完整性？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>每个发布版本都提供了 SHA256 哈希值，您可以使用以下方法校验：1) 使用 Windows 自带的 certutil 命令：certutil -hashfile 文件名 SHA256；2)
+                        使用 PowerShell 命令：Get-FileHash 文件名 -Algorithm SHA256；3) 使用第三方工具如 HashTab、7-Zip 等。下载后请务必比对官方提供的
+                        SHA256 值，确保文件未被篡改。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>14. 正式版和快照版有什么区别？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>正式版经过完整的测试周期和兼容性验证，稳定性高，适合生产环境和企业部署。快照版基于最新代码自动构建，包含最新的功能特性和 Bug
+                        修复，但可能包含未充分测试的代码，适合开发者和测试人员抢先体验新功能。建议普通用户选择正式版，开发者和测试人员可以选择快照版。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>15. 软件被杀毒软件误报怎么办？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Release Control 采用了反调试技术和进程深度访问机制，部分杀毒软件可能会误报为潜在风险，这是正常现象，软件本身不含任何恶意代码。建议您：1) 将 Release Control
+                        添加到杀毒软件的信任列表/排除列表；2) 从官方网站下载以确保文件来源可信；3) 比对 SHA256 哈希值验证文件完整性。如有误报请及时向我们反馈。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>16. 如何配置开机自启动？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>您可以通过以下两种方式配置开机自启动：1) 在软件设置中勾选“开机自启动”选项，软件会自动在启动目录创建快捷方式；2)
+                        使用内置的自启动项管理器，可以更精细地管理所有开机启动项（包括注册表、启动目录、计划任务、Windows服务等）。配置后，您还可以选择开机自启后是否自动隐藏到系统托盘。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>17. Hosts文件分区编辑器有什么作用？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Hosts文件编辑器采用分区管理模式，用户可以将域名解析记录划分为多个逻辑分区（如广告屏蔽分区、开发测试分区、内网解析分区等），每个分区可以单独锁定，防止被其他程序或用户意外修改。软件还提供实时备份与一键还原功能，支持从文本文件导入记录和导出配置。
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>18. 系统托盘有什么功能？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>用户可以选择将软件最小化到系统托盘而不是关闭，软件会在后台继续运行（守护监控模式仍然生效）。托盘图标支持右键菜单，包含：显示主窗口、退出程序、重启软件、检查更新、卸载产品密钥等选项。用户可以在设置中配置关闭按钮的行为（退出或最小化到托盘）以及开机自启后是否自动隐藏到托盘。
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>19. 如何联系技术支持或报告 Bug？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>您可以通过以下方式联系我们：1) 发送邮件至 ziyitstudio@qq.com；2) 访问官方网站 https://ziyit-hacker.github.io 提交反馈；3) 在
+                        GitHub 仓库 https://github.com/ziyit-Hacker/Release_control 中提交 Issue。报告 Bug
+                        时，请提供软件版本号、操作系统版本、详细的错误描述以及日志文件（位于 logs 目录下），以便快速定位问题。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>20. DLC的价格是多少？</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>未来 Release Control 的 DLC（可下载内容）将逐步取代常规功能更新，价格可能会根据内容规模和功能价值有所调整，以当前版本公告为准。<br>
+                        <strong>当前 26.9 版本 DLC 定价：每个 <span style="color: #10b981; font-weight: bold;">¥5.00 人民币</span>。</strong><br>
+                        购买方式：请通过官方邮箱 <a href="mailto:ziyitstudio@qq.com" style="color: #2563eb; text-decoration: none;">ziyitstudio@qq.com</a> 联系我们，确认所需 DLC 内容后进行付款。<br>
+                        <em style="color: var(--ziyit-text-secondary); font-size: 0.85rem;">注：因技术原因，暂不支持在线支付，请知悉。</em></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="version-header">
+            <h2 class="section-title">发行版本 · 正式版 / 快照版</h2>
+            <div class="version-switch">
+                <button class="version-btn active" data-version="stable">正式版 (Stable)</button>
+                <button class="version-btn" data-version="snapshot">快照版 (Snapshot)</button>
+            </div>
+        </div>
+
+        <div id="stable-table" class="version-table">
+            <div class="card">
+                <div class="card-header">
+                    <h2>稳定发行版本 · 生产级可靠性</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>版本号</th>
+                            <th>文件名</th>
+                            <th>SHA256 校验值</th>
+                            <th>下载</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="version">26.9 <span class="hidden"> [<span class="internalTesting"> </span>]</span></td>
+                            <td class="filename">Release_control_26.9_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                <span class="noPublish"> </span>
+                            </td>
+                            <td><span class="noPublish"> </span></td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.8 <span class="badge"> </span></td>
+                            <td class="filename">Release_control_26.8_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                D13CD4A19A6A3ADBDD4054BCDD79FBB1484BF7C7BA8B42C661B07D8421326EF6
+                                <br><button class="copy-btn"
+                                    data-sha256="D13CD4A19A6A3ADBDD4054BCDD79FBB1484BF7C7BA8B42C661B07D8421326EF6">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.8/Release_control_26.8_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.7</td>
+                            <td class="filename">Release_control_26.7_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                D884444BB77652C1FAF27E292A78C5B52738B9C80A51F544D3BD74A9362F34A5
+                                <br><button class="copy-btn"
+                                    data-sha256="D884444BB77652C1FAF27E292A78C5B52738B9C80A51F544D3BD74A9362F34A5">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.7/Release_control_26.7_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.6</td>
+                            <td class="filename">Release_control_26.6_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                74C3674FC5F1F63A9F8FB4CDD098309EE6A4C3CD5D612C8019E2394CDF251CE2
+                                <br><button class="copy-btn"
+                                    data-sha256="74C3674FC5F1F63A9F8FB4CDD098309EE6A4C3CD5D612C8019E2394CDF251CE2">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.6/Release_control_26.6_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.5</td>
+                            <td class="filename">Release_control_26.5_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                64573DBCB573D5983928C8F255F82E9D20300517BD93A02D8F6BFF53B53E8AA3
+                                <br><button class="copy-btn"
+                                    data-sha256="64573DBCB573D5983928C8F255F82E9D20300517BD93A02D8F6BFF53B53E8AA3">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.5/Release_control_26.5_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.4</td>
+                            <td class="filename">Release_control_26.4_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                A06DC526EF680D6D37E8DDFCF3F0E56B8061C7BEA8415F3C31249B54D12741FB<br><button
+                                    class="copy-btn"
+                                    data-sha256="A06DC526EF680D6D37E8DDFCF3F0E56B8061C7BEA8415F3C31249B54D12741FB">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.4/Release_control_26.4_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.3</td>
+                            <td class="filename">Release_control_26.3_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                6EED8788769931C8F258B5FFCDA4AA7317DC734646D111A38ED85EFB60ABDBEE<br><button
+                                    class="copy-btn"
+                                    data-sha256="6EED8788769931C8F258B5FFCDA4AA7317DC734646D111A38ED85EFB60ABDBEE">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.3/Release_control_26.3_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.2</td>
+                            <td class="filename">Release_control_26.2_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                F7462E8DDA421624CD736C9CC8739DAF8E2E3D0F50C9D07465600AFE8BE4D814<br><button
+                                    class="copy-btn"
+                                    data-sha256="F7462E8DDA421624CD736C9CC8739DAF8E2E3D0F50C9D07465600AFE8BE4D814">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.2/Release_control_26.2_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.1</td>
+                            <td class="filename">Release_control_26.1_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                <span class="versionLast"> </span>
+                            </td>
+                            <td><span class="versionLast"> </span></td>
+                        </tr>
+                        <tr>
+                            <td class="version">1.0.9</td>
+                            <td class="filename">Release_control_1.0.9_Windows_Install_x86.exe</td>
+                            <td class="sha256">
+                                <span class="versionLast"> </span>
+                            </td>
+                            <td><span class="versionLast"> </span></td>
+                        </tr>
+                        <tr>
+                            <td class="version">1.0.6</td>
+                            <td class="filename">Release_control_1.0.6_Windows_Install_x86.exe</td>
+                            <td class="sha256">
+                                <span class="versionLast"> </span>
+                            </td>
+                            <td><span class="versionLast"> </span></td>
+                        </tr>
+                        <tr>
+                            <td class="version">1.0.3</td>
+                            <td class="filename">Release_control_1.0.3_Windows_Install_x86.exe</td>
+                            <td class="sha256">
+                                <span class="versionLast"> </span>
+                            </td>
+                            <td><span class="versionLast"> </span></td>
+                        </tr>
+                        <tr>
+                            <td class="version">1.0.1</td>
+                            <td class="filename">Release_control_1.0.1_Windows_Install_x86.exe</td>
+                            <td class="sha256">
+                                <span class="versionLast"> </span>
+                            </td>
+                            <td><span class="versionLast"> </span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note-stable">
+                <p>正式版经过完整安全审计与兼容性测试，适用于企业办公、服务器运维等场景。下载后请务必校验 SHA256 哈希值。</p>
+            </div>
+        </div>
+
+        <div id="snapshot-table" class="version-table" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h2>快照预览版本 · 最新功能抢先体验</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>版本号</th>
+                            <th>文件名</th>
+                            <th>SHA256 校验值</th>
+                            <th>下载</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="version">26.8-snapshot-26W29A <span class="snapshot-badge"> </span></td>
+                            <td class="filename">Release_control_26.8-snapshot-26W29A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                A2C5BF43F1AFC52D9E55B8112D285EE0C9DD4446AB02307DAD6A3C5A12D90B31<br><button
+                                    class="copy-btn"
+                                    data-sha256="A2C5BF43F1AFC52D9E55B8112D285EE0C9DD4446AB02307DAD6A3C5A12D90B31">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.8-snapshot-26W29A/Release_control_26.8-snapshot-26W29A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.8-snapshot-26W28A</td>
+                            <td class="filename">Release_control_26.8-snapshot-26W28A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                0E8D3391DD6344E3F372471113A7449ECCCA27120DBEFEB41130981DCC080B92<br><button
+                                    class="copy-btn"
+                                    data-sha256="0E8D3391DD6344E3F372471113A7449ECCCA27120DBEFEB41130981DCC080B92">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.8-snapshot-26W28A/Release_control_26.8-snapshot-26W28A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.7-snapshot-26W26B</td>
+                            <td class="filename">Release_control_26.7-snapshot-26W26B_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                A4E4B75B4A77806DA7BC0EDDD97EEE03447EB002A28A594C8CFA64E584CEF9DA<br><button
+                                    class="copy-btn"
+                                    data-sha256="A4E4B75B4A77806DA7BC0EDDD97EEE03447EB002A28A594C8CFA64E584CEF9DA">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.7-snapshot-26W26B/Release_control_26.7-snapshot-26W26B_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.7-snapshot-26W26A</td>
+                            <td class="filename">Release_control_26.7-snapshot-26W26A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                60DDF6785855D25135AEFFE30B30BCDEA76E4AC3073140BE6900A4B61B51D5A6<br><button
+                                    class="copy-btn"
+                                    data-sha256="60DDF6785855D25135AEFFE30B30BCDEA76E4AC3073140BE6900A4B61B51D5A6">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.7-snapshot-26W26A/Release_control_26.7-snapshot-26W26A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.7-snapshot-26W25B</td>
+                            <td class="filename">Release_control_26.7-snapshot-26W25B_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                F314735E93B50101D3D4FBF7A052AFE4853CBDBDECBE7E1E8D761A1A11A6D201<br><button
+                                    class="copy-btn"
+                                    data-sha256="F314735E93B50101D3D4FBF7A052AFE4853CBDBDECBE7E1E8D761A1A11A6D201">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.7-snapshot-26W25B/Release_control_26.7-snapshot-26W25B_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.7-snapshot-26W25A</td>
+                            <td class="filename">Release_control_26.7-snapshot-26W25A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                69F09CCC3BE46F6117AD9ACADA408BE31B3FD38F4207BE63379C87E64287E350<br><button
+                                    class="copy-btn"
+                                    data-sha256="69F09CCC3BE46F6117AD9ACADA408BE31B3FD38F4207BE63379C87E64287E350">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.7-snapshot-26W25A/Release_control_26.7-snapshot-26W25A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.6-snapshot-26W22C</td>
+                            <td class="filename">Release_control_26.6-snapshot-26W22C_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                C0650C5F9FD0C09EC3D5431E45D1E7A55BD58BA194BC60F6434B5551DB20FABF<br><button
+                                    class="copy-btn"
+                                    data-sha256="C0650C5F9FD0C09EC3D5431E45D1E7A55BD58BA194BC60F6434B5551DB20FABF">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.6-snapshot-26W22C/Release_control_26.6-snapshot-26W22C_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.6-snapshot-26W22B</td>
+                            <td class="filename">Release_control_26.6-snapshot-26W22B_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                82FE03170ECC1841709748B0AAECB6A077096E0F8FE620E34939A361344118BB<br><button
+                                    class="copy-btn"
+                                    data-sha256="82FE03170ECC1841709748B0AAECB6A077096E0F8FE620E34939A361344118BB">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.6-snapshot-26W22B/Release_control_26.6-snapshot-26W22B_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.6-snapshot-26W22A</td>
+                            <td class="filename">Release_control_26.6-snapshot-26W22A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                95F9E56AB11B10CF718DED2FA87539BCB73F7D1006445497C7FCD73FFDD27F7A<br><button
+                                    class="copy-btn"
+                                    data-sha256="95F9E56AB11B10CF718DED2FA87539BCB73F7D1006445497C7FCD73FFDD27F7A">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.6-snapshot-26W22A/Release_control_26.6-snapshot-26W22A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.5-snapshot-26W20E</td>
+                            <td class="filename">Release_control_26.5-snapshot-26W20E_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                20C6E255BE7C32C5608E81DE98EC3CD05296CF56B96F3C712A9E4C27257B2FDE<br><button
+                                    class="copy-btn"
+                                    data-sha256="20C6E255BE7C32C5608E81DE98EC3CD05296CF56B96F3C712A9E4C27257B2FDE">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.5-snapshot-26W20E/Release_control_26.5-snapshot-26W20E_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.5-snapshot-26W20D</td>
+                            <td class="filename">Release_control_26.5-snapshot-26W20D_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                79093EE2D6B7B391684B906A3AAC00410EA2A06676DF27AE37EF3CB8C64BB6EB<br><button
+                                    class="copy-btn"
+                                    data-sha256="79093EE2D6B7B391684B906A3AAC00410EA2A06676DF27AE37EF3CB8C64BB6EB">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.5-snapshot-26W20D/Release_control_26.5-snapshot-26W20D_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.5-snapshot-26W20C</td>
+                            <td class="filename">Release_control_26.5-snapshot-26W20C_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                59845D6250252CD0D703A1B80EC5A79C72D6E31F031D9E873F2E95631A78C99E<br><button
+                                    class="copy-btn"
+                                    data-sha256="59845D6250252CD0D703A1B80EC5A79C72D6E31F031D9E873F2E95631A78C99E">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.5-snapshot-26W20C/Release_control_26.5-snapshot-26W20C_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.5-snapshot-26W20B</td>
+                            <td class="filename">Release_control_26.5-snapshot-26W20B_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                7B3EA6105683BF0F73D5A1EBC8C0D40EFD314A3D33BFB8EA377B979F2E4E9B4C<br><button
+                                    class="copy-btn"
+                                    data-sha256="7B3EA6105683BF0F73D5A1EBC8C0D40EFD314A3D33BFB8EA377B979F2E4E9B4C">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.5-snapshot-26W20B/Release_control_26.5-snapshot-26W20B_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.5-snapshot-26W20A</td>
+                            <td class="filename">Release_control_26.5-snapshot-26W20A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                7E26C476758B28E3CD2CD632155261520EAB4A9108A4748624108D0581C45978<br><button
+                                    class="copy-btn"
+                                    data-sha256="7E26C476758B28E3CD2CD632155261520EAB4A9108A4748624108D0581C45978">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.5-snapshot-26W20A/Release_control_26.5-snapshot-26W20A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.4-snapshot-26W19A</td>
+                            <td class="filename">Release_control_26.4-snapshot-26W19A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                7F7B8A9C161A927A1D4E091E5C36E3A934F3D8B079BDE8540D02495B9BC6B849<br><button
+                                    class="copy-btn"
+                                    data-sha256="7F7B8A9C161A927A1D4E091E5C36E3A934F3D8B079BDE8540D02495B9BC6B849">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.4-snapshot-26W19A/Release_control_26.4-snapshot-26W19A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.4-snapshot-26W18B</td>
+                            <td class="filename">Release_control_26.4-snapshot-26W18B_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                54B6101D0E1695B252453AC65B90A2D0C88921EA9A85AAA2FB7007716DCE558F<br><button
+                                    class="copy-btn"
+                                    data-sha256="54B6101D0E1695B252453AC65B90A2D0C88921EA9A85AAA2FB7007716DCE558F">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.4-snapshot-26W18B/Release_control_26.4-snapshot-26W18B_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.4-snapshot-26W18A</td>
+                            <td class="filename">Release_control_26.4-snapshot-26W18A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                FE235B6EE3C126485B3CA11FED52E0BC591262D7EBFC4771752DB02928AAF8C4<br><button
+                                    class="copy-btn"
+                                    data-sha256="FE235B6EE3C126485B3CA11FED52E0BC591262D7EBFC4771752DB02928AAF8C4">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.4-snapshot-26W18A/Release_control_26.4-snapshot-26W18A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.4-snapshot-26W17A</td>
+                            <td class="filename">Release_control_26.4-snapshot-26W17A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                9DDDF384AC31B55088B6D96025BDA121CC78EC877C35163D26598AEEAAAC965C<br><button
+                                    class="copy-btn"
+                                    data-sha256="9DDDF384AC31B55088B6D96025BDA121CC78EC877C35163D26598AEEAAAC965C">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.4-snapshot-26W17A/Release_control_26.4-snapshot-26W17A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.3-snapshot-26W14A</td>
+                            <td class="filename">Release_control_26.3-snapshot-26W14A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                B71390823CFD9990DF73610E9DBC83048502F7CB5A7122B92BD735AA65842BF5<br><button
+                                    class="copy-btn"
+                                    data-sha256="B6FB39A14924584A35E6A6255B1C45E18375C6741DEB72FE471AC9109951C55F">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.3-snapshot-26W14A/Release_control_26.3-snapshot-26W14A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.3-snapshot-26W12A</td>
+                            <td class="filename">Release_control_26.3-snapshot-26W12A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                B6FB39A14924584A35E6A6255B1C45E18375C6741DEB72FE471AC9109951C55F<br><button
+                                    class="copy-btn"
+                                    data-sha256="B6FB39A14924584A35E6A6255B1C45E18375C6741DEB72FE471AC9109951C55F">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.3-snapshot-26W12A/Release_control_26.3-snapshot-26W12A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.3-snapshot-26W05B</td>
+                            <td class="filename">Release_control_26.3-snapshot-26W05B_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                C6BE34A6CFFC0D92C7015E6E847CEA0FEDAF238282E2DA1EBC5C094C815901CA<br><button
+                                    class="copy-btn"
+                                    data-sha256="C6BE34A6CFFC0D92C7015E6E847CEA0FEDAF238282E2DA1EBC5C094C815901CA">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.3-snapshot-26W05B/Release_control_26.3-snapshot-26W05B_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.3-snapshot-26W05A</td>
+                            <td class="filename">Release_control_26.3-snapshot-26W05A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                26FBB730311DCDAD2791626EC84B1F807D580DF284857CE745549A2A0D889A73<br><button
+                                    class="copy-btn"
+                                    data-sha256="26FBB730311DCDAD2791626EC84B1F807D580DF284857CE745549A2A0D889A73">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.3-snapshot-26W05A/Release_control_26.3-snapshot-26W05A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.2-snapshot-26W04B</td>
+                            <td class="filename">Release_control_26.2-snapshot-26W04B_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                31204A6A16C13B7F2BBDB1F9F87E2E306792B72CBB110E46409A81A186A741C4<br><button
+                                    class="copy-btn"
+                                    data-sha256="31204A6A16C13B7F2BBDB1F9F87E2E306792B72CBB110E46409A81A186A741C4">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.2-snapshot-26W04B/Release_control_26.2-snapshot-26W04B_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.2-snapshot-26W04A</td>
+                            <td class="filename">Release_control_26.2-snapshot-26W04A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                D54C51E3700C329432B727A321E388216B5E4C0480A2FF59113B3F4C2CB37FC2<br><button
+                                    class="copy-btn"
+                                    data-sha256="D54C51E3700C329432B727A321E388216B5E4C0480A2FF59113B3F4C2CB37FC2">复制</button>
+                            </td>
+                            <td><button class="download-btn"
+                                    data-href="https://github.com/ziyit-Hacker/Release_control/releases/download/26.2-snapshot-26W04A/Release_control_26.2-snapshot-26W04A_Windows_Install_x64.exe">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.0-snapshot-26W03A</td>
+                            <td class="filename">Release_control_26.0-snapshot-26W03A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                <span class="versionLast"> </span>
+                            </td>
+                            <td><span class="versionLast"> </span></td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.0-snapshot-26W02A</td>
+                            <td class="filename">Release_control_26.0-snapshot-26W02A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                <span class="versionLast"> </span>
+                            </td>
+                            <td><span class="versionLast"> </span></td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.0-snapshot-26W01B</td>
+                            <td class="filename">Release_control_26.0-snapshot-26W01B_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                <span class="versionLast"> </span>
+                            </td>
+                            <td><span class="versionLast"> </span></td>
+                        </tr>
+                        <tr>
+                            <td class="version">26.0-snapshot-26W01A</td>
+                            <td class="filename">Release_control_26.0-snapshot-26W01A_Windows_Install_x64.exe</td>
+                            <td class="sha256">
+                                <span class="versionLast"> </span>
+                            </td>
+                            <td><span class="versionLast"> </span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">
+                <p>快照版本基于每日构建，包含未充分测试的代码，仅推荐开发者或测试环境使用，可能存在未知问题。</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2026 ZIYIT STUDIO 版权所有，侵权必究 | Release Control 为闭源商业软件，受著作权法及国际公约保护</p>
+            <p class="footer-link">官网: https://ziyit-hacker.github.io | 授权咨询: ziyitstudio@qq.com</p>
+        </div>
+    </div>
+
+    <div id="eulaModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">最终用户软件许可协议（EULA）</div>
+            <div class="modal-body">
+                <h1 style="font-size: 1.5rem; margin-top: 0;">最终用户软件许可协议（EULA）</h1>
+                <p><strong>软件名称</strong>：Release
+                    control<br><strong>版本号</strong>：26.7<br><strong>最后更新日期</strong>：2026年5月24日</p>
+                <p>本最终用户软件许可协议（以下简称“本协议”）是您（自然人或法人实体，以下简称“用户”或“您”）与 <strong>ZIYIT
+                        STUDIO</strong>（以下简称“许可方”或“我方”）之间关于上述软件（以下简称“本软件”）的法律协议。</p>
+                <p><strong>安装、复制或以任何方式使用本软件，即表示您同意接受本协议全部条款的约束。如不同意，请勿安装或使用本软件。</strong></p>
+
+                <hr>
+
+                <h3>1. 知识产权声明</h3>
+                <p>本软件（包括但不限于其代码、文档、界面设计、运行文件、产品密钥验证机制及相关素材）的所有权利、所有权及知识产权（包括著作权、商标权、专利权、商业秘密及其他相关权利）均归
+                    <strong>ZIYIT STUDIO</strong> 及其许可方所有。
+                </p>
+                <p>本软件受《中华人民共和国著作权法》《计算机软件保护条例》及相关国际条约的保护。本协议不构成任何知识产权的转让。</p>
+
+                <h3>2. 许可授予</h3>
+                <p>在您完全遵守本协议的前提下，许可方授予您一项<strong>个人的、非独占的、不可转让的、不可再许可的</strong>有限使用权：</p>
+                <ol>
+                    <li><strong>合法使用</strong>：您可为个人或内部使用目的，在一台受支持的设备上安装、运行本软件；</li>
+                    <li><strong>产品密钥</strong>：产品密钥仅限您本人使用，禁止共享、转让、公开或通过任何方式允许第三方使用；</li>
+                    <li><strong>更新与支持</strong>：许可方保留不提供任何技术支持或软件更新的权利，但可自行决定提供修复或版本更新。</li>
+                </ol>
+
+                <h3>3. 使用限制</h3>
+                <p>您<strong>不得</strong>且不得允许任何第三方：</p>
+                <ol>
+                    <li><strong>反向工程</strong>：对本软件进行反向工程、反编译、反汇编、提取源代码或试图获取其核心逻辑；</li>
+                    <li><strong>二次分发</strong>：将本软件或其任何副本、修改版本以任何形式上传至公开网络、代码仓库、网盘或通过任何渠道公开发布；</li>
+                    <li><strong>商业化利用</strong>：未经许可方书面授权，销售、出租、租赁、出借、捆绑销售或以任何营利方式利用本软件；</li>
+                    <li><strong>篡改与破解</strong>：修改、删除、绕过本软件的版权标识、产品密钥验证机制或任何安全防护措施；</li>
+                    <li><strong>恶意利用</strong>：利用本软件的漏洞、错误或技术缺陷获取未经授权的使用权限；</li>
+                    <li><strong>非法用途</strong>：将本软件用于任何违反中华人民共和国法律法规、侵犯第三方合法权益或干扰正常社会秩序的活动。</li>
+                </ol>
+
+                <h3>4. 用户行为责任</h3>
+                <p>您应对以下事项独立承担全部责任：</p>
+                <ul>
+                    <li>使用本软件所产生的全部行为及后果；</li>
+                    <li>妥善保管产品密钥、恢复密钥文件及加密文件，防止泄露、丢失或被未授权使用；</li>
+                    <li>遵守本软件运行所依赖的平台、设备及网络环境的服务条款及相关规定。</li>
+                </ul>
+
+                <h3>5. 数据与隐私保护声明</h3>
+                <p>为明确双方权利义务，许可方特此作出以下声明：</p>
+                <ol>
+                    <li><strong>不上传任何数据</strong>：本软件<strong>不会</strong>将您的任何文件、密钥、配置、日志或个人数据上传至任何服务器或第三方；</li>
+                    <li><strong>摄像头使用声明</strong>：二维码及PDF417机票扫描功能仅在您主动点击“打开摄像头”时启用，摄像头视频流<strong>仅用于实时条码识别</strong>，不会被录制、保存、上传或用于任何其他用途；
+                    </li>
+                    <li><strong>文件访问声明</strong>：本软件仅在您主动选择文件时进行读取操作，不会在未经您明确授权的情况下扫描、读取或传输您设备上的任何文件；</li>
+                    <li><strong>日志存储声明</strong>：本软件生成的日志文件<strong>仅保存在您设备的本地磁盘</strong>，不会自动上传至任何远程服务器；</li>
+                    <li><strong>无后台行为</strong>：本软件不会在后台执行任何未经您授权的网络通信、数据收集或文件操作。</li>
+                </ol>
+                <p><strong>您理解并同意</strong>：您自行选择加密、破坏或处理的文件，其安全性和后果由您自行承担。许可方不对因您操作失误导致的文件丢失或损坏承担责任。</p>
+
+                <h3>6. 免责声明</h3>
+                <p>本软件按“现状”提供，不附带任何明示或默示的担保，包括但不限于：</p>
+                <ul>
+                    <li>适销性；</li>
+                    <li>特定用途适用性；</li>
+                    <li>不侵权；</li>
+                    <li>运行无错误或无中断。</li>
+                </ul>
+                <p>许可方不保证本软件能满足您的所有需求，也不对因使用本软件所造成的任何直接或间接损失承担责任，包括但不限于数据丢失、业务中断、系统故障、声誉损失、加密文件无法解密等，即使许可方已被告知此类损害的可能性。
+                </p>
+                <p><strong>特别提示</strong>：若您丢失产品密钥或恢复密钥文件，加密数据将<strong>永久无法恢复</strong>，许可方对此不承担任何责任。本软件的加密功能仅供您保护个人数据使用，您需自行负责密钥的备份与保管。
+                </p>
+
+                <h3>7. 责任限制</h3>
+                <p>在法律允许的最大范围内，许可方因本协议或本软件所承担的累计赔偿责任，总额不超过您为本软件所支付的费用（如有）。在免费使用场景下，许可方不承担任何赔偿责任。</p>
+
+                <h3>8. 终止</h3>
+                <ol>
+                    <li><strong>自动终止</strong>：若您违反本协议任何条款，本协议授予的所有权利将立即自动终止，无需另行通知；</li>
+                    <li><strong>终止后的义务</strong>：协议终止后，您必须立即停止使用本软件，并永久销毁所有副本及相关材料；</li>
+                    <li><strong>存续条款</strong>：知识产权声明、免责声明、责任限制及管辖条款在本协议终止后继续有效。</li>
+                </ol>
+
+                <h3>9. 协议更新</h3>
+                <p>许可方保留随时修改本协议的权利。修改后的协议将以适当方式公布（包括但不限于在软件安装包、官方网站或更新说明中展示）。若您在协议修改后继续使用本软件，即视为接受修改后的协议内容。</p>
+
+                <h3>10. 适用法律与管辖</h3>
+                <p>本协议的订立、执行、解释及争议解决均适用《中华人民共和国法律》。</p>
+                <p>因本协议引起的或与本协议有关的任何争议，双方应首先协商解决；协商不成的，任何一方均有权向 <strong>许可方所在地有管辖权的人民法院</strong> 提起诉讼。</p>
+
+                <h3>11. 其他条款</h3>
+                <ol>
+                    <li><strong>完整协议</strong>：本协议构成双方就本软件许可事宜的完整合意，取代此前所有口头或书面的沟通；</li>
+                    <li><strong>可分割性</strong>：若本协议任何条款被认定为无效或不可执行，其余条款仍具有完全效力；</li>
+                    <li><strong>放弃权利</strong>：许可方未行使或延迟行使任何权利，不视为对该权利的放弃。</li>
+                </ol>
+
+                <h3>联系方式</h3>
+                <p>如您对本协议有任何疑问，或需申请商业授权，请联系：</p>
+                <p><strong>ZIYIT STUDIO</strong><br>邮箱：ziyitstudio@qq.com<br>官网：https://ziyit-hacker.github.io
+                </p>
+
+                <p><strong>版权所有 © 2026 ZIYIT STUDIO 保留所有权利</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-decline" id="declineEula">拒绝</button>
+                <button class="btn-accept" id="acceptEula">同意并继续下载</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function toggleFAQ(element) {
+            var answer = element.nextElementSibling;
+            var icon = element.querySelector('i');
+            answer.classList.toggle('active');
+            if (answer.classList.contains('active')) {
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        let codeBlockTitles = {};
+
+        async function loadCodeBlockTitles() {
+            try {
+                const response = await fetch('./Update.inf');
+                if (!response.ok) return;
+                const text = await response.text();
+                const lines = text.split('\n');
+                let inCodeBlock = false;
+                let currentTitle = '';
+                let currentContent = [];
+
+                for (const line of lines) {
+                    if (line.startsWith('```') && !inCodeBlock) {
+                        inCodeBlock = true;
+                        currentTitle = line.substring(3).trim();
+                        if (currentTitle === '') {
+                            currentTitle = 'code';
+                        }
+                        currentContent = [];
+                    } else if (line.startsWith('```') && inCodeBlock) {
+                        inCodeBlock = false;
+                        const contentKey = currentContent.join('\n').trim();
+                        if (contentKey) {
+                            codeBlockTitles[contentKey] = currentTitle;
+                        }
+                    } else if (inCodeBlock) {
+                        currentContent.push(line);
+                    }
+                }
+            } catch (error) {
+                console.error('加载代码块标题失败:', error);
+            }
+        }
+
+        function enhanceCodeBlocks() {
+            document.querySelectorAll('.update-log-content pre code').forEach((codeBlock) => {
+                const pre = codeBlock.parentElement;
+                const container = pre.parentElement;
+                if (container.classList.contains('code-block-wrapper')) return;
+
+                const codeText = codeBlock.textContent;
+                let title = 'code';
+
+                for (const [content, blockTitle] of Object.entries(codeBlockTitles)) {
+                    if (codeText.includes(content) || content.includes(codeText.substring(0, 200))) {
+                        title = blockTitle;
+                        break;
+                    }
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+                const toolbar = document.createElement('div');
+                toolbar.className = 'code-toolbar';
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'code-title';
+                titleSpan.textContent = title;
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'code-copy-btn';
+                copyBtn.textContent = '复制';
+                copyBtn.onclick = () => {
+                    const text = codeBlock.textContent;
+                    navigator.clipboard.writeText(text).then(() => {
+                        copyBtn.textContent = '已复制';
+                        setTimeout(() => { copyBtn.textContent = '复制'; }, 1500);
+                    });
+                };
+                const expandBtn = document.createElement('button');
+                expandBtn.className = 'code-expand-btn';
+                expandBtn.textContent = '展开';
+                expandBtn.onclick = () => {
+                    if (wrapper.classList.contains('expanded')) {
+                        wrapper.classList.remove('expanded');
+                        expandBtn.textContent = '展开';
+                        wrapper.style.maxHeight = '300px';
+                    } else {
+                        wrapper.classList.add('expanded');
+                        expandBtn.textContent = '收起';
+                        wrapper.style.maxHeight = 'none';
+                    }
+                };
+                toolbar.appendChild(titleSpan);
+                toolbar.appendChild(copyBtn);
+                toolbar.appendChild(expandBtn);
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(toolbar);
+                wrapper.appendChild(pre);
+                wrapper.style.maxHeight = '300px';
+                wrapper.style.overflow = 'hidden';
+                wrapper.style.position = 'relative';
+            });
+        }
+
+        async function loadUpdateLog() {
+            const container = document.getElementById('updateLogContent');
+            if (!container) return;
+            container.innerHTML = '<div class="ziyit-loading">' +
+                '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>' +
+                '<div class="ziyit-loader">' +
+                '<div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>' +
+                '<div class="loader-bar"><div class="loader-fill"></div></div>' +
+                '</div></div>';
+            try {
+                await loadCodeBlockTitles();
+                const response = await fetch('./Update.inf');
+                if (!response.ok) throw new Error('无法加载 Update.inf');
+                const text = await response.text();
+                const lines = text.split('\n');
+                let targetPath = null;
+                for (const line of lines) {
+                    if (line.includes('任务管理器')) {
+                        const parts = line.split('\\');
+                        if (parts.length >= 3) {
+                            targetPath = parts[2];
+                            break;
+                        }
+                    }
+                }
+                if (!targetPath) {
+                    container.innerHTML = '<p>未找到任务管理器的更新日志配置</p>';
+                    return;
+                }
+                const rcResponse = await fetch(targetPath);
+                if (!rcResponse.ok) throw new Error('无法加载更新日志文件');
+                const markdown = await rcResponse.text();
+                const html = marked.parse(markdown);
+                container.innerHTML = html;
+                enhanceCodeBlocks();
+            } catch (error) {
+                console.error('加载更新日志失败:', error);
+                container.innerHTML = '<p>加载更新日志失败，请稍后重试</p>';
+            }
+        }
+
+        (function () {
+            let pendingDownloadUrl = null;
+            const modal = document.getElementById('eulaModal');
+
+            function showModal(url) {
+                pendingDownloadUrl = url;
+                modal.style.display = 'flex';
+            }
+            function closeModal() { modal.style.display = 'none'; pendingDownloadUrl = null; }
+            function acceptAndRedirect() {
+                if (pendingDownloadUrl) {
+                    window.open(pendingDownloadUrl, '_blank', 'noopener,noreferrer');
+                }
+                closeModal();
+            }
+
+            document.getElementById('acceptEula').addEventListener('click', acceptAndRedirect);
+            document.getElementById('declineEula').addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            const downloadBtns = document.querySelectorAll('.download-btn');
+            downloadBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const url = btn.getAttribute('data-href');
+                    if (url) showModal(url);
+                });
+            });
+
+            const versionBtns = document.querySelectorAll('.version-btn');
+            const stableDiv = document.getElementById('stable-table');
+            const snapshotDiv = document.getElementById('snapshot-table');
+            function setActive(version) {
+                versionBtns.forEach(btn => {
+                    if (btn.getAttribute('data-version') === version) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                });
+                if (version === 'stable') { stableDiv.style.display = 'block'; snapshotDiv.style.display = 'none'; }
+                else { stableDiv.style.display = 'none'; snapshotDiv.style.display = 'block'; }
+            }
+            versionBtns.forEach(btn => btn.addEventListener('click', (e) => setActive(btn.getAttribute('data-version'))));
+
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const sha = btn.getAttribute('data-sha256');
+                    if (sha) navigator.clipboard.writeText(sha).then(() => { btn.textContent = '已复制'; setTimeout(() => btn.textContent = '复制', 1200); });
+                });
+            });
+
+            async function loadHashFromFile() {
+                try {
+                    const response = await fetch('RChash.txt');
+                    if (!response.ok) throw new Error('无法加载哈希文件');
+                    const text = await response.text();
+                    const hashMap = {};
+                    text.split('\n').forEach(line => {
+                        const parts = line.trim().split(',');
+                        if (parts.length === 2) {
+                            const version = parts[0].trim();
+                            const hash = parts[1].trim();
+                            if (version && hash) hashMap[version] = hash;
+                        }
+                    });
+
+                    document.querySelectorAll('tr').forEach(tr => {
+                        const versionTd = tr.querySelector('.version');
+                        const shaTd = tr.querySelector('.sha256');
+                        if (versionTd && shaTd) {
+                            const versionText = versionTd.textContent.trim().split(' ')[0];
+                            if (hashMap[versionText]) {
+                                const hash = hashMap[versionText];
+                                shaTd.innerHTML = hash + '<br><button class="copy-btn" data-sha256="' + hash + '">复制</button>';
+                                shaTd.querySelector('.copy-btn').addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(hash).then(() => { e.target.textContent = '已复制'; setTimeout(() => e.target.textContent = '复制', 1200); });
+                                });
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('加载哈希文件失败:', error);
+                }
+            }
+            loadHashFromFile();
+
+            loadUpdateLog();
+        })();
+        async function loadModDoc() {
+            const container = document.getElementById('mod-doc-content');
+            if (!container) return;
+            container.innerHTML = '<div class="ziyit-loading">' +
+                '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>' +
+                '<div class="ziyit-loader">' +
+                '<div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>' +
+                '<div class="loader-bar"><div class="loader-fill"></div></div>' +
+                '</div></div>';
+            try {
+                const response = await fetch('./RCMOD.md');
+                if (!response.ok) throw new Error('无法加载 RCMOD.md');
+                const markdown = await response.text();
+                const html = marked.parse(markdown);
+                container.innerHTML = html;
+                enhanceCodeBlocks();
+            } catch (error) {
+                console.error('加载开发者文档失败:', error);
+                container.innerHTML = '<p>加载开发者文档失败，请确保 RCMOD.md 文件存在于同目录下。</p>';
+            }
+        }
+        loadModDoc();
+    </script>
+    <script>
+        async function loadModDownload() {
+            const list = document.getElementById('mod-list');
+            if (!list) return;
+            const loginTip = document.getElementById('mod-login-tip');
+            const offlineTip = document.getElementById('mod-offline-tip');
+
+            if (!ZIYIT_API.getToken()) {
+                loginTip.style.display = 'block';
+                list.innerHTML = '<div style="color:var(--ziyit-text-secondary); font-size:0.9rem;">请先登录后查看 MOD/DLC 列表</div>';
+                return;
+            }
+
+            // 显示加载进度条
+            list.innerHTML = '<div class="ziyit-loading">' +
+                '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>' +
+                '<div class="ziyit-loader">' +
+                '<div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>' +
+                '<div class="loader-bar"><div class="loader-fill"></div></div>' +
+                '</div></div>';
+
+            try {
+                const [modsData, dlcData] = await Promise.all([
+                    ZIYIT_API.getMods().catch(function () { return null; }),
+                    ZIYIT_API.getDlc().catch(function () { return null; })
+                ]);
+                if (!modsData && !dlcData) {
+                    offlineTip.style.display = 'block';
+                    list.innerHTML = '';
+                    return;
+                }
+
+                const mods = (modsData && modsData.mods) || [];
+                const dlcs = (dlcData && dlcData.dlc) || [];
+                const all = dlcs.map(function (m) { return { type: 'DLC', mod: m }; })
+                    .concat(mods.map(function (m) { return { type: 'MOD', mod: m }; }));
+
+                if (all.length === 0) {
+                    list.innerHTML = '<div style="color:var(--ziyit-text-secondary); font-size:0.9rem;">暂无 MOD/DLC</div>';
+                    return;
+                }
+
+                list.innerHTML = '';
+                all.forEach(function (item) {
+                    const mod = item.mod;
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.cssText = 'margin-bottom:0;padding:1rem;';
+
+                    const head = document.createElement('div');
+                    head.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.4rem;';
+                    const name = document.createElement('span');
+                    name.style.fontWeight = '700';
+                    name.style.fontSize = '0.95rem';
+                    name.textContent = mod.modName;
+                    const typeBadge = document.createElement('span');
+                    typeBadge.style.cssText = 'background:' + (item.type === 'DLC' ? 'rgba(124,58,237,.16);color:#a78bfa' : 'var(--ziyit-primary-light);color:var(--ziyit-primary)') + ';font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:20px;white-space:nowrap;flex-shrink:0;';
+                    typeBadge.textContent = item.type;
+                    head.appendChild(name);
+                    head.appendChild(typeBadge);
+
+                    const desc = document.createElement('div');
+                    desc.style.cssText = 'color:var(--ziyit-text-secondary);font-size:0.85rem;margin-bottom:0.4rem;';
+                    desc.textContent = mod.modDescription || '暂无描述';
+
+                    const meta = document.createElement('div');
+                    meta.style.cssText = 'color:#94a3b8;font-size:0.75rem;margin-bottom:0.6rem;';
+                    const version = Array.isArray(mod.modVersion) ? mod.modVersion.join(',') : (mod.modVersion || '-');
+                    meta.textContent = '作者: ' + (mod.modAuthor || '-') + ' | 版本: ' + version;
+
+                    const dl = document.createElement('button');
+                    dl.textContent = '下载';
+                    dl.style.cssText = 'background:#1e293b;color:#fff;border:none;padding:0.4rem 1.2rem;border-radius:40px;font-size:0.8rem;cursor:pointer;font-weight:500;';
+                    dl.onclick = function () { downloadModFromServer(mod); };
+
+                    card.appendChild(head);
+                    card.appendChild(desc);
+                    card.appendChild(meta);
+                    card.appendChild(dl);
+                    list.appendChild(card);
+                });
+            } catch (e) {
+                offlineTip.style.display = 'block';
+                list.innerHTML = '';
+            }
+        }
+
+        function downloadModFromServer(mod) {
+            if (!ZIYIT_API.getToken()) {
+                alert('请先登录');
+                window.location.href = '../user/';
+                return;
+            }
+
+            ZIYIT_API.downloadMod(mod.modId).then(function (res) {
+                if (res.status === 401) {
+                    alert('登录已过期，请重新登录');
+                    window.location.href = '../user/';
+                    return;
+                }
+                if (res.status === 403) {
+                    return res.json().then(function (d) {
+                        alert((d && d.detail) || '您未拥有该MOD/DLC');
+                    });
+                }
+                if (!res.ok) {
+                    alert('下载失败，请稍后再试');
+                    return;
+                }
+                return res.blob().then(function (blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = mod.modName + '.rcm';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+            }).catch(function () {
+                alert('服务器连接失败，请稍后再试');
+            });
+        }
+
+        loadModDownload();
+
+        // ===== 上传我的 MOD =====
+        (function () {
+            const submitModal = document.getElementById('modSubmitModal');
+            const submitBtn = document.getElementById('mod-submit-btn');
+            if (!submitModal || !submitBtn) return;
+
+            function openSubmitModal() {
+                if (!ZIYIT_API.getToken()) {
+                    alert('请先登录后再上传 MOD');
+                    window.location.href = '../user/';
+                    return;
+                }
+                document.getElementById('submit-mod-name').value = '';
+                document.getElementById('submit-mod-url').value = '';
+                document.getElementById('submit-mod-version').value = '';
+                submitModal.style.display = 'flex';
+            }
+
+            function closeSubmitModal() {
+                submitModal.style.display = 'none';
+            }
+
+            submitBtn.addEventListener('click', openSubmitModal);
+            document.getElementById('submit-mod-cancel').addEventListener('click', closeSubmitModal);
+            submitModal.addEventListener('click', function (e) {
+                if (e.target === submitModal) closeSubmitModal();
+            });
+
+            document.getElementById('submit-mod-confirm').addEventListener('click', function () {
+                const modName = document.getElementById('submit-mod-name').value.trim();
+                const lastFileUrl = document.getElementById('submit-mod-url').value.trim();
+                const modVersion = document.getElementById('submit-mod-version').value.trim();
+                if (!modName || !lastFileUrl || !modVersion) {
+                    alert('请填写 MOD 名称、文件下载链接和版本号');
+                    return;
+                }
+                const btn = this;
+                const oldText = btn.textContent;
+                btn.textContent = '提交中...';
+                btn.disabled = true;
+                ZIYIT_API.submitMod({
+                    modName: modName,
+                    lastFileUrl: lastFileUrl,
+                    modVersion: modVersion
+                }).then(function () {
+                    alert('MOD 已提交，等待管理员审核');
+                    closeSubmitModal();
+                    loadModDownload();
+                }).catch(function (err) {
+                    alert('提交失败: ' + (err.message || err));
+                }).finally(function () {
+                    btn.textContent = oldText;
+                    btn.disabled = false;
+                });
+            });
+        })();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

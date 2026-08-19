@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>下载中心 - ZIYIT STUDIO</title>
+    <meta name="description" content="ZIYIT STUDIO 下载中心：软件、工具与资源下载。">
+    <meta name="keywords" content="ZIYIT,下载,软件下载,资源">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/download/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ZIYIT STUDIO">
+    <meta property="og:title" content="下载中心 - ZIYIT STUDIO">
+    <meta property="og:description" content="ZIYIT STUDIO 下载中心：软件、工具与资源下载。">
+    <meta property="og:url" content="https://ziyit-hacker.github.io/download/">
+    <meta property="og:image" content="https://ziyit-hacker.github.io/assets/ziyit.png">
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/blacklist.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <style>
+        /* ===== 下载中心页面样式（DESIGN.md 设计体系） ===== */
+        .bid {
+            color: var(--ziyit-danger);
+            font-size: 12px;
+            margin-left: 4px;
+        }
+
+        .page-header {
+            max-width: 900px;
+            margin: 32px auto 8px;
+            padding: 24px 20px;
+            text-align: center;
+            background: var(--ziyit-primary-light);
+            border-radius: 10px;
+        }
+        .page-header h1 {
+            margin: 0 0 8px;
+            font-size: 26px;
+            color: var(--ziyit-text-primary);
+        }
+        .page-header p {
+            margin: 4px 0;
+            color: var(--ziyit-text-secondary);
+        }
+        .page-header .sub {
+            color: var(--ziyit-text-primary);
+            font-weight: 600;
+        }
+
+        .download-entry {
+            max-width: 900px;
+            margin: 16px auto;
+            text-align: center;
+        }
+        .download-entry a {
+            display: inline-block;
+            padding: 10px 22px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-primary);
+            border-radius: 8px;
+            color: var(--ziyit-primary);
+            font-weight: 600;
+            text-decoration: none;
+            transition: background .2s, color .2s;
+        }
+        .download-entry a:hover {
+            background: var(--ziyit-primary);
+            color: #fff;
+        }
+
+        /* 搜索框 */
+        .search-box {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 16px;
+        }
+        .search-box form {
+            display: flex;
+            align-items: center;
+        }
+        .search-box label {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            margin-right: 12px;
+            white-space: nowrap;
+        }
+        .search-box input {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 16px;
+            font-size: 15px;
+            border: 1px solid var(--ziyit-primary);
+            border-radius: 100px 0 0 100px;
+            outline: none;
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+        }
+        .search-box button {
+            padding: 10px 18px;
+            background: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            border-radius: 0 100px 100px 0;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* 产品卡片网格 */
+        .product-grid {
+            list-style: none;
+            padding: 0;
+            margin: 8px auto 32px;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 14px;
+        }
+        .product-card {
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            transition: border-color .2s, box-shadow .2s, transform .2s;
+        }
+        .product-card:hover {
+            border-color: var(--ziyit-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+            transform: translateY(-2px);
+        }
+        .product-card .product {
+            color: var(--ziyit-primary);
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            display: block;
+        }
+        .product-card .product:hover {
+            color: var(--ziyit-primary-dark);
+        }
+
+        .to-top {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--ziyit-primary);
+            text-decoration: none;
+            font-size: 14px;
+            margin: 0 16px;
+        }
+        .to-top:hover {
+            color: var(--ziyit-primary-dark);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            background: var(--ziyit-bg-card);
+            border-top: 1px solid var(--ziyit-border);
+            color: var(--ziyit-text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .search-box label {
+                display: none;
+            }
+            .page-header {
+                padding: 18px 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        function checkUserPermission() {
+            if (!ZIYIT_API.getToken()) {
+                alert('请先登录以访问该页面');
+                window.location.href = './';
+                return;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkUserPermission);
+    </script>
+
+    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav" id="up">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href='../search'>搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 页面主体 -->
+    <header class="page-header">
+        <h1>下载中心</h1>
+        <p>在 ZIYIT STUDIO 的下载主页你可以下载付费程序和免费程序。</p>
+        <p>我们会提供对你们有帮助的工具！</p>
+        <p class="sub">以下是 ZIYIT STUDIO 提供的产品，请自行下载</p>
+    </header>
+
+    <div class="download-entry">
+        <a href="./errordiv">高级权限下载区域</a>
+    </div>
+
+    <div class="search-box">
+        <form method="get" autocomplete="off">
+            <label for="search-input"><strong>搜索文件:</strong></label>
+            <input type="text" id="search-input" name="q" placeholder="搜索...">
+            <button type="submit" id="search-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle;">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                </svg>
+            </button>
+        </form>
+    </div>
+
+    <ul class="product-grid" id="product-grid">
+        <li class="ziyit-loading">
+            <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+            <div class="ziyit-loader">
+                <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                <div class="loader-bar"><div class="loader-fill"></div></div>
+            </div>
+        </li>
+    </ul>
+
+    <div style="text-align:center; padding: 0 16px;">
+        <a href="#up" class="to-top" aria-label="到顶部">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+            到顶部
+        </a>
+    </div>
+
+    <footer>
+        &copy;2026&nbsp;&nbsp;ZIYIT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>版权所有，侵权必究</strong>
+    </footer>
+
+    <script>
+        fetch('download.txt')
+            .then(res => res.text())
+            .then(data => {
+                const lines = data.split('\n');
+                const productGrid = document.querySelector('.product-grid');
+                productGrid.innerHTML = '';
+
+                lines.forEach((line, i) => {
+                    if (!line.trim()) return;
+                    const parts = line.split('\\');
+                    const name = parts[0];
+                    const location = parts[1];
+                    let flag = parts[2];
+                    if (flag) flag = flag.trim();
+
+                    if (flag === 'w') {
+                        const li = document.createElement('li');
+                        const link = document.createElement('a');
+                        link.href = location;
+                        link.textContent = name;
+                        link.classList.add('product');
+                        li.classList.add('product-card');
+                        li.appendChild(link);
+                        productGrid.appendChild(li);
+                    }
+                });
+            });
+    </script>
+
+    <script>
+        document.getElementById('search-button').addEventListener('click', function (e) {
+            e.preventDefault();
+            const searchInput = document.getElementById('search-input').value.toLowerCase();
+            const items = document.querySelectorAll('.product-grid li');
+
+            items.forEach(item => {
+                const link = item.querySelector('.product');
+                if (link && (link.textContent.toLowerCase().includes(searchInput) || searchInput === '')) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    </script>
+
+    <script>
+        // 导航权限过滤（DESIGN.md §4.6.5）：登录后按角色显示菜单项
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                const loginLink = document.getElementById('loginLink');
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

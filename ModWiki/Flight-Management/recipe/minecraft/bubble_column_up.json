@@ -1,0 +1,14 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "bubble column up",
+    "ingredients": [
+        "flyconfig:nuclear_spawn_egg",
+        "flyconfig:nuclear_disarm_tool"
+    ],
+    "result": {
+        "id": "flyconfig:bubble_column_up",
+        "count": 1
+    },
+    "show_notification": true
+}

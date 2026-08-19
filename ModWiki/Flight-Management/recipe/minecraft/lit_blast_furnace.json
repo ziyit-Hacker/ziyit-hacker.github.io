@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "lit blast furnace",
+    "ingredients": [
+        "flyconfig:metal_scrap",
+        "flyconfig:synthetic_motoroil",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:lit_blast_furnace",
+        "count": 1
+    },
+    "show_notification": true
+}

@@ -1,0 +1,16 @@
+{
+  "type": "crafting_shapeless",
+  "category": "redstone",
+  "group": "what_the_dog_doing",
+  "ingredients": [
+    "flyconfig:germany_developed",
+    "flyconfig:metal_scrap",
+    "flyconfig:synthetic_motoroil",
+    "flyconfig:ultimate_healthy_nightmare"
+  ],
+  "result": {
+    "id": "flyconfig:what_the_dog_doing",
+    "count": 1
+  },
+  "show_notification": true
+}

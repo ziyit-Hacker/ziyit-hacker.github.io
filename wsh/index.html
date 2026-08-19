@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- 引入扩展脚本（保留原内容） -->
+    <script src="chrome-extension://cpiamehmlamjjaccpfpepfmfcbdeafcd/inject.js"></script>
+    <script src="chrome-extension://kjbmkgldehlkpnaeeeegfolcjjlaildg/inject.js"></script>
+    
+    <!-- 基础元信息 -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导航页面</title>
+    
+    <!-- 可选：添加基础样式，让导航更美观 -->
+    <style>
+        .nav-container {
+            margin: 20px 0;
+        }
+        .nav-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            gap: 20px;
+        }
+        .nav-item {
+            padding: 5px 10px;
+        }
+        .nav-item a {
+            text-decoration: none;
+            color: #333;
+        }
+        .nav-item a:hover {
+            color: #007bff;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航容器 -->
+    <div class="nav-container">
+        <ul class="nav-list">
+            <!-- 还原可识别的导航项 -->
+            <li class="nav-item" role="all">
+                <a href="https://hacker.github.io/tas/" target="_blank">主页</a>
+            </li>
+            <li class="nav-item" role="all">
+                <a href="#" class="onlink">用户中心</a>
+            </li>
+            <li class="nav-item" role="all">
+                <a href="#" id="login">登录</a>
+            </li>
+            <!-- 可根据需要补充其他导航项 -->
+        </ul>
+    </div>
+
+    <!-- live-server 自动刷新脚本（保留原核心逻辑，修复语法） -->
+    <script>
+        // <![CDATA[  <-- For SVG support
+        if ('WebSocket' in window) {
+            (function () {
+                function refreshCSS() {
+                    var sheets = [].slice.call(document.getElementsByTagName("link"));
+                    var head = document.getElementsByTagName("head")[0];
+                    for (var i = 0; i < sheets.length; ++i) {
+                        var elem = sheets[i];
+                        var parent = elem.parentElement || head;
+                        parent.removeChild(elem);
+                        var rel = elem.rel;
+                        if (elem.href && (typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet")) {
+                            var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+                            elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+                        }
+                        parent.appendChild(elem);
+                    }
+                }
+                var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+                var address = protocol + window.location.host + window.location.pathname + '/ws';
+                var socket = new WebSocket(address);
+                socket.onmessage = function (msg) {
+                    if (msg.data == 'reload') window.location.reload();
+                    else if (msg.data == 'refreshcss') refreshCSS();
+                };
+                if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+                    console.log('Live reload enabled.');
+                    sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+                }
+            })();
+        } else {
+            console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+        }
+        // ]]>
+    </script>
+</body>
+</html>

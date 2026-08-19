@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "carrot crop 4",
+    "ingredients": [
+        "flyconfig:uranium_ingot",
+        "flyconfig:metal_scrap",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:carrot_crop_4",
+        "count": 1
+    },
+    "show_notification": true
+}

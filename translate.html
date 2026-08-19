@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>必应翻译循环恶搞工具</title>
+    <link rel="icon" href="./assets/ziyit.png" type="image/x-icon">
+    <script src="./assets/f12check.js"></script>
+    <script src="./assets/blacklist.js"></script>
+    <script src="./assets/ziyit_api.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "微软雅黑", Arial, sans-serif;
+        }
+
+        body {
+            padding: 0 0 20px;
+            background: var(--ziyit-bg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 24px auto;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--ziyit-text-primary);
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .config {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .config-item {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--ziyit-text-secondary);
+        }
+
+        select,
+        input[type="number"],
+        input[type="text"] {
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+        }
+
+        select,
+        input[type="number"],
+        button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background: var(--ziyit-primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: var(--ziyit-primary-dark);
+        }
+
+        button:disabled {
+            background: var(--ziyit-border);
+            color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        .text-area {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 4px;
+            font-size: 16px;
+            resize: vertical;
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+        }
+
+        #status {
+            text-align: center;
+            margin: 10px 0;
+            color: var(--ziyit-text-secondary);
+            font-size: 14px;
+        }
+
+        .language-note {
+            font-size: 12px;
+            color: var(--ziyit-text-disabled);
+            margin-top: 5px;
+        }
+
+        .tips {
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--ziyit-bg-hover);
+            border-left: 3px solid var(--ziyit-primary);
+            font-size: 14px;
+            color: var(--ziyit-text-secondary);
+        }
+
+        .custom-select {
+            position: relative;
+            width: 100%;
+        }
+
+        .select-search {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 4px;
+            font-size: 16px;
+            margin-bottom: 5px;
+            box-sizing: border-box;
+        }
+
+        .select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .select-option {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--ziyit-border-light);
+        }
+
+        .select-option:hover {
+            background: var(--ziyit-bg-hover);
+        }
+
+        .select-option.selected {
+            background: var(--ziyit-primary);
+            color: white;
+        }
+
+        .select-option.hidden {
+            display: none;
+        }
+
+        .bid {
+            color: var(--ziyit-danger);
+            font-size: 12px;
+            margin-left: 4px;
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="./assets/ziyit-theme.css">
+</head>
+
+<body>
+    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='./download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='./move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="./move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="./search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="./music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="./Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="./Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="./developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="./backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="./music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="./ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="./user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="./user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>必应翻译循环恶搞工具（免密钥）</h1>
+
+        <div class="config">
+            <div class="config-item">
+                <label for="sourceLang">源语言</label>
+                <div class="custom-select" id="sourceLangContainer">
+                    <input type="text" class="select-search" placeholder="搜索语言编号或名称..." id="sourceLangSearch">
+                    <select id="sourceLang" style="display: none;">
+                        <option value="auto-detect">自动识别</option>
+                        <option value="af">南非荷兰语 (af)</option>
+                        <option value="sq">阿尔巴尼亚语 (sq)</option>
+                        <option value="am">阿姆哈拉语 (am)</option>
+                        <option value="ar">阿拉伯语 (ar)</option>
+                        <option value="hy">亚美尼亚语 (hy)</option>
+                        <option value="as">阿萨姆语 (as)</option>
+                        <option value="az">阿塞拜疆语 (az)</option>
+                        <option value="bn">孟加拉语 (bn)</option>
+                        <option value="bs">波斯尼亚语 (bs)</option>
+                        <option value="bg">保加利亚语 (bg)</option>
+                        <option value="yue">粤语（繁体） (yue)</option>
+                        <option value="ca">加泰罗尼亚语 (ca)</option>
+                        <option value="zh-cn">中文（简体） (zh-cn)</option>
+                        <option value="zh-tw">中文（繁体） (zh-tw)</option>
+                        <option value="hr">克罗地亚语 (hr)</option>
+                        <option value="cs">捷克语 (cs)</option>
+                        <option value="da">丹麦语 (da)</option>
+                        <option value="prs">达里语 (prs)</option>
+                        <option value="dv">迪维希语 (dv)</option>
+                        <option value="nl">荷兰语 (nl)</option>
+                        <option value="en">英语 (en)</option>
+                        <option value="et">爱沙尼亚语 (et)</option>
+                        <option value="fj">斐济语 (fj)</option>
+                        <option value="fil">菲律宾语 (fil)</option>
+                        <option value="fi">芬兰语 (fi)</option>
+                        <option value="fr">法语 (fr)</option>
+                        <option value="fr-ca">法语（加拿大） (fr-ca)</option>
+                        <option value="ka">格鲁吉亚语 (ka)</option>
+                        <option value="de">德语 (de)</option>
+                        <option value="el">希腊语 (el)</option>
+                        <option value="gu">古吉拉特语 (gu)</option>
+                        <option value="ht">海地克里奥尔语 (ht)</option>
+                        <option value="he">希伯来语 (he)</option>
+                        <option value="hi">印地语 (hi)</option>
+                        <option value="mww">白苗语 (mww)</option>
+                        <option value="hu">匈牙利语 (hu)</option>
+                        <option value="is">冰岛语 (is)</option>
+                        <option value="id">印度尼西亚语 (id)</option>
+                        <option value="iu">因纽特语 (iu)</option>
+                        <option value="ga">爱尔兰语 (ga)</option>
+                        <option value="it">意大利语 (it)</option>
+                        <option value="ja">日语 (ja)</option>
+                        <option value="kn">卡纳达语 (kn)</option>
+                        <option value="kk">哈萨克语 (kk)</option>
+                        <option value="km">高棉语 (km)</option>
+                        <option value="tlh-Latn">克林贡语（拉丁文） (tlh-Latn)</option>
+                        <option value="tlh-Piqd">克林贡语（pIqaD） (tlh-Piqd)</option>
+                        <option value="ko">韩语 (ko)</option>
+                        <option value="ku">库尔德语（中部） (ku)</option>
+                        <option value="kmr">库尔德语（北部） (kmr)</option>
+                        <option value="ky">吉尔吉斯语 (ky)</option>
+                        <option value="lo">老挝语 (lo)</option>
+                        <option value="lv">拉脱维亚语 (lv)</option>
+                        <option value="lt">立陶宛语 (lt)</option>
+                        <option value="mk">马其顿语 (mk)</option>
+                        <option value="mg">马尔加什语 (mg)</option>
+                        <option value="ms">马来语 (ms)</option>
+                        <option value="ml">马拉雅拉姆语 (ml)</option>
+                        <option value="mt">马耳他语 (mt)</option>
+                        <option value="mi">毛利语 (mi)</option>
+                        <option value="mr">马拉地语 (mr)</option>
+                        <option value="mn-Cyrl">蒙古语（西里尔文） (mn-Cyrl)</option>
+                        <option value="mn-Mong">蒙古语（传统） (mn-Mong)</option>
+                        <option value="my">缅甸语 (my)</option>
+                        <option value="ne">尼泊尔语 (ne)</option>
+                        <option value="nb">挪威语 (nb)</option>
+                        <option value="or">奥里亚语 (or)</option>
+                        <option value="ps">普什图语 (ps)</option>
+                        <option value="fa">波斯语 (fa)</option>
+                        <option value="pl">波兰语 (pl)</option>
+                        <option value="pt">葡萄牙语 (pt)</option>
+                        <option value="pt-pt">葡萄牙语（葡萄牙） (pt-pt)</option>
+                        <option value="pa">旁遮普语 (pa)</option>
+                        <option value="otq">克雷塔罗奥托米语 (otq)</option>
+                        <option value="ro">罗马尼亚语 (ro)</option>
+                        <option value="ru">俄语 (ru)</option>
+                        <option value="sm">萨摩亚语 (sm)</option>
+                        <option value="sr-Cyrl">塞尔维亚语（西里尔文） (sr-Cyrl)</option>
+                        <option value="sr-Latn">塞尔维亚语（拉丁文） (sr-Latn)</option>
+                        <option value="sk">斯洛伐克语 (sk)</option>
+                        <option value="sl">斯洛文尼亚语 (sl)</option>
+                        <option value="so">索马里语 (so)</option>
+                        <option value="es">西班牙语 (es)</option>
+                        <option value="sw">斯瓦希里语 (sw)</option>
+                        <option value="sv">瑞典语 (sv)</option>
+                        <option value="ty">塔希提语 (ty)</option>
+                        <option value="ta">泰米尔语 (ta)</option>
+                        <option value="tt">鞑靼语 (tt)</option>
+                        <option value="te">泰卢固语 (te)</option>
+                        <option value="th">泰语 (th)</option>
+                        <option value="bo">藏语 (bo)</option>
+                        <option value="ti">提格里尼亚语 (ti)</option>
+                        <option value="to">汤加语 (to)</option>
+                        <option value="tr">土耳其语 (tr)</option>
+                        <option value="tk">土库曼语 (tk)</option>
+                        <option value="uk">乌克兰语 (uk)</option>
+                        <option value="ur">乌尔都语 (ur)</option>
+                        <option value="ug">维吾尔语 (ug)</option>
+                        <option value="uz">乌兹别克语 (uz)</option>
+                        <option value="vi">越南语 (vi)</option>
+                        <option value="cy">威尔士语 (cy)</option>
+                        <option value="yua">尤卡坦玛雅语 (yua)</option>
+                    </select>
+                    <div class="select-options" id="sourceLangOptions"></div>
+                </div>
+            </div>
+            <div class="config-item">
+                <label for="cycleTimes">循环翻译次数</label>
+                <input type="number" id="cycleTimes" min="1" max="250" value="100" placeholder="建议≤100，避免卡顿">
+            </div>
+
+            <div class="config-item">
+                <label for="targetLang">最终目标语言</label>
+                <div class="custom-select" id="targetLangContainer">
+                    <input type="text" class="select-search" placeholder="搜索语言编号或名称..." id="targetLangSearch">
+                    <select id="targetLang" style="display: none;">
+                        <option value="af">南非荷兰语 (af)</option>
+                        <option value="sq">阿尔巴尼亚语 (sq)</option>
+                        <option value="am">阿姆哈拉语 (am)</option>
+                        <option value="ar">阿拉伯语 (ar)</option>
+                        <option value="hy">亚美尼亚语 (hy)</option>
+                        <option value="as">阿萨姆语 (as)</option>
+                        <option value="az">阿塞拜疆语 (az)</option>
+                        <option value="bn">孟加拉语 (bn)</option>
+                        <option value="bs">波斯尼亚语 (bs)</option>
+                        <option value="bg">保加利亚语 (bg)</option>
+                        <option value="yue">粤语（繁体） (yue)</option>
+                        <option value="ca">加泰罗尼亚语 (ca)</option>
+                        <option value="zh-cn" selected>中文（简体） (zh-cn)</option>
+                        <option value="zh-tw">中文（繁体） (zh-tw)</option>
+                        <option value="hr">克罗地亚语 (hr)</option>
+                        <option value="cs">捷克语 (cs)</option>
+                        <option value="da">丹麦语 (da)</option>
+                        <option value="prs">达里语 (prs)</option>
+                        <option value="dv">迪维希语 (dv)</option>
+                        <option value="nl">荷兰语 (nl)</option>
+                        <option value="en">英语 (en)</option>
+                        <option value="et">爱沙尼亚语 (et)</option>
+                        <option value="fj">斐济语 (fj)</option>
+                        <option value="fil">菲律宾语 (fil)</option>
+                        <option value="fi">芬兰语 (fi)</option>
+                        <option value="fr">法语 (fr)</option>
+                        <option value="fr-ca">法语（加拿大） (fr-ca)</option>
+                        <option value="ka">格鲁吉亚语 (ka)</option>
+                        <option value="de">德语 (de)</option>
+                        <option value="el">希腊语 (el)</option>
+                        <option value="gu">古吉拉特语 (gu)</option>
+                        <option value="ht">海地克里奥尔语 (ht)</option>
+                        <option value="he">希伯来语 (he)</option>
+                        <option value="hi">印地语 (hi)</option>
+                        <option value="mww">白苗语 (mww)</option>
+                        <option value="hu">匈牙利语 (hu)</option>
+                        <option value="is">冰岛语 (is)</option>
+                        <option value="id">印度尼西亚语 (id)</option>
+                        <option value="iu">因纽特语 (iu)</option>
+                        <option value="ga">爱尔兰语 (ga)</option>
+                        <option value="it">意大利语 (it)</option>
+                        <option value="ja">日语 (ja)</option>
+                        <option value="kn">卡纳达语 (kn)</option>
+                        <option value="kk">哈萨克语 (kk)</option>
+                        <option value="km">高棉语 (km)</option>
+                        <option value="tlh-Latn">克林贡语（拉丁文） (tlh-Latn)</option>
+                        <option value="tlh-Piqd">克林贡语（pIqaD） (tlh-Piqd)</option>
+                        <option value="ko">韩语 (ko)</option>
+                        <option value="ku">库尔德语（中部） (ku)</option>
+                        <option value="kmr">库尔德语（北部） (kmr)</option>
+                        <option value="ky">吉尔吉斯语 (ky)</option>
+                        <option value="lo">老挝语 (lo)</option>
+                        <option value="lv">拉脱维亚语 (lv)</option>
+                        <option value="lt">立陶宛语 (lt)</option>
+                        <option value="mk">马其顿语 (mk)</option>
+                        <option value="mg">马尔加什语 (mg)</option>
+                        <option value="ms">马来语 (ms)</option>
+                        <option value="ml">马拉雅拉姆语 (ml)</option>
+                        <option value="mt">马耳他语 (mt)</option>
+                        <option value="mi">毛利语 (mi)</option>
+                        <option value="mr">马拉地语 (mr)</option>
+                        <option value="mn-Cyrl">蒙古语（西里尔文） (mn-Cyrl)</option>
+                        <option value="mn-Mong">蒙古语（传统） (mn-Mong)</option>
+                        <option value="my">缅甸语 (my)</option>
+                        <option value="ne">尼泊尔语 (ne)</option>
+                        <option value="nb">挪威语 (nb)</option>
+                        <option value="or">奥里亚语 (or)</option>
+                        <option value="ps">普什图语 (ps)</option>
+                        <option value="fa">波斯语 (fa)</option>
+                        <option value="pl">波兰语 (pl)</option>
+                        <option value="pt">葡萄牙语 (pt)</option>
+                        <option value="pt-pt">葡萄牙语（葡萄牙） (pt-pt)</option>
+                        <option value="pa">旁遮普语 (pa)</option>
+                        <option value="otq">克雷塔罗奥托米语 (otq)</option>
+                        <option value="ro">罗马尼亚语 (ro)</option>
+                        <option value="ru">俄语 (ru)</option>
+                        <option value="sm">萨摩亚语 (sm)</option>
+                        <option value="sr-Cyrl">塞尔维亚语（西里尔文） (sr-Cyrl)</option>
+                        <option value="sr-Latn">塞尔维亚语（拉丁文） (sr-Latn)</option>
+                        <option value="sk">斯洛伐克语 (sk)</option>
+                        <option value="sl">斯洛文尼亚语 (sl)</option>
+                        <option value="so">索马里语 (so)</option>
+                        <option value="es">西班牙语 (es)</option>
+                        <option value="sw">斯瓦希里语 (sw)</option>
+                        <option value="sv">瑞典语 (sv)</option>
+                        <option value="ty">塔希提语 (ty)</option>
+                        <option value="ta">泰米尔语 (ta)</option>
+                        <option value="tt">鞑靼语 (tt)</option>
+                        <option value="te">泰卢固语 (te)</option>
+                        <option value="th">泰语 (th)</option>
+                        <option value="bo">藏语 (bo)</option>
+                        <option value="ti">提格里尼亚语 (ti)</option>
+                        <option value="to">汤加语 (to)</option>
+                        <option value="tr">土耳其语 (tr)</option>
+                        <option value="tk">土库曼语 (tk)</option>
+                        <option value="uk">乌克兰语 (uk)</option>
+                        <option value="ur">乌尔都语 (ur)</option>
+                        <option value="ug">维吾尔语 (ug)</option>
+                        <option value="uz">乌兹别克语 (uz)</option>
+                        <option value="vi">越南语 (vi)</option>
+                        <option value="cy">威尔士语 (cy)</option>
+                        <option value="yua">尤卡坦玛雅语 (yua)</option>
+                    </select>
+                    <div class="select-options" id="targetLangOptions"></div>
+                </div>
+            </div>
+
+            <div class="config-item" style="min-width: 120px;">
+                <label>&nbsp;</label>
+                <button id="translateBtn">开始循环翻译</button>
+            </div>
+        </div>
+
+        <div id="status">就绪 - 点击按钮开始翻译（首次翻译可能稍慢）</div>
+
+        <div class="text-area">
+            <div style="width: 50%;">
+                <label style="margin-bottom: 10px; display: block;">输入文本</label>
+                <textarea id="inputText" placeholder="粘贴你要恶搞的文本..."></textarea>
+            </div>
+            <div style="width: 50%;">
+                <label style="margin-bottom: 10px; display: block;">输出结果（双击复制）</label>
+                <textarea id="outputText" readonly placeholder="翻译结果会显示在这里..."></textarea>
+            </div>
+        </div>
+
+        <div class="tips">
+            📌 小贴士：1. 翻译次数建议≤100，避免浏览器卡顿；2. 若翻译失败，刷新页面重试；3. 输出框双击可快速复制结果。
+        </div>
+    </div>
+
+    <script>
+        // 语言映射（必应翻译的语言代码）
+        const langMap = {
+            'auto-detect': 'auto',
+            'af': 'af', 'sq': 'sq', 'am': 'am', 'ar': 'ar', 'hy': 'hy',
+            'as': 'as', 'az': 'az', 'bn': 'bn', 'bs': 'bs', 'bg': 'bg',
+            'yue': 'yue', 'ca': 'ca', 'zh-cn': 'zh-cn', 'zh-tw': 'zh-tw',
+            'hr': 'hr', 'cs': 'cs', 'da': 'da', 'prs': 'prs', 'dv': 'dv',
+            'nl': 'nl', 'en': 'en', 'et': 'et', 'fj': 'fj', 'fil': 'fil',
+            'fi': 'fi', 'fr': 'fr', 'fr-ca': 'fr-ca', 'ka': 'ka', 'de': 'de',
+            'el': 'el', 'gu': 'gu', 'ht': 'ht', 'he': 'he', 'hi': 'hi',
+            'mww': 'mww', 'hu': 'hu', 'is': 'is', 'id': 'id', 'iu': 'iu',
+            'ga': 'ga', 'it': 'it', 'ja': 'ja', 'kn': 'kn', 'kk': 'kk',
+            'km': 'km', 'tlh-Latn': 'tlh-Latn', 'tlh-Piqd': 'tlh-Piqd',
+            'ko': 'ko', 'ku': 'ku', 'kmr': 'kmr', 'ky': 'ky', 'lo': 'lo',
+            'lv': 'lv', 'lt': 'lt', 'mk': 'mk', 'mg': 'mg', 'ms': 'ms',
+            'ml': 'ml', 'mt': 'mt', 'mi': 'mi', 'mr': 'mr', 'mn-Cyrl': 'mn-Cyrl',
+            'mn-Mong': 'mn-Mong', 'my': 'my', 'ne': 'ne', 'nb': 'nb', 'or': 'or',
+            'ps': 'ps', 'fa': 'fa', 'pl': 'pl', 'pt': 'pt', 'pt-pt': 'pt-pt',
+            'pa': 'pa', 'otq': 'otq', 'ro': 'ro', 'ru': 'ru', 'sm': 'sm',
+            'sr-Cyrl': 'sr-Cyrl', 'sr-Latn': 'sr-Latn', 'sk': 'sk', 'sl': 'sl',
+            'so': 'so', 'es': 'es', 'sw': 'sw', 'sv': 'sv', 'ty': 'ty',
+            'ta': 'ta', 'tt': 'tt', 'te': 'te', 'th': 'th', 'bo': 'bo',
+            'ti': 'ti', 'to': 'to', 'tr': 'tr', 'tk': 'tk', 'uk': 'uk',
+            'ur': 'ur', 'ug': 'ug', 'uz': 'uz', 'vi': 'vi', 'cy': 'cy',
+            'yua': 'yua'
+        };
+
+        // DOM元素
+        const translateBtn = document.getElementById('translateBtn');
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const statusText = document.getElementById('status');
+        const sourceLang = document.getElementById('sourceLang');
+        const cycleTimes = document.getElementById('cycleTimes');
+        const targetLang = document.getElementById('targetLang');
+
+        // 搜索功能相关元素
+        const sourceLangSearch = document.getElementById('sourceLangSearch');
+        const sourceLangOptions = document.getElementById('sourceLangOptions');
+        const targetLangSearch = document.getElementById('targetLangSearch');
+        const targetLangOptions = document.getElementById('targetLangOptions');
+
+        // 初始化搜索功能
+        function initSearchFunctionality() {
+            // 初始化源语言搜索
+            initSelectSearch('sourceLang', sourceLangSearch, sourceLangOptions);
+            // 初始化目标语言搜索
+            initSelectSearch('targetLang', targetLangSearch, targetLangOptions);
+        }
+
+        // 初始化单个下拉框的搜索功能
+        function initSelectSearch(selectId, searchInput, optionsContainer) {
+            const select = document.getElementById(selectId);
+            const options = Array.from(select.options);
+            
+            // 创建选项显示
+            function renderOptions(filterText = '') {
+                optionsContainer.innerHTML = '';
+                let hasVisibleOptions = false;
+                
+                // 只在初始渲染时设置搜索框的值
+                let isInitialRender = false;
+                if (filterText === '' && searchInput.value === '') {
+                    isInitialRender = true;
+                }
+                
+                options.forEach(option => {
+                    const optionText = option.textContent;
+                    const optionValue = option.value;
+                    
+                    // 搜索逻辑：匹配语言编号或名称
+                    const searchLower = filterText.toLowerCase();
+                    const matches = filterText === '' || 
+                        optionText.toLowerCase().includes(searchLower) ||
+                        optionValue.toLowerCase().includes(searchLower);
+                    
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'select-option';
+                    optionElement.textContent = optionText;
+                    optionElement.dataset.value = optionValue;
+                    
+                    if (!matches) {
+                        optionElement.classList.add('hidden');
+                    } else {
+                        hasVisibleOptions = true;
+                    }
+                    
+                    // 设置选中状态 - 只在初始渲染时设置搜索框值
+                    if (option.selected) {
+                        optionElement.classList.add('selected');
+                        if (isInitialRender) {
+                            searchInput.value = optionText;
+                        }
+                    }
+                    
+                    // 点击选项事件
+                    optionElement.addEventListener('click', () => {
+                        // 更新select的选中状态
+                        select.value = optionValue;
+                        
+                        // 更新搜索框显示为选中项文本
+                        searchInput.value = optionText;
+                        
+                        // 隐藏选项列表
+                        optionsContainer.style.display = 'none';
+                        
+                        // 更新选中状态
+                        optionsContainer.querySelectorAll('.select-option').forEach(el => {
+                            el.classList.remove('selected');
+                        });
+                        optionElement.classList.add('selected');
+                    });
+                    
+                    optionsContainer.appendChild(optionElement);
+                });
+                
+                // 如果没有可见选项，显示提示
+                if (!hasVisibleOptions && filterText !== '') {
+                    const noResults = document.createElement('div');
+                    noResults.className = 'select-option';
+                    noResults.textContent = '没有找到匹配的语言';
+                    noResults.style.color = '#999';
+                    noResults.style.fontStyle = 'italic';
+                    optionsContainer.appendChild(noResults);
+                }
+            }
+            
+            // 初始渲染
+            renderOptions();
+            
+            // 搜索框输入事件
+            searchInput.addEventListener('input', (e) => {
+                const filterText = e.target.value;
+                renderOptions(filterText);
+                optionsContainer.style.display = 'block';
+                
+                // 确保程序能够识别到输入更改
+                const select = document.getElementById(selectId);
+                if (filterText === '') {
+                    // 如果搜索框为空，显示所有选项
+                    renderOptions('');
+                } else {
+                    // 触发select元素的change事件，确保程序知道值已更改
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+            
+            // 搜索框焦点事件
+            searchInput.addEventListener('focus', () => {
+                // 保存当前值以便后续恢复
+                const currentValue = searchInput.value;
+                
+                // 清空搜索框以便重新搜索
+                searchInput.value = '';
+                renderOptions('');
+                optionsContainer.style.display = 'block';
+                
+                // 添加一个小的延迟，确保清空操作完成
+                setTimeout(() => {
+                    // 触发输入事件，确保程序识别到更改
+                    searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    // 如果用户没有输入，恢复原来的值（可选）
+                    setTimeout(() => {
+                        if (searchInput.value === '' && currentValue) {
+                            searchInput.value = currentValue;
+                            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    }, 1000);
+                }, 10);
+            });
+            
+            // 点击其他地方隐藏选项列表
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !optionsContainer.contains(e.target)) {
+                    optionsContainer.style.display = 'none';
+                }
+            });
+            
+            // 键盘导航
+            searchInput.addEventListener('keydown', (e) => {
+                const visibleOptions = optionsContainer.querySelectorAll('.select-option:not(.hidden)');
+                const currentSelected = optionsContainer.querySelector('.select-option.selected');
+                let currentIndex = Array.from(visibleOptions).indexOf(currentSelected);
+                
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        if (visibleOptions.length > 0) {
+                            currentIndex = (currentIndex + 1) % visibleOptions.length;
+                            visibleOptions[currentIndex].click();
+                        }
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        if (visibleOptions.length > 0) {
+                            currentIndex = (currentIndex - 1 + visibleOptions.length) % visibleOptions.length;
+                            visibleOptions[currentIndex].click();
+                        }
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (currentSelected) {
+                            currentSelected.click();
+                        }
+                        break;
+                    case 'Escape':
+                        optionsContainer.style.display = 'none';
+                        break;
+                }
+            });
+        }
+
+        // 页面加载完成后初始化搜索功能
+        document.addEventListener('DOMContentLoaded', () => {
+            initSearchFunctionality();
+        });
+
+        // 核心翻译函数（优先使用微软，失败后重试2次，3次都失败换平台）
+        async function bingTranslate(text, fromLang, toLang) {
+            if (!text.trim()) return '';
+
+            // 转换为必应的语言代码
+            const from = langMap[fromLang] || 'auto';
+            const to = langMap[toLang] || 'zh';
+
+            // 方案1：优先使用微软翻译，最多重试3次
+            for (let retry = 0; retry < 3; retry++) {
+                try {
+                    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                    const targetUrl = `https://cn.bing.com/ttranslatev3?isVertical=1&&IG=8B8C8C8C8C8C8C8C&IID=translator.5028.1`;
+                    
+                    const response = await fetch(proxyUrl + targetUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: new URLSearchParams({
+                            'fromLang': from,
+                            'text': text,
+                            'to': to
+                        })
+                    });
+
+                    if (!response.ok) throw new Error(`微软翻译接口请求失败: ${response.status}`);
+
+                    const result = await response.json();
+                    // 解析翻译结果
+                    if (result[0]?.translations?.length > 0) {
+                        return result[0].translations[0].text || text;
+                    } else {
+                        throw new Error('微软翻译返回结果为空');
+                    }
+                } catch (error) {
+                    console.warn(`微软翻译第${retry + 1}次尝试失败:`, error);
+                    if (retry === 2) {
+                        statusText.textContent = `⚠️ 微软翻译3次尝试均失败，尝试谷歌翻译...`;
+                    }
+                    // 如果不是最后一次重试，等待1秒后重试
+                    if (retry < 2) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+            }
+
+            // 方案2：微软翻译3次都失败，尝试谷歌翻译
+            try {
+                statusText.textContent = '🔄 尝试使用谷歌翻译...';
+                // 使用简单的谷歌翻译API（需要CORS代理）
+                const googleResponse = await fetch('https://cors-anywhere.herokuapp.com/https://translate.googleapis.com/translate_a/single?client=gtx&sl=' + from + '&tl=' + to + '&dt=t&q=' + encodeURIComponent(text));
+                
+                if (!googleResponse.ok) throw new Error(`谷歌翻译接口请求失败: ${googleResponse.status}`);
+                
+                const googleResult = await googleResponse.json();
+                if (googleResult && googleResult[0] && googleResult[0][0] && googleResult[0][0][0]) {
+                    return googleResult[0][0][0];
+                } else {
+                    throw new Error('谷歌翻译返回结果格式异常');
+                }
+            } catch (googleError) {
+                console.error('谷歌翻译失败:', googleError);
+                statusText.textContent = '🔄 谷歌翻译失败，尝试百度翻译...';
+                
+                // 方案3：谷歌翻译失败，尝试百度翻译
+                try {
+                    // 使用百度翻译API（需要CORS代理）
+                    const appid = '20260101000000000'; // 示例appid，实际使用时需要申请
+                    const salt = Date.now();
+                    const sign = ''; // 实际使用时需要计算签名
+                    
+                    const baiduResponse = await fetch('https://cors-anywhere.herokuapp.com/https://fanyi-api.baidu.com/api/trans/vip/translate?q=' + encodeURIComponent(text) + '&from=' + from + '&to=' + to + '&appid=' + appid + '&salt=' + salt + '&sign=' + sign);
+                    
+                    if (!baiduResponse.ok) throw new Error(`百度翻译接口请求失败: ${baiduResponse.status}`);
+                    
+                    const baiduResult = await baiduResponse.json();
+                    if (baiduResult && baiduResult.trans_result && baiduResult.trans_result[0] && baiduResult.trans_result[0].dst) {
+                        return baiduResult.trans_result[0].dst;
+                    } else {
+                        throw new Error('百度翻译返回结果格式异常');
+                    }
+                } catch (baiduError) {
+                    console.error('百度翻译失败:', baiduError);
+                    statusText.textContent = '❌ 所有翻译平台均失败，返回原文本';
+                    return text; // 所有翻译都失败，返回原文本
+                }
+            }
+        }
+
+        // 定义循环翻译的语言序列
+        const cycleLanguages = ['en', 'fr', 'de', 'es', 'ja', 'ko', 'ru', 'ar', 'pt', 'it'];
+
+        // 循环翻译主逻辑
+        async function startCycleTranslate() {
+            const text = inputText.value.trim();
+            const times = parseInt(cycleTimes.value);
+            const from = sourceLang.value;
+            const to = targetLang.value;
+
+            // 输入验证
+            if (!text) {
+                alert('请先输入要翻译的文本！');
+                return;
+            }
+            if (isNaN(times) || times < 1 || times > 500) {
+                alert('循环次数请输入1-500之间的数字（建议≤100）！');
+                return;
+            }
+
+            // 禁用按钮，防止重复点击
+            translateBtn.disabled = true;
+            statusText.textContent = `🚀 开始循环翻译（共${times}次）...`;
+            outputText.value = '';
+
+            try {
+                let currentText = text;
+                // 第一步：先把源文本翻译成第一个循环语言
+                let firstCycleLang = cycleLanguages[0];
+                currentText = await bingTranslate(currentText, from, firstCycleLang);
+                statusText.textContent = `进度: 1/${times}（当前语言：${firstCycleLang}）`;
+
+                // 循环翻译：在语言池里来回切换
+                for (let i = 1; i < times; i++) {
+                    const prevLang = cycleLanguages[(i - 1) % cycleLanguages.length];
+                    const nextLang = cycleLanguages[i % cycleLanguages.length];
+
+                    // 翻译到下一个语言
+                    currentText = await bingTranslate(currentText, prevLang, nextLang);
+
+                    // 每10次更新一次输出，避免浏览器卡顿
+                    if (i % 10 === 0) {
+                        outputText.value = currentText;
+                    }
+
+                    // 更新进度
+                    statusText.textContent = `进度: ${i + 1}/${times}（当前语言：${nextLang}）`;
+
+                    // 加一点延迟，避免请求过快被屏蔽
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+
+                // 最后一步：翻译成最终目标语言
+                const finalText = await bingTranslate(currentText, cycleLanguages[(times - 1) % cycleLanguages.length], to);
+                outputText.value = finalText;
+                statusText.textContent = `✅ 翻译完成！共循环${times}次，可双击输出框复制结果`;
+
+            } catch (error) {
+                statusText.textContent = `❌ 翻译过程出错: ${error.message}`;
+            } finally {
+                // 恢复按钮
+                translateBtn.disabled = false;
+            }
+        }
+
+        // 绑定按钮点击事件
+        translateBtn.addEventListener('click', startCycleTranslate);
+
+        // 双击输出框复制结果
+        outputText.addEventListener('dblclick', () => {
+            outputText.select();
+            document.execCommand('copy');
+            statusText.textContent = '📋 结果已复制到剪贴板！';
+        });
+    </script>
+    <script>
+        // 导航权限过滤（DESIGN.md §4.6.5）：登录后按角色显示菜单项，未登录保留公开项
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const loginLink = document.getElementById('loginLink');
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    const show = role === 'all';
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                if (loginLink) loginLink.style.display = 'inline-block';
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    const show = role === 'all';
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+<script src="./assets/ziyit-theme.js"></script>
+</body>
+
+</html>

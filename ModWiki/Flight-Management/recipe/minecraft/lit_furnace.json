@@ -1,0 +1,14 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "lit furnace",
+    "ingredients": [
+        "flyconfig:uranium_ingot",
+        "flyconfig:metal_scrap"
+    ],
+    "result": {
+        "id": "flyconfig:lit_furnace",
+        "count": 1
+    },
+    "show_notification": true
+}

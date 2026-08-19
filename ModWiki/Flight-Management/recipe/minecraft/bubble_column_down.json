@@ -1,0 +1,14 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "bubble column down",
+    "ingredients": [
+        "flyconfig:nuclear_disarm_tool",
+        "flyconfig:uranium_ingot"
+    ],
+    "result": {
+        "id": "flyconfig:bubble_column_down",
+        "count": 1
+    },
+    "show_notification": true
+}

@@ -1,0 +1,15 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "sugar cane 2",
+    "ingredients": [
+        "flyconfig:metal_scrap",
+        "flyconfig:synthetic_motoroil",
+        "flyconfig:snowy_grass_block"
+    ],
+    "result": {
+        "id": "flyconfig:sugar_cane_2",
+        "count": 1
+    },
+    "show_notification": true
+}

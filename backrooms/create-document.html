@@ -1,0 +1,2209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后室层级文档创建器</title>
+    <link href="/assets/logo.ico" rel="icon" type="image/x-icon">
+    <style>
+        /* 与 levels.html 完全一致的主题链：WIKIDOT 基础样式 + BHL/liminal + 生存难度组件 */
+        @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
+        @import url(https://cdn.scpwiki.com/theme/en/black-highlighter/css/min/normalize.min.css);
+        @import url("https://github.backroomswiki.cn/New_BHL/css/liminal.css");
+        @import url("https://github.backroomswiki.cn/New_BHL/css/sidebar.css");
+        @import url(https://scp-wiki.wdfiles.com/local--code/info%3Astyle/1);
+        @import url("https://deckdevteam.github.io/frontend-components-bak/component-level-class/main.css");
+    </style>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans SC", sans-serif; background: #f0f1f3; color: #1f2328; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #22262c; color: #fff; position: sticky; top: 0; z-index: 50; }
+        .topbar h1 { font-size: 16px; margin: 0; }
+        #page-type-badge { font-size: 12px; color: #9fd4ff; margin-left: 8px; font-weight: 400; }
+        .top-actions { display: flex; gap: 8px; }
+        .top-actions button { padding: 7px 14px; border: none; border-radius: 6px; background: #0078d4; color: #fff; font-size: 13px; cursor: pointer; }
+        .top-actions button:hover { background: #0069b9; }
+        .main-layout { display: flex; height: calc(100vh - 50px); overflow: hidden; }
+
+        .panel { width: 300px; min-width: 260px; background: #fff; border-right: 1px solid #d9dce1; overflow-y: auto; padding: 12px; }
+        .panel-sec { margin-bottom: 16px; border: 1px solid #e2e5ea; border-radius: 8px; padding: 10px 12px; background: #fafbfc; }
+        .panel-sec h3 { margin: 0 0 10px; font-size: 13px; color: #444; border-bottom: 1px solid #e8eaee; padding-bottom: 6px; }
+        .panel-sec label { display: block; font-size: 12px; color: #666; margin: 8px 0 3px; }
+        .panel-sec input[type="text"], .panel-sec input[type="url"], .panel-sec input[type="number"], .panel-sec select {
+            width: 100%; padding: 6px 8px; border: 1px solid #cfd3d9; border-radius: 5px; font-size: 13px; background: #fff; color: #1f2328; }
+        .panel-sec input[type="color"] { width: 56px; height: 28px; padding: 0; border: 1px solid #cfd3d9; border-radius: 4px; cursor: pointer; }
+        .panel-sec .file-btn { display: inline-block; padding: 5px 10px; border: 1px solid #b9bec6; border-radius: 5px; background: #f1f2f4; font-size: 12px; cursor: pointer; margin-top: 4px; }
+        .panel-sec .file-btn:hover { background: #e5e7ea; }
+        .panel-sec input[type="file"] { display: none; }
+        .panel-sec textarea { width: 100%; min-height: 70px; resize: vertical; border: 1px solid #cfd3d9; border-radius: 5px; font-size: 13px; font-family: inherit; padding: 6px 8px; box-sizing: border-box; margin-top: 6px; }
+        .panel-sec .hint { font-size: 11px; color: #999; margin-top: 4px; line-height: 1.5; }
+        .img-thumb { max-width: 100%; max-height: 90px; border-radius: 5px; margin-top: 6px; border: 1px solid #ddd; display: block; object-fit: contain; }
+        .img-row, .block-row { border: 1px solid #e5e8ec; border-radius: 6px; padding: 8px; margin-bottom: 8px; background: #fff; }
+        .img-row .row-actions { display: flex; gap: 6px; margin-top: 6px; }
+        .row-del { border: 1px solid #d66 !important; color: #c33 !important; }
+        .add-row-btn { width: 100%; padding: 6px; border: 1px dashed #b9bec6; border-radius: 6px; background: #fff; font-size: 12px; cursor: pointer; color: #444; }
+        .add-row-btn:hover { background: #f1f2f4; border-color: #0078d4; color: #0078d4; }
+        .html-field { display: block; min-height: 22px; }
+        .html-field:empty::before { content: '（点击编辑，支持 HTML）'; color: #999; font-size: 12px; }
+
+        /* 描述/基地段落编辑（面板） */
+        .para-row { display: flex; gap: 6px; margin-bottom: 8px; align-items: flex-start; }
+        .para-row textarea { flex: 1; min-height: 60px; resize: vertical; border: 1px solid #cfd3d9; border-radius: 5px; font-size: 13px; font-family: inherit; padding: 6px 8px; box-sizing: border-box; background: #fff; color: #1f2328; }
+        .para-row .row-del { padding: 5px 8px; border: 1px solid #d66; color: #c33; background: #fff; border-radius: 5px; cursor: pointer; }
+        .para-row .row-del:hover { background: #fdeaea; }
+        .block-paras { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e0e3e8; }
+        .block-paras .para-label { font-size: 11px; color: #888; margin-bottom: 6px; }
+
+        /* 描述/基地段落与插入区块（预览） */
+        .preview-add-para, .preview-add-block { display: inline-block; margin: 8px 0 14px; padding: 4px 12px; border: 1px dashed #b9bec6; border-radius: 5px; background: #f6f7f8; color: #555; font-size: 12px; cursor: pointer; }
+        .preview-add-para:hover, .preview-add-block:hover { background: #eceef0; border-color: #0078d4; color: #0078d4; }
+        #desc-paras-preview p, #base-paras-preview p { margin: 0 0 8px; }
+        #desc-paras-preview p.editable:hover, #base-paras-preview p.editable:hover { outline: 1px dashed #7fb4e0; cursor: pointer; }
+
+        /* 入口/出口列表条目的删除与添加按钮（仅预览可见，导出不含） */
+        .li-del-btn { margin-left: 8px; padding: 1px 8px; font-size: 11px; border: 1px solid #d66; color: #c33; background: #fff; border-radius: 4px; cursor: pointer; vertical-align: baseline; }
+        .li-del-btn:hover { background: #fdeaea; }
+        .li-add-row { list-style: none; }
+        .li-add-btn { margin-top: 4px; padding: 3px 12px; border: 1px dashed #b9bec6; border-radius: 5px; background: #fff; font-size: 12px; cursor: pointer; color: #444; }
+        .li-add-btn:hover { border-color: #0078d4; color: #0078d4; }
+        #entry-list li, #exit-list li { margin-bottom: 2px; }
+        #footer-code { margin-top: 10px; }
+
+        .preview { flex: 1; overflow-y: auto; background: #f5f6f8; padding: 24px 20px 60px; }
+        .preview-shell { max-width: 860px; margin: 0 auto; background: #fff; border: 1px solid #dde0e5; border-radius: 10px; padding: 30px 40px 40px; box-shadow: 0 2px 12px rgba(0,0,0,.06); min-height: 70vh; }
+        .preview #page-title { font-size: 22px; font-weight: 700; color: #1a1d21; margin-bottom: 6px; }
+        .preview #breadcrumbs { font-size: 12px; color: #888; margin-bottom: 18px; }
+        .preview #page-content p:not(#sd-container p) { line-height: 1.75; }
+        .preview #page-content h1:not(#sd-container h1) { font-size: 20px; border-bottom: 2px solid #333; padding-bottom: 4px; margin-top: 26px; }
+        .preview #page-content h3:not(#sd-container h3) { font-size: 15px; margin-top: 16px; }
+        .preview #page-content ul:not(#sd-container ul) { padding-left: 24px; }
+        .preview #page-content .scp-image-block { float: right; margin: 0 0 14px 18px; }
+        .preview #page-content .scp-image-block img { max-width: 300px; width: 300px; border: 1px solid #ccc; display: block; }
+        .preview #page-content .scp-image-caption { background: #eee; font-size: 12px; padding: 4px 8px; text-align: center; }
+
+        .editable { color: #0b6cbd; text-decoration: none; border-bottom: 1px dashed #0b6cbd; cursor: pointer; border-radius: 3px; padding: 0 1px; transition: background .15s; }
+        .editable:hover { background: rgba(11,108,189,.12); }
+        .edit-badge { display: inline-block; font-size: 11px; background: #0b6cbd; color: #fff; border: none; border-radius: 4px; padding: 2px 8px; margin-left: 10px; vertical-align: middle; cursor: pointer; }
+        .edit-badge:hover { background: #095a9e; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 999; }
+        .modal-overlay.hidden { display: none; }
+        .modal { width: 460px; max-width: calc(100vw - 40px); background: #fff; border-radius: 10px; padding: 18px 20px; box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+        .modal h3 { margin: 0 0 12px; font-size: 15px; color: #222; }
+        .modal textarea { width: 100%; min-height: 90px; resize: vertical; border: 1px solid #cfd3d9; border-radius: 6px; padding: 8px 10px; font-size: 14px; font-family: inherit; line-height: 1.6; box-sizing: border-box; }
+        .modal-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+        .modal-btns button { padding: 7px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+        #modal-ok { background: #0078d4; color: #fff; }
+        #modal-cancel { background: #e9ebee; color: #333; }
+        .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 9px 18px; border-radius: 6px; font-size: 13px; z-index: 1000; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+
+        /* ===== 图片库弹窗 ===== */
+        .img-mgr-modal { width: 720px; max-width: calc(100vw - 40px); }
+        .img-mgr-quota { font-size: 12px; color: #666; font-weight: 400; margin-left: 8px; }
+        .img-mgr-upload { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+        .img-mgr-status { font-size: 12px; color: #c33; margin-bottom: 8px; min-height: 16px; word-break: break-all; }
+        .img-mgr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; max-height: 50vh; overflow-y: auto; }
+        .img-mgr-tile { border: 1px solid #e2e5ea; border-radius: 8px; overflow: hidden; background: #fafbfc; }
+        .img-mgr-tile img { width: 100%; height: 90px; object-fit: cover; display: block; background: #eee; cursor: pointer; }
+        .img-mgr-tile .img-mgr-path { font-size: 10px; color: #888; padding: 4px 6px; word-break: break-all; }
+        .img-mgr-tile .img-mgr-actions { display: flex; gap: 4px; padding: 0 6px 6px; }
+        .img-mgr-tile .img-mgr-actions button { flex: 1; font-size: 11px; padding: 3px 0; border: 1px solid #cfd3d9; border-radius: 4px; background: #fff; cursor: pointer; }
+        .img-mgr-tile .img-mgr-actions button:hover { border-color: #0078d4; color: #0078d4; }
+        .img-mgr-tile .img-mgr-del { border-color: #d66 !important; color: #c33 !important; }
+        .img-mgr-tile .img-mgr-del:hover { background: #fdeaea !important; }
+        .img-mgr-empty { text-align: center; color: #999; font-size: 13px; padding: 30px 0; }
+
+        /* 我的评分：选择绑定（与图片库同风格） */
+        .rate-mgr-tile { border: 1px solid #e2e5ea; border-radius: 8px; padding: 8px; background: #fafbfc; }
+        .rate-mgr-code { font-family: Consolas, monospace; font-weight: 700; font-size: 14px; }
+        .rate-mgr-id { font-size: 10px; color: #888; font-weight: 400; margin-left: 6px; }
+        .rate-mgr-desc { font-size: 11px; color: #666; word-break: break-all; margin: 3px 0; }
+        .rate-mgr-votes { font-size: 11px; color: #888; }
+        .rate-mgr-actions { display: flex; gap: 4px; margin-top: 6px; }
+        .rate-mgr-actions button { flex: 1; font-size: 11px; padding: 3px 0; border: 1px solid #cfd3d9; border-radius: 4px; background: #fff; cursor: pointer; }
+        .rate-mgr-actions button:hover { border-color: #0078d4; color: #0078d4; }
+        .rate-mgr-actions .rate-mgr-bound { border-color: #2a7d2f; color: #2a7d2f; cursor: default; }
+        .rate-mgr-actions .rate-mgr-unbind { border-color: #b98a00; color: #b98a00; }
+        .rate-mgr-actions .rate-mgr-del { border-color: #d66; color: #c33; }
+
+        .preview .sd-container {
+            /* levels.html 依赖的 BHL 主题变量链（liminal.css → black-highlighter）在此补齐，
+               否则 main.css 中 rgb(var(--gray-monochrome)) / rgb(var(--swatch-text-secondary-color)) 全部失效 */
+            --gray-monochrome: 72, 69, 60;
+            --swatch-text-secondary-color: 252, 252, 252;
+            --sd-font: Poppins, "Noto Sans SC", "Noto Serif SC", sans-serif;
+            --class-0: 247, 227, 117; --class-1: 255, 201, 14; --class-2: 245, 156, 0; --class-3: 249, 90, 0;
+            --class-4: 254, 23, 1; --class-5: 175, 6, 6; --class-unknown: 38, 38, 38; --class-habitable: 26, 128, 111;
+            --class-deadzone: 44, 13, 12; --class-pending: 182, 182, 182; --class-n-a: 38, 38, 38;
+            --class-amended: 185, 135, 212; --class-omega: 25, 46, 255;
+            --sd-border: var(--gray-monochrome, 90, 29, 27);
+            --sd-symbol: var(--gray-monochrome, 90, 29, 27);
+        }
+
+        /* 覆盖组件 CSS：非数字等级（死区/宜居/未分级/修正/终结/不适用/等待分级等）的名称
+           不再由 .bottom-text::after 伪元素（content:"等级：死区"）显示，
+           改用可编辑的 a 标签（.editable）文本显示，与 1-5 级行为一致 */
+        .preview .sd-container .top-box .bottom-text p {
+            display: block !important;
+        }
+        .preview .sd-container .top-box .bottom-text::after {
+            content: none !important;
+        }
+
+        @media (max-width: 820px) {
+            .main-layout { flex-direction: column; height: auto; overflow: visible; }
+            .panel { width: 100%; border-right: none; border-bottom: 1px solid #d9dce1; max-height: 40vh; }
+            .preview-shell { padding: 18px 14px; }
+        }
+    </style>
+        <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/init.combined.js"></script>
+    <script type="text/javascript">
+        var URL_HOST = 'www.wikidot.com';
+        var URL_DOMAIN = 'wikidot.com';
+        var USE_SSL = true;
+        var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
+        // global request information
+
+        var WIKIREQUEST = {};
+        WIKIREQUEST.info = {};
+
+        WIKIREQUEST.info.domain = "backrooms-wiki-cn.wikidot.com";
+        WIKIREQUEST.info.siteId = 4716348;
+        WIKIREQUEST.info.siteUnixName = "backrooms-wiki-cn";
+        WIKIREQUEST.info.categoryId = 40786773;
+        WIKIREQUEST.info.themeId = 1;
+        WIKIREQUEST.info.requestPageName = "level-165";
+        OZONE.request.timestamp = 1760700764;
+        OZONE.request.date = new Date();
+        WIKIREQUEST.info.lang = 'cn';
+        WIKIREQUEST.info.pageUnixName = "level-165";
+        WIKIREQUEST.info.pageId = 1459226153;
+        WIKIREQUEST.info.lang = "cn";
+        OZONE.lang = "cn";
+        var isUAMobile = !!/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    </script>
+    <script type="text/javascript">
+
+        require.config({
+            baseUrl: URL_STATIC + '/common--javascript',
+            paths: {
+                'jquery.ui': 'jquery-ui.min',
+                'jquery.form': 'jquery.form'
+            }
+        });
+
+    </script>
+
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <meta name="theme-color" content="#35B1A4" />
+    <meta name="og:type" content="article" />
+    <meta name="description" content="后室文档公共数据库——你曾经来过这里。" />
+    <meta name="og:site_name" content="The Backrooms 中文维基" />
+    <meta name="og:image" content="https://backrooms-oversight-cn.wdfiles.com/local--files/bml-emojis-1/bml_04.png" />
+    <meta name="og:locale" content="zh-cn" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta http-equiv="content-language" content="cn" />
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/WIKIDOT.combined.js"></script>
+
+    <style type="text/css" id="internal-style">
+        @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
+        @import url(https://cdn.scpwiki.com/theme/en/black-highlighter/css/min/normalize.min.css);
+    </style>
+
+    <meta name="msapplication-TileColor" content="#000000" />
+
+    <link rel="alternate" type="application/wiki" title="Edit this page"
+        href="javascript:WIKIDOT.page.listeners.editClick()" />
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-18234656-1']);
+        _gaq.push(['_setDomainName', 'none']);
+        _gaq.push(['_setAllowLinker', true]);
+        _gaq.push(['_trackPageview']);
+
+        _gaq.push(['old._setAccount', 'UA-68540-5']);
+        _gaq.push(['old._setDomainName', 'none']);
+        _gaq.push(['old._setAllowLinker', true]);
+        _gaq.push(['old._trackPageview']);
+
+        _gaq.push(['userTracker._setAccount', 'UA-290379544-1']);
+        _gaq.push(['userTracker._trackPageview']);
+    </script>
+
+    <script type="text/javascript">
+        window.google_analytics_uacct = 'UA-18234656-1';
+        window.google_analytics_domain_name = 'none';
+    </script>
+    <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" acync=""></script>
+    <script>
+        var OneSignal = window.OneSignal || [];
+        OneSignal.push(function () {
+            OneSignal.init({
+                appId: null,
+            });
+        });
+    </script>
+
+    <meta name="google-adsense-account" content="ca-pub-7805322678042888" />
+    <style>
+        @import url("https://github.backroomswiki.cn/New_BHL/css/liminal.css");
+    </style>
+    <style>
+        @import url("https://github.backroomswiki.cn/New_BHL/css/sidebar.css");
+    </style>
+    <style>
+        @import url(https://scp-wiki.wdfiles.com/local--code/info%3Astyle/1);
+    </style>
+    <style>
+        @import url("https://deckdevteam.github.io/frontend-components-bak/component-level-class/main.css");
+    </style>
+    <style>
+        .cntr td {
+            text-align: center;
+        }
+    </style>
+    <style>
+        .licensebox blockquote * {
+            word-break: break-all;
+        }
+
+        .rainbowtext {
+            margin-top: -1rem;
+            width: fit-content;
+            font-family: 'Bubblegum Sans', 'KNMaiyuan', 'Noto Sans SC', sans-serif;
+            background: linear-gradient(to right, red, #f05d60, #f6bf2c, #eff93f, #a8d944, #45a147, #2bbfc1, #2991ef, #775bc5, #e085b3);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+
+    <script type="text/javascript"
+        src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--modules/js/list/ListPagesModule.js"></script>
+    <script src="/assets/ziyit_api.js"></script>
+</head>
+
+<body>
+
+    <header class="topbar">
+        <h1>📄 后室层级文档创建器<span id="page-type-badge"></span></h1>
+        <div class="top-actions">
+            <button id="btn-load-template">从模板加载</button>
+            <button id="btn-upload-html">上传 HTML</button>
+            <button id="btn-export">导出 HTML</button>
+        </div>
+        <input type="file" id="f-html-file" accept=".html,text/html" style="display:none">
+    </header>
+
+    <div class="main-layout">
+        <!-- ============ 左侧编辑面板 ============ -->
+        <aside class="panel" id="panel">
+            <section class="panel-sec">
+                <h3>我的图片库</h3>
+                <button type="button" class="add-row-btn" id="btn-img-lib-open">📁 打开图片库（上传 / 管理 / 复制地址）</button>
+                <div class="hint">图片以 /img/{id} 公开地址发布，可插入到文档任意图片位置（Markdown：![](/img/{id})）。</div>
+            </section>
+
+            <section class="panel-sec">
+                <h3>基本信息</h3>
+                <label>标题 / 页面编号</label>
+                <input type="text" id="f-title" placeholder="如：Level 0">
+                <label>面包屑 1</label>
+                <input type="text" id="f-crumb1" placeholder="如：层级">
+                <label>面包屑 2</label>
+                <input type="text" id="f-crumb2" placeholder="如：Level 0">
+                <div class="hint" id="rating-status"></div>
+                <button type="button" class="add-row-btn" id="btn-rate-open">⭐ 我的评分（选择绑定）</button>
+            </section>
+
+            <section class="panel-sec">
+                <h3>生存难度</h3>
+                <label>预设等级</label>
+                <select id="f-sd-preset"></select>
+                <label>等级名称（显示在"等级"后）</label>
+                <input type="text" id="f-sd-name" placeholder="如：死区 / 天堂 / 宜居">
+                <label>自定义颜色（自定义等级时生效）</label>
+                <input type="color" id="f-sd-color" value="#2c0d0c">
+                <label>菱形图片（URL 或上传）</label>
+                <input type="text" id="f-sd-image" placeholder="图片 URL（可留空）">
+                <label class="file-btn" for="f-sd-image-file">⬆ 上传图片</label>
+                <input type="file" id="f-sd-image-file" accept="image/*">
+                <button type="button" class="file-btn" id="btn-sd-image-lib">📁 从图片库选择</button>
+                <img id="f-sd-image-thumb" class="img-thumb" alt="" style="display:none;">
+                <label>要点 1</label>
+                <input type="text" id="f-sd-one" placeholder="如：安全性">
+                <label>要点 2</label>
+                <input type="text" id="f-sd-two" placeholder="如：实体数量">
+                <label>要点 3</label>
+                <input type="text" id="f-sd-three" placeholder="如：混沌程度">
+                <div class="hint">参考「死区→天堂」：选择预设等级，或选择「自定义」填写等级名、颜色与图片。</div>
+            </section>
+
+            <section class="panel-sec">
+                <h3>描述正文（多段落）</h3>
+                <div id="desc-para-list"></div>
+                <button type="button" class="add-row-btn" id="btn-desc-para-add-panel">＋ 增加段落</button>
+                <div class="hint">每段单独编辑、可删除；点预览中的段落也可直接修改。</div>
+            </section>
+
+            <section class="panel-sec">
+                <h3>基地、前哨和社区正文（多段落）</h3>
+                <div id="base-para-list"></div>
+                <button type="button" class="add-row-btn" id="btn-base-para-add-panel">＋ 增加段落</button>
+                <div class="hint">每段单独编辑、可删除；点预览中的段落也可直接修改。</div>
+            </section>
+
+            <section class="panel-sec">
+                <h3>自定义区块（可选位置）</h3>
+                <div id="custom-block-list"></div>
+                <button type="button" class="add-row-btn" id="btn-block-add">＋ 添加区块（如：免责声明）</button>
+                <button type="button" class="add-row-btn" id="btn-block-insert-panel" style="margin-top:6px;">＋ 在描述与基地之间插入区块</button>
+                <div class="hint">标题与内容均可编辑，内容支持 HTML。每个区块可选择：页顶、基地、前哨和社区之前/之后。</div>
+            </section>
+
+            <section class="panel-sec">
+                <h3>描述区图片</h3>
+                <div id="desc-img-list"></div>
+                <button type="button" class="add-row-btn" id="btn-desc-img-add">＋ 添加图片</button>
+                <button type="button" class="add-row-btn" id="btn-desc-img-lib">📁 从图片库添加</button>
+                <div class="hint">每张图片可填 URL 或上传，可单独编辑说明、删除。</div>
+            </section>
+
+            <section class="panel-sec">
+                <h3>文档尾部自定义代码</h3>
+                <textarea id="f-footer-code" placeholder="写在这里的原生 HTML/JS 会原样出现在导出文档的最后面，可用来实现 !+ 之类的附加功能"></textarea>
+                <div class="hint">支持 &lt;script&gt; 标签，预览中会直接执行；导出时放在「出口」列表之后。</div>
+            </section>
+        </aside>
+
+        <!-- ============ 右侧预览 ============ -->
+        <main class="preview" id="preview">
+            <div class="preview-shell">
+                <div id="main-content">
+                    <div id="page-title"><a class="editable" data-field="titlePrefix"></a> - “<a class="editable" data-field="titleName"></a>”<button type="button" class="edit-badge" id="btn-edit-title" title="修改标题">✏️ 编辑标题</button></div>
+                    <div id="breadcrumbs"><a class="editable" data-field="crumb1"></a> &raquo; <a class="editable" data-field="crumb2"></a></div>
+                    <div id="page-content">
+                        <span style="white-space: pre-wrap;">&#32;</span><br>
+                        <div id="custom-blocks"></div>
+                        <div class="lang-cn sd-container" id="sd-container"></div>
+                        <div class="editable html-field" data-field="intro"></div>
+
+                        <h1><span>描述</span></h1>
+                        <div id="desc-block">
+                            <div id="desc-images"></div>
+                            <div id="desc-paras-preview"></div>
+                            <button type="button" class="preview-add-para" id="btn-desc-para-add">＋ 增加段落</button>
+                            <div style="clear:both;"></div>
+                        </div>
+
+                        <div id="custom-blocks-base-before"></div>
+                        <button type="button" class="preview-add-block" id="btn-block-insert">＋ 在描述与基地之间插入区块</button>
+                        <h1><span>基地、前哨和社区</span></h1>
+                        <div id="base-paras-preview"></div>
+                        <button type="button" class="preview-add-para" id="btn-base-para-add">＋ 增加段落</button>
+                        <div id="custom-blocks-base-after"></div>
+
+                        <h1><span>入口和出口</span></h1>
+                        <h3><span>入口</span></h3>
+                        <em><a class="editable" data-field="entryIntro"></a></em>
+                        <ul id="entry-list"></ul>
+                        <h3><span>出口</span></h3>
+                        <em><a class="editable" data-field="exitIntro"></a></em>
+                        <ul id="exit-list"></ul>
+                        <div id="footer-code"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ============ 编辑弹窗 ============ -->
+    <div class="modal-overlay hidden" id="modal-overlay">
+        <div class="modal">
+            <h3 id="modal-title">编辑内容</h3>
+            <textarea id="modal-input" placeholder="请输入内容"></textarea>
+            <div class="modal-btns">
+                <button id="modal-cancel">取消</button>
+                <button id="modal-ok">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ 图片库弹窗 ============ -->
+    <div class="modal-overlay hidden" id="img-mgr-overlay">
+        <div class="modal img-mgr-modal">
+            <h3>📁 我的图片库<span id="img-mgr-quota" class="img-mgr-quota"></span></h3>
+            <div class="img-mgr-upload">
+                <label class="file-btn" for="img-mgr-file">⬆ 上传图片（≤10MB，自动压缩为 PNG）</label>
+                <input type="file" id="img-mgr-file" accept="image/*">
+                <button type="button" id="img-mgr-refresh" class="file-btn">🔄 刷新</button>
+            </div>
+            <div id="img-mgr-status" class="img-mgr-status"></div>
+            <div id="img-mgr-grid" class="img-mgr-grid"></div>
+            <div class="modal-btns">
+                <button id="img-mgr-close">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="rate-mgr-overlay">
+        <div class="modal img-mgr-modal">
+            <h3>⭐ 我的评分<span id="rate-mgr-total" class="img-mgr-quota"></span></h3>
+            <div class="img-mgr-upload">
+                <input type="text" id="rate-mgr-code-input" placeholder="编号，如 L111 / E2 / O3（可自行输入）" style="flex:1;min-width:150px;">
+                <button type="button" id="rate-mgr-create" class="file-btn">＋ 创建评分</button>
+                <button type="button" id="rate-mgr-refresh" class="file-btn">🔄 刷新</button>
+            </div>
+            <div id="rate-mgr-status" class="img-mgr-status"></div>
+            <div id="rate-mgr-list" class="img-mgr-grid"></div>
+            <div class="modal-btns">
+                <button id="rate-mgr-close">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            /* ================= 状态 ================= */
+            var rawTemplate = '';
+            var doc = {
+                titlePrefix: '[NO DATA]',
+                titleName: '[NO DATA]',
+                crumb1: '[NO DATA]',
+                crumb2: '[NO DATA]',
+                sd: {
+                    cls: 'class-1',
+                    name: '1',
+                    customColor: '',
+                    image: '',
+                    one: '${one}',
+                    two: '${two}',
+                    three: '${three}'
+                },
+                intro: '[NO DATA]',
+                customBlocks: [],
+                descImages: [],
+                // 描述 / 基地、前哨和社区：多段落内容（每段一个字符串，导出为 <p>）
+                descParas: ['[NO DATA]'],
+                baseParas: ['[NO DATA]'],
+                entryIntro: '[NO DATA]',
+                entryItems: ['[NO DATA]'],
+                exitIntro: '[NO DATA]',
+                exitItems: ['[NO DATA]'],
+                footerCode: '',
+                // 文档类型标识：默认 levels，后续可用 create-document.html?type=item|entity|phenomenon 区分
+                type: 'levels'
+            };
+
+            var SD_PRESETS = [
+                { key: 'unknown', name: '未定分级', cls: 'class-unknown' },
+                { key: 'habitable', name: '宜居', cls: 'class-habitable' },
+                { key: 'deadzone', name: '死区', cls: 'class-deadzone' },
+                { key: 'pending', name: '等待分级', cls: 'class-pending' },
+                { key: 'n-a', name: '不适用', cls: 'class-n/a' },
+                { key: 'amended', name: '修正', cls: 'class-amended' },
+                { key: 'omega', name: '终结', cls: 'class-omega' },
+                { key: '0', name: '0', cls: 'class-0' },
+                { key: '1', name: '1', cls: 'class-1' },
+                { key: '2', name: '2', cls: 'class-2' },
+                { key: '3', name: '3', cls: 'class-3' },
+                { key: '4', name: '4', cls: 'class-4' },
+                { key: '5', name: '5', cls: 'class-5' },
+                { key: 'custom', name: '自定义…', cls: '' }
+            ];
+
+            /* ================= 工具函数 ================= */
+            function $(id) { return document.getElementById(id); }
+
+            function escHtml(s) {
+                return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
+            var SITE_BASE = 'https://ziyit-hacker.github.io';
+
+            // 相对路径转绝对 URL：/xxx、../xxx、./xxx → https://ziyit-hacker.github.io/xxx
+            function toAbsUrl(u) {
+                u = String(u == null ? '' : u).trim();
+                if (!u) return u;
+                if (/^(https?:)?\/\//i.test(u) || /^data:/i.test(u) || /^#/i.test(u)
+                    || /^javascript:/i.test(u) || /^mailto:/i.test(u)) return u;
+                var p = u.replace(/^\.\.?\/+/, '');
+                if (!/^\//.test(p)) p = '/' + p;
+                return SITE_BASE + p;
+            }
+
+            // 把 HTML 字符串里的 src/href/url(...) 转为绝对 URL
+            function absolutizeHtml(html) {
+                return String(html == null ? '' : html)
+                    .replace(/(\b(?:src|href)\s*=\s*["'])(.*?)(["'])/g, function (m, pre, url, post) {
+                        return pre + toAbsUrl(url) + post;
+                    })
+                    .replace(/url\(\s*["']?(.*?)["']?\s*\)/gi, function (m, url) {
+                        return 'url(' + toAbsUrl(url) + ')';
+                    });
+            }
+
+            // ${x} 形式的占位符 → class 用 {$x}（与 levels.html 模板一致）
+            function placeholderClass(v) {
+                var m = String(v == null ? '' : v).match(/^\$\{(.+)\}$/);
+                return m ? '{$' + m[1] + '}' : v;
+            }
+
+            function toast(msg) {
+                var t = document.createElement('div');
+                t.className = 'toast';
+                t.textContent = msg;
+                document.body.appendChild(t);
+                setTimeout(function () { t.remove(); }, 2600);
+            }
+
+            /* ================= 文档类型标识（?type=levels|item|entity|phenomenon） ================= */
+            var TYPE_LABELS = { levels: '层级', item: '物品', entity: '实体', phenomenon: '现象' };
+
+            // 从 URL 读取 ?type=，非法值回退到 levels
+            function parseType() {
+                var m = (location.search || '').match(/[?&]type=([^&]+)/);
+                var t = m ? decodeURIComponent(m[1]).toLowerCase() : 'levels';
+                if (!TYPE_LABELS[t]) t = 'levels';
+                doc.type = t;
+            }
+
+            // 顶栏徽章：显示当前文档类型（层级/物品/实体/现象）
+            function updateTypeBadge() {
+                var badge = $('page-type-badge');
+                if (badge) badge.textContent = '（' + (TYPE_LABELS[doc.type] || '层级') + '文档）';
+            }
+
+            /* ================= 图片库（GET/POST/DELETE /img/*） ================= */
+            // target：sdImage=填充菱形图；descImage=添加到描述区；copy=仅复制地址
+            var imgMgr = { target: 'copy' };
+
+            // 与 ziyit_api.js 一致的生效地址：优先 localStorage 自定义，否则默认 BASE
+            function imgApiBase() {
+                var b = '';
+                try { b = localStorage.getItem('ziyit_api_base') || ''; } catch (e) {}
+                if (!b && window.ZIYIT_API && ZIYIT_API.BASE) b = ZIYIT_API.BASE;
+                return b;
+            }
+
+            // 相对路径 /img/{id} → 绝对地址（缩略图、插入文档均用绝对地址）
+            function imgAbsUrl(p) {
+                p = String(p == null ? '' : p);
+                if (/^(https?:)?\/\//i.test(p) || /^data:/i.test(p)) return p;
+                return imgApiBase() + p;
+            }
+
+            function openImageManager(target) {
+                imgMgr.target = target || 'copy';
+                $('img-mgr-overlay').classList.remove('hidden');
+                loadImageManager();
+            }
+
+            function closeImageManager() {
+                $('img-mgr-overlay').classList.add('hidden');
+            }
+
+            function loadImageManager() {
+                var grid = $('img-mgr-grid'), status = $('img-mgr-status'), quota = $('img-mgr-quota');
+                grid.innerHTML = '<div class="img-mgr-empty">加载中…</div>';
+                status.textContent = '';
+                if (!window.ZIYIT_API) { status.textContent = 'API 组件未加载，请刷新页面后重试'; return; }
+                ZIYIT_API.request('/img/my').then(function (data) {
+                    quota.textContent = fmtQuota(data);
+                    renderImageGrid(data && data.images ? data.images : [], grid, status);
+                }).catch(function (err) {
+                    quota.textContent = '';
+                    grid.innerHTML = '';
+                    status.textContent = '加载失败：' + ((err && err.message) || '未知错误') + '（请确认已登录）';
+                });
+            }
+
+            // 配额：4级（超级管理员）不限制 → 后端返回 null/负数时显示"不限"
+            function fmtQuota(d) {
+                d = d || {};
+                var used = (d.total != null ? d.total : 0);
+                var q = d.quota;
+                if (q == null || q < 0) return '已用 ' + used + ' / 不限';
+                return '已用 ' + used + ' / ' + q;
+            }
+
+            function renderImageGrid(images, grid, status) {
+                if (!images.length) {
+                    grid.innerHTML = '<div class="img-mgr-empty">暂无图片，点击上方「上传图片」上传</div>';
+                    return;
+                }
+                grid.innerHTML = '';
+                images.forEach(function (im) {
+                    var path = im.url || ('/img/' + (im.id || ''));
+                    var tile = document.createElement('div');
+                    tile.className = 'img-mgr-tile';
+                    tile.innerHTML = '<img src="' + escHtml(imgAbsUrl(path)) + '" alt="' + escHtml(im.id || '') + '">'
+                        + '<div class="img-mgr-path">' + escHtml(path) + '</div>'
+                        + '<div class="img-mgr-actions">'
+                        + '<button type="button" class="img-mgr-use">使用</button>'
+                        + '<button type="button" class="img-mgr-copy">复制</button>'
+                        + '<button type="button" class="img-mgr-del" title="删除">🗑</button>'
+                        + '</div>';
+                    grid.appendChild(tile);
+                    tile.querySelector('img').addEventListener('click', function () { useImage(im); });
+                    tile.querySelector('.img-mgr-use').addEventListener('click', function () { useImage(im); });
+                    tile.querySelector('.img-mgr-copy').addEventListener('click', function () { copyImagePath(im); });
+                    tile.querySelector('.img-mgr-del').addEventListener('click', function () { deleteImage(im); });
+                });
+            }
+
+            // 「使用」：按打开时的目标把图片地址写入文档相应位置
+            function useImage(im) {
+                var path = im.url || ('/img/' + (im.id || ''));
+                var abs = imgAbsUrl(path);
+                if (imgMgr.target === 'sdImage') {
+                    doc.sd.image = abs;
+                    render();
+                    closeImageManager();
+                    toast('已设为生存难度菱形图');
+                } else if (imgMgr.target === 'descImage') {
+                    doc.descImages.push({ image: abs, alt: '图片', caption: '' });
+                    render();
+                    closeImageManager();
+                    toast('已添加到描述区图片');
+                } else {
+                    copyImagePath(im);
+                }
+            }
+
+            // 复制 /img/{id} 路径（Markdown 图片地址）
+            function copyImagePath(im) {
+                var path = im.url || ('/img/' + (im.id || ''));
+                function done() { toast('已复制图片地址：' + path); }
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(path).then(done, function () { fallbackCopy(path); done(); });
+                } else {
+                    fallbackCopy(path);
+                    done();
+                }
+            }
+
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (e) {}
+                ta.remove();
+            }
+
+            // 上传：multipart FormData 字段 file
+            function uploadImage(file) {
+                if (!file) return;
+                if (!window.ZIYIT_API) { toast('API 组件未加载'); return; }
+                var status = $('img-mgr-status');
+                status.textContent = '上传中…';
+                var fd = new FormData();
+                fd.append('file', file);
+                ZIYIT_API.request('/img/upload', { method: 'POST', body: fd }).then(function (data) {
+                    status.textContent = '';
+                    toast('上传成功' + (data && data.id ? '：' + data.id : ''));
+                    loadImageManager();
+                }).catch(function (err) {
+                    status.textContent = '上传失败：' + ((err && err.message) || '未知错误');
+                });
+            }
+
+            function deleteImage(im) {
+                if (!window.ZIYIT_API) return;
+                var path = im.url || ('/img/' + (im.id || ''));
+                if (!window.confirm('确定删除这张图片？\n' + path + '\n（若仍有文档引用，仅解除与你的归属关系）')) return;
+                ZIYIT_API.request('/img/' + encodeURIComponent(im.id), { method: 'DELETE' }).then(function () {
+                    toast('已删除');
+                    loadImageManager();
+                }).catch(function (err) {
+                    toast('删除失败：' + ((err && err.message) || '未知错误'));
+                });
+            }
+
+            /* ================= 评分控件（下载时注入：免责声明下、生存难度上） ================= */
+            // 编号字母：层级 L / 实体 E / 物品 O / 现象 P
+            var RATE_LETTER = { levels: 'L', item: 'O', entity: 'E', phenomenon: 'P' };
+
+            // 评分编号：类型字母 + 页面编号（如 L111、Lc258、E2、O3）
+            function ratingCode() {
+                var letter = RATE_LETTER[doc.type] || 'L';
+                return letter + String(doc.titlePrefix || '').trim();
+            }
+
+            // 已创建评分的 id 持久绑定（code → id）：localStorage + 内存双缓存，重复下载不再重复创建
+            var ratingIdCache = {};
+
+            function loadRatingIds() {
+                try { return JSON.parse(localStorage.getItem('ziyit_rating_ids') || '{}') || {}; }
+                catch (e) { return {}; }
+            }
+
+            function saveRatingId(code, id) {
+                ratingIdCache[code] = id;
+                var ids = loadRatingIds();
+                ids[code] = id;
+                try { localStorage.setItem('ziyit_rating_ids', JSON.stringify(ids)); } catch (e) {}
+            }
+
+            function boundRatingId(code) {
+                if (ratingIdCache[code] != null) return ratingIdCache[code];
+                var ids = loadRatingIds();
+                if (ids[code] != null) ratingIdCache[code] = ids[code];
+                return ratingIdCache[code] != null ? ratingIdCache[code] : null;
+            }
+
+            // 解除绑定（清除内存与 localStorage 中的 code → id 记录）
+            function unbindRating(code) {
+                delete ratingIdCache[code];
+                var ids = loadRatingIds();
+                delete ids[code];
+                try { localStorage.setItem('ziyit_rating_ids', JSON.stringify(ids)); } catch (e) {}
+            }
+
+            // 控件样式：仿 wikidot page-rate-widget-box 的深灰圆角盒
+            var RATING_WIDGET_CSS = '.ziyit-rate{display:inline-block;background:#f4f4f0;border:1px solid #d8d8d0;border-radius:8px;padding:6px 10px;margin-bottom:14px;font-size:13px;color:#444;}.ziyit-rate .ziyit-rate-points{margin-right:8px;}.ziyit-rate .ziyit-rate-num{font-weight:700;color:#222;margin-left:4px;}.ziyit-rate .ziyit-rate-up,.ziyit-rate .ziyit-rate-down{display:inline-block;width:26px;height:24px;line-height:22px;text-align:center;border:1px solid #aaa;border-radius:5px;background:#fff;cursor:pointer;margin-left:5px;vertical-align:middle;}.ziyit-rate .ziyit-rate-up a,.ziyit-rate .ziyit-rate-down a{text-decoration:none;color:#333;display:block;font-weight:700;}.ziyit-rate .ziyit-rate-up:hover,.ziyit-rate .ziyit-rate-down:hover{border-color:#333;background:#f0f0f0;}';
+
+            // 控件脚本：显示评价值 + 好评/差评（依赖导出页已加载的 ziyit_api.js）
+            var RATING_WIDGET_JS = '(function(){function refresh(box){var code=box.getAttribute("data-code"),num=box.querySelector(".ziyit-rate-num");if(!window.ZIYIT_API){num.textContent="—";return;}ZIYIT_API.request("/ratings/"+encodeURIComponent(code)+"/value").then(function(d){var v=d?(d.value||0):0;num.textContent=(v>0?"+":"")+v;}).catch(function(){num.textContent="—";});}window.ziyitRate=function(el,dir){var box=el.closest(".ziyit-rate"),rid=box.getAttribute("data-rid");if(!rid){alert("该评分尚未创建，暂时无法投票");return;}if(!window.ZIYIT_API){alert("评分组件加载失败");return;}ZIYIT_API.request("/ratings/"+encodeURIComponent(rid)+(dir>0?"/up":"/down"),{method:"POST"}).then(function(){refresh(box);}).catch(function(e){alert("投票失败："+((e&&e.message)||"未知错误"));});};function init(){var boxes=document.querySelectorAll(".ziyit-rate");for(var i=0;i<boxes.length;i++)refresh(boxes[i]);}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();})();';
+
+            // 控件 HTML（rid 为空时仅显示评价值，投票按钮提示未创建）
+            function ratingWidgetExportHtml(rid, code) {
+                return '<div class="ziyit-rate" data-code="' + escHtml(code) + '" data-rid="' + escHtml(rid == null ? '' : rid) + '">'
+                    + '<span class="ziyit-rate-points">评分:<span class="ziyit-rate-num">…</span></span>'
+                    + '<span class="ziyit-rate-up" title="我喜欢"><a href="javascript:;" onclick="ziyitRate(this,1)">+</a></span>'
+                    + '<span class="ziyit-rate-down" title="我不喜欢"><a href="javascript:;" onclick="ziyitRate(this,-1)">−</a></span>'
+                    + '</div>';
+            }
+
+            /* ================= 我的评分（选择绑定，类似图片库） ================= */
+            function openRatingManager() {
+                $('rate-mgr-code-input').value = ratingCode();
+                $('rate-mgr-overlay').classList.remove('hidden');
+                loadRatingManager();
+            }
+
+            function closeRatingManager() {
+                $('rate-mgr-overlay').classList.add('hidden');
+            }
+
+            function loadRatingManager() {
+                var list = $('rate-mgr-list'), status = $('rate-mgr-status'), total = $('rate-mgr-total');
+                list.innerHTML = '<div class="img-mgr-empty">加载中…</div>';
+                status.textContent = '';
+                if (!window.ZIYIT_API) { status.textContent = 'API 组件未加载，请刷新页面后重试'; return; }
+                ZIYIT_API.request('/ratings/my').then(function (data) {
+                    total.textContent = (data && data.total != null) ? '共 ' + data.total + ' 条' : '';
+                    renderRatingList(data && data.ratings ? data.ratings : [], list, status);
+                }).catch(function (err) {
+                    total.textContent = '';
+                    list.innerHTML = '';
+                    status.textContent = '加载失败：' + ((err && err.message) || '未知错误') + '（请确认已登录）';
+                });
+            }
+
+            function renderRatingList(ratings, list, status) {
+                if (!ratings.length) {
+                    list.innerHTML = '<div class="img-mgr-empty">暂无评分，点击上方「＋ 为当前文档创建评分」创建后即可绑定</div>';
+                    return;
+                }
+                list.innerHTML = '';
+                ratings.forEach(function (r) {
+                    var tile = document.createElement('div');
+                    tile.className = 'rate-mgr-tile';
+                    var bound = boundRatingId(r.code) == r.id;
+                    var desc = r.description ? '<div class="rate-mgr-desc">' + escHtml(r.description) + '</div>' : '';
+                    tile.innerHTML = '<div class="rate-mgr-code">' + escHtml(r.code) + '<span class="rate-mgr-id">ID ' + r.id + '</span></div>'
+                        + desc
+                        + '<div class="rate-mgr-votes">好评 ' + (r.upVotes || 0) + ' / 差评 ' + (r.downVotes || 0) + ' / 评价值 ' + (r.value || 0) + ' · ' + escHtml(String(r.createdAt || '').replace('T', ' ').slice(0, 16)) + '</div>'
+                        + '<div class="rate-mgr-actions">'
+                        + (bound
+                            ? '<button type="button" class="rate-mgr-bound">✓ 已绑定</button>'
+                            : '<button type="button" class="rate-mgr-bind">绑定</button>')
+                        + (bound
+                            ? '<button type="button" class="rate-mgr-unbind">解除绑定</button>'
+                            : '<button type="button" class="rate-mgr-del">🗑 删除</button>')
+                        + '</div>';
+                    list.appendChild(tile);
+                    var bindBtn = tile.querySelector('.rate-mgr-bind');
+                    if (bindBtn) bindBtn.addEventListener('click', function () {
+                        saveRatingId(r.code, r.id);
+                        render();
+                        loadRatingManager();
+                        toast('已绑定评分 ' + r.code + '（ID ' + r.id + '），导出后投票可用');
+                    });
+                    var unbindBtn = tile.querySelector('.rate-mgr-unbind');
+                    if (unbindBtn) unbindBtn.addEventListener('click', function () {
+                        unbindRating(r.code);
+                        render();
+                        loadRatingManager();
+                        toast('已解除绑定 ' + r.code);
+                    });
+                    var delBtn = tile.querySelector('.rate-mgr-del');
+                    if (delBtn) delBtn.addEventListener('click', function () { deleteMyRating(r); });
+                });
+            }
+
+            // 删除我的评分（DELETE /ratings/my/{id}）
+            function deleteMyRating(r) {
+                if (!window.confirm('确定删除评分 ' + r.code + '（ID ' + r.id + '）？')) return;
+                ZIYIT_API.request('/ratings/my/' + encodeURIComponent(r.id), { method: 'DELETE' }).then(function (d) {
+                    toast('已删除评分 ' + (d && d.code ? d.code : ''));
+                    loadRatingManager();
+                }).catch(function (err) {
+                    $('rate-mgr-status').textContent = '删除失败：' + ((err && err.message) || '未知错误');
+                });
+            }
+
+            // 创建评分并绑定（POST /ratings，编号可自行输入，默认当前文档的编号）
+            function createCurrentRating() {
+                var code = ($('rate-mgr-code-input').value || '').trim();
+                if (!code) { toast('请填写评分编号'); return; }
+                if (!window.ZIYIT_API) { toast('API 组件未加载'); return; }
+                var status = $('rate-mgr-status');
+                status.textContent = '创建中…';
+                ZIYIT_API.request('/ratings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                }).then(function (data) {
+                    status.textContent = '';
+                    render();
+                    loadRatingManager();
+                    toast('已创建评分 ' + code + '（ID ' + (data && data.id) + '），点击「绑定」后导出可用');
+                }).catch(function (err) {
+                    status.textContent = '创建失败：' + ((err && err.message) || '未知错误');
+                });
+            }
+
+            /* ================= 模板加载（读取 levels.html） ================= */
+
+            // 识别自定义章节（含 h1 标题的 div 等）：剔除标准章节标题与标准内容节点
+            function collectSection(n, pos) {
+                var tag = (n.tagName || '').toLowerCase();
+                if (tag === 'span' || tag === 'br' || tag === 'p' || tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'em' || tag === 'ul') return;
+                if (!(n.textContent || '').trim()) return;
+                if (tag === 'div' && n.querySelector('.scp-image-block')) return;
+                // 标准章节标题（h1/h2：描述/基地/入口和出口）不收集
+                var h = n.querySelector('h1, h2');
+                var title = h ? (h.textContent || '').trim() : '';
+                if (title && (title.indexOf('描述') >= 0 || title.indexOf('基地') >= 0 || title.indexOf('入口和出口') >= 0)) return;
+                var clone = n.cloneNode(true);
+                if (h) {
+                    var hd = clone.querySelector('h1, h2');
+                    if (hd) hd.parentNode.removeChild(hd);
+                }
+                // 提取段落：区块内的 <p> 拆为段落数组，其余 HTML 留在 content
+                var paras = [];
+                Array.prototype.forEach.call(clone.querySelectorAll('p'), function (pEl) {
+                    var t = (pEl.textContent || '').replace(/\s+/g, ' ').trim();
+                    if (t) paras.push(t);
+                });
+                if (paras.length) {
+                    Array.prototype.forEach.call(clone.querySelectorAll('p'), function (pEl) {
+                        if (pEl.parentNode) pEl.parentNode.removeChild(pEl);
+                    });
+                }
+                var content = (clone.innerHTML || '').trim();
+                if (title || content || paras.length) doc.customBlocks.push({ title: title, content: content, pos: pos, paras: paras });
+            }
+
+            /* ================= 正文解析（模板 / 导出文件共用） ================= */
+
+            // 重置正文相关字段，避免加载新文件后残留旧内容
+            function resetBodyFields() {
+                doc.titlePrefix = '[NO DATA]';
+                doc.titleName = '[NO DATA]';
+                doc.crumb1 = '[NO DATA]';
+                doc.crumb2 = '[NO DATA]';
+                doc.intro = '[NO DATA]';
+                doc.customBlocks = [];
+                doc.descImages = [];
+                doc.descParas = ['[NO DATA]'];
+                doc.baseParas = ['[NO DATA]'];
+                doc.entryIntro = '[NO DATA]';
+                doc.entryItems = ['[NO DATA]'];
+                doc.exitIntro = '[NO DATA]';
+                doc.exitItems = ['[NO DATA]'];
+                doc.footerCode = '';
+            }
+
+            // 自身就是 .scp-image-block 的 div（真实文档里直接作为 page-content 子节点的图片块）
+            function isImageBlockSelf(n) {
+                return n.classList && n.classList.contains('scp-image-block');
+            }
+
+            // 自定义区块的包裹 div（导出时为 <div style="text-align:center;margin-bottom:14px;">）
+            function isCustomBlockWrap(n) {
+                var st = (n.getAttribute && n.getAttribute('style')) || '';
+                return st.indexOf('text-align:center') >= 0 && st.indexOf('margin-bottom') >= 0;
+            }
+
+            // 从容器 div 中提取描述图片（scp-image-block）
+            function extractImagesFrom(n) {
+                Array.prototype.forEach.call(n.querySelectorAll('.scp-image-block'), function (b) {
+                    var imgEl = b.querySelector('img');
+                    var cap = b.querySelector('.scp-image-caption');
+                    doc.descImages.push({
+                        image: imgEl ? (imgEl.getAttribute('src') || '') : '',
+                        alt: imgEl ? (imgEl.getAttribute('alt') || '') : '',
+                        caption: cap ? cap.textContent.replace(/\s+/g, ' ').trim() : ''
+                    });
+                });
+            }
+
+            // 从容器元素提取段落数组：优先按 <p> 拆分，否则整体一段
+            function parasFromEl(n) {
+                var c = n.cloneNode(true);
+                Array.prototype.forEach.call(c.querySelectorAll('.scp-image-block'), function (b) {
+                    if (b.parentNode) b.parentNode.removeChild(b);
+                });
+                var ps = c.querySelectorAll('p');
+                var out = [];
+                if (ps.length) {
+                    Array.prototype.forEach.call(ps, function (pEl) {
+                        var t = pEl.textContent.replace(/\s+/g, ' ').trim();
+                        if (t) out.push(t);
+                    });
+                }
+                if (!out.length) {
+                    var tx = (c.textContent || '').replace(/\s+/g, ' ').trim();
+                    if (tx) out.push(tx);
+                }
+                return out;
+            }
+
+            // 追加一段（默认占位 [NO DATA] 时替换）
+            function appendPara(arr, n) {
+                var t = n.textContent.replace(/\s+/g, ' ').trim();
+                if (!t) return;
+                if (arr.length === 1 && arr[0] === '[NO DATA]') arr[0] = t;
+                else arr.push(t);
+            }
+
+            // 统一解析 sd-container 之后的正文：识别章节、消费描述/基地容器、收集自定义区块与尾部代码
+            function parseBodyLoop(nodes, startIdx) {
+                var body = nodes.slice(startIdx + 1);
+                var stage = 'intro';
+                var exitDone = false; // 出口列表之后的内容视为尾部自定义代码
+                var footerParts = [];
+                var descDivDone = false, baseDivDone = false; // 描述/基地文本容器只消费一次
+                body.forEach(function (n) {
+                    var tag = (n.tagName || '').toLowerCase();
+                    if (exitDone) {
+                        if (tag === 'br') return;
+                        if (!(n.textContent || '').trim() && tag !== 'script') return;
+                        footerParts.push(tag === 'script'
+                            ? '<script>' + (n.textContent || '') + '<\/script>'
+                            : (n.outerHTML || ''));
+                        return;
+                    }
+                    // 引导段：首个 p，或首个普通 div（非图片块、非自定义区块）
+                    if (tag === 'p' && stage === 'intro') {
+                        var itx = n.textContent.replace(/\s+/g, ' ').trim();
+                        if (itx && (!doc.intro || doc.intro === '[NO DATA]')) doc.intro = itx;
+                    }
+                    if (tag === 'div' && stage === 'intro' && !isImageBlockSelf(n) && !isCustomBlockWrap(n) && !n.querySelector('h1, h2')) {
+                        var itd = n.textContent.replace(/\s+/g, ' ').trim();
+                        if (itd) doc.intro = itd;
+                        return; // 已消费，避免被当自定义区块
+                    }
+                    // 章节标题（h1/h2 均可，兼容真实文档用 h2 做章节头）
+                    if (tag === 'h1' || tag === 'h2') {
+                        var t = (n.textContent || '').trim();
+                        if (t.indexOf('描述') >= 0) { stage = 'desc'; descDivDone = false; }
+                        else if (t.indexOf('基地') >= 0) { stage = 'base'; baseDivDone = false; }
+                        else if (t.indexOf('入口和出口') >= 0) stage = 'entrance';
+                    }
+                    // 描述区图片块（自身是 scp-image-block 的 div）：提取图片，不当作文本容器
+                    if (tag === 'div' && stage === 'desc' && isImageBlockSelf(n)) {
+                        extractImagesFrom(n);
+                        return;
+                    }
+                    // 描述容器：紧跟「描述」章节头后的第一个普通 div（非图片块、非自定义区块）
+                    if (tag === 'div' && stage === 'desc' && !descDivDone && !isImageBlockSelf(n) && !isCustomBlockWrap(n)) {
+                        descDivDone = true;
+                        extractImagesFrom(n);
+                        var paras = parasFromEl(n);
+                        if (paras.length) doc.descParas = paras;
+                        return; // 已消费，避免被当自定义区块
+                    }
+                    // 基地容器：紧跟「基地」章节头后的第一个普通 div
+                    if (tag === 'div' && stage === 'base' && !baseDivDone && !isImageBlockSelf(n) && !isCustomBlockWrap(n)) {
+                        baseDivDone = true;
+                        var bparas = parasFromEl(n);
+                        if (bparas.length) doc.baseParas = bparas;
+                        return; // 已消费，避免被当自定义区块
+                    }
+                    // 松散段落（真实文档常见：段落直接是 page-content 子节点）
+                    if (tag === 'p' && stage === 'desc' && !n.closest('.scp-image-caption')) appendPara(doc.descParas, n);
+                    if (tag === 'p' && stage === 'base' && !n.closest('.scp-image-caption')) appendPara(doc.baseParas, n);
+                    if (tag === 'em' && stage === 'entrance') doc.entryIntro = n.textContent.replace(/\s+/g, ' ').trim() || doc.entryIntro;
+                    if (tag === 'h3') {
+                        if ((n.textContent || '').indexOf('入口') >= 0) stage = 'entrance';
+                        if ((n.textContent || '').indexOf('出口') >= 0) stage = 'exit';
+                    }
+                    if (tag === 'em' && stage === 'exit') doc.exitIntro = n.textContent.replace(/\s+/g, ' ').trim() || doc.exitIntro;
+                    if (tag === 'ul') {
+                        var items = Array.prototype.map.call(n.querySelectorAll('li'), function (li) {
+                            return li.textContent.replace(/\s+/g, ' ').trim();
+                        }).filter(function (x) { return x; });
+                        if (items.length) {
+                            if (stage === 'entrance') doc.entryItems = items;
+                            if (stage === 'exit') { doc.exitItems = items; exitDone = true; }
+                        }
+                    }
+
+                    // 自定义章节：描述与基地之间 → base-before；基地与入口和出口之间 → base-after
+                    if (stage === 'desc' || stage === 'base') collectSection(n, stage === 'desc' ? 'base-before' : 'base-after');
+                });
+                if (footerParts.length) doc.footerCode = footerParts.join('\n');
+            }
+
+            // 页顶自定义区块收集（生存难度之前、面包屑之后）
+            function collectTopBlocks(nodes, startIdx) {
+                if (startIdx > 0) {
+                    nodes.slice(0, startIdx).forEach(function (n) {
+                        var tag = (n.tagName || '').toLowerCase();
+                        if (tag === 'span' || tag === 'br') return;
+                        if (n.className && String(n.className).indexOf('ziyit-rate') >= 0) return; // 跳过评分控件
+                        if (!(n.textContent || '').trim()) return;
+                        var h1 = n.querySelector('h1');
+                        var title = h1 ? (h1.textContent || '').trim() : '';
+                        var clone = n.cloneNode(true);
+                        if (h1) {
+                            var h = clone.querySelector('h1');
+                            if (h) h.parentNode.removeChild(h);
+                        }
+                        var content = (clone.innerHTML || '').trim();
+                        if (title || content) doc.customBlocks.push({ title: title, content: content, pos: 'top' });
+                    });
+                }
+            }
+
+            function loadTemplate() {
+                fetch('levels.html')
+                    .then(function (r) {
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        return r.text();
+                    })
+                    .then(parseTemplate)
+                    .catch(function (err) {
+                        toast('模板加载失败：' + err.message + '（请通过本地服务器访问本页面）');
+                    });
+            }
+
+            function parseTemplate(html) {
+                rawTemplate = html;
+                var p = new DOMParser().parseFromString(html, 'text/html');
+                resetBodyFields(); // 先清空旧内容，避免残留
+
+                var pt = p.querySelector('#page-title');
+                if (pt) {
+                    var txt = (pt.textContent || '').replace(/\s+/g, ' ').trim();
+                    var m = txt.match(/^(.*?)\s*-\s*[“"](.*)[”"]\s*$/);
+                    if (m) { doc.titlePrefix = m[1].trim(); doc.titleName = m[2].trim(); }
+                    else doc.titlePrefix = txt;
+                }
+
+                var bc = p.querySelector('#breadcrumbs');
+                if (bc) {
+                    var links = bc.querySelectorAll('a');
+                    if (links[0]) doc.crumb1 = (links[0].textContent || '').trim();
+                    var rest = (bc.textContent || '').split('»');
+                    if (rest[1]) doc.crumb2 = rest[1].trim();
+                }
+
+                var sdEl = p.querySelector('#page-content .sd-container');
+                if (sdEl) {
+                    // 采用模板自身的等级：从顶框读取 class，从底框读取「等级名称」，
+                    // 使加载后「等级 X」、菱形符号、默认要点都与模板一致（用户仍可下拉切换）。
+                    var tb = sdEl.querySelector('.top-box');
+                    if (tb) {
+                        var tbCls = String(tb.className || '');
+                        var tcls = tbCls.split(/\s+/).filter(function (c) {
+                            return c.indexOf('class-') === 0;
+                        })[0];
+                        if (tcls) doc.sd.cls = tcls;
+                        // 自定义颜色：color-#xxxxxx / --custom-color（与 level-!+.html 的「天堂」一致）
+                        var colorM = tbCls.match(/color-(#[0-9a-fA-F]{6})/);
+                        var styleColor = (((tb.getAttribute('style') || '').match(/--custom-color:\s*([^;]+)/)) || [])[1];
+                        var col = colorM ? colorM[1] : (styleColor ? styleColor.trim() : '');
+                        if (col) doc.sd.customColor = col;
+                    }
+                    var bt = sdEl.querySelector('.bottom-text');
+                    if (bt) {
+                        var nameSpans = bt.querySelectorAll('span:not(.lang-cn):not(.lang-tr)');
+                        var nameEl = nameSpans.length ? nameSpans[nameSpans.length - 1] : null;
+                        var name = nameEl ? (nameEl.textContent || '').replace(/\s+/g, ' ').trim() : '';
+                        if (name && !/^\$\{.+\}$/.test(name)) doc.sd.name = name;
+                    }
+                    var img = sdEl.querySelector('.diamond-image');
+                    if (img) {
+                        var um = ((img.getAttribute('style') || '')).match(/url\(["']?(.*?)["']?\)/);
+                        var url = um ? um[1].trim() : '';
+                        // 模板占位符（{$image} 等）或 style 无值时，尝试从 class 中取真实 URL
+                        if (!url || /[{$]/.test(url)) {
+                            var cm = (img.className || '').match(/https?:\/\/\S+|data:image\/[^\s"']+/i);
+                            url = cm ? cm[0].replace(/["']+$/, '') : '';
+                        }
+                        if (/[{$]/.test(url)) url = '';
+                        doc.sd.image = url || '';
+                    }
+                    var lis = sdEl.querySelectorAll('.bottom-box li');
+                    var sdKeys = ['one', 'two', 'three'];
+                    sdKeys.forEach(function (k, i) {
+                        var li = lis[i];
+                        if (!li) return;
+                        // 取 li 第一个 span（default 里的嵌套空格 span 会干扰 first-child 索引）
+                        var sp = li.querySelector('span');
+                        var v = sp ? (sp.textContent || '').trim() : '';
+                        // ${x} 占位符不覆盖（保留当前示例值）
+                        if (v && !/^\$\{.+\}$/.test(v)) doc.sd[k] = v;
+                    });
+                }
+
+                var pc = p.querySelector('#page-content');
+                var nodes = pc ? Array.prototype.slice.call(pc.children) : [];
+                var startIdx = -1;
+                nodes.forEach(function (n, i) {
+                    if (n.className && String(n.className).indexOf('sd-container') >= 0) startIdx = i;
+                });
+
+                // 页顶区块（生存难度之前）与正文（生存难度之后）统一解析
+                collectTopBlocks(nodes, startIdx);
+                parseBodyLoop(nodes, startIdx);
+
+                initPresetSelect();
+                syncPanel();
+                render();
+                toast('模板已加载');
+            }
+
+            /* ================= 上传 HTML 自动读取（把导出的文档解析回编辑器） ================= */
+            function parseExportedHtml(html) {
+                var p = new DOMParser().parseFromString(html, 'text/html');
+                if (p.querySelector('parsererror')) { toast('无法解析该 HTML 文件'); return; }
+                resetBodyFields(); // 先清空旧内容，避免残留/重复
+
+                // 文档类型标识
+                var tm = p.querySelector('meta[name="doc-type"]');
+                if (tm) {
+                    var t = (tm.getAttribute('content') || '').toLowerCase();
+                    if (t === 'levels' || t === 'item' || t === 'entity' || t === 'phenomenon') doc.type = t;
+                }
+
+                // 评分绑定：读取控件上的编号与评分 ID，写入 localStorage（创建后即可绑定）
+                var rateBox = p.querySelector('.ziyit-rate');
+                if (rateBox) {
+                    var rcode = (rateBox.getAttribute('data-code') || '').trim();
+                    var rid = (rateBox.getAttribute('data-rid') || '').trim();
+                    if (rcode && rid) saveRatingId(rcode, rid);
+                }
+
+                var pt = p.querySelector('#page-title');
+                if (pt) {
+                    var txt = (pt.textContent || '').replace(/\s+/g, ' ').trim();
+                    var m = txt.match(/^(.*?)\s*-\s*[“"](.*)[”"]\s*$/);
+                    if (m) { doc.titlePrefix = m[1].trim(); doc.titleName = m[2].trim(); }
+                    else doc.titlePrefix = txt;
+                }
+
+                var bc = p.querySelector('#breadcrumbs');
+                if (bc) {
+                    var links = bc.querySelectorAll('a');
+                    if (links[0]) doc.crumb1 = (links[0].textContent || '').trim();
+                    var rest = (bc.textContent || '').split('»');
+                    if (rest[1]) doc.crumb2 = rest[1].trim();
+                }
+
+                // 生存难度
+                var sdEl = p.querySelector('#page-content .sd-container');
+                if (sdEl) {
+                    var tb = sdEl.querySelector('.top-box');
+                    if (tb) {
+                        var tbCls = String(tb.className || '');
+                        var tcls = tbCls.split(/\s+/).filter(function (c) {
+                            return c.indexOf('class-') === 0;
+                        })[0];
+                        if (tcls) doc.sd.cls = tcls;
+                        // 自定义颜色：color-#xxxxxx / --custom-color（与 level-!+.html 的「天堂」一致）
+                        var colorM = tbCls.match(/color-(#[0-9a-fA-F]{6})/);
+                        var styleColor = (((tb.getAttribute('style') || '').match(/--custom-color:\s*([^;]+)/)) || [])[1];
+                        var col = colorM ? colorM[1] : (styleColor ? styleColor.trim() : '');
+                        if (col) doc.sd.customColor = col;
+                    }
+                    var bt = sdEl.querySelector('.bottom-text');
+                    if (bt) {
+                        var nameSpans = bt.querySelectorAll('span:not(.lang-cn):not(.lang-tr)');
+                        var nameEl = nameSpans.length ? nameSpans[nameSpans.length - 1] : null;
+                        var name = nameEl ? (nameEl.textContent || '').replace(/\s+/g, ' ').trim() : '';
+                        if (name && !/^\$\{.+\}$/.test(name)) doc.sd.name = name;
+                    }
+                    var img = sdEl.querySelector('.diamond-image');
+                    if (img) {
+                        var um = ((img.getAttribute('style') || '')).match(/url\(["']?(.*?)["']?\)/);
+                        var url = um ? um[1].trim() : '';
+                        if (!url || /[{$]/.test(url)) {
+                            var cm = (img.className || '').match(/https?:\/\/\S+|data:image\/[^\s"']+/i);
+                            url = cm ? cm[0].replace(/["']+$/, '') : '';
+                        }
+                        if (/[{$]/.test(url)) url = '';
+                        doc.sd.image = url || '';
+                    }
+                    var lis = sdEl.querySelectorAll('.bottom-box li');
+                    var sdKeys = ['one', 'two', 'three'];
+                    sdKeys.forEach(function (k, i) {
+                        var li = lis[i];
+                        if (!li) return;
+                        var sp = li.querySelector('span');
+                        var v = sp ? (sp.textContent || '').trim() : '';
+                        if (v && !/^\$\{.+\}$/.test(v)) doc.sd[k] = v;
+                    });
+                }
+
+                // 正文各区块（含自定义区块三位置 + 尾部自定义代码）统一解析
+                var pc = p.querySelector('#page-content');
+                var nodes = pc ? Array.prototype.slice.call(pc.children) : [];
+                var startIdx = -1;
+                nodes.forEach(function (n, i) {
+                    if (n.className && String(n.className).indexOf('sd-container') >= 0) startIdx = i;
+                });
+
+                collectTopBlocks(nodes, startIdx);
+                parseBodyLoop(nodes, startIdx);
+
+                initPresetSelect();
+                syncPanel();
+                render();
+                toast('已读取 HTML 文件，可继续编辑');
+            }
+
+            /* ================= 渲染 ================= */
+            function render() {
+                renderPreview();
+                renderParaEditors();
+                syncPanel();
+                updateTypeBadge();
+                updateRatingStatus();
+            }
+
+            // 面板「基本信息」中显示评分绑定状态
+            function updateRatingStatus() {
+                var el = $('rating-status');
+                if (!el) return;
+                var code = ratingCode();
+                var rid = boundRatingId(code);
+                el.textContent = rid != null
+                    ? '评分：' + code + '（已绑定 ID ' + rid + '，投票可用）'
+                    : '评分：' + code + '（未绑定，请到「我的评分」中创建并绑定）';
+            }
+
+            function renderPreview() {
+                document.querySelector('[data-field="titlePrefix"]').textContent = doc.titlePrefix;
+                document.querySelector('[data-field="titleName"]').textContent = doc.titleName;
+                document.querySelector('[data-field="crumb1"]').textContent = doc.crumb1;
+                document.querySelector('[data-field="crumb2"]').textContent = doc.crumb2;
+
+                $('custom-blocks').innerHTML = customBlocksHtml('top');
+                $('custom-blocks-base-before').innerHTML = customBlocksHtml('base-before');
+                $('custom-blocks-base-after').innerHTML = customBlocksHtml('base-after');
+                $('sd-container').innerHTML = sdHtml();
+
+                setHtml('[data-field="intro"]', doc.intro);
+                $('desc-paras-preview').innerHTML = parasPreviewHtml(doc.descParas, 'descPara');
+                $('base-paras-preview').innerHTML = parasPreviewHtml(doc.baseParas, 'basePara');
+                document.querySelector('[data-field="entryIntro"]').textContent = doc.entryIntro;
+                document.querySelector('[data-field="exitIntro"]').textContent = doc.exitIntro;
+
+                $('desc-images').innerHTML = descImagesHtml();
+
+                renderList('entry-list', doc.entryItems, 'entryItem');
+                renderList('exit-list', doc.exitItems, 'exitItem');
+
+                if (doc.sd.image) {
+                    $('f-sd-image-thumb').src = doc.sd.image;
+                    $('f-sd-image-thumb').style.display = 'block';
+                } else {
+                    $('f-sd-image-thumb').style.display = 'none';
+                }
+
+                // 文档尾部自定义代码（HTML/JS）：重新插入 <script> 使其执行
+                var fc = $('footer-code');
+                fc.innerHTML = doc.footerCode.replace(/<\/script/gi, '<\\/script');
+                fc.querySelectorAll('script').forEach(function (s) {
+                    var ns = document.createElement('script');
+                    if (s.src) ns.src = s.src; else ns.textContent = s.textContent;
+                    s.parentNode.replaceChild(ns, s);
+                });
+            }
+
+            // 允许 HTML 的字段：直接插入
+            function setHtml(sel, html) {
+                var el = document.querySelector(sel);
+                if (el) el.innerHTML = html == null ? '' : String(html);
+            }
+
+            // 段落数组 → 导出 HTML（每段一个 <p>）
+            function parasExportHtml(paras) {
+                return (paras || []).map(function (p) { return '<p>' + absolutizeHtml(p) + '</p>'; }).join('');
+            }
+
+            // 段落数组 → 预览 HTML（每段可点击编辑）
+            function parasPreviewHtml(paras, prefix) {
+                return (paras || []).map(function (p, i) {
+                    var t = String(p == null ? '' : p);
+                    if (!t) t = '（空段落，点击编辑）';
+                    return '<p class="editable" data-field="' + prefix + ':' + i + '" style="cursor:pointer;">' + t + '</p>';
+                }).join('');
+            }
+
+            // 面板段落编辑器：描述/基地 各自的文本域 + 删除按钮
+            function renderParaEditors() {
+                [['descPara', 'desc-para-list', doc.descParas], ['basePara', 'base-para-list', doc.baseParas]].forEach(function (conf) {
+                    var prefix = conf[0], listId = conf[1], paras = conf[2];
+                    var list = $(listId);
+                    if (!list) return;
+                    list.innerHTML = '';
+                    paras.forEach(function (p, i) {
+                        var row = document.createElement('div');
+                        row.className = 'para-row';
+                        var ta = document.createElement('textarea');
+                        ta.value = p;
+                        ta.placeholder = '第 ' + (i + 1) + ' 段内容';
+                        ta.addEventListener('input', function () {
+                            paras[i] = ta.value;
+                            syncParaPreview(prefix, i, ta.value);
+                        });
+                        ta.addEventListener('blur', function () { render(); });
+                        var del = document.createElement('button');
+                        del.type = 'button';
+                        del.className = 'row-del';
+                        del.textContent = '🗑';
+                        del.title = '删除此段';
+                        del.addEventListener('click', function () {
+                            paras.splice(i, 1);
+                            if (!paras.length) paras.push('');
+                            render();
+                        });
+                        row.appendChild(ta);
+                        row.appendChild(del);
+                        list.appendChild(row);
+                    });
+                });
+            }
+
+            // 输入时仅同步预览中对应段落，避免重建编辑器丢失焦点
+            function syncParaPreview(prefix, i, text) {
+                var el = document.querySelector('[data-field="' + prefix + ':' + i + '"]');
+                if (el) el.textContent = text || '（空段落，点击编辑）';
+            }
+
+            // 输入时同步预览中对应自定义区块段落（data-field=customPara:blockIdx:paraIdx）
+            function syncCustomParaPreview(bi, pi, text) {
+                var el = document.querySelector('[data-field="customPara:' + bi + ':' + pi + '"]');
+                if (el) el.textContent = text || '（空段落，点击编辑）';
+            }
+
+            // 自定义区块（按位置）：top=页顶（居中），base-before=基地前（左对齐），base-after=基地后（左对齐）
+            function customBlocksHtml(pos) {
+                var align = (pos || 'top') === 'top' ? 'text-align:center' : 'text-align:left';
+                return doc.customBlocks.filter(function (b) { return (b.pos || 'top') === (pos || 'top'); }).map(function (b) {
+                    var i = doc.customBlocks.indexOf(b);
+                    var s = '<div style="' + align + ';margin-bottom:14px;">';
+                    if (b.title) {
+                        s += '<h1 style="margin-top:4px;"><span class="editable" data-field="customTitle:' + i + '">' + escHtml(b.title) + '</span></h1>';
+                    }
+                    if (b.content) {
+                        s += '<div class="editable" data-field="customContent:' + i + '">' + b.content + '</div>';
+                    }
+                    (b.paras || []).forEach(function (p, j) {
+                        var t = String(p == null ? '' : p);
+                        if (!t) t = '（空段落，点击编辑）';
+                        s += '<p class="editable" data-field="customPara:' + i + ':' + j + '" style="cursor:pointer;">' + t + '</p>';
+                    });
+                    return s + '</div>';
+                }).join('');
+            }
+
+            // 描述区多张图片
+            function descImagesHtml() {
+                return doc.descImages.map(function (img, i) {
+                    if (!img.image) return '';
+                    return '<div class="scp-image-block block-right" style="width:300px;">'
+                        + '<a class="editable" data-field="descImage:' + i + '" style="display:block;"><img src="' + escHtml(img.image) + '" alt="' + escHtml(img.alt) + '" class="image"></a>'
+                        + '<div class="scp-image-caption"><a class="editable" data-field="descCaption:' + i + '">' + escHtml(img.caption) + '</a></div>'
+                        + '</div>';
+                }).join('');
+            }
+
+            // 入口/出口列表：条目可点击编辑、可单独删除，末尾可添加新条目
+            function renderList(id, items, prefix) {
+                var ul = $(id);
+                ul.innerHTML = '';
+                items.forEach(function (text, i) {
+                    var li = document.createElement('li');
+                    var p = document.createElement('p');
+                    var a = document.createElement('a');
+                    a.className = 'editable';
+                    a.setAttribute('data-field', prefix + ':' + i);
+                    a.textContent = text;
+                    p.appendChild(a);
+                    var del = document.createElement('button');
+                    del.type = 'button';
+                    del.className = 'li-del-btn';
+                    del.title = '删除此条';
+                    del.textContent = '🗑 删除';
+                    del.addEventListener('click', function () {
+                        items.splice(i, 1);
+                        render();
+                        toast('已删除');
+                    });
+                    li.appendChild(p);
+                    li.appendChild(del);
+                    ul.appendChild(li);
+                });
+                var addLi = document.createElement('li');
+                addLi.className = 'li-add-row';
+                var addBtn = document.createElement('button');
+                addBtn.type = 'button';
+                addBtn.className = 'li-add-btn';
+                addBtn.textContent = '＋ 添加';
+                addBtn.addEventListener('click', function () {
+                    items.push('[NO DATA]');
+                    render();
+                    toast('已添加，点击文字可编辑内容');
+                });
+                addLi.appendChild(addBtn);
+                ul.appendChild(addLi);
+            }
+
+            // 菱形图片：无自定义图时按模板渲染 {$image} 占位样式（显示当前等级的默认符号 --img-N），
+            // 有图时用 --custom-image 显示上传/填写的图片
+            function diamondImgHtml(cls, image) {
+                var img = image == null ? doc.sd.image : image;
+                if (!img) {
+                    return '<div class="diamondy diamond-image ' + escHtml(cls) + ' {$image}"'
+                        + ' style="--custom-image: url(&quot;{$image}&quot;)"></div>';
+                }
+                return '<div class="diamondy diamond-image ' + escHtml(cls) + ' ' + escHtml(img) + '"'
+                    + ' style="--custom-image: url(&quot;' + img.replace(/"/g, '&quot;') + '&quot;)"></div>';
+            }
+
+            // 要点条目：${x} 占位符渲染成 levels.html L283-292 的模板形式（span.{$x} + .default），
+            // 让 main.css 按当前等级自动显示默认要点（class-1=安全/稳定/极少量实体，死区=环境危害/…）；
+            // 真实内容渲染为可点击编辑的 <a>
+            function sdLiHtml(field, val) {
+                if (/^\$\{.+\}$/.test(val)) {
+                    return '<li><span class="' + escHtml(placeholderClass(val)) + '">' + escHtml(val) + '</span>'
+                        + '<span class="default"><span style="white-space: pre-wrap;"> </span></span></li>';
+                }
+                return '<li><a class="editable" data-field="' + field + '">' + escHtml(val) + '</a>'
+                    + '<span class="default"><span style="white-space: pre-wrap;"> </span></span></li>';
+            }
+
+            function sdHtml() {
+                var sd = doc.sd;
+                var cls = sd.cls || 'class-1';
+                var colorCls = sd.customColor ? ' color-' + escHtml(sd.customColor) : '';
+                var styleAttr = sd.customColor ? ' style="--custom-color: ' + escHtml(sd.customColor) + '"' : '';
+                return ''
+                    + '<div class="top-box ' + escHtml(cls) + colorCls + '"' + styleAttr + '>'
+                    + '<div class="header-diamond">'
+                    + '<div class="bg"></div>'
+                    + '<div class="diamondy diamond-color ' + escHtml(cls) + colorCls + '"' + styleAttr + '></div>'
+                    + '<div class="diamondy diamond-pattern"></div>'
+                    + diamondImgHtml(cls)
+                    + '</div>'
+                    + '<div class="gradient-box">'
+                    + '<div class="top-text"><p><span class="lang-cn">生存难度：</span><span class="lang-tr">生存难度：</span></p></div>'
+                    + '<div class="bottom-text"><p><span class="lang-cn">等级 </span><span class="lang-tr">等級 </span><a class="editable" data-field="sdName">' + escHtml(sd.name) + '</a></p></div>'
+                    + '</div>'
+                    + '</div>'
+                    + '<div class="bottom-box ' + escHtml(cls) + '"><ul>'
+                    + sdLiHtml('sdOne', sd.one)
+                    + sdLiHtml('sdTwo', sd.two)
+                    + sdLiHtml('sdThree', sd.three)
+                    + '</ul></div>';
+            }
+
+            /* ================= 面板同步 ================= */
+            function syncPanel() {
+                function setVal(id, v) {
+                    var el = $(id);
+                    // 正在编辑的输入框不移位光标
+                    if (document.activeElement === el) return;
+                    el.value = v;
+                }
+                setVal('f-title', doc.titleName);
+                setVal('f-crumb1', doc.crumb1);
+                setVal('f-crumb2', doc.crumb2);
+                setVal('f-sd-name', doc.sd.name);
+                if (doc.sd.customColor) setVal('f-sd-color', doc.sd.customColor);
+                setVal('f-sd-image', doc.sd.image || '');
+                setVal('f-sd-one', doc.sd.one);
+                setVal('f-sd-two', doc.sd.two);
+                setVal('f-sd-three', doc.sd.three);
+                renderDescImgRows();
+                renderBlockRows();
+            }
+
+            // 描述区图片行
+            function renderDescImgRows() {
+                var box = $('desc-img-list');
+                box.innerHTML = '';
+                doc.descImages.forEach(function (img, i) {
+                    var row = document.createElement('div');
+                    row.className = 'img-row';
+                    row.innerHTML = ''
+                        + '<input type="text" placeholder="图片 URL（可上传）" class="row-url" value="' + escHtml(/^data:/i.test(img.image) ? '' : img.image) + '">'
+                        + '<div class="row-actions">'
+                        + '<label class="file-btn" for="desc-file-' + i + '">⬆ 上传</label>'
+                        + '<input type="file" id="desc-file-' + i + '" accept="image/*" class="row-file">'
+                        + '<button type="button" class="file-btn row-del">🗑 删除</button>'
+                        + '</div>'
+                        + '<input type="text" placeholder="图片说明（可选）" class="row-cap" value="' + escHtml(img.caption) + '">'
+                        + '<img class="img-thumb row-thumb" alt="" style="' + (img.image ? '' : 'display:none;') + '" src="' + escHtml(img.image) + '">';
+                    box.appendChild(row);
+
+                    var urlInput = row.querySelector('.row-url');
+                    urlInput.addEventListener('input', function () {
+                        doc.descImages[i].image = urlInput.value;
+                        var thumb = row.querySelector('.row-thumb');
+                        if (urlInput.value) { thumb.src = urlInput.value; thumb.style.display = 'block'; }
+                        else { thumb.src = ''; thumb.style.display = 'none'; }
+                        renderPreview();
+                    });
+
+                    var capInput = row.querySelector('.row-cap');
+                    capInput.addEventListener('input', function () {
+                        doc.descImages[i].caption = capInput.value;
+                        renderPreview();
+                    });
+
+                    row.querySelector('.row-file').addEventListener('change', function () {
+                        var f = this.files && this.files[0];
+                        if (!f) return;
+                        var rd = new FileReader();
+                        rd.onload = function () {
+                            doc.descImages[i].image = rd.result;
+                            var thumb = row.querySelector('.row-thumb');
+                            if (thumb) { thumb.src = rd.result; thumb.style.display = 'block'; }
+                            row.querySelector('.row-url').value = '';
+                            renderPreview();
+                        };
+                        rd.readAsDataURL(f);
+                        this.value = '';
+                    });
+
+                    row.querySelector('.row-del').addEventListener('click', function () {
+                        doc.descImages.splice(i, 1);
+                        render();
+                        toast('已删除图片');
+                    });
+                });
+            }
+
+            // 页顶区块行
+            function renderBlockRows() {
+                var box = $('custom-block-list');
+                box.innerHTML = '';
+                doc.customBlocks.forEach(function (b, i) {
+                    if (!b.paras) b.paras = [];
+                    var row = document.createElement('div');
+                    row.className = 'block-row';
+                    row.innerHTML = ''
+                        + '<select class="row-pos" title="区块位置">'
+                        + '<option value="top"' + ((b.pos || 'top') === 'top' ? ' selected' : '') + '>位置：页顶（生存难度之前）</option>'
+                        + '<option value="base-before"' + ((b.pos || '') === 'base-before' ? ' selected' : '') + '>位置：基地、前哨和社区 之前</option>'
+                        + '<option value="base-after"' + ((b.pos || '') === 'base-after' ? ' selected' : '') + '>位置：基地、前哨和社区 之后</option>'
+                        + '</select>'
+                        + '<input type="text" placeholder="区块标题，如：免责声明" class="row-title" value="' + escHtml(b.title) + '">'
+                        + '<textarea placeholder="区块内容（支持 HTML，如 <p>…</p><hr />）" class="row-content">' + escHtml(b.content) + '</textarea>'
+                        + '<div class="block-paras"><div class="para-label">区块段落（每段单独编辑）</div><div class="block-para-list"></div>'
+                        + '<button type="button" class="add-row-btn block-para-add">＋ 增加段落</button></div>'
+                        + '<div class="row-actions"><button type="button" class="file-btn row-del">🗑 删除区块</button></div>';
+                    box.appendChild(row);
+
+                    var posSel = row.querySelector('.row-pos');
+                    posSel.addEventListener('change', function () {
+                        doc.customBlocks[i].pos = posSel.value;
+                        render();
+                    });
+
+                    var titleInput = row.querySelector('.row-title');
+                    titleInput.addEventListener('input', function () {
+                        doc.customBlocks[i].title = titleInput.value;
+                        renderPreview();
+                    });
+
+                    var contentInput = row.querySelector('.row-content');
+                    contentInput.addEventListener('input', function () {
+                        doc.customBlocks[i].content = contentInput.value;
+                        renderPreview();
+                    });
+
+                    row.querySelector('.row-del').addEventListener('click', function () {
+                        doc.customBlocks.splice(i, 1);
+                        render();
+                        toast('已删除区块');
+                    });
+
+                    // 区块段落：每段一个 textarea（输入时同步预览），可删除
+                    var paraList = row.querySelector('.block-para-list');
+                    b.paras.forEach(function (p, j) {
+                        var pRow = document.createElement('div');
+                        pRow.className = 'para-row';
+                        var ta = document.createElement('textarea');
+                        ta.value = p;
+                        ta.placeholder = '第 ' + (j + 1) + ' 段内容';
+                        ta.addEventListener('input', function () {
+                            b.paras[j] = ta.value;
+                            syncCustomParaPreview(i, j, ta.value);
+                        });
+                        ta.addEventListener('blur', function () { render(); });
+                        var del = document.createElement('button');
+                        del.type = 'button';
+                        del.className = 'row-del';
+                        del.textContent = '🗑';
+                        del.title = '删除此段';
+                        del.addEventListener('click', function () {
+                            b.paras.splice(j, 1);
+                            render();
+                        });
+                        pRow.appendChild(ta);
+                        pRow.appendChild(del);
+                        paraList.appendChild(pRow);
+                    });
+
+                    row.querySelector('.block-para-add').addEventListener('click', function () {
+                        b.paras.push('');
+                        render();
+                        toast('已为该区块增加一段');
+                    });
+                });
+            }
+
+            function initPresetSelect() {
+                var sel = $('f-sd-preset');
+                sel.innerHTML = '';
+                // 名称与任一预设均不符 → 视为自定义名称，下拉选中「自定义…」
+                var nameIsCustom = SD_PRESETS.every(function (p) { return p.name !== doc.sd.name; });
+                SD_PRESETS.forEach(function (p) {
+                    var o = document.createElement('option');
+                    o.value = p.key;
+                    o.textContent = (p.key === 'custom' ? '✨ ' : '') + p.name;
+                    if (p.key === 'custom') { if (nameIsCustom) o.selected = true; }
+                    else if (p.cls === doc.sd.cls) o.selected = true;
+                    sel.appendChild(o);
+                });
+            }
+
+            /* ================= 弹窗编辑 ================= */
+            var modal = { field: null, extra: null };
+
+            function openModal(title, value, field, extra, opts) {
+                modal.field = field;
+                modal.extra = extra || null;
+                opts = opts || {};
+                $('modal-title').textContent = title;
+                $('modal-input').value = value;
+                $('modal-input').placeholder = opts.placeholder || '请输入内容';
+                $('modal-overlay').classList.remove('hidden');
+                $('modal-input').focus();
+            }
+
+            function closeModal() {
+                $('modal-overlay').classList.add('hidden');
+                modal.field = null;
+                modal.extra = null;
+            }
+
+            function saveModal() {
+                var val = $('modal-input').value;
+                if (modal.extra === 'list') {
+                    var items = val.split(/\n/).map(function (x) { return x.replace(/^\s+|\s+$/g, ''); }).filter(function (x) { return x; });
+                    applyField(modal.field, items);
+                } else {
+                    applyField(modal.field, val);
+                }
+                closeModal();
+            }
+
+            function applyField(field, val) {
+                var m = String(field).split(':');
+                switch (m[0]) {
+                    case 'titlePrefix': doc.titlePrefix = val; break;
+                    case 'titleName': doc.titleName = val; break;
+                    case 'crumb1': doc.crumb1 = val; break;
+                    case 'crumb2': doc.crumb2 = val; break;
+                    case 'sdName': doc.sd.name = val; break;
+                    case 'sdOne': doc.sd.one = val; break;
+                    case 'sdTwo': doc.sd.two = val; break;
+                    case 'sdThree': doc.sd.three = val; break;
+                    case 'intro': doc.intro = val; break;
+                    case 'descPara': if (doc.descParas[+m[1]] !== undefined) doc.descParas[+m[1]] = val; break;
+                    case 'descImage': if (doc.descImages[+m[1]]) doc.descImages[+m[1]].image = val; break;
+                    case 'descCaption': if (doc.descImages[+m[1]]) doc.descImages[+m[1]].caption = val; break;
+                    case 'basePara': if (doc.baseParas[+m[1]] !== undefined) doc.baseParas[+m[1]] = val; break;
+                    case 'customTitle': if (doc.customBlocks[+m[1]]) doc.customBlocks[+m[1]].title = val; break;
+                    case 'customContent': if (doc.customBlocks[+m[1]]) doc.customBlocks[+m[1]].content = val; break;
+                    case 'customPara':
+                        if (doc.customBlocks[+m[1]] && doc.customBlocks[+m[1]].paras && doc.customBlocks[+m[1]].paras[+m[2]] !== undefined) doc.customBlocks[+m[1]].paras[+m[2]] = val;
+                        break;
+                    case 'newBlockTitle':
+                        doc.customBlocks.push({ title: val, content: '', pos: 'base-before', paras: [] });
+                        toast(val ? '已插入区块「' + val + '」，请填写内容' : '已插入区块，请填写标题与内容');
+                        break;
+                    case 'entryIntro': doc.entryIntro = val; break;
+                    case 'exitIntro': doc.exitIntro = val; break;
+                    case 'entryItem': if (doc.entryItems[+m[1]] !== undefined) doc.entryItems[+m[1]] = val; break;
+                    case 'exitItem': if (doc.exitItems[+m[1]] !== undefined) doc.exitItems[+m[1]] = val; break;
+                }
+                render();
+            }
+
+            /* ================= 事件绑定 ================= */
+            function bindEvents() {
+                $('preview').addEventListener('click', function (e) {
+                    var a = e.target.closest ? e.target.closest('.editable') : null;
+                    if (!a || !a.hasAttribute('data-field')) return;
+                    var field = a.getAttribute('data-field');
+                    var m = String(field).split(':');
+                    var val = '', title = '编辑内容', opts = {};
+                    switch (m[0]) {
+                        case 'titlePrefix': val = doc.titlePrefix; title = '编辑页面编号'; break;
+                        case 'titleName': val = doc.titleName; title = '编辑标题名称'; break;
+                        case 'crumb1': val = doc.crumb1; title = '编辑面包屑 1'; break;
+                        case 'crumb2': val = doc.crumb2; title = '编辑面包屑 2'; break;
+                        case 'sdName': val = doc.sd.name; title = '编辑生存难度等级名称（如：死区/天堂）'; break;
+                        case 'sdOne': val = doc.sd.one; title = '编辑生存难度要点 1'; break;
+                        case 'sdTwo': val = doc.sd.two; title = '编辑生存难度要点 2'; break;
+                        case 'sdThree': val = doc.sd.three; title = '编辑生存难度要点 3'; break;
+                        case 'intro': val = doc.intro; title = '编辑概述'; opts.placeholder = '段落或 HTML 文本'; break;
+                        case 'descPara': val = doc.descParas[+m[1]] || ''; title = '编辑描述第 ' + ((+m[1]) + 1) + ' 段'; opts.placeholder = '段落或 HTML 文本'; break;
+                        case 'descImage': val = (doc.descImages[+m[1]] || {}).image || ''; title = '编辑图片 URL'; opts.placeholder = 'https://… 或 /assets/xxx.png'; break;
+                        case 'descCaption': val = (doc.descImages[+m[1]] || {}).caption || ''; title = '编辑图片说明'; break;
+                        case 'basePara': val = doc.baseParas[+m[1]] || ''; title = '编辑「基地、前哨和社区」第 ' + ((+m[1]) + 1) + ' 段'; opts.placeholder = '段落或 HTML 文本'; break;
+                        case 'customTitle': val = (doc.customBlocks[+m[1]] || {}).title || ''; title = '编辑区块标题'; break;
+                        case 'customContent': val = (doc.customBlocks[+m[1]] || {}).content || ''; title = '编辑区块内容'; opts.placeholder = '支持 HTML，如：<p>…</p><hr />'; break;
+                        case 'customPara':
+                            val = (doc.customBlocks[+m[1]] && doc.customBlocks[+m[1]].paras && doc.customBlocks[+m[1]].paras[+m[2]]) || '';
+                            title = '编辑区块第 ' + ((+m[1]) + 1) + ' 的第 ' + ((+m[2]) + 1) + ' 段';
+                            opts.placeholder = '段落或 HTML 文本';
+                            break;
+                        case 'entryIntro': val = doc.entryIntro; title = '编辑「入口」引导语'; break;
+                        case 'exitIntro': val = doc.exitIntro; title = '编辑「出口」引导语'; break;
+                        case 'entryItem': val = doc.entryItems[+m[1]] || ''; title = '编辑「入口」第 ' + ((+m[1]) + 1) + ' 条'; break;
+                        case 'exitItem': val = doc.exitItems[+m[1]] || ''; title = '编辑「出口」第 ' + ((+m[1]) + 1) + ' 条'; break;
+                        default: return;
+                    }
+                    openModal(title, val, field, (m[0] === 'entryItem' || m[0] === 'exitItem') ? 'list' : null, opts);
+                });
+
+                function bindInput(id, fn) {
+                    $(id).addEventListener('input', function () { fn($(id).value); });
+                }
+                bindInput('f-title', function (v) { doc.titleName = v; render(); });
+                bindInput('f-crumb1', function (v) { doc.crumb1 = v; render(); });
+                bindInput('f-crumb2', function (v) { doc.crumb2 = v; render(); });
+                bindInput('f-sd-name', function (v) {
+                    doc.sd.name = v;
+                    // 名称不属于任何预设 → 预设下拉同步为「自定义…」（仅视觉，不影响样式 class，
+                    // 与 level-!+.html 把死区改成「天堂」时保留 class-deadzone 的做法一致）
+                    initPresetSelect();
+                    render();
+                });
+                // 中文输入法 / 失焦等场景的兜底同步
+                $('f-sd-name').addEventListener('change', function () {
+                    doc.sd.name = this.value;
+                    initPresetSelect();
+                    render();
+                });
+                bindInput('f-sd-image', function (v) { doc.sd.image = v; render(); });
+                bindInput('f-sd-one', function (v) { doc.sd.one = v; render(); });
+                bindInput('f-sd-two', function (v) { doc.sd.two = v; render(); });
+                bindInput('f-sd-three', function (v) { doc.sd.three = v; render(); });
+                bindInput('f-footer-code', function (v) { doc.footerCode = v; render(); });
+
+                // 添加描述图片
+                $('btn-desc-img-add').addEventListener('click', function () {
+                    doc.descImages.push({ image: '', alt: '图片 ' + (doc.descImages.length + 1), caption: '' });
+                    render();
+                    toast('已添加图片，请填写 URL 或上传');
+                });
+
+                // 添加自定义区块（默认位置：页顶）
+                $('btn-block-add').addEventListener('click', function () {
+                    doc.customBlocks.push({ title: '', content: '', pos: 'top', paras: [] });
+                    render();
+                    toast('已添加区块，请填写标题与内容');
+                });
+
+                // 描述/基地：增加段落（预览 + 面板）
+                $('btn-desc-para-add').addEventListener('click', function () {
+                    doc.descParas.push('');
+                    render();
+                    toast('已为「描述」增加一段');
+                });
+                $('btn-base-para-add').addEventListener('click', function () {
+                    doc.baseParas.push('');
+                    render();
+                    toast('已为「基地、前哨和社区」增加一段');
+                });
+                $('btn-desc-para-add-panel').addEventListener('click', function () {
+                    doc.descParas.push('');
+                    render();
+                    toast('已为「描述」增加一段');
+                    var tas = $('desc-para-list').querySelectorAll('textarea');
+                    if (tas.length) tas[tas.length - 1].focus();
+                });
+                $('btn-base-para-add-panel').addEventListener('click', function () {
+                    doc.baseParas.push('');
+                    render();
+                    toast('已为「基地、前哨和社区」增加一段');
+                    var tas = $('base-para-list').querySelectorAll('textarea');
+                    if (tas.length) tas[tas.length - 1].focus();
+                });
+
+                // 在描述与基地之间插入自定义区块（弹窗输入标题）
+                $('btn-block-insert').addEventListener('click', function () {
+                    openModal('输入新区块标题', '', 'newBlockTitle', null, { placeholder: '例如：特殊性质 / 环境描述' });
+                });
+                $('btn-block-insert-panel').addEventListener('click', function () {
+                    openModal('输入新区块标题', '', 'newBlockTitle', null, { placeholder: '例如：特殊性质 / 环境描述' });
+                });
+
+                $('f-sd-preset').addEventListener('change', function () {
+                    var key = this.value;
+                    var p = SD_PRESETS.filter(function (x) { return x.key === key; })[0];
+                    if (!p) return;
+                    if (key === 'custom') {
+                        // 自定义等级名称：保留当前样式 class（如 class-deadzone），
+                        // 仅允许自定义名称与颜色（与 level-!+.html 把死区改成「天堂」的做法一致）
+                        if (!doc.sd.cls || doc.sd.cls.indexOf('class-') !== 0) doc.sd.cls = 'class-1';
+                        if (!doc.sd.customColor) doc.sd.customColor = $('f-sd-color').value;
+                        if (!doc.sd.name || /^\$\{.+\}$/.test(doc.sd.name)) doc.sd.name = '自定义';
+                    } else {
+                        doc.sd.cls = p.cls;
+                        doc.sd.name = p.name;
+                        doc.sd.customColor = '';
+                    }
+                    render();
+                    toast('生存难度已切换为「' + doc.sd.name + '」');
+                });
+
+                $('f-sd-color').addEventListener('input', function () {
+                    // 只设置自定义颜色，不影响等级样式 class（class-deadzone 等保持不变）
+                    doc.sd.customColor = this.value;
+                    render();
+                });
+
+                // 图片上传（生存难度菱形图）
+                $('f-sd-image-file').addEventListener('change', function () {
+                    var f = this.files && this.files[0];
+                    if (!f) return;
+                    var rd = new FileReader();
+                    rd.onload = function () { doc.sd.image = rd.result; render(); };
+                    rd.readAsDataURL(f);
+                    this.value = '';
+                });
+
+                // 弹窗
+                $('modal-cancel').addEventListener('click', closeModal);
+                $('modal-ok').addEventListener('click', saveModal);
+                $('modal-overlay').addEventListener('click', function (e) {
+                    if (e.target === this) closeModal();
+                });
+
+                // 修改标题按钮
+                $('btn-edit-title').addEventListener('click', function () {
+                    openModal('修改标题', doc.titleName, 'titleName');
+                });
+
+                // 加载模板 / 上传 HTML / 导出
+                $('btn-load-template').addEventListener('click', loadTemplate);
+                $('btn-upload-html').addEventListener('click', function () { $('f-html-file').click(); });
+                $('f-html-file').addEventListener('change', function (e) {
+                    var file = e.target.files && e.target.files[0];
+                    if (!file) return;
+                    var reader = new FileReader();
+                    reader.onload = function (ev) { parseExportedHtml(ev.target.result); };
+                    reader.readAsText(file, 'utf-8');
+                    e.target.value = ''; // 允许再次选择同一文件
+                });
+                $('btn-export').addEventListener('click', exportHtml);
+
+                // 图片库
+                $('btn-img-lib-open').addEventListener('click', function () { openImageManager('copy'); });
+                $('btn-sd-image-lib').addEventListener('click', function () { openImageManager('sdImage'); });
+                $('btn-desc-img-lib').addEventListener('click', function () { openImageManager('descImage'); });
+                $('img-mgr-close').addEventListener('click', closeImageManager);
+
+                // 我的评分（选择绑定）
+                $('btn-rate-open').addEventListener('click', openRatingManager);
+                $('rate-mgr-close').addEventListener('click', closeRatingManager);
+                $('rate-mgr-refresh').addEventListener('click', loadRatingManager);
+                $('rate-mgr-create').addEventListener('click', createCurrentRating);
+                $('rate-mgr-code-input').addEventListener('keydown', function (e) { if (e.key === 'Enter') createCurrentRating(); });
+                $('rate-mgr-overlay').addEventListener('click', function (e) {
+                    if (e.target === this) closeRatingManager();
+                });
+                $('img-mgr-refresh').addEventListener('click', loadImageManager);
+                $('img-mgr-overlay').addEventListener('click', function (e) {
+                    if (e.target === this) closeImageManager();
+                });
+                $('img-mgr-file').addEventListener('change', function () {
+                    var f = this.files && this.files[0];
+                    if (f) uploadImage(f);
+                    this.value = '';
+                });
+            }
+
+            /* ================= 导出完整 HTML ================= */
+            // 下载绑定的评分控件：使用用户在「我的评分」里创建/绑定的评分（按当前文档编号查找），不自动创建
+            function exportHtml() {
+                var slug = (doc.titleName || 'level').replace(/[^\w\u4e00-\u9fa5-]+/g, '-').replace(/^-+|-+$/g, '') || 'level';
+                var code = ratingCode();
+                var rid = boundRatingId(code);
+                if (rid != null) toast('已绑定评分 ' + code + '（ID ' + rid + '）');
+                var html = buildFullHtml(rid);
+                var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = slug + '.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(function () { URL.revokeObjectURL(url); }, 500);
+                toast('已导出 ' + slug + '.html');
+            }
+
+            /* 导出版的生存难度（无 editable） */
+            function sdExportHtml() {
+                var sd = doc.sd;
+                var cls = sd.cls || 'class-1';
+                var colorCls = sd.customColor ? ' color-' + escHtml(sd.customColor) : '';
+                var styleAttr = sd.customColor ? ' style="--custom-color: ' + escHtml(sd.customColor) + '"' : '';
+                return ''
+                    + '<div class="top-box ' + escHtml(cls) + colorCls + '"' + styleAttr + '>'
+                    + '<div class="header-diamond">'
+                    + '<div class="bg"></div>'
+                    + '<div class="diamondy diamond-color ' + escHtml(cls) + colorCls + '"' + styleAttr + '></div>'
+                    + '<div class="diamondy diamond-pattern"></div>'
+                    + diamondImgHtml(cls, toAbsUrl(sd.image))
+                    + '</div>'
+                    + '<div class="gradient-box">'
+                    + '<div class="top-text"><p><span class="lang-cn">生存难度：</span><span class="lang-tr">生存难度：</span></p></div>'
+                    + '<div class="bottom-text"><p><span class="lang-cn">等级 </span><span class="lang-tr">等級 </span><span>' + escHtml(sd.name) + '</span></p></div>'
+                    + '</div>'
+                    + '</div>'
+                    + '<div class="bottom-box ' + escHtml(cls) + '"><ul>'
+                    + '<li><span class="' + escHtml(placeholderClass(sd.one)) + '">' + escHtml(sd.one) + '</span><span class="default"><span style="white-space: pre-wrap;"> </span></span></li>'
+                    + '<li><span class="' + escHtml(placeholderClass(sd.two)) + '">' + escHtml(sd.two) + '</span><span class="default"><span style="white-space: pre-wrap;"> </span></span></li>'
+                    + '<li><span class="' + escHtml(placeholderClass(sd.three)) + '">' + escHtml(sd.three) + '</span><span class="default"><span style="white-space: pre-wrap;"> </span></span></li>'
+                    + '</ul></div>';
+            }
+
+            function descImgsExportHtml() {
+                return doc.descImages.map(function (img) {
+                    if (!img.image) return '';
+                    return '<div class="scp-image-block block-right" style="width:300px;"><img src="' + escHtml(toAbsUrl(img.image)) + '" alt="' + escHtml(img.alt) + '" class="image" />'
+                        + '<div class="scp-image-caption">' + escHtml(img.caption) + '</div></div>';
+                }).join('');
+            }
+
+            function customBlocksExportHtml(pos) {
+                var align = (pos || 'top') === 'top' ? 'text-align:center' : 'text-align:left';
+                return doc.customBlocks.filter(function (b) { return (b.pos || 'top') === (pos || 'top'); }).map(function (b) {
+                    var s = '<div style="' + align + ';margin-bottom:14px;">';
+                    if (b.title) s += '<h1 style="margin-top:4px;"><span>' + escHtml(b.title) + '</span></h1>';
+                    if (b.content) s += absolutizeHtml(b.content);
+                    (b.paras || []).forEach(function (p) {
+                        s += '<p>' + absolutizeHtml(String(p == null ? '' : p)) + '</p>';
+                    });
+                    return s + '</div>';
+                }).join('');
+            }
+
+            // 用户正文（sd-container 之后的部分）
+            function userBodyExportHtml() {
+                var entryHtml = doc.entryItems.map(function (x) { return '<li><p>' + escHtml(x) + '</p></li>'; }).join('');
+                var exitHtml = doc.exitItems.map(function (x) { return '<li><p>' + escHtml(x) + '</p></li>'; }).join('');
+                return ''
+                    + '<div>' + absolutizeHtml(doc.intro) + '</div>\n'
+                    + '<h1><span>描述</span></h1>\n'
+                    + '<div>' + descImgsExportHtml() + '<div>' + parasExportHtml(doc.descParas) + '</div></div>\n'
+                    + customBlocksExportHtml('base-before')
+                    + '<h1><span>基地、前哨和社区</span></h1>\n'
+                    + '<div>' + parasExportHtml(doc.baseParas) + '</div>\n'
+                    + customBlocksExportHtml('base-after')
+                    + '<h1><span>入口和出口</span></h1>\n'
+                    + '<h3><span>入口</span></h3>\n'
+                    + '<em>' + escHtml(doc.entryIntro) + '</em>\n'
+                    + '<ul>' + entryHtml + '</ul>\n'
+                    + '<h3><span>出口</span></h3>\n'
+                    + '<em>' + escHtml(doc.exitIntro) + '</em>\n'
+                    + '<ul>' + exitHtml + '</ul>\n';
+            }
+
+            // 基于完整 levels.html 骨架导出（导航栏/登录/header/head 全部资源）
+            function buildFullFromTemplate(rid) {
+                if (!rawTemplate) return '';
+                var p = new DOMParser().parseFromString(rawTemplate, 'text/html');
+                var code = ratingCode();
+
+                if (p.title !== undefined) p.title = doc.titleName + ' - The Backrooms 中文维基';
+
+                // 文档类型标识（levels/item/entity/phenomenon）
+                if (p.head) {
+                    var typeMeta = p.createElement('meta');
+                    typeMeta.setAttribute('name', 'doc-type');
+                    typeMeta.setAttribute('content', doc.type);
+                    p.head.appendChild(typeMeta);
+                    // 评分控件样式
+                    var st = p.createElement('style');
+                    st.textContent = RATING_WIDGET_CSS;
+                    p.head.appendChild(st);
+                }
+
+                var pt = p.getElementById('page-title');
+                if (pt) pt.innerHTML = escHtml(doc.titlePrefix) + ' - &ldquo;<strong>' + escHtml(doc.titleName) + '</strong>&rdquo;';
+
+                var bc = p.getElementById('breadcrumbs');
+                if (bc) bc.innerHTML = '<a>' + escHtml(doc.crumb1) + '</a> &raquo; ' + escHtml(doc.crumb2);
+
+                // 站点 logo 链接固定为 /backrooms/
+                var h1a = p.querySelector('#header h1 a');
+                if (h1a) h1a.setAttribute('href', '/backrooms/');
+
+                var pc = p.getElementById('page-content');
+                var sdEl = pc ? pc.querySelector('.sd-container') : null;
+                if (sdEl) {
+                    // 页顶区块（如免责声明）：插到生存难度之前
+                    if (doc.customBlocks.length) {
+                        var frag = p.createDocumentFragment();
+                        var tmp = p.createElement('div');
+                        tmp.innerHTML = customBlocksExportHtml();
+                        while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+                        sdEl.parentNode.insertBefore(frag, sdEl);
+                    }
+                    // 评分控件：免责声明（页顶区块）下方、生存难度上方
+                    var tmpR = p.createElement('div');
+                    tmpR.innerHTML = ratingWidgetExportHtml(rid, code);
+                    while (tmpR.firstChild) sdEl.parentNode.insertBefore(tmpR.firstChild, sdEl);
+                    // 生存难度
+                    sdEl.innerHTML = sdExportHtml();
+                    // 移除其后所有模板残留（使用说明等），插入用户正文
+                    var cursor = sdEl.nextSibling;
+                    while (cursor) {
+                        var nx = cursor.nextSibling;
+                        pc.removeChild(cursor);
+                        cursor = nx;
+                    }
+                    var tmp2 = p.createElement('div');
+                    tmp2.innerHTML = userBodyExportHtml();
+                    while (tmp2.firstChild) pc.appendChild(tmp2.firstChild);
+                    // 文档尾部自定义代码（HTML/JS）
+                    if (doc.footerCode) {
+                        var tmp3 = p.createElement('div');
+                        tmp3.innerHTML = absolutizeHtml(doc.footerCode);
+                        while (tmp3.firstChild) pc.appendChild(tmp3.firstChild);
+                    }
+                }
+
+                // 评分控件脚本（放到 body 末尾）
+                if (p.body) {
+                    var sc = p.createElement('script');
+                    sc.textContent = RATING_WIDGET_JS;
+                    p.body.appendChild(sc);
+                }
+
+                return '<!DOCTYPE html>\n' + absolutizeHtml(p.documentElement.outerHTML);
+            }
+
+            function buildFullHtml(rid) {
+                if (rawTemplate) {
+                    var full = buildFullFromTemplate(rid);
+                    if (full) return full;
+                }
+                var code = ratingCode();
+                // 未加载模板时的简化版
+                return '<!DOCTYPE html>\n'
+                    + '<html lang="zh-CN">\n<head>\n'
+                    + '<meta charset="UTF-8">\n'
+                    + '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+                    + '<title>' + escHtml(doc.titleName) + ' - The Backrooms 中文维基</title>\n'
+                    + '<meta name="doc-type" content="' + escHtml(doc.type) + '">\n'
+                    + '<link rel="icon" href="' + toAbsUrl('/assets/ziyit.png') + '" type="image/x-icon">\n'
+                    + '<script src="' + toAbsUrl('/assets/f12check.js') + '"><\/script>\n'
+                    + '<script src="' + toAbsUrl('/assets/ziyit_api.js') + '"><\/script>\n'
+                    + '<script src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/init.combined.js"><\/script>\n'
+                    + '<script src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/WIKIDOT.combined.js"><\/script>\n'
+                    + '<script src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--modules/js/list/ListPagesModule.js"><\/script>\n'
+                    + '<script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""><\/script>\n'
+                    + '<style>\n'
+                    + '@import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);\n'
+                    + '@import url(https://cdn.scpwiki.com/theme/en/black-highlighter/css/min/normalize.min.css);\n'
+                    + '@import url("https://github.backroomswiki.cn/New_BHL/css/liminal.css");\n'
+                    + '@import url("https://github.backroomswiki.cn/New_BHL/css/sidebar.css");\n'
+                    + '@import url(https://scp-wiki.wdfiles.com/local--code/info%3Astyle/1);\n'
+                    + '@import url("https://deckdevteam.github.io/frontend-components-bak/component-level-class/main.css");\n'
+                    + '.sd-container{--sd-font:Poppins,"Noto Sans SC","Noto Serif SC",sans-serif;--class-0:247,227,117;--class-1:255,201,14;--class-2:245,156,0;--class-3:249,90,0;--class-4:254,23,1;--class-5:175,6,6;--class-unknown:38,38,38;--class-habitable:26,128,111;--class-deadzone:44,13,12;--class-pending:182,182,182;--class-n-a:38,38,38;--class-amended:185,135,212;--class-omega:25,46,255;}\n'
+                    + '#main-content{max-width:860px;margin:0 auto;padding:20px 24px;}\n'
+                    + '#page-title{font-size:24px;font-weight:700;margin-bottom:6px;}\n'
+                    + '#breadcrumbs{font-size:13px;color:#777;margin-bottom:20px;}\n'
+                    + '#page-content p{line-height:1.75;}\n'
+                    + '#page-content h1{font-size:21px;border-bottom:2px solid #333;padding-bottom:4px;margin-top:28px;}\n'
+                    + '#page-content h3{font-size:16px;margin-top:16px;}\n'
+                    + '.scp-image-block{float:right;margin:0 0 14px 18px;}\n'
+                    + '.scp-image-block img{max-width:300px;width:300px;border:1px solid #ccc;display:block;}\n'
+                    + '.scp-image-caption{background:#eee;font-size:12px;padding:4px 8px;text-align:center;}\n'
+                    + RATING_WIDGET_CSS + '\n'
+                    + '</style>\n<\/head>\n<body>\n'
+                    + '<div id="main-content">\n'
+                    + '<div id="page-title">' + escHtml(doc.titlePrefix) + ' - “<strong>' + escHtml(doc.titleName) + '</strong>”</div>\n'
+                    + '<div id="breadcrumbs"><a>' + escHtml(doc.crumb1) + '</a> &raquo; ' + escHtml(doc.crumb2) + '</div>\n'
+                    + '<div id="page-content">\n'
+                    + '<span style="white-space: pre-wrap;">&#32;</span><br />\n'
+                    + customBlocksExportHtml()
+                    + ratingWidgetExportHtml(rid, code)
+                    + '<div class="lang-cn sd-container">' + sdExportHtml() + '</div>\n'
+                    + userBodyExportHtml()
+                    + absolutizeHtml(doc.footerCode.replace(/<\/script/gi, '<\\/script'))
+                    + '<script>' + RATING_WIDGET_JS + '<\/script>\n'
+                    + '</div>\n</div>\n<\/body>\n<\/html>';
+            }
+
+            /* ================= 初始化 ================= */
+            function init() {
+                parseType();
+                initPresetSelect();
+                bindEvents();
+                render();
+                // 自动尝试加载模板（通过本地服务器时生效）
+                setTimeout(loadTemplate, 300);
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+</body>
+
+</html>

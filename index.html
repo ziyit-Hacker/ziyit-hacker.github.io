@@ -1,0 +1,1514 @@
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZIYIT STUDIO - 科技 · 创造 · 无限可能</title>
+    <meta name="description" content="ZIYIT STUDIO 官方工作室 — 科技 · 创造 · 无限可能。提供人机验证服务、Release Control 系统工具、MOD/DLC 下载中心、音乐分享与 VIP 用户服务。">
+    <meta name="keywords" content="ZIYIT STUDIO,ZIYIT,工作室,人机验证,Release Control,系统工具,MOD,DLC,软件下载,VIP">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ZIYIT STUDIO">
+    <meta property="og:title" content="ZIYIT STUDIO - 科技 · 创造 · 无限可能">
+    <meta property="og:description" content="ZIYIT STUDIO 官方工作室：人机验证服务、Release Control 系统工具、MOD/DLC 下载中心、音乐分享与 VIP 用户服务。">
+    <meta property="og:url" content="https://ziyit-hacker.github.io/">
+    <meta property="og:image" content="https://ziyit-hacker.github.io/assets/ziyit.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="ZIYIT STUDIO - 科技 · 创造 · 无限可能">
+    <meta name="twitter:description" content="ZIYIT STUDIO 官方工作室：人机验证、Release Control 系统工具、MOD/DLC 下载中心、音乐分享与 VIP 用户服务。">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "ZIYIT STUDIO",
+        "url": "https://ziyit-hacker.github.io/",
+        "description": "ZIYIT STUDIO 官方工作室，提供人机验证服务、Release Control 系统工具、MOD/DLC 下载中心、音乐分享与 VIP 用户服务。",
+        "publisher": {
+            "@type": "Organization",
+            "name": "ZIYIT STUDIO",
+            "url": "https://ziyit-hacker.github.io/"
+        }
+    }
+    </script>
+    <link rel="icon" href="./assets/ziyit.png" type="image/x-icon">
+    <script src="./assets/f12check.js"></script>
+    <script src="./assets/blacklist.js"></script>
+    <script src="./assets/auto_f5.js"></script>
+    <script src="./assets/Cookie.js"></script>
+    <script src="./assets/ziyit_api.js"></script>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0;
+            list-style: none;
+        }
+
+        a {
+            text-decoration: none;
+            color: #66e656;
+        }
+
+        p {
+            color: black;
+        }
+
+        ul li {
+            display: inline-block;
+            line-height: 35px;
+        }
+
+        li a {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        li p {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .bid {
+            color: #f25767;
+        }
+
+        .tit {
+            color: black;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 5px 0;
+        }
+
+        .line {
+            width: 1px;
+            height: 12px;
+            background-color: #f3a707;
+        }
+
+        a:hover {
+            color: #ff8000;
+        }
+
+        h1 {
+            width: 100%;
+            background-color: var(--ziyit-primary-light);
+            color: var(--ziyit-text-primary);
+            text-align: center;
+            font-size: 50px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .slider {
+            width: 560px;
+            max-width: 100%;   /* 移动端防止横向溢出 */
+            height: 400px;
+            overflow: hidden;
+        }
+
+        /* 轮播图右侧内容区 */
+        .home-hero {
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+            max-width: 1200px;
+            margin: 24px auto;
+            padding: 0 16px;
+            flex-wrap: wrap;
+        }
+        .home-hero .slider {
+            flex: 0 1 560px;
+        }
+        .home-hero-side {
+            flex: 1 1 280px;
+            min-width: 260px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            padding: 24px;
+        }
+        .home-hero-side h3 {
+            margin: 0 0 12px;
+            color: var(--ziyit-primary);
+            font-size: 20px;
+        }
+        .home-hero-side p {
+            margin: 0 0 16px;
+            color: var(--ziyit-text-secondary);
+            line-height: 1.7;
+        }
+        .home-hero-links {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .home-hero-links a {
+            display: block;
+            padding: 10px 12px;
+            border-radius: 6px;
+            background: var(--ziyit-bg-hover);
+            color: var(--ziyit-text-primary);
+            text-decoration: none;
+            transition: background .2s, color .2s;
+        }
+        .home-hero-links a:hover {
+            background: var(--ziyit-primary-light);
+            color: var(--ziyit-primary);
+        }
+        @media (max-width: 768px) {
+            .home-hero-links {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .slider-wrapper {
+            width: 100%;
+            height: 320px;
+        }
+
+        .slider-wrapper img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .slider-footer {
+            height: 80px;
+            background-color: rgb(100, 67, 68);
+            padding: 12px 12px 0 12px;
+            position: relative;
+        }
+
+        .slider-footer .toggle {
+            position: absolute;
+            right: 0;
+            top: 12px;
+            display: flex;
+        }
+
+        .slider-footer .toggle button {
+            margin-right: 12px;
+            width: 28px;
+            height: 28px;
+            appearance: none;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .slider-footer .toggle button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .slider-footer p {
+            margin: 0;
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .slider-indicator {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .slider-indicator li {
+            width: 8px;
+            height: 8px;
+            margin: 4px;
+            border-radius: 50%;
+            background: #fff;
+            opacity: 0.4;
+            cursor: pointer;
+        }
+
+        .slider-indicator li.active {
+            width: 12px;
+            height: 12px;
+            opacity: 1;
+        }
+
+        footer {
+            transition: background-color 0.5s ease;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .visible {
+            display: inline-block !important;
+        }
+
+        * {
+            cursor: default !important;
+        }
+
+        .backrooms {
+            color: #8b4513;
+        }
+
+        .backrooms:hover {
+            color: #ff8000;
+        }
+    </style>
+    <style>
+        @media (max-width: 768px) {
+            .line {
+                display: none;
+            }
+
+            .service-grid {
+                flex-direction: column;
+            }
+
+            .service-grid>div {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                text-align: center;
+            }
+        }
+
+        /* 添加backrooms导航栏的颜色变量 */
+        :root {
+            --gray-monochrome: 128, 128, 128;
+            --pale-gray-monochrome: 240, 240, 240;
+            --white-monochrome: 255, 255, 255;
+            --black-monochrome: 0, 0, 0;
+            --link-color: 53, 177, 164;
+            --mono-font: 'Courier New', monospace;
+        }
+
+        /* 折叠导航栏样式 - 修改为backrooms风格 */
+        .top-bar {
+            background-color: rgb(var(--gray-monochrome));
+            padding: 0.5rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .top-bar ul {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .top-bar ul li {
+            position: relative;
+            margin: 0 0.5rem;
+        }
+
+        .top-bar ul li a {
+            color: rgb(var(--pale-gray-monochrome));
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            display: block;
+            transition: 300ms;
+            font-family: var(--mono-font);
+        }
+
+        .top-bar ul li a:hover {
+            color: rgb(var(--link-color));
+            background-color: rgb(var(--white-monochrome));
+        }
+
+        .top-bar ul li:hover {
+            color: rgb(var(--link-color));
+            background-color: rgb(var(--white-monochrome));
+        }
+
+        .top-bar ul ul {
+            display: none;
+            position: absolute;
+            background-color: rgb(var(--pale-gray-monochrome));
+            border: rgb(var(--gray-monochrome)) solid 0.2rem;
+            border-top: none;
+            padding: 0.5rem;
+            z-index: 1000;
+            min-width: 200px;
+            top: 100%;
+            left: 0;
+        }
+
+        .top-bar ul li:hover>ul {
+            display: block;
+        }
+
+        .top-bar ul ul li {
+            display: block !important;
+            margin: 0.2rem 0;
+        }
+
+        .top-bar ul ul li.hidden {
+            display: none !important;
+        }
+
+        .top-bar ul ul li a {
+            color: rgb(var(--black-monochrome));
+            padding: 0.3rem 0.5rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .top-bar ul ul li a:hover {
+            color: rgb(var(--link-color));
+            background-color: rgb(var(--white-monochrome));
+        }
+
+        /* 移动端导航栏样式 - 修改为backrooms风格 */
+        .mobile-top-bar {
+            display: none;
+            background-color: rgb(var(--gray-monochrome));
+            padding: 0.5rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .mobile-top-bar .open-menu {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .mobile-top-bar .open-menu a {
+            font-size: 24px;
+            color: rgb(var(--pale-gray-monochrome));
+            text-decoration: none;
+        }
+
+        .mobile-top-bar ul {
+            display: none;
+            background-color: rgb(var(--pale-gray-monochrome));
+            border: rgb(var(--gray-monochrome)) solid 0.2rem;
+            border-top: none;
+            padding: 0.5rem;
+            margin: 0;
+        }
+
+        .mobile-top-bar ul.active {
+            display: block;
+        }
+
+        .mobile-top-bar ul li {
+            display: block;
+            margin: 0.3rem 0;
+        }
+
+        .mobile-top-bar ul li a {
+            color: rgb(var(--black-monochrome));
+            padding: 0.3rem 0.5rem;
+            display: block;
+            text-decoration: none;
+            transition: 300ms;
+        }
+
+        .mobile-top-bar ul li a:hover {
+            color: rgb(var(--link-color));
+            background-color: rgb(var(--white-monochrome));
+        }
+
+        .mobile-top-bar ul ul {
+            display: block;
+            position: static;
+            border: none;
+            padding: 0.5rem 0 0 1rem;
+            margin: 0;
+        }
+
+        .mobile-top-bar ul ul li {
+            display: block !important;
+            margin: 0.2rem 0;
+        }
+
+        .mobile-top-bar ul ul li.hidden {
+            display: none !important;
+        }
+
+        .navMenu {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .top-bar {
+                display: none;
+            }
+
+            .mobile-top-bar {
+                display: block;
+            }
+        }
+
+        /* Cookie提示样式 */
+        .cookie-consent {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 25px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            display: none;
+            animation: slideUp 0.5s ease-out;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .cookie-consent.active {
+            display: block;
+        }
+
+        .cookie-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .cookie-text {
+            flex: 1;
+            margin-right: 30px;
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .cookie-text h3 {
+            color: #ecf0f1;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .cookie-text h4 {
+            color: #bdc3c7;
+            margin: 15px 0 10px 0;
+            font-size: 16px;
+        }
+
+        .cookie-text ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .cookie-text li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .cookie-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 150px;
+        }
+
+        .cookie-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .cookie-accept {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .cookie-accept:hover {
+            background: linear-gradient(135deg, #229954, #27ae60);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+        }
+
+        .cookie-reject {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .cookie-reject:hover {
+            background: linear-gradient(135deg, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+        }
+
+        .cookie-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: none;
+        }
+
+        .cookie-overlay.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .cookie-content {
+                flex-direction: column;
+                text-align: left;
+            }
+
+            .cookie-text {
+                margin-right: 0;
+                margin-bottom: 20px;
+                font-size: 13px;
+            }
+
+            .cookie-buttons {
+                flex-direction: row;
+                justify-content: center;
+                width: 100%;
+            }
+
+            .cookie-btn {
+                padding: 10px 20px;
+                font-size: 13px;
+                flex: 1;
+                max-width: 150px;
+            }
+
+            .cookie-text h3 {
+                font-size: 16px;
+            }
+
+            .cookie-text h4 {
+                font-size: 14px;
+            }
+        }
+
+        .cookie-btn {
+            cursor: pointer !important;
+        }
+
+        #lang {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        #languageSelect {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            padding: 12px 40px 12px 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            min-width: 120px;
+            position: relative;
+        }
+
+        #languageSelect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        #languageSelect:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+
+        #languageSelect option {
+            background: #2c3e50;
+            color: white;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        /* 自定义下拉箭头 */
+        #lang::after {
+            content: "▼";
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1001;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            #lang {
+                top: 15px;
+                right: 15px;
+            }
+
+            #languageSelect {
+                padding: 10px 35px 10px 15px;
+                font-size: 14px;
+                min-width: 100px;
+            }
+
+            #lang::after {
+                right: 12px;
+                font-size: 10px;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes languageSwitch {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .language-switch-animation {
+            animation: languageSwitch 0.3s ease;
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="./assets/ziyit-theme.css">
+</head>
+
+<body>
+    <script>
+        function Development() {
+            const devLink = document.getElementById('development');
+            if (devLink) {
+                devLink.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    disableAntidebug();
+
+                    setTimeout(() => {
+                        const event = new KeyboardEvent('keydown', {
+                            key: 'F12',
+                            code: 'F12',
+                            keyCode: 123,
+                            which: 123,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        document.dispatchEvent(event);
+
+                        setTimeout(() => {
+                            enableAntidebug();
+                        }, 1000);
+
+                    }, 100);
+
+                    alert('开发者工具已临时启用，请在1秒内按F12');
+                });
+            }
+        }
+        document.addEventListener('DOMContentLoaded', Development);
+    </script>
+    <h1>ZIYIT主页</h1>
+
+    <hr>
+    <!-- ===== 导航栏（DESIGN.md §4.6，参照 ui-test.html site-nav 规范） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='./download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='./move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="./move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="./search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="./music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="./Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="./Human_verification">人机验证</a></li>
+                        <li class="nav-item" data-role="all"><a href="./guide">在线客服</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="./developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="./backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="./music/admin">后台管理</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="#" id="development">开发者工具</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="./ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="./backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="admin"><p><span class="bid">未开发</span>，敬请期待</p></li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="./user" id="userActionLink">用户中心</a></li>
+                <li><a href="./user/" id="loginLink">登录</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="home-hero">
+        <div class="slider">
+            <div class="slider-wrapper">
+                <img src="./images/slider09.jpg" alt="ZIYIT STUDIO 首页轮播图" />
+            </div>
+            <div class="slider-footer">
+                <p>ZIYIT添加学习界面。</p>
+                <ul class="slider-indicator">
+                    <li class="active"></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <div class="toggle">
+                        <button class="prev">&lt;</button>
+                        <button class="next">&gt;</button>
+                    </div>
+            </div>
+        </div>
+        <aside class="home-hero-side">
+            <h3>欢迎来到 ZIYIT STUDIO</h3>
+            <p>聚合工具、资源与知识的个人站点：下载、搜索、音乐、学习与翻译一站式体验。</p>
+            <ul class="home-hero-links">
+                <li><a href="./download/">下载中心</a></li>
+                <li><a href="./music/">音乐分享</a></li>
+                <li><a href="./search">全站搜索</a></li>
+                <li><a href="./design/ui-test">UI 设计体系</a></li>
+                <li><a href="./guide">在线客服</a></li>
+            </ul>
+        </aside>
+    </div>
+
+    <div style="margin: 30px auto; max-width: 1000px;" id="product">
+        <h2 style="text-align: center; margin-bottom: 20px;">我们的产品与服务</h2>
+        <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+            <div
+                style="width: 300px; background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); padding: 20px; margin: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.06);">
+                <h3 style="color: var(--ziyit-primary)">安全防护</h3>
+                <p style="color: var(--ziyit-text-secondary);">专业级病毒防护解决方案，保障您的数字安全</p>
+            </div>
+            <div
+                style="width: 300px; background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); padding: 20px; margin: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.06);">
+                <h3 style="color: var(--ziyit-primary);">学习资源</h3>
+                <p style="color: var(--ziyit-text-secondary);">丰富的技术学习资料，助力个人成长</p>
+            </div>
+            <div
+                style="width: 300px; background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); padding: 20px; margin: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.06);">
+                <h3 style="color: var(--ziyit-primary);">开发者工具</h3>
+                <p style="color: var(--ziyit-text-secondary);">高效开发工具套件，提升工作效率</p>
+            </div>
+        </div>
+    </div>
+
+    <footer style="background: var(--ziyit-bg-card); border-top: 1px solid var(--ziyit-border); padding: 20px; margin-top: 50px;">
+        <div style="max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap;">
+            <div style="width: 300px; margin-bottom: 20px;">
+                <h3 style="color: var(--ziyit-text-primary);">关于我们</h3>
+                <p style="color: var(--ziyit-text-secondary);">ZIYIT致力于提供优质的技术服务和解决方案</p>
+            </div>
+            <div style="width: 300px; margin-bottom: 20px;">
+                <h3 style="color: var(--ziyit-text-primary);">联系方式</h3>
+                <a href="mailto:ziyitstudio@qq.com" style="color: var(--ziyit-text-secondary);">邮箱: ziyitstudio@qq.com</a>
+                <br>
+                <a href="tel:13258227085" style="color: var(--ziyit-text-secondary);">手机号: 13258227085</a>
+            </div>
+            <div style="width: 300px; margin-bottom: 20px;">
+                <h3 style="color: var(--ziyit-text-primary);">关注我们</h3>
+                <a href="https://space.bilibili.com/3546981356013833"
+                    style="color: var(--ziyit-primary); margin-right: 10px;">哔哩哔哩</a>
+                <p style="color: var(--ziyit-primary);">QQ: 3950140506</p>
+            </div>
+        </div>
+        <p class="tit">&copy;2026 ZIYIT <strong>版权所有，侵权必究</strong></p>
+    </footer>
+
+    <!-- Cookie同意提示 -->
+    <div class="cookie-overlay" id="cookieOverlay"></div>
+    <div class="cookie-consent" id="cookieConsent">
+        <div class="cookie-content">
+            <div class="cookie-text">
+                <h3>🍪 Cookie设置</h3>
+                <p>我们使用Cookie来提升您的浏览体验。选择"接受"即表示您同意使用所有Cookie。</p>
+                <p style="font-size: 14px; color: #ccc; margin-top: 10px;">
+                    <strong>拒绝Cookie将导致部分功能无法使用。</strong> 您可以在浏览器设置中随时更改此选择。
+                </p>
+            </div>
+            <div class="cookie-buttons">
+                <button class="cookie-btn cookie-accept" id="cookieAccept">接受</button>
+                <button class="cookie-btn cookie-reject" id="cookieReject">拒绝</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        // Cookie同意提示功能
+        function initCookieConsent() {
+            const cookieConsent = document.getElementById('cookieConsent');
+            const cookieOverlay = document.getElementById('cookieOverlay');
+            const cookieAccept = document.getElementById('cookieAccept');
+            const cookieReject = document.getElementById('cookieReject');
+
+            // 检查元素是否存在
+            if (!cookieConsent || !cookieOverlay || !cookieAccept || !cookieReject) {
+                console.error('Cookie提示元素未找到');
+                return;
+            }
+
+            // 检查是否已经做出Cookie选择
+            const cookieChoice = localStorage.getItem('Cookie');
+
+            if (cookieChoice === null) {
+                // 如果还没有选择，显示Cookie提示
+                setTimeout(() => {
+                    cookieConsent.classList.add('active');
+                    cookieOverlay.classList.add('active');
+
+                    // 禁用页面其他内容，但确保Cookie按钮可以点击
+                    document.body.style.overflow = 'hidden';
+                    document.querySelectorAll('a, button, input, select, textarea').forEach(element => {
+                        if (!element.classList.contains('cookie-btn')) {
+                            element.style.pointerEvents = 'none';
+                        }
+                    });
+                }, 1000);
+            } else {
+                // 如果已经选择，根据选择处理
+                handleCookieChoice(cookieChoice);
+            }
+
+            // 接受Cookie
+            cookieAccept.addEventListener('click', function (e) {
+                e.stopPropagation();
+                console.log('接受按钮被点击');
+                // 使用Cookie管理器设置状态
+                if (window.cookieManager) {
+                    window.cookieManager.setCookieStatus(true);
+                } else {
+                    localStorage.setItem('Cookie', 'True');
+                }
+                hideCookieConsent();
+            });
+
+            // 拒绝Cookie
+            cookieReject.addEventListener('click', function (e) {
+                e.stopPropagation();
+                console.log('拒绝按钮被点击');
+                // 使用Cookie管理器设置状态
+                if (window.cookieManager) {
+                    window.cookieManager.setCookieStatus(false);
+                } else {
+                    localStorage.setItem('Cookie', 'False');
+                }
+                hideCookieConsent();
+            });
+
+            function hideCookieConsent() {
+                cookieConsent.classList.remove('active');
+                cookieOverlay.classList.remove('active');
+
+                // 恢复页面功能
+                document.body.style.overflow = '';
+                document.querySelectorAll('a, button, input, select, textarea').forEach(element => {
+                    element.style.pointerEvents = '';
+                });
+            }
+
+            function handleCookieChoice(choice) {
+                // 使用Cookie管理器处理选择
+                if (window.cookieManager) {
+                    window.cookieManager.setCookieStatus(choice === 'True');
+                }
+            }
+        }
+
+        // 确保DOM完全加载后再初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCookieConsent);
+        } else {
+            // DOM已经加载完成
+            initCookieConsent();
+        }
+    </script>
+
+    <script>
+        const data = [
+            { url: './images/slider09.jpg', title: 'ZIYIT添加学习界面。', color: 'rgb(135, 206, 235)', link: '' },
+            { url: './images/slider07.jpg', title: '我的世界_寒坤的哔哩哔哩是"我的世界寒坤"', color: 'rgb(63, 44, 46)', link: 'https://space.bilibili.com/3546981356013833' },
+            { url: './images/slider01.jpg', title: '登录界面大改，使用前必须登录', color: 'rgb(0, 120, 212)', link: '' },
+            { url: './images/slider02.jpg', title: 'Backroom Wikidot版详细Wiki', color: 'rgb(72, 69, 60)', link: './backrooms/' },
+            { url: './images/slider03.jpg', title: '修复了注册页面的bug', color: 'rgb(67, 190, 255)', link: '' },
+            { url: './images/asfl.png', title: '广告位招租', color: 'rgb(0, 0, 0)', link: 'mailto:ziyitstudio@qq.com' },
+        ]
+        const img = document.querySelector('.slider-wrapper img')
+        const p = document.querySelector('.slider-footer p')
+        const footer = document.querySelector('.slider-footer')
+        const next = document.querySelector('.next')
+        let i = 0
+        next.addEventListener('click', function () {
+            i++
+            i = i % data.length
+            toggle()
+        })
+        const prev = document.querySelector('.prev')
+        prev.addEventListener('click', function () {
+            i--
+            if (i < 0) {
+                i = data.length - 1
+            }
+            toggle()
+        })
+        // 在toggle函数中添加点击事件
+        function toggle() {
+            img.src = data[i].url
+            p.innerHTML = data[i].title
+            footer.style.backgroundColor = data[i].color
+            document.querySelector('.slider-indicator .active').classList.remove('active')
+            document.querySelector(`.slider-indicator li:nth-child(${i + 1})`).classList.add('active')
+
+            // 添加点击跳转功能
+            img.onclick = function () {
+                if (data[i].link) {
+                    window.open(data[i].link, '_blank')
+                }
+            }
+        }
+
+        let timerId = setInterval(function () {
+            next.click()
+        }, 2500)
+        const slider = document.querySelector('.slider')
+        slider.addEventListener('mouseenter', function () {
+            clearInterval(timerId)
+        })
+        slider.addEventListener('mouseleave', function () {
+            if (timerId) clearInterval(timerId)
+            timerId = setInterval(function () {
+                next.click()
+            }, 2500)
+        })
+        const lis = document.querySelectorAll('.slider-indicator li')
+        lis.forEach(function (li, index) {
+            li.addEventListener('click', function () {
+                i = index
+                toggle()
+            })
+        })
+    </script>
+
+    <script>
+        // 移动端导航栏折叠功能：点击一次 ≡ 展开，再点击一次 ≡ 折叠；默认折叠，不自动折叠
+        document.addEventListener('DOMContentLoaded', function () {
+            const openMenuLink = document.querySelector('.mobile-top-bar .open-menu a');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            if (openMenuLink && mobileMenu) {
+                // ≡ 恒为菜单开关，不随登录态变化
+                openMenuLink.textContent = '≡';
+                openMenuLink.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    mobileMenu.classList.toggle('active');
+                });
+            }
+
+            // 移动端子菜单折叠功能
+            const mobileMenuItems = document.querySelectorAll('#mobile-menu > li');
+            mobileMenuItems.forEach(item => {
+                const subMenu = item.querySelector('ul');
+                if (subMenu) {
+                    // 为有子菜单的项添加点击事件
+                    item.addEventListener('click', function (e) {
+                        if (e.target.tagName === 'A') return; // 如果是链接点击，不阻止
+                        e.stopPropagation();
+                        subMenu.style.display = subMenu.style.display === 'block' ? 'none' : 'block';
+                    });
+                }
+            });
+        });
+
+        toggle()
+    </script>
+
+    <script>
+        // 从cookie获取用户信息的函数
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+            return null;
+        }
+
+        // 获取当前用户认证信息
+        function getCurrentUser() {
+            // 优先从cookie获取
+            const authToken = getCookie('authToken');
+            if (authToken) {
+                return authToken;
+            }
+            // 如果cookie中没有，尝试从localStorage获取（兼容旧版本）
+            return localStorage.getItem('authToken');
+        }
+
+        // 检查用户是否登录（优先以本地凭据 ziyit_cred 为准，兼容旧 authToken）
+        function isLoggedIn() {
+            return !!(getCurrentUser() || (ZIYIT_API.getCredentials && ZIYIT_API.getCredentials()));
+        }
+
+        // 检查黑名单函数
+        async function checkBlacklist(authToken) {
+            // 这里应该调用blacklist.js中的检查逻辑
+            // 暂时返回false，实际应该与blacklist.js集成
+            return false;
+        }
+
+        async function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const loginLink = document.getElementById('loginLink');
+            const mobileLoginLink = document.getElementById('mobileLoginLink');
+            const slider = document.querySelector('.slider');
+            const lines = document.querySelectorAll('.line');
+
+            function showLoggedOut() {
+                navItems.forEach(item => {
+                    if (item.textContent.includes('登录')) {
+                        item.classList.add('visible');
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                        item.classList.remove('visible');
+                    }
+                });
+                lines.forEach(line => line.style.display = 'none');
+                loginLink.style.display = 'inline-block';
+                if (mobileLoginLink) mobileLoginLink.style.display = 'inline-block';
+                if (document.getElementById('userActionLink')) document.getElementById('userActionLink').style.display = 'none';
+                if (document.getElementById('mobileUserActionLink')) document.getElementById('mobileUserActionLink').style.display = 'none';
+            }
+
+            const authToken = getCurrentUser();
+            const hasCred = !!(ZIYIT_API.getCredentials && ZIYIT_API.getCredentials());
+            if (!authToken && !hasCred) {
+                showLoggedOut();
+                return;
+            }
+
+            // 实时验证登录态：旧 Cookie 中的无效 token/凭据立即清理，避免功能区块与登录同时出现
+            let meUser = null;
+            let authError = null;
+            try {
+                meUser = await ZIYIT_API.currentUser();
+            } catch (e) {
+                authError = e;
+            }
+            if (!meUser) {
+                const invalidAuth = authError && authError.status === 401;
+                if (invalidAuth) {
+                    ZIYIT_API.clearToken();
+                } else if (authToken && !hasCred) {
+                    ZIYIT_API.clearToken();
+                }
+                showLoggedOut();
+                return;
+            }
+            if (document.getElementById('userActionLink')) document.getElementById('userActionLink').style.display = 'block';
+            if (document.getElementById('mobileUserActionLink')) document.getElementById('mobileUserActionLink').style.display = 'block';
+
+            const username = meUser.username || '';
+
+            const ut = parseInt(localStorage.getItem('ut')) || 0;
+
+            if (ut > 240 && (username === 'cache' || username === 'temp')) {
+                localStorage.setItem('ut', 1024);
+                localStorage.removeItem('authToken');
+                location.reload();
+                return;
+            }
+
+            if (username === 'cache' || username === 'temp') {
+                alert('此账号为临时账号，体验时间为3.75分钟')
+                const timer = setInterval(() => {
+                    let currentUt = parseInt(localStorage.getItem('ut')) || 0;
+
+                    if (ut > 240) {
+                        if (currentUt > 240) {
+                            currentUt -= 1;
+                            localStorage.setItem('ut', currentUt);
+                            if (currentUt === 240) {
+                                localStorage.setItem('ut', 0);
+                                clearInterval(timer);
+                            }
+                        }
+                    } else {
+                        currentUt += 1;
+                        localStorage.setItem('ut', currentUt);
+                        if (currentUt + 1 > 240) {
+                            alert('体验时间已结束');
+                            localStorage.removeItem('authToken');
+                            location.reload();
+                            clearInterval(timer);
+                        }
+                    }
+                }, 1000);
+            } else {
+                localStorage.removeItem('ut');
+            }
+
+            loginLink.style.display = 'none';
+            if (mobileLoginLink) mobileLoginLink.style.display = 'none';
+
+            if (!authToken) {
+                navItems.forEach(item => item.style.display = 'none');
+                lines.forEach(line => line.style.display = 'none');
+                loginLink.style.display = 'inline-block';
+                if (mobileLoginLink) mobileLoginLink.style.display = 'inline-block';
+                return;
+            }
+
+            const isBlacklisted = await checkBlacklist(authToken);
+
+            if (isBlacklisted) {
+                document.querySelectorAll('#navMenu li').forEach(item => {
+                    const isVirusDb = item.querySelector('a[href=".\\move\\mod"]');
+                    item.style.display = isVirusDb ? 'inline-block' : 'none';
+                });
+
+                document.querySelectorAll('#mobile-menu li').forEach(item => {
+                    const isVirusDb = item.querySelector('a[href=".\\move\\mod"]');
+                    item.style.display = isVirusDb ? 'block' : 'none';
+                });
+
+                loginLink.style.display = 'none';
+                if (mobileLoginLink) mobileLoginLink.style.display = 'none';
+                if (slider) slider.style.display = 'none';
+                document.querySelectorAll('footer').forEach(footer => footer.style.display = 'none');
+                document.getElementById('product').style.display = 'none';
+
+                addBlacklistNotice();
+                return;
+            }
+
+            // 管理员身份缓存：null=未检测，0=非管理员，1-4=管理员等级
+            // （避免每 250ms 轮询都请求后端 /admin/me）
+            let adminLevelCache = null;
+
+            setInterval(() => {
+                if (!getCurrentUser()) {
+                    adminLevelCache = null;
+                    navItems.forEach(item => {
+                        if (item.textContent.includes('登录')) {
+                            item.classList.add('visible');
+                            item.classList.remove('hidden');
+                        } else {
+                            item.classList.add('hidden');
+                            item.classList.remove('visible');
+                        }
+                    });
+                    return;
+                }
+
+                ZIYIT_API.currentUser().then(function (user) {
+                    const isVip = ZIYIT_API.isVip(user);
+                    const uname = user.username || '';
+                    // 管理员判定：首次登录时检测一次并缓存；非管理员记 0 不再重试
+                    let isAdmin = adminLevelCache > 0;
+                    if (adminLevelCache === null) {
+                        isAdmin = false;
+                        ZIYIT_API.adminMe().then(function (me) {
+                            adminLevelCache = (me && me.level) ? Number(me.level) : 0;
+                        }).catch(function () {
+                            adminLevelCache = 0;
+                        });
+                    }
+                    loginLink.style.display = 'none';
+                    if (mobileLoginLink) mobileLoginLink.style.display = 'none';
+
+                    navItems.forEach(item => {
+                        const role = item.getAttribute('data-role');
+
+                        if (uname === 'Minecraft_zy227') {
+                            // 超管：所有后台/开发者入口全部可见
+                            if (role === 'all' || role === 'admin' || role === 'adminstr') {
+                                item.classList.add('visible');
+                                item.classList.remove('hidden');
+                            } else {
+                                item.classList.add('hidden');
+                                item.classList.remove('visible');
+                            }
+                        } else {
+                            // 普通用户 / VIP / 管理员：
+                            // - admin 角色（开发者选项等）：VIP 或任意等级管理员可见
+                            // - adminstr 角色（后台管理/开发者工具）：仅管理员可见
+                            if (role === 'all' ||
+                                ((isVip || isAdmin) && role === 'admin') ||
+                                (isAdmin && role === 'adminstr') ||
+                                (!isVip && role === 'user')) {
+                                item.classList.add('visible');
+                                item.classList.remove('hidden');
+                            } else {
+                                item.classList.add('hidden');
+                                item.classList.remove('visible');
+                            }
+                        }
+
+                        const adminstrElements = item.querySelectorAll('[data-role="adminstr"]');
+                        adminstrElements.forEach(element => {
+                            if (uname === 'Minecraft_zy227' || isAdmin) {
+                                element.classList.add('visible');
+                                element.classList.remove('hidden');
+                            } else {
+                                element.classList.add('hidden');
+                                element.classList.remove('visible');
+                            }
+                        });
+                    });
+
+                    const mobileAdminstrElements = document.querySelectorAll('#mobile-menu [data-role="adminstr"]');
+                    mobileAdminstrElements.forEach(element => {
+                        if (uname === 'Minecraft_zy227' || isAdmin) {
+                            element.classList.add('visible');
+                            element.classList.remove('hidden');
+                        } else {
+                            element.classList.add('hidden');
+                            element.classList.remove('visible');
+                        }
+                    });
+                }).catch(function () {
+                    // 轮询时发现登录态失效：清理残留的无效 token（无凭据时）
+                    if (getCurrentUser() && !(ZIYIT_API.getCredentials && ZIYIT_API.getCredentials())) {
+                        ZIYIT_API.clearToken();
+                    }
+                    loginLink.style.display = 'inline-block';
+                    if (mobileLoginLink) mobileLoginLink.style.display = 'inline-block';
+                });
+            }, 250);
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+
+    <!-- <script>
+        // 广告数据列表 正常广告ad开头，广告位招租asfl
+        const adsData = [
+            { img: 'images/asfl.png', title: '广告位招租', link: 'mailto:ziyitstudio@qq.com' },
+            // 可以添加更多广告数据
+        ];
+
+        const MAX_AD_DISPLAY = 5; // 每日最大广告显示次数
+        let adDisplayCount = 0; // 当前广告显示计数
+        let currentAd = null; // 当前显示的广告
+        let shakeCount = 0; // 摇动计数
+        let adTimer = null; // 广告计时器
+
+        // 显示广告
+        function showAd() {
+            const isMobile = window.innerWidth <= 768; // 使用屏幕宽度判断
+            
+            if (!isMobile || adDisplayCount >= MAX_AD_DISPLAY) return;
+            
+            currentAd = getRandomAd();
+            adDisplayCount++;
+            
+            // 创建广告层
+            const adLayer = document.createElement('div');
+            adLayer.id = 'ad-layer';
+            adLayer.style.position = 'fixed';
+            adLayer.style.top = '0';
+            adLayer.style.left = '0';
+            adLayer.style.width = '100%';
+            adLayer.style.height = '100%';
+            adLayer.style.zIndex = '9999';
+            adLayer.style.backgroundColor = '#000';
+            adLayer.style.display = 'flex';
+            adLayer.style.justifyContent = 'center';
+            adLayer.style.alignItems = 'center';
+            
+            // 检查是否是视频广告
+            const isVideo = currentAd.img.endsWith('.mp4');
+            
+            if (isVideo) {
+                // 创建视频元素
+                const video = document.createElement('video');
+                video.src = currentAd.img;
+                video.style.maxWidth = '100%';
+                video.style.maxHeight = '100%';
+                video.controls = false;
+                video.autoplay = true;
+                video.loop = false;
+                video.muted = true; // 默认静音
+                
+                // 点击视频跳转
+                video.addEventListener('click', function() {
+                    window.location.href = currentAd.link;
+                    document.body.removeChild(adLayer);
+                    window.removeEventListener('devicemotion', handleShake);
+                    clearTimeout(adTimer);
+                });
+                
+                // 视频结束处理
+                video.addEventListener('ended', function() {
+                    window.location.href = currentAd.link;
+                    document.body.removeChild(adLayer);
+                    window.removeEventListener('devicemotion', handleShake);
+                    clearTimeout(adTimer);
+                });
+                
+                adLayer.appendChild(video);
+            } else {
+                // 创建图片广告
+                const adImgContainer = document.createElement('div');
+                adImgContainer.style.maxWidth = '100%';
+                adImgContainer.style.maxHeight = '100%';
+                
+                const adImg = document.createElement('img');
+                adImg.src = currentAd.img;
+                adImg.style.maxWidth = '100%';
+                adImg.style.maxHeight = '100%';
+                adImg.style.objectFit = 'contain';
+                
+                adImg.addEventListener('click', function() {
+                    window.location.href = currentAd.link;
+                    document.body.removeChild(adLayer);
+                    window.removeEventListener('devicemotion', handleShake);
+                    clearTimeout(adTimer);
+                });
+                
+                adImgContainer.appendChild(adImg);
+                adLayer.appendChild(adImgContainer);
+            }
+            
+            // 创建跳过按钮
+            const skipBtn = document.createElement('button');
+            skipBtn.id = 'skip-ad-btn';
+            skipBtn.textContent = '跳过广告';
+            skipBtn.style.position = 'absolute';
+            skipBtn.style.top = '20px';
+            skipBtn.style.right = '20px';
+            skipBtn.style.padding = '10px 20px';
+            skipBtn.style.backgroundColor = '#ff0000';
+            skipBtn.style.color = '#fff';
+            skipBtn.style.border = 'none';
+            skipBtn.style.borderRadius = '5px';
+            skipBtn.style.cursor = 'not-allowed';
+            skipBtn.disabled = true;
+            
+            skipBtn.addEventListener('click', handleSkipAd);
+            
+            adLayer.appendChild(skipBtn);
+            document.body.appendChild(adLayer);
+            
+            // 15秒后自动跳转
+            adTimer = setTimeout(() => {
+                if (shakeCount < 10) {
+                    window.location.href = currentAd.link;
+                }
+            }, 15000);
+            
+            window.addEventListener('devicemotion', handleShake);
+        }
+    </script> -->
+
+    <script>
+        // 语言切换功能
+        function changeLanguage(lang) {
+            const select = document.getElementById('languageSelect');
+
+            // 添加动画效果
+            select.classList.add('language-switch-animation');
+            setTimeout(() => {
+                select.classList.remove('language-switch-animation');
+            }, 300);
+
+            if (lang === './') {
+                alert('当前已是简体中文页面');
+            } else if (lang === './ikun/') {
+                window.location.href = lang;
+            }
+        }
+
+        // 页面加载时设置当前语言
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentPath = window.location.pathname;
+            const select = document.getElementById('languageSelect');
+
+            // 根据当前路径设置选中状态
+            if (currentPath.includes('/ikun/')) {
+                select.value = './ikun/';
+            } else {
+                select.value = './';
+            }
+        });
+    </script>
+<script src="./assets/ziyit-theme.js"></script>
+</body>
+
+</html>

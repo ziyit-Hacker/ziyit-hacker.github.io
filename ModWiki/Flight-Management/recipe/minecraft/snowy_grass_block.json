@@ -1,0 +1,14 @@
+{
+    "type": "crafting_shapeless",
+    "category": "miscellaneous",
+    "group": "snowy grass block",
+    "ingredients": [
+        "flyconfig:metal_scrap",
+        "flyconfig:synthetic_motoroil"
+    ],
+    "result": {
+        "id": "flyconfig:snowy_grass_block",
+        "count": 1
+    },
+    "show_notification": true
+}

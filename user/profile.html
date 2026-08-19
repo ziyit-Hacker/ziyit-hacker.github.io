@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户信息 - ZIYIT</title>
+    <meta name="description" content="ZIYIT 个人账户信息与登录记录管理。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/profile.html">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: default !important;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--ziyit-primary);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: var(--ziyit-bg);
+        }
+
+        .form-container {
+            max-width: 520px;
+            margin: 20px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .back-link {
+            display: block;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .info-card {
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--ziyit-border-light);
+            font-size: 14px;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--ziyit-text-secondary);
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .info-value.green {
+            color: var(--ziyit-success);
+        }
+
+        .info-value.red {
+            color: var(--ziyit-danger);
+        }
+
+        .verify-btn {
+            background: var(--ziyit-primary);
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .verify-btn:hover {
+            background: var(--ziyit-primary-dark);
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--ziyit-border);
+            padding-bottom: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
+
+        input {
+            padding: 12px 15px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 4px;
+            background-color: var(--ziyit-bg-card);
+            font-size: 14px;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+            color: var(--ziyit-text-primary);
+            margin-bottom: 10px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--ziyit-primary);
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.3);
+        }
+
+        button {
+            background-color: var(--ziyit-primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        button:disabled {
+            background-color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .result.error {
+            color: var(--ziyit-danger);
+        }
+
+        .result.success {
+            color: var(--ziyit-success);
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                width: 90%;
+                padding: 16px;
+            }
+
+            input,
+            button {
+                font-size: 16px;
+            }
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+</head>
+
+<body>
+    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <h1>用户信息</h1>
+        <a href="javascript:history.back()" class="back-link">返回</a>
+
+        <div class="info-card" id="infoCard">
+            <div class="info-row"><span class="info-label">用户ID</span><span class="info-value" id="infoUserId">-</span></div>
+            <div class="info-row"><span class="info-label">用户名</span><span class="info-value" id="infoUsername"><span class="spinner-inline"></span></span></div>
+            <div class="info-row"><span class="info-label">用户类型</span><span class="info-value" id="infoType">-</span></div>
+            <div class="info-row"><span class="info-label">注册时间</span><span class="info-value" id="infoRegisterTime">-</span></div>
+            <div class="info-row"><span class="info-label">最后登录</span><span class="info-value" id="infoLastLogin">-</span></div>
+            <div class="info-row"><span class="info-label">修改密码时间</span><span class="info-value" id="infoPasswordChanged">-</span></div>
+            <div class="info-row"><span class="info-label">邮箱</span><span class="info-value" id="infoEmail">-</span></div>
+            <div class="info-row"><span class="info-label">邮箱验证<span id="verifyArea"></span></span><span class="info-value" id="infoEmailVerify">-</span></div>
+        </div>
+
+        <div class="section">
+            <h2>登录记录</h2>
+            <div id="loginHistoryArea" style="font-size: 13px;">
+                <div class="ziyit-loading">
+                    <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                    <div class="ziyit-loader">
+                        <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                        <div class="loader-bar"><div class="loader-fill"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>IP 封禁管理</h2>
+            <div id="ipManageArea" style="font-size: 13px;"></div>
+        </div>
+
+        <div class="section">
+            <h2>修改用户名</h2>
+            <input type="text" id="newUsername" maxlength="15" autocomplete="off" placeholder="输入新用户名">
+            <button id="usernameBtn" type="button">修改用户名</button>
+            <div class="result" id="usernameResult"></div>
+        </div>
+
+        <div class="section">
+            <h2>修改邮箱</h2>
+            <input type="email" id="newEmail" maxlength="100" autocomplete="off" placeholder="输入新邮箱">
+            <button id="emailBtn" type="button">修改邮箱</button>
+            <div class="result" id="emailResult"></div>
+        </div>
+
+        <div class="section">
+            <h2>修改密码</h2>
+            <input type="password" id="oldPassword" autocomplete="off" placeholder="原密码">
+            <input type="password" id="newPassword" autocomplete="off" placeholder="新密码">
+            <input type="password" id="confirmPassword" autocomplete="off" placeholder="确认新密码">
+            <button id="passwordBtn" type="button">修改密码</button>
+            <div class="result" id="passwordResult"></div>
+        </div>
+
+        <div class="section">
+            <h2>注销账号</h2>
+            <div id="deletionArea">
+                <p style="font-size: 13px; color: var(--ziyit-text-secondary); margin: 0 0 10px 0;">申请注销后进入 15 天宽限期，期间可随时取消；到期后账号将被删除。注销需要邮箱已验证。</p>
+                <button id="deletionBtn" type="button" style="background: var(--ziyit-danger);">申请注销</button>
+            </div>
+            <div class="result" id="deletionResult"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!ZIYIT_API.getToken()) {
+                alert('请先登录');
+                window.location.href = './';
+                return;
+            }
+
+            function md5Base64(text) {
+                return CryptoJS.MD5(text).toString(CryptoJS.enc.Base64);
+            }
+
+            const infoUserId = document.getElementById('infoUserId');
+            const infoUsername = document.getElementById('infoUsername');
+            const infoType = document.getElementById('infoType');
+            const infoRegisterTime = document.getElementById('infoRegisterTime');
+            const infoLastLogin = document.getElementById('infoLastLogin');
+            const infoPasswordChanged = document.getElementById('infoPasswordChanged');
+            const infoEmail = document.getElementById('infoEmail');
+            const infoEmailVerify = document.getElementById('infoEmailVerify');
+            const verifyArea = document.getElementById('verifyArea');
+
+            function formatTime(t) {
+                if (!t) return '-';
+                let d;
+                if (typeof t === 'number') d = new Date(t < 1e12 ? t * 1000 : t);
+                else d = new Date(t);
+                if (isNaN(d.getTime())) return '-';
+                const p = function (n) { return n < 10 ? '0' + n : '' + n; };
+                return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+            }
+
+            function isBoundEmail(email) {
+                if (!email) return false;
+                const s = String(email).trim().toLowerCase();
+                return s !== '' && s !== '[no data]' && s !== 'null' && s !== 'undefined' && s.indexOf('@') > 0;
+            }
+
+            function loadUser() {
+                ZIYIT_API.currentUser(true).then(function (user) {
+                    latestUser = user;
+                    infoUserId.textContent = user.userId != null ? user.userId : '-';
+                    infoUsername.textContent = user.username || '未知';
+                    infoType.textContent = ZIYIT_API.isVip(user) ? 'vip用户' : '普通用户';
+                    infoRegisterTime.textContent = formatTime(user.registerTime || user.register_time || user.createdAt);
+                    infoLastLogin.textContent = formatTime(user.lastLoginTime || user.last_login);
+                    infoPasswordChanged.textContent = formatTime(user.passwordChangedAt);
+
+                    if (user.emailVerified) {
+                        infoEmail.textContent = isBoundEmail(user.email) ? user.email : '未绑定';
+                        infoEmailVerify.textContent = '已验证';
+                        infoEmailVerify.className = 'info-value green';
+                        verifyArea.innerHTML = '';
+                    } else if (isBoundEmail(user.email)) {
+                        infoEmail.textContent = user.email;
+                        infoEmailVerify.textContent = '未验证';
+                        infoEmailVerify.className = 'info-value red';
+                        const btn = document.createElement('button');
+                        btn.className = 'verify-btn';
+                        btn.textContent = '发送验证邮件';
+                        btn.onclick = function () {
+                            btn.disabled = true;
+                            btn.textContent = '发送中...';
+                            ZIYIT_API.sendVerifyEmail().then(function () {
+                                btn.textContent = '已发送';
+                                setTimeout(function () {
+                                    btn.textContent = '重新发送';
+                                    btn.disabled = false;
+                                }, 60000);
+                            }).catch(function (err) {
+                                btn.textContent = '发送失败';
+                                btn.disabled = false;
+                                alert((err.data && err.data.detail) || '发送失败，请稍后再试');
+                            });
+                        };
+                        verifyArea.appendChild(btn);
+                    } else {
+                        infoEmail.textContent = '未绑定';
+                        infoEmailVerify.textContent = '未验证';
+                        infoEmailVerify.className = 'info-value red';
+                        verifyArea.innerHTML = '';
+                    }
+
+                    renderDeletion(user);
+                    renderLoginHistory(user);
+                    renderIpManage();
+                }).catch(function () {
+                    infoUsername.textContent = '获取失败';
+                });
+            }
+
+            // ===== 登录记录 & IP 封禁管理 =====
+            const ipLocCache = {};
+            const ipStatusCache = {};
+            const myBannedIps = JSON.parse(localStorage.getItem('ziyit_my_banned_ips') || '{}');
+            const CONFIRM_EXPIRE_MS = 15 * 60 * 1000; // 确认链接有效期（与后端一致）
+            let latestUser = null;
+
+            // 清理已过期的待确认记录（封禁/解封确认链接过期后恢复原状态）
+            function cleanExpiredBans() {
+                const now = Date.now();
+                let changed = false;
+                Object.keys(myBannedIps).forEach(function (k) {
+                    const s = myBannedIps[k];
+                    if (s && s.pending && s.expireAt && now > s.expireAt) {
+                        delete myBannedIps[k];
+                        changed = true;
+                    }
+                });
+                if (changed) localStorage.setItem('ziyit_my_banned_ips', JSON.stringify(myBannedIps));
+            }
+
+            // 按钮状态：优先使用后端 /ip/{ip}/status 的权威状态，本地记录仅作降级
+            function getBanButtonState(ip) {
+                cleanExpiredBans();
+                const st = ipStatusCache[ip];
+                if (st) {
+                    if (st.pendingUnban) return { label: '解封确认中', disabled: true, color: '#b45309' };
+                    if (st.pendingBan) return { label: '邮箱验证中', disabled: true, color: '#b45309' };
+                    if (st.banned) return { label: '解封IP', disabled: false, color: '#107c10' };
+                    return { label: '封禁IP', disabled: false, color: '' };
+                }
+                const s = myBannedIps[ip];
+                if (s && s.pending) {
+                    return { label: s.pending === 'unban' ? '解封确认中' : '邮箱验证中', disabled: true, color: '#b45309' };
+                }
+                // 后端状态未确认（查询失败）时，本地非待确认记录不可信，一律显示"封禁IP"
+                return { label: '封禁IP', disabled: false, color: '' };
+            }
+
+            // 刷新页面上所有 IP 操作按钮的状态
+            function refreshIpButtons() {
+                document.querySelectorAll('[data-ip-ops]').forEach(function (btn) {
+                    const ip = btn.getAttribute('data-ip-ops');
+                    const st = getBanButtonState(ip);
+                    btn.textContent = st.label;
+                    btn.disabled = st.disabled;
+                    btn.style.background = st.color;
+                });
+                renderIpManage();
+            }
+
+            // 从后端查询某个 IP 的真实状态并刷新
+            function refreshIpStatus(ip) {
+                if (!ip || ip === '-' || ipStatusCache[ip] !== undefined) return;
+                ZIYIT_API.getIpStatus(ip).then(function (s) {
+                    ipStatusCache[ip] = s;
+                    refreshIpButtons();
+                }).catch(function () {
+                    ipStatusCache[ip] = null;
+                });
+            }
+
+            // 提交封禁/解封后使缓存失效，重新从后端拉取真实状态
+            function invalidateIpStatus(ip) {
+                delete ipStatusCache[ip];
+                refreshIpButtons();
+                refreshIpStatus(ip);
+            }
+
+            // 统一处理 IP 操作按钮点击（封禁/解封）
+            function handleIpAction(btn) {
+                const ip = btn.getAttribute('data-ip-ops');
+                if (!ip) return;
+                const st = getBanButtonState(ip);
+                if (st.disabled) return;
+                if (st.label === '解封IP') {
+                    if (!confirm('确定解封 IP ' + ip + ' 吗？将发送确认邮件至您的邮箱')) return;
+                    ZIYIT_API.unbanIp(ip).then(function (data) {
+                        myBannedIps[ip] = { reason: (myBannedIps[ip] || {}).reason || '', time: '', pending: 'unban', expireAt: Date.now() + CONFIRM_EXPIRE_MS };
+                        localStorage.setItem('ziyit_my_banned_ips', JSON.stringify(myBannedIps));
+                        alert((data && (data.message || data.detail)) || '操作确认邮件已发送到您的邮箱，请点击邮件中的链接完成解封');
+                        invalidateIpStatus(ip);
+                    }).catch(function (err) {
+                        alert(getErrMsg(err, '解封失败'));
+                    });
+                } else {
+                    const reason = prompt('封禁 IP ' + ip + '，将发送确认邮件至您的邮箱，可填写原因（可选）：');
+                    if (reason === null) return;
+                    ZIYIT_API.banIp(ip, reason ? reason : undefined).then(function (data) {
+                        myBannedIps[ip] = { reason: reason || '', time: '', pending: true, expireAt: Date.now() + CONFIRM_EXPIRE_MS };
+                        localStorage.setItem('ziyit_my_banned_ips', JSON.stringify(myBannedIps));
+                        alert((data && (data.message || data.detail)) || '操作确认邮件已发送到您的邮箱，请点击邮件中的链接完成封禁');
+                        invalidateIpStatus(ip);
+                    }).catch(function (err) {
+                        alert(getErrMsg(err, '封禁失败'));
+                    });
+                }
+            }
+
+            function getErrMsg(err, def) {
+                if (err && err.data && err.data.detail) {
+                    const d = String(err.data.detail);
+                    if (d.indexOf('Email not verified') >= 0 || (d.indexOf('email') >= 0 && d.indexOf('verified') >= 0)) {
+                        return '请先验证邮箱后再执行此操作';
+                    }
+                    return d;
+                }
+                if (err && err.status === 401) return '登录已过期，请重新登录';
+                if (err && err.status === 403) return '请先验证邮箱后再执行此操作';
+                return def;
+            }
+
+            function getLocText(ip) {
+                if (ipLocCache[ip] !== undefined) return Promise.resolve(ipLocCache[ip]);
+                return ZIYIT_API.getIpLocation(ip).then(function (d) {
+                    let loc = ZIYIT_API.formatIpLocation(d);
+                    ipLocCache[ip] = loc;
+                    return loc;
+                }).catch(function () {
+                    ipLocCache[ip] = '未知';
+                    return '未知';
+                });
+            }
+
+            function renderLoginHistory(user) {
+                const area = document.getElementById('loginHistoryArea');
+                const list = Array.isArray(user.loginHistory) ? user.loginHistory : [];
+                if (!list.length) {
+                    area.innerHTML = '<p style="color: #64748b;">暂无登录记录</p>';
+                    return;
+                }
+                // 从旧到新显示，index 对应原数组下标（0 开始）
+                const items = list.map(function (rec, index) {
+                    return {
+                        index: index,
+                        time: formatTime(rec.time || rec.loginTime || rec.timestamp),
+                        ip: rec.ip || rec.ipAddress || '-'
+                    };
+                }).reverse();
+
+                area.innerHTML = '';
+                items.forEach(function (it) {
+                    const row = document.createElement('div');
+                    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef2f7;gap:10px;flex-wrap:wrap;';
+                    const info = document.createElement('div');
+                    info.style.cssText = 'min-width:0;';
+                    info.innerHTML = '<div><b>' + it.time + '</b></div><div style="color:#64748b;word-break:break-all;">IP: ' + it.ip + ' <span class="ip-loc" style="color:#107c10;">查询中...</span></div>';
+                    const btns = document.createElement('div');
+                    btns.style.cssText = 'display:flex;gap:6px;flex-shrink:0;';
+                    const banBtn = document.createElement('button');
+                    banBtn.type = 'button';
+                    banBtn.setAttribute('data-ip-ops', it.ip);
+                    const banState = getBanButtonState(it.ip);
+                    banBtn.style.cssText = 'padding:5px 12px;font-size:12px;' + (banState.color ? 'background:' + banState.color + ';' : '');
+                    banBtn.textContent = banState.label;
+                    if (banState.disabled) banBtn.disabled = true;
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.style.cssText = 'padding:5px 12px;font-size:12px;background:#a4262c;';
+                    delBtn.textContent = '删除记录';
+                    btns.appendChild(banBtn);
+                    btns.appendChild(delBtn);
+                    row.appendChild(info);
+                    row.appendChild(btns);
+                    area.appendChild(row);
+
+                    const locSpan = info.querySelector('.ip-loc');
+                    if (it.ip && it.ip !== '-') {
+                        getLocText(it.ip).then(function (loc) { locSpan.textContent = '(' + loc + ')'; });
+                    } else {
+                        locSpan.textContent = '';
+                    }
+
+                    banBtn.addEventListener('click', function () { handleIpAction(banBtn); });
+
+                    delBtn.addEventListener('click', function () {
+                        if (!confirm('确定删除这条登录记录吗？将发送确认邮件至您的邮箱')) return;
+                        ZIYIT_API.deleteLoginHistory(it.index).then(function (data) {
+                            alert((data && (data.message || data.detail)) || '操作确认邮件已发送到您的邮箱，请点击邮件中的链接完成删除');
+                        }).catch(function (err) {
+                            alert(getErrMsg(err, '删除失败'));
+                        });
+                    });
+                });
+
+                // 从后端查询每个 IP 的真实封禁状态
+                const seen = {};
+                items.forEach(function (it) {
+                    if (it.ip && it.ip !== '-' && !seen[it.ip]) {
+                        seen[it.ip] = true;
+                        refreshIpStatus(it.ip);
+                    }
+                });
+            }
+
+            function renderIpManage() {
+                cleanExpiredBans();
+                const area = document.getElementById('ipManageArea');
+                // 收集相关 IP：本地记录 + 登录记录中出现过的 IP
+                const allIps = {};
+                Object.keys(myBannedIps).forEach(function (k) { allIps[k] = true; });
+                if (latestUser && Array.isArray(latestUser.loginHistory)) {
+                    latestUser.loginHistory.forEach(function (rec) {
+                        const ip = rec.ip || rec.ipAddress;
+                        if (ip && ip !== '-') allIps[ip] = true;
+                    });
+                }
+                const keys = Object.keys(allIps);
+                if (!keys.length) {
+                    area.innerHTML = '<p style="color: #64748b;margin:0;">暂无 IP 记录。登录后产生的登录记录会显示在这里，可对其中出现的 IP 执行封禁（需邮箱验证）。</p>';
+                    return;
+                }
+                let html = '<p style="color: #64748b;margin:0 0 8px 0;">封禁状态（封禁/解封均需邮箱确认，确认链接 15 分钟内有效）：</p>';
+                keys.forEach(function (ip) {
+                    const st = ipStatusCache[ip];
+                    const btnSt = getBanButtonState(ip);
+                    let stateText = '未封禁';
+                    let stateColor = '#64748b';
+                    if (st) {
+                        if (st.pendingUnban) {
+                            stateText = '待邮箱确认（解封）';
+                            stateColor = '#b45309';
+                        } else if (st.pendingBan) {
+                            stateText = '待邮箱确认（封禁）';
+                            stateColor = '#b45309';
+                        } else if (st.banned) {
+                            const entry = st.banEntry || {};
+                            stateText = '已封禁' + (entry.reason ? '（' + entry.reason + '）' : '');
+                            stateColor = '#a4262c';
+                        }
+                    } else if (myBannedIps[ip] && myBannedIps[ip].pending) {
+                        stateText = myBannedIps[ip].pending === 'unban' ? '待邮箱确认（解封）' : '待邮箱确认（封禁）';
+                        stateColor = '#b45309';
+                    }
+                    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #eef2f7;gap:10px;flex-wrap:wrap;">'
+                        + '<span style="word-break:break-all;">IP: <b>' + ip + '</b> <span style="color:' + stateColor + ';">' + stateText + '</span></span>'
+                        + '<button type="button" data-ip-ops="' + ip + '" style="padding:5px 12px;font-size:12px;' + (btnSt.color ? 'background:' + btnSt.color + ';' : '') + '"' + (btnSt.disabled ? ' disabled' : '') + '>' + btnSt.label + '</button>'
+                        + '</div>';
+                });
+                area.innerHTML = html;
+                // 事件绑定（封禁/解封）
+                area.querySelectorAll('[data-ip-ops]').forEach(function (btn) {
+                    btn.addEventListener('click', function () { handleIpAction(btn); });
+                });
+            }
+
+            function renderDeletion(user) {
+                const area = document.getElementById('deletionArea');
+                const result = document.getElementById('deletionResult');
+                result.style.display = 'none';
+
+                if (user.deletionScheduledAt) {
+                    let delDate = user.deletionScheduledAt;
+                    if (typeof delDate === 'number') delDate = new Date(delDate < 1e12 ? delDate * 1000 : delDate);
+                    else delDate = new Date(delDate);
+                    const remainMs = delDate.getTime() - Date.now();
+                    const remainDays = Math.max(0, Math.ceil(remainMs / 86400000));
+                    area.innerHTML = '<p style="font-size: 13px; color: #a4262c; margin: 0 0 10px 0;">账号注销申请已提交，将于 <b>' + remainDays + ' 天后（' + formatTime(user.deletionScheduledAt) + '）</b> 被删除，期间可取消注销。</p><button id="cancelDeletionBtn" type="button">取消注销</button>';
+                    document.getElementById('cancelDeletionBtn').addEventListener('click', function () {
+                        const btn = this;
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner-inline"></span>取消中...';
+                        ZIYIT_API.cancelDeletion().then(function () {
+                            result.textContent = '已取消注销';
+                            result.className = 'result success';
+                            result.style.display = 'block';
+                            loadUser();
+                        }).catch(function (err) {
+                            btn.disabled = false;
+                            btn.innerHTML = '取消注销';
+                            result.textContent = (err.data && err.data.detail) || '取消失败，请稍后再试';
+                            result.className = 'result error';
+                            result.style.display = 'block';
+                        }).finally(function () {
+                            btn.disabled = false;
+                            btn.innerHTML = '取消注销';
+                        });
+                    });
+                } else {
+                    area.innerHTML = '<p style="font-size: 13px; color: #64748b; margin: 0 0 10px 0;">申请注销后进入 15 天宽限期，期间可随时取消；到期后账号将被删除。注销需要邮箱已验证。</p><button id="deletionBtn" type="button" style="background: #a4262c;">申请注销</button>';
+                    document.getElementById('deletionBtn').addEventListener('click', function () {
+                        if (!confirm('确定要申请注销当前账号吗？15 天后将被删除，注销需要邮箱已验证。')) return;
+                        const btn = this;
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner-inline"></span>提交中...';
+                        ZIYIT_API.requestDeletion().then(function (data) {
+                            const msg = (data && (data.message || data.detail)) || '操作确认邮件已发送到您的邮箱，请点击邮件中的链接完成注销申请，确认后进入 15 天宽限期';
+                            result.textContent = msg;
+                            result.className = 'result success';
+                            result.style.display = 'block';
+                        }).catch(function (err) {
+                            btn.disabled = false;
+                            btn.innerHTML = '申请注销';
+                            result.textContent = getErrMsg(err, '提交失败，请稍后再试');
+                            result.className = 'result error';
+                            result.style.display = 'block';
+                        }).finally(function () {
+                            // 无论成功失败（含超时）都恢复按钮，避免卡在"提交中..."
+                            btn.disabled = false;
+                            btn.innerHTML = '申请注销';
+                        });
+                    });
+                }
+            }
+
+            loadUser();
+
+            document.getElementById('usernameBtn').addEventListener('click', function () {
+                const btn = this;
+                const result = document.getElementById('usernameResult');
+                const name = document.getElementById('newUsername').value.trim();
+                if (!name) {
+                    result.textContent = '请输入新用户名';
+                    result.className = 'result error';
+                    result.style.display = 'block';
+                    return;
+                }
+                btn.disabled = true;
+                result.style.display = 'none';
+                ZIYIT_API.updateUsername(name).then(function () {
+                    result.textContent = '用户名修改成功';
+                    result.className = 'result success';
+                    result.style.display = 'block';
+                    document.getElementById('newUsername').value = '';
+                    ZIYIT_API.currentUser(true).then(function (user) {
+                        ZIYIT_API.saveUserInfo(user);
+                        infoUsername.textContent = user.username;
+                    }).catch(function () {});
+                }).catch(function (error) {
+                    let msg = '修改失败，请稍后再试';
+                    if (error.status === 401) msg = '登录已过期，请重新登录';
+                    else if (error.status === 409) msg = '该用户名已被使用';
+                    else if (error.data && error.data.detail) msg = '修改失败: ' + error.data.detail;
+                    result.textContent = msg;
+                    result.className = 'result error';
+                    result.style.display = 'block';
+                }).finally(function () {
+                    btn.disabled = false;
+                });
+            });
+
+            document.getElementById('emailBtn').addEventListener('click', function () {
+                const btn = this;
+                const result = document.getElementById('emailResult');
+                const email = document.getElementById('newEmail').value.trim();
+                if (!email || email.indexOf('@') < 0) {
+                    result.textContent = '请输入正确的邮箱';
+                    result.className = 'result error';
+                    result.style.display = 'block';
+                    return;
+                }
+                btn.disabled = true;
+                result.style.display = 'none';
+                ZIYIT_API.updateEmail(email).then(function () {
+                    result.textContent = '邮箱修改成功';
+                    result.className = 'result success';
+                    result.style.display = 'block';
+                    document.getElementById('newEmail').value = '';
+                    loadUser();
+                }).catch(function (error) {
+                    let msg = '修改失败，请稍后再试';
+                    if (error.status === 401) msg = '登录已过期，请重新登录';
+                    else if (error.status === 409) msg = '该邮箱已被使用';
+                    else if (error.data && error.data.detail) msg = '修改失败: ' + error.data.detail;
+                    result.textContent = msg;
+                    result.className = 'result error';
+                    result.style.display = 'block';
+                }).finally(function () {
+                    btn.disabled = false;
+                });
+            });
+
+            document.getElementById('passwordBtn').addEventListener('click', function () {
+                const btn = this;
+                const result = document.getElementById('passwordResult');
+                const oldPwd = document.getElementById('oldPassword').value;
+                const newPwd = document.getElementById('newPassword').value;
+                const confirmPwd = document.getElementById('confirmPassword').value;
+                if (!oldPwd) {
+                    result.textContent = '请输入原密码';
+                    result.className = 'result error';
+                    result.style.display = 'block';
+                    return;
+                }
+                if (!newPwd) {
+                    result.textContent = '请输入新密码';
+                    result.className = 'result error';
+                    result.style.display = 'block';
+                    return;
+                }
+                if (newPwd !== confirmPwd) {
+                    result.textContent = '两次输入的新密码不一致';
+                    result.className = 'result error';
+                    result.style.display = 'block';
+                    return;
+                }
+                if (newPwd === oldPwd) {
+                    result.textContent = '新密码不能与原密码相同';
+                    result.className = 'result error';
+                    result.style.display = 'block';
+                    return;
+                }
+                btn.disabled = true;
+                result.style.display = 'none';
+                ZIYIT_API.updatePassword(md5Base64(oldPwd), md5Base64(newPwd)).then(function (data) {
+                    const msg = (data && (data.message || data.detail)) || '操作确认邮件已发送到您的邮箱，请点击邮件中的链接，确认后新密码生效';
+                    result.textContent = msg;
+                    result.className = 'result success';
+                    result.style.display = 'block';
+                    document.getElementById('oldPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                }).catch(function (error) {
+                    let msg = '修改失败，请稍后再试';
+                    if (error.status === 401) msg = '原密码错误';
+                    else if (error.status === 422) msg = '密码格式不符合要求';
+                    else if (error.status === 403) msg = '请先验证邮箱后再执行此操作';
+                    else if (error.data && error.data.detail) {
+                        const d = String(error.data.detail);
+                        if (d.indexOf('Email not verified') >= 0 || (d.indexOf('email') >= 0 && d.indexOf('verified') >= 0)) msg = '请先验证邮箱后再执行此操作';
+                        else msg = '修改失败: ' + d;
+                    }
+                    result.textContent = msg;
+                    result.className = 'result error';
+                    result.style.display = 'block';
+                }).finally(function () {
+                    btn.disabled = false;
+                });
+            });
+        });
+    </script>
+<script>
+        // 导航权限过滤（DESIGN.md §4.6.5，需登录页模式）：未登录全部隐藏，登录后按角色显示
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                const loginLink = document.getElementById('loginLink');
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>
