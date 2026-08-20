@@ -75,7 +75,7 @@
     <div class="gate" id="gate">
         <div class="gate-card">
             <h2>⛔ 无权访问</h2>
-            <p id="gate-msg">该页面仅管理员（Lv.1 及以上）可访问。</p>
+            <p id="gate-msg">该页面仅管理员（Lv.1+）可访问。</p>
             <a href="/user/">去登录</a>
         </div>
     </div>
@@ -96,7 +96,7 @@
 
         <div class="card" id="sec-advanced">
             <h2>🛡 高级审核（人工复审）<span id="advanced-count" class="badge b-advanced"></span></h2>
-            <p class="desc">AI 初审通过后进入高级审核队列（Lv.2 及以上可操作）。</p>
+            <p class="desc">AI 初审通过后进入高级审核队列（Lv.2+ 可操作）。</p>
             <button id="btn-advanced-refresh" class="secondary">刷新</button>
             <div id="advanced-list"></div>
         </div>
@@ -441,7 +441,7 @@
                 LEVEL = Number(me && (me.level != null ? me.level : 0));
                 ME = me;
                 if (!LEVEL) {
-                    $('gate-msg').textContent = '该页面仅管理员（Lv.1 及以上）可访问。当前账号无管理员权限。';
+                    $('gate-msg').textContent = '该页面仅管理员（Lv.1+）可访问。当前账号无管理员权限。';
                     $('gate').classList.add('show');
                     return;
                 }

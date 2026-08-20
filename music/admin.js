@@ -1533,7 +1533,7 @@ function apiKeyFields(k) {
 }
 
 function loadApiKeys() {
-    if (!canAccess(3)) { alert('仅 3 级及以上管理员可访问 API Key 管理'); return; }
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可访问 API Key 管理'); return; }
     document.getElementById('api-key-list').innerHTML = loadingHTML();;
     return ZIYIT_API.request('/admin/api-keys').then(function (data) {
         apiKeyList = Array.isArray(data) ? data : (data.api_keys || data.keys || data.data || data.items || []);
@@ -1589,7 +1589,7 @@ function renderApiKeys() {
 }
 
 function createApiKey() {
-    if (!canAccess(3)) { alert('仅 3 级及以上管理员可创建 API Key'); return; }
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可创建 API Key'); return; }
     const userId = parseInt(document.getElementById('apikey-userid').value, 10);
     if (!userId) {
         alert('请输入用户ID');
@@ -1614,7 +1614,7 @@ function createApiKey() {
 }
 
 function openEditApiKey(key) {
-    if (!canAccess(3)) { alert('仅 3 级及以上管理员可编辑 API Key'); return; }
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可编辑 API Key'); return; }
     editingApiKey = key;
     document.getElementById('apikey-edit-key').value = key;
     let cur = null;
@@ -1690,7 +1690,7 @@ function modFields(m) {
 }
 
 function loadMods() {
-    if (!canAccess(3)) { alert('仅 3 级及以上管理员可访问 MOD/DLC 管理'); return; }
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可访问 MOD/DLC 管理'); return; }
     document.getElementById('mod-list').innerHTML = loadingHTML();;
     return ZIYIT_API.request('/admin/mods').then(function (data) {
         modList = Array.isArray(data) ? data : (data.mods || data.data || data.items || []);
@@ -1871,7 +1871,7 @@ function rcKeyFields(k) {
 }
 
 function loadRcKeys() {
-    if (!canAccess(3)) { alert('仅 3 级及以上管理员可访问 RC 软件密钥'); return; }
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可访问 RC 软件密钥'); return; }
     document.getElementById('rc-key-list').innerHTML = loadingHTML();;
     return ZIYIT_API.request('/admin/keys').then(function (data) {
         rcKeyList = Array.isArray(data) ? data : (data.keys || data.users || data.data || []);
