@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>层级列表 - The Backrooms 中文维基</title>
+    <link href="/assets/logo.ico" rel="icon" type="image/x-icon">
+    <script src="/assets/ziyit_api.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans SC", sans-serif; background: #f0f1f3; color: #1f2328; }
+        .topbar { display: flex; align-items: center; gap: 14px; padding: 12px 18px; background: #22262c; color: #fff; position: sticky; top: 0; z-index: 50; }
+        .topbar h1 { font-size: 17px; margin: 0; }
+        .topbar .links { margin-left: auto; display: flex; gap: 10px; }
+        .topbar a { color: #cfe3ff; font-size: 13px; text-decoration: none; }
+        .topbar a:hover { text-decoration: underline; }
+        main { max-width: 980px; margin: 18px auto 60px; padding: 0 16px; }
+        .card { background: #fff; border: 1px solid #d9dce1; border-radius: 10px; padding: 16px 18px; }
+        .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+        .filters input, .filters select { border: 1px solid #c9cdd4; border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+        .filters input { flex: 1; min-width: 200px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #e8eaee; }
+        th { background: #f6f7f9; font-weight: 600; }
+        tbody tr { cursor: pointer; }
+        tbody tr:hover { background: #f4f8ff; }
+        .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; }
+        .b-pending { background: #fff4d6; color: #8a6d00; }
+        .b-ai-passed { background: #d9f0ff; color: #005a9e; }
+        .b-ai-failed { background: #ffe0e0; color: #b00020; }
+        .b-advanced { background: #e9dcff; color: #5b2a86; }
+        .b-approved { background: #d8f7dc; color: #107c10; }
+        .b-rejected { background: #f0f0f0; color: #666; }
+        .b-rewritten { background: #fff0dc; color: #a35200; }
+        .empty { color: #999; font-size: 13px; padding: 20px 4px; text-align: center; }
+        .count { color: #777; font-size: 12px; margin-bottom: 10px; }
+        /* wikidot 同款重写标记样式 */
+        .rew { display: inline-block; vertical-align: middle; margin-left: 6px; }
+        .rew span { display: block; width: 14px; height: 9px; background: #4caf50; border-radius: 2px; }
+        .toast { position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%); background: #22262c; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; z-index: 9999; display: none; }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <h1>🗂 层级列表</h1>
+        <div class="links">
+            <a href="create-document.html">文档创建器</a>
+            <a href="submit.html">提交层级</a>
+            <a href="normal-levels/">静态层级列表</a>
+            <a href="/">返回首页</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="card">
+            <div class="filters">
+                <input type="text" id="search" placeholder="搜索 ID / 名称 / 作者…">
+                <select id="filter-status">
+                    <option value="">全部状态</option>
+                    <option value="pending">待审核</option>
+                    <option value="ai_passed">已过基础审核</option>
+                    <option value="ai_failed">未过基础审核</option>
+                    <option value="advanced_pending">高级审核中</option>
+                    <option value="approved">已收录</option>
+                    <option value="rejected">未收录</option>
+                    <option value="rewritten">已重写</option>
+                </select>
+            </div>
+            <div class="count" id="count"></div>
+            <div id="list"></div>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        var ALL = [];
+        var BASE = (function () { try { return (localStorage.getItem('ziyit_api_base') || 'https://willian-unheady-rawly.ngrok-free.dev').replace(/\/$/, ''); } catch (e) { return 'https://willian-unheady-rawly.ngrok-free.dev'; } })();
+
+        var STATUS_CN = {
+            pending: ['待审核', 'b-pending'],
+            ai_passed: ['已过基础审核', 'b-ai-passed'],
+            ai_failed: ['未过基础审核', 'b-ai-failed'],
+            advanced_pending: ['高级审核中', 'b-advanced'],
+            approved: ['已收录', 'b-approved'],
+            rejected: ['未收录', 'b-rejected'],
+            rewritten: ['已重写', 'b-rewritten']
+        };
+
+        var $ = function (id) { return document.getElementById(id); };
+        function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        function toast(msg) { var t = $('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(t._t); t._t = setTimeout(function () { t.style.display = 'none'; }, 2500); }
+        function idOf(it) { return it.levelId || it.id; }
+        function nameOf(it) { return it.name || ''; }
+        function badge(status) { var s = STATUS_CN[status] || [status || '未知', 'b-rejected']; return '<span class="badge ' + s[1] + '">' + esc(s[0]) + '</span>'; }
+        // wikidot 同款重写标记
+        function rewMark() { return '<span class="rew"><span style="white-space: pre-wrap;"> </span></span>'; }
+
+        function render() {
+            var kw = ($('search').value || '').trim().toLowerCase();
+            var st = $('filter-status').value;
+            var list = ALL.filter(function (it) {
+                var id = String(idOf(it) || '').toLowerCase();
+                var name = String(nameOf(it) || '').toLowerCase();
+                var owner = String(it.ownerName || it.owner || '').toLowerCase();
+                if (kw && id.indexOf(kw) === -1 && name.indexOf(kw) === -1 && owner.indexOf(kw) === -1) return false;
+                if (st && it.status !== st) return false;
+                return true;
+            });
+            $('count').textContent = '共 ' + list.length + ' 条（' + (st ? '筛选' : '全部') + '）';
+            if (!list.length) { $('list').innerHTML = '<div class="empty">暂无层级数据。</div>'; return; }
+            $('list').innerHTML = '<table><thead><tr><th>层级</th><th>名称</th><th>作者</th><th>状态</th><th>版本</th><th>重写</th></tr></thead><tbody>'
+                + list.map(function (it) {
+                    var id = idOf(it);
+                    return '<tr data-id="' + esc(id) + '">'
+                        + '<td><strong>' + esc(id) + '</strong></td>'
+                        + '<td>' + esc(nameOf(it) || '—') + '</td>'
+                        + '<td>' + esc(it.ownerName || it.owner || '—') + '</td>'
+                        + '<td>' + badge(it.status) + '</td>'
+                        + '<td>' + esc(it.version != null ? it.version : '—') + '</td>'
+                        + '<td>' + (it.rewritten ? rewMark() : '—') + '</td>'
+                        + '</tr>';
+                }).join('') + '</tbody></table>';
+        }
+
+        $('search').addEventListener('input', render);
+        $('filter-status').addEventListener('change', render);
+
+        document.getElementById('list').addEventListener('click', function (e) {
+            var tr = e.target.closest('tr[data-id]');
+            if (!tr) return;
+            var id = tr.getAttribute('data-id');
+            window.open(BASE + '/backrooms/levels/' + encodeURIComponent(id), '_blank');
+        });
+
+        function load() {
+            ZIYIT_API.backroomsList().then(function (d) {
+                var levels = (d && (d.levels || d.data || d)) || [];
+                if (!Array.isArray(levels)) levels = [];
+                ALL = levels;
+                render();
+            }).catch(function (err) {
+                var d = err && err.data;
+                var msg = d ? (typeof d.detail === 'string' ? d.detail : (d.message || '请求失败')) : (err.message || '请求失败');
+                $('list').innerHTML = '<div class="empty">加载失败：' + esc(msg) + '</div>';
+            });
+        }
+
+        load();
+    </script>
+</body>
+
+</html>

@@ -24,6 +24,8 @@
         .top-actions { display: flex; gap: 8px; }
         .top-actions button { padding: 7px 14px; border: none; border-radius: 6px; background: #0078d4; color: #fff; font-size: 13px; cursor: pointer; }
         .top-actions button:hover { background: #0069b9; }
+        .top-actions .top-link { padding: 7px 14px; border-radius: 6px; background: #3a424d; color: #fff; font-size: 13px; text-decoration: none; }
+        .top-actions .top-link:hover { background: #4a5562; }
         .main-layout { display: flex; height: calc(100vh - 50px); overflow: hidden; }
 
         /* ===== 登录门禁：未登录时整页遮挡，阻止使用创建器 ===== */
@@ -320,6 +322,8 @@
             <button id="btn-load-template">从模板加载</button>
             <button id="btn-upload-html">上传 HTML</button>
             <button id="btn-export">导出 HTML</button>
+            <a class="top-link" href="submit.html">📤 提交层级 / 我的层级</a>
+            <a class="top-link" href="all-levels.html">🗂 层级列表</a>
         </div>
         <input type="file" id="f-html-file" accept=".html,text/html" style="display:none">
     </header>

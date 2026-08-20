@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>层级提交 / 我的层级 - The Backrooms 中文维基</title>
+    <link href="/assets/logo.ico" rel="icon" type="image/x-icon">
+    <script src="/assets/ziyit_api.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans SC", sans-serif; background: #f0f1f3; color: #1f2328; }
+        .topbar { display: flex; align-items: center; gap: 14px; padding: 12px 18px; background: #22262c; color: #fff; position: sticky; top: 0; z-index: 50; }
+        .topbar h1 { font-size: 17px; margin: 0; }
+        .topbar .who { font-size: 12px; color: #9fd4ff; }
+        .topbar .links { margin-left: auto; display: flex; gap: 10px; }
+        .topbar a { color: #cfe3ff; font-size: 13px; text-decoration: none; }
+        .topbar a:hover { text-decoration: underline; }
+        main { max-width: 900px; margin: 18px auto 60px; padding: 0 16px; }
+        .card { background: #fff; border: 1px solid #d9dce1; border-radius: 10px; padding: 16px 18px; margin-bottom: 18px; }
+        .card h2 { margin: 0 0 12px; font-size: 16px; }
+        .card label { display: block; font-size: 13px; color: #444; margin: 10px 0 4px; }
+        .card input[type="text"] { width: 100%; border: 1px solid #c9cdd4; border-radius: 8px; padding: 9px 12px; font-size: 14px; }
+        .card input[type="text"]:focus { outline: none; border-color: #0078d4; }
+        .card .hint { color: #888; font-size: 12px; margin: 4px 0 0; }
+        .card button { padding: 8px 16px; border: none; border-radius: 6px; background: #0078d4; color: #fff; font-size: 14px; cursor: pointer; margin-top: 14px; }
+        .card button:hover { background: #0069b9; }
+        .card button:disabled { opacity: .5; cursor: not-allowed; }
+        .card button.secondary { background: #5a6572; }
+        .card button.danger { background: #d13438; }
+        .card button.danger:hover { background: #b52e31; }
+        .file-box { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .file-box input[type="file"] { font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e8eaee; vertical-align: top; }
+        th { background: #f6f7f9; font-weight: 600; }
+        .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; }
+        .b-pending { background: #fff4d6; color: #8a6d00; }
+        .b-ai-passed { background: #d9f0ff; color: #005a9e; }
+        .b-ai-failed { background: #ffe0e0; color: #b00020; }
+        .b-advanced { background: #e9dcff; color: #5b2a86; }
+        .b-approved { background: #d8f7dc; color: #107c10; }
+        .b-rejected { background: #f0f0f0; color: #666; }
+        .b-rewritten { background: #fff0dc; color: #a35200; }
+        .empty { color: #999; font-size: 13px; padding: 14px 4px; }
+        .gate { display: none; position: fixed; inset: 0; z-index: 9999; background: #f0f1f3; align-items: center; justify-content: center; }
+        .gate.show { display: flex; }
+        .gate-card { background: #fff; border: 1px solid #d9dce1; border-radius: 12px; padding: 36px 44px; text-align: center; max-width: 420px; }
+        .gate-card h2 { margin: 0 0 12px; }
+        .gate-card p { margin: 0 0 18px; color: #555; font-size: 14px; }
+        .gate-card a { color: #0078d4; text-decoration: none; }
+        .modal-mask { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); display: none; align-items: center; justify-content: center; z-index: 999; }
+        .modal-mask.show { display: flex; }
+        .modal { background: #fff; border-radius: 12px; width: min(520px, 92vw); padding: 20px 24px; }
+        .modal h3 { margin: 0 0 12px; font-size: 16px; }
+        .modal label { display: block; font-size: 13px; color: #444; margin: 10px 0 4px; }
+        .modal input[type="text"] { width: 100%; border: 1px solid #c9cdd4; border-radius: 8px; padding: 9px 12px; font-size: 14px; }
+        .modal .row { margin-top: 14px; display: flex; gap: 10px; }
+        .toast { position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%); background: #22262c; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; z-index: 9999; display: none; }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <h1>📤 层级提交 / 我的层级</h1>
+        <span class="who" id="whoami"></span>
+        <div class="links">
+            <a href="create-document.html">文档创建器</a>
+            <a href="all-levels.html">层级列表</a>
+            <a href="normal-levels/">返回层级列表</a>
+        </div>
+    </header>
+
+    <!-- 登录门禁 -->
+    <div class="gate" id="gate">
+        <div class="gate-card">
+            <h2>🔒 需要登录</h2>
+            <p id="gate-msg">提交与管理层级需要先登录账号。</p>
+            <a href="/user/">去登录</a>
+        </div>
+    </div>
+
+    <main id="main" style="display:none">
+        <div class="card">
+            <h2>📤 提交新层级</h2>
+            <label>层级 ID <span style="color:#d13438">*</span></label>
+            <input type="text" id="f-id" placeholder="Level-706 / Level-!+ / Level-NO-DATA">
+            <p class="hint">唯一标识，需以 Level- 开头（如 Level-706、Level-!+、Level-NO-DATA）。</p>
+            <label>层级名称 <span style="color:#d13438">*</span></label>
+            <input type="text" id="f-name" placeholder="如：回忆">
+            <p class="hint">任意字符串，展示为《Level-706》（回忆）。</p>
+            <label>HTML 文件 <span style="color:#d13438">*</span></label>
+            <div class="file-box">
+                <input type="file" id="f-file" accept=".html,text/html">
+                <span class="hint" id="f-file-name"></span>
+            </div>
+            <p class="hint">文件需 ≤ 1MB，页面结构与「文档创建器」导出格式一致。</p>
+            <button id="btn-submit">提交审核</button>
+        </div>
+
+        <div class="card">
+            <h2>🗂 我的层级 <span id="mine-count"></span></h2>
+            <button id="btn-refresh" class="secondary" style="margin-top:0">刷新</button>
+            <div id="mine-list"></div>
+        </div>
+    </main>
+
+    <!-- 修改弹窗 -->
+    <div class="modal-mask" id="modal-mask">
+        <div class="modal" id="modal-box"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        var USERNAME = '';
+        var BASE = (function () { try { return (localStorage.getItem('ziyit_api_base') || 'https://willian-unheady-rawly.ngrok-free.dev').replace(/\/$/, ''); } catch (e) { return 'https://willian-unheady-rawly.ngrok-free.dev'; } })();
+        var MAX_SIZE = 1024 * 1024; // 1MB
+
+        var STATUS_CN = {
+            pending: ['待审核', 'b-pending'],
+            ai_passed: ['已过基础审核', 'b-ai-passed'],
+            ai_failed: ['未过基础审核', 'b-ai-failed'],
+            advanced_pending: ['高级审核中', 'b-advanced'],
+            approved: ['已收录', 'b-approved'],
+            rejected: ['未收录', 'b-rejected'],
+            rewritten: ['已重写', 'b-rewritten']
+        };
+
+        var $ = function (id) { return document.getElementById(id); };
+        function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        function toast(msg) { var t = $('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(t._t); t._t = setTimeout(function () { t.style.display = 'none'; }, 3000); }
+        function errText(err) { var d = err && err.data; if (d) { if (typeof d.detail === 'string') return d.detail; if (d.detail && typeof d.detail.message === 'string') return d.detail.message; if (typeof d.message === 'string') return d.message; if (typeof d.msg === 'string') return d.msg; try { return JSON.stringify(d.detail || d); } catch (e) {} } return (err && err.message) || '请求失败'; }
+        function badge(status) { var s = STATUS_CN[status] || [status || '未知', 'b-rejected']; return '<span class="badge ' + s[1] + '">' + esc(s[0]) + '</span>'; }
+        function idOf(it) { return it.levelId || it.id; }
+        function nameOf(it) { return it.name || ''; }
+
+        $('f-file').addEventListener('change', function () {
+            $('f-file-name').textContent = this.files && this.files[0] ? this.files[0].name + '（' + fmtSize(this.files[0].size) + '）' : '';
+        });
+        function fmtSize(n) { n = Number(n); if (n < 1024) return n + ' B'; if (n < 1048576) return (n / 1024).toFixed(1) + ' KB'; return (n / 1048576).toFixed(2) + ' MB'; }
+
+        // 带 Token 拉取层级 HTML（作者本人可看自己未公开稿件，不报 404；响应含"正在审核中"提示条）
+        function fetchLevelHtml(id) {
+            var token = window.ZIYIT_API && ZIYIT_API.getToken ? ZIYIT_API.getToken() : '';
+            return fetch(BASE + '/backrooms/levels/' + encodeURIComponent(id), {
+                headers: {
+                    'ngrok-skip-browser-warning': '1',
+                    'Authorization': token ? 'Bearer ' + token : ''
+                }
+            }).then(function (res) {
+                if (!res.ok) { var e = new Error('请求失败 ' + res.status); e.status = res.status; throw e; }
+                return res.text();
+            });
+        }
+        // 查看：新标签打开（blob 方式，携带登录态渲染）
+        function viewLevelHtml(id) {
+            fetchLevelHtml(id).then(function (html) {
+                var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+                var url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+                setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+            }).catch(function (err) { toast('查看失败：' + errText(err)); });
+        }
+        // 下载：保存为 HTML 文件
+        function downloadLevelHtml(id) {
+            fetchLevelHtml(id).then(function (html) {
+                var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'level-' + String(id).replace(/^level-?/i, '') + '.html';
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+            }).catch(function (err) { toast('下载失败：' + errText(err)); });
+        }
+
+        // ============ 提交 ============
+        $('btn-submit').addEventListener('click', function () {
+            var id = $('f-id').value.trim();
+            var name = $('f-name').value.trim();
+            var file = $('f-file').files && $('f-file').files[0];
+            if (!/^level-/i.test(id)) { toast('层级 ID 需以 Level- 开头（如 Level-706 / Level-!+）'); return; }
+            if (!name) { toast('请填写层级名称'); return; }
+            if (!file) { toast('请选择 HTML 文件'); return; }
+            if (file.size > MAX_SIZE) { toast('文件超过 1MB 限制，请压缩后再提交'); return; }
+            var b = this; b.disabled = true; b.textContent = '提交中…';
+            ZIYIT_API.backroomsSubmit(id, name, file).then(function (d) {
+                b.disabled = false; b.textContent = '提交审核';
+                toast((d && (d.message || d.msg)) || '提交成功，等待审核');
+                $('f-id').value = ''; $('f-name').value = ''; $('f-file').value = ''; $('f-file-name').textContent = '';
+                loadMine();
+            }).catch(function (err) {
+                b.disabled = false; b.textContent = '提交审核';
+                if (err && err.status === 409) toast('ID 已存在：' + id + '，请更换 ID 或使用「修改」更新');
+                else if (err && err.status === 429) toast('超出限额：已达到每月提交上限 / 个人拥有上限');
+                else if (err && err.status === 403) toast('仅限后室成员使用：当前账号不是后室成员，无法提交');
+                else if (err && err.status === 400) toast('提交失败：' + errText(err));
+                else toast('提交失败：' + errText(err));
+            });
+        });
+
+        // ============ 我的层级 ============
+        function loadMine() {
+            ZIYIT_API.backroomsList().then(function (d) {
+                var levels = (d && (d.levels || d.data || d)) || [];
+                if (!Array.isArray(levels)) levels = [];
+                var mine = levels.filter(function (it) {
+                    var owner = it.ownerName || it.owner || '';
+                    return owner && String(owner).toLowerCase() === String(USERNAME).toLowerCase();
+                });
+                renderMine(mine);
+            }).catch(function (err) {
+                $('mine-list').innerHTML = '<div class="empty">加载失败：' + esc(errText(err)) + '</div>';
+            });
+        }
+
+        function renderMine(items) {
+            var el = $('mine-list');
+            $('mine-count').textContent = items.length ? items.length + ' 条' : '';
+            if (!items.length) { el.innerHTML = '<div class="empty">你还没有提交过层级。</div>'; return; }
+            el.innerHTML = '<table><thead><tr><th>层级</th><th>名称</th><th>状态</th><th>版本</th><th>重写</th><th style="width:230px">操作</th></tr></thead><tbody>'
+                + items.map(function (it) {
+                    var id = idOf(it);
+                    return '<tr>'
+                        + '<td><strong>' + esc(id) + '</strong></td>'
+                        + '<td>' + esc(nameOf(it) || '—') + '</td>'
+                        + '<td>' + badge(it.status) + '</td>'
+                        + '<td>' + esc(it.version != null ? it.version : '—') + '</td>'
+                        + '<td>' + (it.rewritten ? '是' : '—') + '</td>'
+                        + '<td>'
+                        + '<button data-act="view" data-id="' + esc(id) + '">查看</button> '
+                        + '<button data-act="dl" data-id="' + esc(id) + '">下载</button> '
+                        + '<button data-act="edit" data-id="' + esc(id) + '" class="secondary">修改</button> '
+                        + '<button data-act="del" data-id="' + esc(id) + '" class="danger">删除</button>'
+                        + '</td></tr>';
+                }).join('') + '</tbody></table>';
+        }
+
+        document.getElementById('main').addEventListener('click', function (e) {
+            var btn = e.target.closest('button[data-act]');
+            if (!btn) return;
+            var act = btn.getAttribute('data-act'), id = btn.getAttribute('data-id');
+            if (act === 'view') viewLevelHtml(id);
+            if (act === 'dl') downloadLevelHtml(id);
+            if (act === 'edit') openEditModal(id);
+            if (act === 'del') doDelete(id);
+        });
+
+        $('btn-refresh').addEventListener('click', loadMine);
+
+        // 修改：重选文件（可改名称）
+        function openEditModal(id) {
+            var item = null;
+            ZIYIT_API.backroomsList().then(function (d) {
+                var levels = (d && (d.levels || d.data || d)) || [];
+                if (Array.isArray(levels)) {
+                    for (var i = 0; i < levels.length; i++) {
+                        if (idOf(levels[i]) === id) { item = levels[i]; break; }
+                    }
+                }
+                var curName = item ? nameOf(item) : '';
+                openModal('<h3>✏ 修改 ' + esc(id) + '</h3>'
+                    + '<label>层级名称</label><input type="text" id="m-name" value="' + esc(curName) + '">'
+                    + '<label>重新选择 HTML 文件（旧版本自动保留）</label>'
+                    + '<input type="file" id="m-file" accept=".html,text/html" style="margin-top:6px">'
+                    + '<div class="row"><button id="m-save">保存</button> <button class="secondary" data-close>取消</button></div>');
+                $('m-save').addEventListener('click', function () {
+                    var file = $('m-file').files && $('m-file').files[0];
+                    if (!file) { toast('请重新选择 HTML 文件'); return; }
+                    if (file.size > MAX_SIZE) { toast('文件超过 1MB 限制'); return; }
+                    var name = $('m-name').value.trim();
+                    var b = this; b.disabled = true; b.textContent = '保存中…';
+                    ZIYIT_API.backroomsUpdate(id, name || null, file).then(function (r) {
+                        closeModal();
+                        toast((r && (r.message || r.msg)) || '已更新 ' + id + '（旧版本保留）');
+                        loadMine();
+                    }).catch(function (err) {
+                        b.disabled = false; b.textContent = '保存';
+                        if (err && err.status === 403) toast('仅限后室成员使用：当前账号无权限');
+                        else toast('更新失败：' + errText(err));
+                    });
+                });
+            }).catch(function (err) { toast('加载失败：' + errText(err)); });
+        }
+
+        // 删除
+        function doDelete(id) {
+            if (!confirm('确认删除 ' + id + ' ？\n删除后不可恢复，请谨慎！')) return;
+            ZIYIT_API.backroomsDelete(id).then(function (d) {
+                toast((d && (d.message || d.msg)) || '已删除：' + id);
+                loadMine();
+            }).catch(function (err) {
+                if (err && err.status === 403) toast('无权删除：' + id);
+                else toast('删除失败：' + errText(err));
+            });
+        }
+
+        // ============ 弹窗 ============
+        function openModal(html) { $('modal-box').innerHTML = html; $('modal-mask').classList.add('show'); }
+        function closeModal() { $('modal-mask').classList.remove('show'); $('modal-box').innerHTML = ''; }
+        $('modal-mask').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
+        $('modal-box').addEventListener('click', function (e) { if (e.target.closest('[data-close]')) closeModal(); });
+
+        // ============ 初始化 ============
+        function init() {
+            ZIYIT_API.currentUsername().then(function (name) {
+                if (!name) {
+                    $('gate-msg').textContent = '未登录或登录已过期，请先登录。';
+                    $('gate').classList.add('show');
+                    return;
+                }
+                USERNAME = name;
+                $('whoami').textContent = '当前用户：' + name;
+                $('main').style.display = '';
+                loadMine();
+            }).catch(function () {
+                $('gate-msg').textContent = '未登录或登录已过期，请先登录。';
+                $('gate').classList.add('show');
+            });
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

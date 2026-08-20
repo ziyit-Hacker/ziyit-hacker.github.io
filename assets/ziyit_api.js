@@ -698,6 +698,87 @@
         return role === 'zc' || role === 'admin' || role === 'vip' || role === 'vip用户' || role === 'isztg' || role === 'ztg';
     }
 
+    // ==================== Backrooms 层级管理系统 ====================
+    function backroomsList() {
+        return request('/backrooms/levels');
+    }
+
+    function backroomsView(id) {
+        return request('/backrooms/levels/' + encodeURIComponent(id));
+    }
+
+    // 提交层级：levelId(Level-xxx 必填) + name(层级名称 必填) + HTML 文件
+    function backroomsSubmit(levelId, name, file) {
+        var fd = new FormData();
+        fd.append('levelId', levelId);
+        fd.append('name', name);
+        fd.append('file', file);
+        return request('/backrooms/levels', { method: 'POST', body: fd }); // 浏览器自动带 multipart 边界
+    }
+
+    // 更新层级：可选 name（传了则更新名称，不传保留原名）
+    function backroomsUpdate(levelId, name, file) {
+        var fd = new FormData();
+        if (name) fd.append('name', name);
+        fd.append('file', file);
+        return request('/backrooms/levels/' + encodeURIComponent(levelId), { method: 'PUT', body: fd });
+    }
+
+    function backroomsDelete(levelId) {
+        return request('/backrooms/levels/' + encodeURIComponent(levelId), { method: 'DELETE' });
+    }
+
+    function backroomsAdminDelete(levelId) {
+        return request('/backrooms/levels/' + encodeURIComponent(levelId) + '/admin', { method: 'DELETE' });
+    }
+
+    function backroomsRewrite(levelId) {
+        return request('/backrooms/levels/' + encodeURIComponent(levelId) + '/rewrite', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'
+        });
+    }
+
+    function backroomsAiReview(levelId, action, reply, submitAdvanced) {
+        return post('/backrooms/review/ai', {
+            levelId: levelId,
+            action: action,
+            reply: reply || '',
+            submitAdvanced: !!submitAdvanced
+        });
+    }
+
+    function backroomsAdvancedReview(levelId, action, reason) {
+        return post('/backrooms/review/advanced', {
+            levelId: levelId,
+            action: action,
+            reason: reason || ''
+        });
+    }
+
+    // 下载审核标准（保存为"层级审核标准.md"）
+    function backroomsDownloadStandard() {
+        var base = (localStorage.getItem('ziyit_api_base') || DEFAULT_BASE).replace(/\/$/, '');
+        return fetchWithTimeout(base + '/backrooms/normal-levels/slyq.md')
+            .then(function (r) {
+                if (!r.ok) { var e = new Error('下载失败 ' + r.status); e.status = r.status; throw e; }
+                return r.blob();
+            })
+            .then(function (blob) {
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = '层级审核标准.md';
+                document.body.appendChild(a); a.click(); a.remove();
+                URL.revokeObjectURL(a.href);
+            });
+    }
+
+    // 后端层级访问基础地址（查看稿件 / 列表跳转用）
+    function backroomsBase() {
+        return (localStorage.getItem('ziyit_api_base') || DEFAULT_BASE).replace(/\/$/, '');
+    }
+
     window.ZIYIT_API = {
         BASE: DEFAULT_BASE,
         getBases: getBases,
@@ -769,6 +850,17 @@
         appealSession: appealSession,
         appealReply: appealReply,
         userType: userType,
-        isVip: isVip
+        isVip: isVip,
+        backroomsList: backroomsList,
+        backroomsView: backroomsView,
+        backroomsSubmit: backroomsSubmit,
+        backroomsUpdate: backroomsUpdate,
+        backroomsDelete: backroomsDelete,
+        backroomsAdminDelete: backroomsAdminDelete,
+        backroomsRewrite: backroomsRewrite,
+        backroomsAiReview: backroomsAiReview,
+        backroomsAdvancedReview: backroomsAdvancedReview,
+        backroomsDownloadStandard: backroomsDownloadStandard,
+        backroomsBase: backroomsBase
     };
 })();
