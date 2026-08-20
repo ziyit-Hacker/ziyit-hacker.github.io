@@ -26,6 +26,19 @@
         .top-actions button:hover { background: #0069b9; }
         .main-layout { display: flex; height: calc(100vh - 50px); overflow: hidden; }
 
+        /* ===== 登录门禁：未登录时整页遮挡，阻止使用创建器 ===== */
+        .login-gate { display: none; position: fixed; inset: 0; z-index: 9999; background: #f0f1f3; align-items: center; justify-content: center; }
+        .login-gate.show { display: flex; }
+        .login-gate-card { background: #fff; border: 1px solid #d9dce1; border-radius: 12px; padding: 36px 44px; text-align: center; max-width: 420px; box-shadow: 0 8px 30px rgba(0, 0, 0, .08); }
+        .login-gate-card h2 { margin: 0 0 12px; font-size: 20px; }
+        .login-gate-card p { margin: 0 0 8px; color: #555; font-size: 14px; line-height: 1.7; }
+        .login-gate-card .login-gate-sub { color: #e74c3c; font-size: 13px; margin-bottom: 20px; }
+        .login-gate-btn { display: inline-block; background: #22262c; color: #fff; padding: 10px 40px; border-radius: 8px; text-decoration: none; font-size: 15px; }
+        .login-gate-btn:hover { opacity: .88; }
+        .login-gate-back { margin-top: 18px; font-size: 13px; }
+        .login-gate-back a { color: #666; text-decoration: none; }
+        .login-gate-back a:hover { color: #0078d4; }
+
         .panel { width: 300px; min-width: 260px; background: #fff; border-right: 1px solid #d9dce1; overflow-y: auto; padding: 12px; }
         .panel-sec { margin-bottom: 16px; border: 1px solid #e2e5ea; border-radius: 8px; padding: 10px 12px; background: #fafbfc; }
         .panel-sec h3 { margin: 0 0 10px; font-size: 13px; color: #444; border-bottom: 1px solid #e8eaee; padding-bottom: 6px; }
@@ -289,6 +302,17 @@
 </head>
 
 <body>
+
+    <!-- ===== 登录门禁：未登录时整页遮挡 ===== -->
+    <div class="login-gate" id="login-gate">
+        <div class="login-gate-card">
+            <h2>🔒 需要登录</h2>
+            <p>使用「后室层级文档创建器」（编辑 / 加载模板 / 上传 HTML / 导出）需要先登录账号。</p>
+            <p class="login-gate-sub" id="login-gate-sub"></p>
+            <a class="login-gate-btn" href="/user/">去登录</a>
+            <div class="login-gate-back"><a href="/">← 返回首页</a></div>
+        </div>
+    </div>
 
     <header class="topbar">
         <h1>📄 后室层级文档创建器<span id="page-type-badge"></span></h1>
@@ -2189,12 +2213,39 @@
 
             /* ================= 初始化 ================= */
             function init() {
-                parseType();
-                initPresetSelect();
-                bindEvents();
-                render();
-                // 自动尝试加载模板（通过本地服务器时生效）
-                setTimeout(loadTemplate, 300);
+                // 登录门禁：编辑 / 加载模板 / 上传 HTML / 导出均需登录后才能使用，
+                // 未登录时整页遮挡并给出登录入口
+                checkLoginThen(function () {
+                    parseType();
+                    initPresetSelect();
+                    bindEvents();
+                    render();
+                    // 自动尝试加载模板（通过本地服务器时生效）
+                    setTimeout(loadTemplate, 300);
+                });
+            }
+
+            // 校验登录态：通过后执行 cb；失败时显示整页门禁
+            function checkLoginThen(cb) {
+                if (!window.ZIYIT_API) { showGate('API 组件加载失败，请刷新页面后重试'); return; }
+                // 走 request()：自动带 Token，且凭据存在时可自动重登，避免误判未登录
+                ZIYIT_API.request('/auth/user-type').then(function () {
+                    cb();
+                }).catch(function (err) {
+                    if (err && err.status === 401) {
+                        showGate('未登录或登录已过期，请先登录后再使用。');
+                    } else {
+                        showGate('无法验证登录状态（' + ((err && err.message) || '网络异常') + '），请先登录后再使用。');
+                    }
+                });
+            }
+
+            // 显示登录门禁（整页遮挡）
+            function showGate(msg) {
+                var gate = document.getElementById('login-gate');
+                var sub = document.getElementById('login-gate-sub');
+                if (sub) sub.textContent = msg || '';
+                if (gate) gate.classList.add('show');
             }
 
             if (document.readyState === 'loading') {
