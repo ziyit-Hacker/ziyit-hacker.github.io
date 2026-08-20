@@ -379,6 +379,7 @@
                 token: null,        // appealToken
                 sessionId: null,
                 rendered: {},       // 已渲染消息 id（增量去重）
+                pendingSends: {},   // 乐观渲染待同步：fid -> { content, ts, el }，轮询回执匹配后删除
                 sending: false,
                 closed: false,
                 pollTimer: null,
@@ -476,6 +477,7 @@
                 }
                 el.messages.appendChild(wrap);
                 scrollBottom();
+                return wrap;
             }
 
             function addSys(content) {
@@ -483,26 +485,40 @@
             }
 
             // 按后端消息结构渲染（role: user 自己 / system 系统 / 其余为客服）
-            // skipMine=true 用于轮询：自己发送的消息已本地实时渲染，跳过避免复读
-            function renderMsg(m, skipMine) {
+            // isPoll=true 用于轮询：自己刚发送的乐观消息会与服务端回执匹配去重，避免复读；
+            // 刷新后无本地乐观记录，服务端全量历史（含自己发的）会正常渲染出来
+            function renderMsg(m, isPoll) {
                 var id = m.id || (m.ts || m.sentAt || '') + '|' + (m.content || '');
                 if (A.rendered[id]) return;
                 A.rendered[id] = true;
                 var role = String(m.role || m.type || '').toLowerCase();
-                if (skipMine && role === 'user') return;
-                var content = m.content || '';
-                var time = nowTime(m.ts || m.sentAt);
-                if (role === 'system' || role === 'sys' || role === 'handoff' || role === 'transfer') {
-                    addSys(content || '系统消息');
-                } else if (role === 'user') {
-                    addMsg('user', content, { time: time });
-                } else {
-                    addMsg('human', content, { time: time, username: m.senderName || m.fromUsername || '' });
+                if (role !== 'user') {
+                    var content = m.content || '';
+                    var time = nowTime(m.ts || m.sentAt);
+                    if (role === 'system' || role === 'sys' || role === 'handoff' || role === 'transfer') {
+                        addSys(content || '系统消息');
+                    } else {
+                        addMsg('human', content, { time: time, username: m.senderName || m.fromUsername || '' });
+                    }
+                    return;
                 }
+                // 用户自己的消息：轮询回执与最近 2 分钟内发送的乐观消息内容一致 → 保留本地，跳过服务端副本
+                if (isPoll) {
+                    var now = Date.now();
+                    var keys = Object.keys(A.pendingSends);
+                    for (var i = 0; i < keys.length; i++) {
+                        var rec = A.pendingSends[keys[i]];
+                        if (rec.content === m.content && (now - rec.ts) < 120000) {
+                            delete A.pendingSends[keys[i]];
+                            return;
+                        }
+                    }
+                }
+                addMsg('user', m.content || '', { time: nowTime(m.ts || m.sentAt) });
             }
 
-            function renderAll(msgs, skipMine) {
-                (msgs || []).forEach(function (m) { renderMsg(m, skipMine); });
+            function renderAll(msgs, isPoll) {
+                (msgs || []).forEach(function (m) { renderMsg(m, isPoll); });
             }
 
             // ---------- 轮询申诉会话 ----------
@@ -562,14 +578,19 @@
                 A.sending = true;
                 el.send.disabled = true;
                 el.input.value = '';
-                // 乐观渲染自己的消息
-                renderMsg({ role: 'user', content: content, ts: new Date().toISOString() });
+                // 乐观渲染自己的消息，并登记待同步（轮询回执按内容+时间匹配后删除，避免复读）
+                var elMsg = addMsg('user', content, { time: nowTime() });
+                var fid = 'p' + Date.now();
+                A.pendingSends[fid] = { content: content, ts: Date.now(), el: elMsg };
                 ZIYIT_API.appealReply(A.token, content).then(function () {
                     A.sending = false;
                     el.send.disabled = false;
                 }).catch(function (err) {
                     A.sending = false;
                     el.send.disabled = false;
+                    // 发送失败：移除本地乐观消息与登记，避免残留假消息
+                    delete A.pendingSends[fid];
+                    if (elMsg && elMsg.parentNode) elMsg.parentNode.removeChild(elMsg);
                     if (err && (err.status === 400 || err.status === 404 || err.status === 403)) {
                         finishClosed();
                         showToast('申诉会话已结束', 'error');
@@ -607,6 +628,7 @@
                     el.send.disabled = false;
                     el.messages.innerHTML = '';
                     A.rendered = {};
+                    A.pendingSends = {};
                     addSys('申诉已提交，正在等待人工客服接入…');
                     startPolling();
                 }).catch(function (err) {

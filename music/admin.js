@@ -3147,12 +3147,15 @@ function guideRenderSessionMessages(sid) {
     s.msgs.forEach(function (m) {
         const content = m.content || '';
         const time = m.ts || m.sentAt || '';
-        const isSystem = m.type === 'sys' || m.type === 'system' || m.type === 'handoff' || m.type === 'transfer';
+        const isSystem = m.type === 'sys' || m.type === 'system' || m.type === 'handoff' || m.type === 'transfer' || m.senderName === '系统';
         if (isSystem && m.fromUserId == null) {
             html += '<div class="chat-broadcast chat-msg"><div class="chat-msg-bubble">🔄 ' + escAdmin(content || '请求转接人工客服') + '</div></div>';
             return;
         }
-        const mine = guideConsole.myUserId != null && m.fromUserId != null && String(m.fromUserId) === String(guideConsole.myUserId);
+        // 消息归属：优先 fromUserId，后端全量历史用 sender 字段（用户端格式）时以 sender 兜底，
+        // 避免刷新后自己发送的消息被误判为对方
+        const msgId = m.fromUserId != null ? m.fromUserId : (m.sender != null ? m.sender : null);
+        const mine = guideConsole.myUserId != null && msgId != null && String(msgId) === String(guideConsole.myUserId);
         const fromName = m.fromUsername || (mine ? '我' : s.user);
         html += '<div class="chat-msg ' + (mine ? 'chat-mine' : 'chat-theirs') + '">'
             + '<div class="chat-msg-meta">' + escAdmin(fromName) + '<span class="chat-msg-time">' + fmtChatTime(time) + '</span></div>'
