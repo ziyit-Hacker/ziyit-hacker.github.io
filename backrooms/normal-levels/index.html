@@ -3013,6 +3013,22 @@ YRDZST
             } else {
                 merge();
             }
+
+            // 支持 ?open_level=层级ID 直达：以 Blob 临时地址打开后端层级（避免跨域 Cookie 隔离）
+            (function () {
+                var m = location.search.match(/[?&]open_level=([^&]*)/);
+                if (!m) return;
+                var openId = '';
+                try { openId = decodeURIComponent(m[1]); } catch (e) { openId = m[1]; }
+                if (!openId) return;
+                // 清除参数，避免刷新重复打开
+                try { history.replaceState(null, '', location.pathname); } catch (e) {}
+                if (window.ZIYIT_API && ZIYIT_API.backroomsOpenLevel) {
+                    ZIYIT_API.backroomsOpenLevel(openId).catch(function (err) {
+                        alert('打开失败：' + ((err && err.message) || err));
+                    });
+                }
+            })();
         })();
     </script>
 </body>

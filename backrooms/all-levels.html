@@ -152,6 +152,19 @@
         }
 
         load();
+
+        // 支持 ?open_level=层级ID 直达：以 Blob 临时地址打开后端层级（避免跨域 Cookie 隔离）
+        (function () {
+            var m = location.search.match(/[?&]open_level=([^&]*)/);
+            if (!m) return;
+            var openId = '';
+            try { openId = decodeURIComponent(m[1]); } catch (e) { openId = m[1]; }
+            if (!openId) return;
+            try { history.replaceState(null, '', location.pathname); } catch (e) {}
+            ZIYIT_API.backroomsOpenLevel(openId).catch(function (err) {
+                toast('打开失败：' + ((err && err.message) || err));
+            });
+        })();
     </script>
 </body>
 
