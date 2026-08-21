@@ -800,6 +800,31 @@
                 try { localStorage.setItem('ziyit_rating_ids', JSON.stringify(ids)); } catch (e) {}
             }
 
+            // 当前文档绑定的评分档案（用户在「我的评分」中真正绑定到本文档的评分）
+            // 导出时优先使用它，避免用自动拼出的编号（ratingCode）导致绑定不生效
+            var DOC_RATING_KEY = 'ziyit_doc_rating_bindings';
+
+            function saveDocBinding(bcode, bid) {
+                var map = {};
+                try { map = JSON.parse(localStorage.getItem(DOC_RATING_KEY) || '{}') || {}; } catch (e) {}
+                map[ratingCode()] = { code: bcode, id: bid };
+                try { localStorage.setItem(DOC_RATING_KEY, JSON.stringify(map)); } catch (e) {}
+            }
+
+            function getDocBinding() {
+                var map = {};
+                try { map = JSON.parse(localStorage.getItem(DOC_RATING_KEY) || '{}') || {}; } catch (e) {}
+                var b = map[ratingCode()];
+                return b && b.code && b.id != null ? b : null;
+            }
+
+            function clearDocBinding() {
+                var map = {};
+                try { map = JSON.parse(localStorage.getItem(DOC_RATING_KEY) || '{}') || {}; } catch (e) {}
+                delete map[ratingCode()];
+                try { localStorage.setItem(DOC_RATING_KEY, JSON.stringify(map)); } catch (e) {}
+            }
+
             // 控件样式：仿 wikidot page-rate-widget-box 的深灰圆角盒
             var RATING_WIDGET_CSS = '.ziyit-rate{display:inline-block;background:#f4f4f0;border:1px solid #d8d8d0;border-radius:8px;padding:6px 10px;margin-bottom:14px;font-size:13px;color:#444;}.ziyit-rate .ziyit-rate-points{margin-right:8px;}.ziyit-rate .ziyit-rate-num{font-weight:700;color:#222;margin-left:4px;}.ziyit-rate .ziyit-rate-up,.ziyit-rate .ziyit-rate-down{display:inline-block;width:26px;height:24px;line-height:22px;text-align:center;border:1px solid #aaa;border-radius:5px;background:#fff;cursor:pointer;margin-left:5px;vertical-align:middle;}.ziyit-rate .ziyit-rate-up a,.ziyit-rate .ziyit-rate-down a{text-decoration:none;color:#333;display:block;font-weight:700;}.ziyit-rate .ziyit-rate-up:hover,.ziyit-rate .ziyit-rate-down:hover{border-color:#333;background:#f0f0f0;}';
 
@@ -850,7 +875,8 @@
                 ratings.forEach(function (r) {
                     var tile = document.createElement('div');
                     tile.className = 'rate-mgr-tile';
-                    var bound = boundRatingId(r.code) == r.id;
+                    var db = getDocBinding();
+                    var bound = db != null && db.code === r.code && db.id === r.id;
                     var desc = r.description ? '<div class="rate-mgr-desc">' + escHtml(r.description) + '</div>' : '';
                     tile.innerHTML = '<div class="rate-mgr-code">' + escHtml(r.code) + '<span class="rate-mgr-id">ID ' + r.id + '</span></div>'
                         + desc
@@ -867,6 +893,7 @@
                     var bindBtn = tile.querySelector('.rate-mgr-bind');
                     if (bindBtn) bindBtn.addEventListener('click', function () {
                         saveRatingId(r.code, r.id);
+                        saveDocBinding(r.code, r.id);
                         render();
                         loadRatingManager();
                         toast('已绑定评分 ' + r.code + '（ID ' + r.id + '），导出后投票可用');
@@ -874,6 +901,7 @@
                     var unbindBtn = tile.querySelector('.rate-mgr-unbind');
                     if (unbindBtn) unbindBtn.addEventListener('click', function () {
                         unbindRating(r.code);
+                        clearDocBinding();
                         render();
                         loadRatingManager();
                         toast('已解除绑定 ' + r.code);
@@ -1332,6 +1360,11 @@
                 var el = $('rating-status');
                 if (!el) return;
                 var code = ratingCode();
+                var bind = getDocBinding();
+                if (bind != null) {
+                    el.textContent = '评分：' + bind.code + '（已绑定 ID ' + bind.id + '，投票可用）';
+                    return;
+                }
                 var rid = boundRatingId(code);
                 el.textContent = rid != null
                     ? '评分：' + code + '（已绑定 ID ' + rid + '，投票可用）'
@@ -2004,9 +2037,11 @@
             function exportHtml() {
                 var slug = (doc.titleName || 'level').replace(/[^\w\u4e00-\u9fa5-]+/g, '-').replace(/^-+|-+$/g, '') || 'level';
                 var code = ratingCode();
-                var rid = boundRatingId(code);
+                var bind = getDocBinding();
+                if (bind != null) code = bind.code;
+                var rid = bind != null ? bind.id : boundRatingId(code);
                 if (rid != null) toast('已绑定评分 ' + code + '（ID ' + rid + '）');
-                var html = buildFullHtml(rid);
+                var html = buildFullHtml(rid, code);
                 var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
                 var url = URL.createObjectURL(blob);
                 var a = document.createElement('a');
@@ -2088,12 +2123,12 @@
             }
 
             // 基于完整 levels.html 骨架导出（导航栏/登录/header/head 全部资源）
-            function buildFullFromTemplate(rid) {
+            function buildFullFromTemplate(rid, codeOverride) {
                 if (!rawTemplate) return '';
                 var p = new DOMParser().parseFromString(rawTemplate, 'text/html');
-                var code = ratingCode();
+                var code = codeOverride || ratingCode();
 
-                if (p.title !== undefined) p.title = doc.titleName + ' - The Backrooms 中文维基';
+                if (p.title !== undefined) p.title = doc.titlePrefix + ' - “' + doc.titleName + '” - The Backrooms 中文维基';
 
                 // 文档类型标识（levels/item/entity/phenomenon）
                 if (p.head) {
@@ -2162,18 +2197,18 @@
                 return '<!DOCTYPE html>\n' + absolutizeHtml(p.documentElement.outerHTML);
             }
 
-            function buildFullHtml(rid) {
+            function buildFullHtml(rid, codeOverride) {
                 if (rawTemplate) {
-                    var full = buildFullFromTemplate(rid);
+                    var full = buildFullFromTemplate(rid, codeOverride);
                     if (full) return full;
                 }
-                var code = ratingCode();
+                var code = codeOverride || ratingCode();
                 // 未加载模板时的简化版
                 return '<!DOCTYPE html>\n'
                     + '<html lang="zh-CN">\n<head>\n'
                     + '<meta charset="UTF-8">\n'
                     + '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
-                    + '<title>' + escHtml(doc.titleName) + ' - The Backrooms 中文维基</title>\n'
+                    + '<title>' + escHtml(doc.titlePrefix) + ' - “' + escHtml(doc.titleName) + '” - The Backrooms 中文维基</title>\n'
                     + '<meta name="doc-type" content="' + escHtml(doc.type) + '">\n'
                     + '<link rel="icon" href="' + toAbsUrl('/assets/ziyit.png') + '" type="image/x-icon">\n'
                     + '<script src="' + toAbsUrl('/assets/f12check.js') + '"><\/script>\n'
