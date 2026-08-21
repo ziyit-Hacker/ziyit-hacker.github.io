@@ -779,6 +779,32 @@
         return (localStorage.getItem('ziyit_api_base') || DEFAULT_BASE).replace(/\/$/, '');
     }
 
+    // 打开层级：带 Token 拉取 HTML 后以 Blob 临时地址在新标签打开。
+    // 避免直接跳转后端域名造成的 Cookie 隔离（无法登录/评分）；Blob 基于当前前端域名，登录态与评分绑定均可用。
+    function backroomsOpenLevel(id) {
+        var bases = getBases();
+        var base = bases[0] || DEFAULT_BASE;
+        var token = getToken();
+        return fetchWithTimeout(base + '/backrooms/levels/' + encodeURIComponent(id), {
+            headers: {
+                'ngrok-skip-browser-warning': '1',
+                'Authorization': token ? 'Bearer ' + token : ''
+            }
+        }).then(function (res) {
+            if (!res.ok) {
+                var err = new Error('请求失败 ' + res.status);
+                err.status = res.status;
+                throw err;
+            }
+            return res.text();
+        }).then(function (html) {
+            var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+        });
+    }
+
     window.ZIYIT_API = {
         BASE: DEFAULT_BASE,
         getBases: getBases,
@@ -861,6 +887,7 @@
         backroomsAiReview: backroomsAiReview,
         backroomsAdvancedReview: backroomsAdvancedReview,
         backroomsDownloadStandard: backroomsDownloadStandard,
-        backroomsBase: backroomsBase
+        backroomsBase: backroomsBase,
+        backroomsOpenLevel: backroomsOpenLevel
     };
 })();

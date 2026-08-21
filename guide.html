@@ -1041,6 +1041,23 @@
                     if (rt === 'transfer_confirm' && d.reply) addMsg('ai', d.reply, {});
                     return;
                 }
+                // AI 主动转人工（[HUMAN] 或纪律强制转人工）：跳过用户确认直接转接，显示转接中并开始轮询
+                if (rt === 'ai_human_transfer') {
+                    setStatusBadge('等待人工客服接入', 'waiting');
+                    showTransferWait();
+                    startSessionPolling();
+                    if (d.reply) addMsg('ai', d.reply, {});
+                    return;
+                }
+                // 人工客服已接入会话
+                if (rt === 'human_joined') {
+                    var nmJ = humanAdminName(d.humanAdmin) || '';
+                    setStatusBadge(nmJ ? ('人工客服·' + nmJ) : '人工客服在线', 'online');
+                    hideTransferWait();
+                    startSessionPolling();
+                    if (d.reply) addSys(d.reply);
+                    return;
+                }
                 // 转人工相关状态
                 if (rt === 'transfer_waiting') {
                     if (hasHuman) {

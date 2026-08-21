@@ -2930,9 +2930,8 @@ YRDZST
             }
             function makeLi(id, it) {
                 var name = it.name || '';
-                var href = BASE + '/backrooms/levels/' + encodeURIComponent(id);
                 var rew = it.rewritten ? '<span class="rew"><span style="white-space: pre-wrap;"> </span></span>' : '';
-                return '<li><a href="' + esc(href) + '">' + esc(id) + '</a>'
+                return '<li><a class="dyn-level" data-id="' + esc(id) + '" href="javascript:void(0)">' + esc(id) + '</a>'
                     + (name ? ' - “' + esc(name) + '”' : '')
                     + rew + '</li>';
             }
@@ -2994,6 +2993,20 @@ YRDZST
                     });
                 }).catch(function () { /* 后端不可用时静默，保留静态列表 */ });
             }
+
+            // 动态新增层级的点击：以 Blob 临时地址打开（避免跳转后端域名造成 Cookie 隔离，无法登录/评分）
+            document.addEventListener('click', function (e) {
+                var a = e.target && e.target.closest ? e.target.closest('a.dyn-level') : null;
+                if (!a) return;
+                e.preventDefault();
+                var id = a.getAttribute('data-id');
+                if (!id) return;
+                if (window.ZIYIT_API && ZIYIT_API.backroomsOpenLevel) {
+                    ZIYIT_API.backroomsOpenLevel(id).catch(function (err) {
+                        alert('打开失败：' + ((err && err.message) || err));
+                    });
+                }
+            });
 
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', merge);

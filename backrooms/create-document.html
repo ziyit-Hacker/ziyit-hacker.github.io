@@ -2122,6 +2122,46 @@
                     + '<ul>' + exitHtml + '</ul>\n';
             }
 
+            // 导出文档的导航栏（绝对 URL 版本：下载后本地打开也能正常跳转，注册按钮指向 GitHub 托管的注册页）
+            var EXPORT_TOPBAR_HTML =
+                '<!--ziyit-topbar-->\n' +
+                '<div id="top-bar">\n' +
+                '    <div class="top-bar">\n' +
+                '        <ul>\n' +
+                '            <li>图书馆\n' +
+                '                <ul>\n' +
+                '                    <li><a href="https://ziyit-hacker.github.io/backrooms/normal-levels/">层级</a></li>\n' +
+                '                    <li><a href="https://ziyit-hacker.github.io/backrooms/sub-layers/">子区集</a></li>\n' +
+                '                    <li><a href="https://ziyit-hacker.github.io/backrooms/entities/">实体</a></li>\n' +
+                '                    <li><a href="https://ziyit-hacker.github.io/backrooms/objects/">物品</a></li>\n' +
+                '                    <li><a href="https://ziyit-hacker.github.io/backrooms/phenomena/">现象</a></li>\n' +
+                '                    <li><a href="https://ziyit-hacker.github.io/backrooms/groups-list.html">团体</a></li>\n' +
+                '                </ul>\n' +
+                '            </li>\n' +
+                '            <li><a href="javascript:history.back()">返回上一步</a></li>\n' +
+                '        </ul>\n' +
+                '    </div>\n' +
+                '    <div class="mobile-top-bar">\n' +
+                '        <div class="open-menu">\n' +
+                '            <p><a href="#side-bar">≡</a></p>\n' +
+                '        </div>\n' +
+                '        <ul>\n' +
+                '            <li>图书馆\n' +
+                '                <ul>\n' +
+                '                    <li><a href="https://ziyit-hacker.github.io/backrooms/normal-levels/">层级</a></li>\n' +
+                '                    <li><a href="https://ziyit-hacker.github.io/backrooms/sub-layers/">子区集</a></li>\n' +
+                '                    <li><a href="https://ziyit-hacker.github.io/backrooms/entities/">实体</a></li>\n' +
+                '                    <li><a href="https://ziyit-hacker.github.io/backrooms/objects/">物品</a></li>\n' +
+                '                    <li><a href="https://ziyit-hacker.github.io/backrooms/phenomena/">现象</a></li>\n' +
+                '                    <li><a href="https://ziyit-hacker.github.io/backrooms/groups-list.html">团体</a></li>\n' +
+                '                </ul>\n' +
+                '            </li>\n' +
+                '            <li><a href="javascript:history.back()">返回上一步</a></li>\n' +
+                '        </ul>\n' +
+                '    </div>\n' +
+                '</div>\n' +
+                '<!--/ziyit-topbar-->';
+
             // 基于完整 levels.html 骨架导出（导航栏/登录/header/head 全部资源）
             function buildFullFromTemplate(rid, codeOverride) {
                 if (!rawTemplate) return '';
@@ -2129,6 +2169,15 @@
                 var code = codeOverride || ratingCode();
 
                 if (p.title !== undefined) p.title = doc.titlePrefix + ' - “' + doc.titleName + '” - The Backrooms 中文维基';
+
+                // 导航栏替换为绝对 URL 版本（下载后本地打开也能正常跳转）
+                var tb = p.getElementById('top-bar');
+                if (tb) {
+                    var tbHolder = p.createElement('div');
+                    tbHolder.innerHTML = EXPORT_TOPBAR_HTML;
+                    while (tbHolder.firstChild) tb.parentNode.insertBefore(tbHolder.firstChild, tb);
+                    tb.parentNode.removeChild(tb);
+                }
 
                 // 文档类型标识（levels/item/entity/phenomenon）
                 if (p.head) {
@@ -2194,7 +2243,10 @@
                     p.body.appendChild(sc);
                 }
 
-                return '<!DOCTYPE html>\n' + absolutizeHtml(p.documentElement.outerHTML);
+                // 登录/注册链接绝对化（下载后本地打开也能正常跳转）
+                return '<!DOCTYPE html>\n' + absolutizeHtml(p.documentElement.outerHTML)
+                    .replace(/href="\/user\/"/g, 'href="https://ziyit-hacker.github.io/user/"')
+                    .replace(/href="\/user\/register"/g, 'href="https://ziyit-hacker.github.io/user/register"');
             }
 
             function buildFullHtml(rid, codeOverride) {

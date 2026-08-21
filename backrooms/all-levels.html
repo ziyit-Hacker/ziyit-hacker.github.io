@@ -132,7 +132,10 @@
             var tr = e.target.closest('tr[data-id]');
             if (!tr) return;
             var id = tr.getAttribute('data-id');
-            window.open(BASE + '/backrooms/levels/' + encodeURIComponent(id), '_blank');
+            // Blob 方式打开：避免跳转后端域名造成 Cookie 隔离（无法登录/评分）
+            ZIYIT_API.backroomsOpenLevel(id).catch(function (err) {
+                toast('打开失败：' + ((err && err.message) || err));
+            });
         });
 
         function load() {
