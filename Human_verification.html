@@ -770,10 +770,20 @@
       btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2L3 12l6 3 3 6 9-18z"/><path d="M15 9l-6 6"/></svg>免费获取 API Key';
       btn.onclick = showApiKeyDialog;
 
+      // 「我的密钥」管理入口：仅登录用户可见
+      var myKeyBtn = null;
+      if (getLocalToken()) {
+        myKeyBtn = document.createElement('a');
+        myKeyBtn.className = 'api-key-btn';
+        myKeyBtn.href = './user/api-key.html';
+        myKeyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>我的密钥';
+      }
+
       var headerInner = document.querySelector('.header-inner');
       if (headerInner) {
         var spacer = headerInner.querySelector('.header-spacer');
         if (spacer) {
+          if (myKeyBtn) spacer.parentNode.insertBefore(myKeyBtn, spacer.nextSibling);
           spacer.parentNode.insertBefore(btn, spacer.nextSibling);
         }
       }
