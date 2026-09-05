@@ -616,7 +616,8 @@
             </span>
             <div class="feature-title">可嵌入式 SDK</div>
             <p class="feature-body">
-              一行 script 标签即可接入，用法与 reCAPTCHA 一致；提供 mount + onSuccess/onFail 回调，token 由后端核销。
+              一行 script 标签即可接入，用法与 reCAPTCHA 一致；提供 mount + onSuccess/onFail 回调，
+              通过后回调返回本轮的 challengeId + clientKey，随业务请求一并提交后端一次性消费。
             </p>
           </div>
         </div>
@@ -631,7 +632,7 @@
         <div class="demo-card">
           <div class="demo-card-head">
             <span class="demo-card-title">ZHV Widget</span>
-            <span class="demo-card-sub">verify + score + token</span>
+            <span class="demo-card-sub">challenge → verify</span>
           </div>
           <div class="demo-card-body">
             <div id="app"></div>
@@ -664,6 +665,7 @@
   </script>
   <script>
     window.PHANTOM_API_KEY = 'PfwHF-kkg8c-YX6CF-J7Uw1-hv5Dm';
+    window.__phantom = { verified: false, challengeId: '', clientKey: '', pendingSubmit: false };
   </script>
   <script type="module" src="https://ziyit-hacker.github.io/Human_verification/main.js"></script>
   <script>

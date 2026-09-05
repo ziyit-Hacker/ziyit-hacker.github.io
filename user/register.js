@@ -1,136 +1,213 @@
-window.addEventListener('DOMContentLoaded', async () => {
-    // 确认密码输入变化时隐藏不一致提示
-    const confirmPwd = document.getElementById('confirmPassword');
-    const confirmErr = document.getElementById('confirmPasswordError');
-    if (confirmPwd && confirmErr) {
-        confirmPwd.addEventListener('input', function () {
-            confirmErr.style.display = 'none';
-        });
+(function () {
+    let btnLocked = false;
+    let countTimer = null;
+
+    function el(id) {
+        return document.getElementById(id);
     }
 
-    const form = document.querySelector('form');
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+    function hideTip(id) {
+        const n = el(id);
+        if (n) n.style.display = 'none';
+    }
 
-            if (window.location.search) {
-                window.history.replaceState({}, document.title, window.location.pathname);
+    function showTip(id, msg) {
+        const n = el(id);
+        if (!n) return;
+        if (msg != null) n.textContent = msg;
+        n.style.display = 'block';
+    }
+
+    // 冷却禁用注册按钮：期间不可提交，倒计时展示在 dupTip
+    function lockButton(seconds, msg) {
+        const btn = el('registerBtn');
+        btnLocked = true;
+        if (btn) btn.disabled = true;
+        showTip('dupTip', msg);
+        if (countTimer) clearInterval(countTimer);
+        let remain = seconds;
+        countTimer = setInterval(function () {
+            remain -= 1;
+            if (remain <= 0) {
+                clearInterval(countTimer);
+                countTimer = null;
+                btnLocked = false;
+                if (btn) btn.disabled = false;
+                hideTip('dupTip');
+            } else {
+                const d = el('dupTip');
+                if (d) d.textContent = msg + '（' + remain + ' 秒后可重试）';
             }
+        }, 1000);
+    }
 
-            const btn = document.getElementById('registerBtn');
-            const dupTip = document.getElementById('dupTip');
+    // 重置滑块：清空本地凭证，回到待验证态（保留表单字段）
+    function resetCaptcha() {
+        const st = window.__phantom;
+        if (!st) return;
+        st.verified = false;
+        st.challengeId = '';
+        st.clientKey = '';
+        if (typeof st.reset === 'function') st.reset();
+        hideTip('captchaHint');
+    }
 
-            // 人机验证未通过时提示，不进入提交流程
-            if (typeof captchaVerified === 'undefined' || !captchaVerified) {
-                const tip = document.getElementById('captchaTip');
-                if (tip) tip.style.display = 'block';
+    // 核心注册提交（submit 触发；验证通过后由 onSuccess 自动回调）
+    window.__phantomSubmit = async function () {
+        if (btnLocked) return;
+        const btn = el('registerBtn');
+        const dupTip = el('dupTip');
+        const captchaTip = el('captchaTip');
+        const st = window.__phantom;
+
+        // ===== 1) 本地字段校验（先校验后验证，见第 9 条）=====
+        const username = el('username').value.trim();
+        const email = el('email').value.trim();
+        const password = el('password').value;
+        const confirmPassword = el('confirmPassword').value;
+
+        if (!username) { alert('用户名不能为空！'); return false; }
+        if (!password) { alert('密码不能为空！'); return false; }
+        if (!email) { alert('请输入有效的邮箱地址！'); return false; }
+        const emailRe = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+        if (!emailRe.test(email)) { alert('邮箱格式不正确，请检查后重试！'); return false; }
+        if (!confirmPassword || confirmPassword !== password) {
+            showTip('confirmPasswordError', null);
+            return false;
+        }
+        hideTip('confirmPasswordError');
+
+        // ===== 2) 未通过人机验证 → 挂起提交并弹出滑块 =====
+        if (!st || !st.verified || !st.challengeId) {
+            if (captchaTip) captchaTip.style.display = 'block';
+            if (st) {
+                st.pendingSubmit = true;
+                if (typeof st.open === 'function') st.open();
+            }
+            return false;
+        }
+
+        // ===== 3) 提交（带本轮验证凭证）=====
+        hideTip('captchaTip');
+        hideTip('captchaHint');
+        if (btn) btn.disabled = true;
+        if (dupTip) { dupTip.style.display = 'block'; dupTip.textContent = '正在注册，请稍候…'; }
+
+        const CryptoJS = window.CryptoJS;
+        const md5Password = CryptoJS.MD5(password).toString(CryptoJS.enc.Base64);
+
+        try {
+            await ZIYIT_API.register(username, email, md5Password, st.challengeId, st.clientKey);
+            // 注册成功：显示邮箱验证提示并锁定表单
+            const form = document.querySelector('form');
+            const verifyTip = el('verifyTip');
+            if (verifyTip) verifyTip.style.display = 'block';
+            if (form) {
+                form.querySelectorAll('input, button').forEach(function (f) {
+                    f.disabled = true;
+                });
+            }
+            if (dupTip) dupTip.style.display = 'none';
+            return true;
+        } catch (error) {
+            console.error('注册错误:', error);
+            const status = error && error.status;
+            const data = error && error.data;
+            const raw = String(
+                (data && data.detail) || error.detail || error.message || ''
+            );
+            // 后端 429 发生在 challenge 消费之前 → 凭证仍有效，冷却后可复用直接重试
+            if (status === 429) {
+                if (/email/i.test(raw)) {
+                    // “Too many registration attempts for this email”：建议更换邮箱
+                    lockButton(30, '操作过于频繁，请更换邮箱后重试');
+                } else {
+                    // 同 IP 注册过于频繁
+                    lockButton(60, '操作过于频繁，请稍后再试');
+                }
                 return false;
             }
+            // 恢复按钮（非冷却场景）
+            if (btn) btn.disabled = false;
+            if (dupTip) dupTip.style.display = 'none';
 
-            // 防止重复点击提交
-            if (btn && btn.disabled) return false;
-            if (btn) btn.disabled = true;
-            if (dupTip) dupTip.style.display = 'block';
-
-            try {
-                const success = await checkLogin();
-                if (success) {
-                    // 注册成功：停留本页，显示邮箱验证提示并锁定表单
-                    const verifyTip = document.getElementById('verifyTip');
-                    if (verifyTip) verifyTip.style.display = 'block';
-                    form.querySelectorAll('input, button').forEach(function(f) {
-                        f.disabled = true;
-                    });
-                    if (btn) btn.disabled = true;
-                } else {
-                    // 校验未通过：恢复按钮，允许重新提交
-                    if (btn) btn.disabled = false;
-                    if (dupTip) dupTip.style.display = 'none';
+            if (status === 400) {
+                if (/Username already exists/i.test(raw)) {
+                    showTip('usernameError', '该用户名已被注册');
+                    // 400 发生在 challenge 消费之后 → 必须重新验证
+                    resetCaptcha();
+                    if (captchaTip) captchaTip.style.display = 'block';
+                    alert('该用户名已被注册，请更换用户名后重新完成滑块验证');
+                    return false;
                 }
-            } catch (error) {
-                console.error('注册错误:', error);
-                alert('注册失败: ' + error.message);
-                if (btn) btn.disabled = false;
-                if (dupTip) dupTip.style.display = 'none';
+                if (/Email already exists/i.test(raw)) {
+                    resetCaptcha();
+                    if (captchaTip) captchaTip.style.display = 'block';
+                    alert('该邮箱已被注册，请更换邮箱后重新完成滑块验证');
+                    return false;
+                }
+                alert('注册失败: ' + (raw || '请求失败 400'));
+                return false;
             }
-
-            return false;
-        });
-    }
-});
-
-async function checkLogin() {
-    const username = document.getElementById('username').value;
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    // 人机验证检查
-    if (typeof captchaVerified === 'undefined' || !captchaVerified) {
-        const tip = document.getElementById('captchaTip');
-        if (tip) tip.style.display = 'block';
-        return false;
-    }
-
-    if (!username.trim()) {
-        alert('用户名不能为空！');
-        return false;
-    }
-
-    if (!password.trim()) {
-        alert('密码不能为空！');
-        return false;
-    }
-
-    if (!email.trim() || email.indexOf('@') === -1) {
-        alert('请输入有效的邮箱地址！');
-        return false;
-    }
-
-    // 严格邮箱格式校验（防呆：基本格式 + 域名合法字符）
-    const emailRe = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-    if (!emailRe.test(email.trim())) {
-        alert('邮箱格式不正确，请检查后重试！');
-        return false;
-    }
-
-    // 密码确认校验
-    const confirmPassword = document.getElementById('confirmPassword');
-    if (confirmPassword && confirmPassword.value !== password) {
-        const errTip = document.getElementById('confirmPasswordError');
-        if (errTip) errTip.style.display = 'block';
-        confirmPassword.focus();
-        return false;
-    }
-
-    const CryptoJS = window.CryptoJS;
-    const md5Password = CryptoJS.MD5(password).toString(CryptoJS.enc.Base64);
-
-    try {
-        await ZIYIT_API.register(username.trim(), email.trim(), md5Password);
-        return true;
-    } catch (error) {
-        console.error('注册错误:', error);
-        if (error.status === 409 || (error.data && error.data.detail && String(error.data.detail).indexOf('已存在') !== -1)) {
-            document.getElementById('usernameError').style.display = 'block';
+            if (status === 403) {
+                // 验证未通过 / challengeId 过期或已被使用：立即自动重开验证，保留表单
+                resetCaptcha();
+                if (captchaTip) captchaTip.style.display = 'block';
+                st.pendingSubmit = true;
+                if (typeof st.open === 'function') st.open();
+                return false;
+            }
+            if (status === 410) {
+                // 尝试次数耗尽 / challenge 过期
+                resetCaptcha();
+                if (captchaTip) captchaTip.style.display = 'block';
+                alert('验证已失效，请重新滑动');
+                return false;
+            }
+            if (status === 422) {
+                alert('邮箱格式不正确，请检查后重试');
+                return false;
+            }
+            if (status >= 500) {
+                alert('注册失败: 服务器开小差了，请稍后再试');
+                return false;
+            }
+            alert('注册失败: ' + (raw || ('请求失败 ' + (status || '未知错误'))));
             return false;
         }
-        if (error.status) {
-            // 后端业务错误：错误消息可能为英文，尝试给出中文提示
-            var detail = String(error.data && error.data.detail || error.message || '');
-            var cnMsg = null;
-            if (/Too many registrations from this IP/i.test(detail)) {
-                cnMsg = '当前网络注册过于频繁，请稍等一段时间再试（同一网络出口 IP 注册有限额）';
-            } else if (error.status === 429) {
-                cnMsg = '操作过于频繁，请稍后再试';
-            } else if (error.status >= 500) {
-                cnMsg = '服务器开小差了，请稍后再试';
-            }
-            alert('注册失败: ' + (cnMsg || detail || ('请求失败 ' + error.status)));
-        } else {
-            // 网络层错误（无状态码）：后端不可达/超时
-            alert('注册失败: 无法连接服务器，请检查网络后重试');
+    };
+
+    window.addEventListener('DOMContentLoaded', function () {
+        const confirmPwd = el('confirmPassword');
+        const confirmErr = el('confirmPasswordError');
+        if (confirmPwd && confirmErr) {
+            confirmPwd.addEventListener('input', function () {
+                confirmErr.style.display = 'none';
+            });
         }
-        return false;
-    }
-}
+        const usernameInput = el('username');
+        const usernameError = el('usernameError');
+        if (usernameInput && usernameError) {
+            usernameInput.addEventListener('input', function () {
+                usernameError.style.display = 'none';
+            });
+        }
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.location.search) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+                if (btnLocked) {
+                    return false; // dupTip 已显示冷却倒计时
+                }
+                if (typeof window.__phantomSubmit === 'function') {
+                    window.__phantomSubmit();
+                }
+                return false;
+            });
+        }
+    });
+})();

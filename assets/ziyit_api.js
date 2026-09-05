@@ -218,8 +218,12 @@
         return post('/auth/login', { username: username, password: md5Password });
     }
 
-    function register(username, email, md5Password) {
-        return post('/auth/register', { username: username, email: email, password: md5Password });
+    function register(username, email, md5Password, challengeId, clientKey) {
+        var body = { username: username, email: email, password: md5Password };
+        // 人机验证凭证（P0）：注册须携带本轮已通过验证的 challengeId + 同一 clientKey
+        if (challengeId) body.challengeId = challengeId;
+        if (clientKey) body.clientKey = clientKey;
+        return post('/auth/register', body);
     }
 
     function me() {

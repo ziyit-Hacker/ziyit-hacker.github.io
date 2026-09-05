@@ -1,10 +1,9 @@
 // 官方 Demo 页入口：用 Phantom.mount() 驱动 frontend/index.html。
 //
-// 这里展示【浏览器侧】的最简用法：mount + onSuccess/onFail 回调拿到 token。
-// 注意：本 demo 仅在前端打印 token，不演示后端核销——后端核销的完整闭环见
-// demo.html + examples/mock-biz-server.py（接入文档的核心示例）。
+// 这里展示【浏览器侧】的最简用法：mount + onSuccess/onFail 回调拿到验证凭证。
+// P0 新协议：后端不再签发 token，验证凭证 = 本轮的 { challengeId, clientKey }，
+// 由接入方把两者随业务请求一并提交后端（后端 GETDEL 一次性消费）。
 import { mount } from "./phantom.js";
-import { consumeToken } from "./api.js";
 const apiBase = "https://willian-unheady-rawly.ngrok-free.dev";
 const THEME_KEY = "theme";
 const CYCLE = ["light", "dark", "system"];
@@ -42,17 +41,14 @@ function mountWidget(mode) {
     handle = mount("#app", {
         apiBase,
         theme: resolvedTheme(mode),
-        onSuccess: async (r) => {
-            console.log("验证通过，token =", r.token, "score =", r.score.toFixed(2));
-            // 注意：浏览器侧【不应】核销 token。这里仅为了在 demo 里演示核销接口可用，
-            window.__phantomToken = r.token;
+        onSuccess: (r) => {
+            console.log("验证通过，score =", (r.score || 0).toFixed(2), "challengeId =", r.challengeId);
+            // P0：后端不再下发 token；接入方请保存本轮的 challengeId + clientKey，
+            // 随业务请求（如注册）一并提交后端消费。这里仅在 window 上留档供宿主页读取。
             window.__phantomVerified = true;
-            window.dispatchEvent(new CustomEvent('phantom:verified', { detail: { token: r.token } }));
-            // 真实接入请把 token 发给你的后端，由后端调用 /consume-token。
-            if (r.token) {
-                const consume = await consumeToken(apiBase, r.token);
-                console.log("（仅 demo 演示）token 核销:", consume.valid);
-            }
+            window.__phantomChallengeId = r.challengeId;
+            window.__phantomClientKey = r.clientKey;
+            window.dispatchEvent(new CustomEvent('phantom:verified', { detail: { challengeId: r.challengeId, clientKey: r.clientKey } }));
         },
         onFail: (r) => {
             console.log("验证未通过，detail =", r.detail);

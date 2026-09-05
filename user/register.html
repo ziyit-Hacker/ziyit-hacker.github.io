@@ -251,8 +251,8 @@
             </div>
 
             <div id="app"></div>
-            <div id="captchaTip" style="display: none; text-align: center; margin-bottom: 10px;">
-                你是人吗？请参与人机验证</div>
+            <div id="captchaTip" style="display: none; text-align: center; margin-bottom: 10px;">请先完成滑块人机验证</div>
+            <div id="captchaHint" style="display: none; text-align: center; margin-bottom: 10px; color: var(--ziyit-danger); font-size: 13px;"></div>
             <button type="submit" id="registerBtn">注册</button>
             <div id="dupTip">请勿多次点击注册按钮</div>
             <div class="verify-tip" id="verifyTip"><strong>注册成功</strong>，邮箱验证邮件已发送，请在30分钟内完成邮箱验证并登录，逾期未验证将被系统自动注销账号。<a href="./">点击登录</a></div>
@@ -276,14 +276,58 @@
     </script>
     <script>
         window.PHANTOM_API_KEY = 'PfwHF-kkg8c-YX6CF-J7Uw1-hv5Dm';
+        window.__phantom = { verified: false, challengeId: '', clientKey: '', pendingSubmit: false };
     </script>
-    <script type="module" src="https://ziyit-hacker.github.io/Human_verification/main.js"></script>
-    <script>
-        let captchaVerified = false;
-        window.addEventListener('phantom:verified', function (e) {
-            captchaVerified = true;
-            document.getElementById('captchaTip').style.display = 'none';
+    <script type="module">
+        import { mount } from "https://ziyit-hacker.github.io/Human_verification/phantom.js";
+
+        const PH_API_BASE = "https://willian-unheady-rawly.ngrok-free.dev";
+
+        function showCaptchaHint(msg) {
+            const el = document.getElementById('captchaHint');
+            if (!el) return;
+            if (msg) { el.textContent = msg; el.style.display = 'block'; }
+            else { el.style.display = 'none'; }
+        }
+
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const handle = mount('#app', {
+            apiBase: PH_API_BASE,
+            theme: prefersDark ? 'dark' : 'light',
+            onSuccess(r) {
+                // 通过：仅在本地记住 challengeId/clientKey 供注册使用；后端不签发 token
+                const st = window.__phantom;
+                st.verified = true;
+                st.challengeId = r.challengeId || '';
+                st.clientKey = r.clientKey || '';
+                const cap = document.getElementById('captchaTip');
+                if (cap) cap.style.display = 'none';
+                showCaptchaHint('');
+                // 注册按钮曾触发“先验证后提交”：通过后自动继续提交注册
+                if (st.pendingSubmit) {
+                    st.pendingSubmit = false;
+                    if (typeof window.__phantomSubmit === 'function') window.__phantomSubmit();
+                }
+            },
+            onFail() {
+                // 失败不区分原因，统一提示；滑块由 SDK 进入“重试”态（自动拉取新 challenge）
+                const st = window.__phantom;
+                st.verified = false;
+                st.challengeId = '';
+                st.clientKey = '';
+                showCaptchaHint('验证未通过，请重新拖动滑块');
+            },
+            onError() {
+                const st = window.__phantom;
+                st.verified = false;
+                st.challengeId = '';
+                st.clientKey = '';
+                showCaptchaHint('验证服务暂不可用，请稍后再试');
+            }
         });
+        // 宿主接口：open() 程序化弹滑块；reset() 复位（凭证失效/403 后重新验证）
+        window.__phantom.open = function () { if (handle) handle.open(); };
+        window.__phantom.reset = function () { if (handle) handle.reset(); };
     </script>
 
     <script>
