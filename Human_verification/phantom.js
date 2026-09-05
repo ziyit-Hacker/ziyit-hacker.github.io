@@ -11,12 +11,12 @@
 // 流程（验证引擎不变，手册 三）：
 //   1) 点击复选框 -> 弹模态 -> 协商会话密钥 -> 解密路径参数 -> 启动动态显影
 //   2) 用户按住"激活"按钮 -> 肉眼跟随移动方块 -> tracker 采集轨迹
-//   3) 松开 -> 立即加密轨迹 -> 提交 /verify -> 通过回调回传 { passed, score, challengeId, clientKey }
+//   3) 松开 -> 立即加密轨迹 -> 提交 /verify -> 通过回调回传 { passed, score, challengeId, sessionId }
 //
 // 关键语义修正（P0 新协议）：
-//   - 后端不再签发/下发可信 token。验证凭证 = 本轮的 { challengeId, clientKey }，
-//     由 onSuccess 回调一并交回接入方；接入方在自己的业务提交（如注册）里把
-//     { challengeId, clientKey } 一起提交，由后端 GETDEL 一次性消费。
+//   - 后端不再签发/下发可信 token。验证凭证 = 本轮的 { challengeId, sessionId }，
+//     sessionId 由 /challenge 响应签发并存入本轮内存，接入方把两者随业务请求
+//     （如注册）一起提交，由后端 GETDEL 一次性消费 + 会话一致性校验。
 //   - /consume-token 已废弃，SDK 不再调用它。
 //
 // Canvas 生命周期安全点（tracker 监听器绑在 window 上，仅 stop() 移除）：
@@ -36,19 +36,6 @@ const VERSION = "0.1.0";
 /** 预热脉冲时长（毫秒）：按住后先显影方块这段时间，方便用户熟悉方块位置。
  *  时长来自 CONFIG.previewSeconds（由 VITE_PREVIEW_SECONDS 注入，可调）。 */
 const PREVIEW_MS = CONFIG.previewSeconds * 1000;
-/** 生成一轮验证专用的随机 clientKey（32 位 hex，P0 会话绑定）。
- *  每轮 challenge 拉题时重新生成，贯穿 challenge→verify→业务提交，绝不复用。 */
-function randomClientKey() {
-    const b = new Uint8Array(16);
-    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-        crypto.getRandomValues(b);
-    } else {
-        for (let i = 0; i < 16; i++) b[i] = Math.floor(Math.random() * 256);
-    }
-    let s = "";
-    for (let i = 0; i < 16; i++) s += b[i].toString(16).padStart(2, "0");
-    return s;
-}
 /* ============================================================
    内联 SVG 图标（随 currentColor 自适应主题，无外部资源依赖）
    - LOGO_SVG：使用 https://ziyit-hacker.github.io/assets/logo.ico 图片替代原有幽灵图标
@@ -155,9 +142,9 @@ class WidgetSession {
             writable: true,
             value: ""
         });
-        /** 本轮验证的随机客户端会话密钥（32 hex）。start() 拉题时生成并贯穿到
-         *  verify / 宿主业务提交，失败重试（新 session）时重新生成，禁止复用。 */
-        Object.defineProperty(this, "clientKey", {
+        /** 本轮验证的后端会话标识。由 /challenge 响应签发并在 start() 拉题时写入，
+         *  贯穿到 /verify 与宿主业务提交（同轮一致），失败重试（新 session）时随新题刷新。 */
+        Object.defineProperty(this, "sessionId", {
             enumerable: true,
             configurable: true,
             writable: true,
@@ -236,11 +223,11 @@ class WidgetSession {
         this.setHint("loading", "");
         this.activateBtn.disabled = true;
         try {
-            // 0) 每轮挑战生成新的 clientKey（一题一答：失败重试后禁止复用上一轮）
-            this.clientKey = randomClientKey();
-            // 1) 协商会话密钥 + 取题（携带本轮 clientKey 做会话指纹绑定）
+            // 1) 协商会话密钥 + 取题；保存后端签发的新 sessionId（本轮绑定）
             const { privateKey, publicJwk } = await generateClientKeyPair();
-            const challenge = await requestChallenge(this.apiBase, publicJwk, this.device, this.clientKey);
+            const challenge = await requestChallenge(this.apiBase, publicJwk, this.device);
+            if (challenge && challenge.sessionId)
+                this.sessionId = challenge.sessionId;
             const serverPub = await importServerPublic(challenge.serverPublicJwk);
             this.sessionKey = await deriveSessionKey(privateKey, serverPub, challenge.salt);
             this.challengeId = challenge.challengeId;
@@ -374,15 +361,15 @@ class WidgetSession {
         const plaintext = new TextEncoder().encode(JSON.stringify(payload));
         const { iv, ciphertext } = await encrypt(this.sessionKey, plaintext);
         try {
-            // 提交本轮 clientKey：后端做“与 /challenge 同轮指纹”一致校验
-            const result = await submitVerify(this.apiBase, this.challengeId, iv, ciphertext, this.clientKey);
+            // 提交本轮 sessionId：后端做“与 /challenge 同轮会话”一致性校验
+            const result = await submitVerify(this.apiBase, this.challengeId, this.sessionId, iv, ciphertext);
             this.renderer?.stop();
             this.finished = true;
             this.status.textContent = "";
-            // 通过时把本轮的 challengeId + clientKey 一并回传宿主：
-            // 后端 P0 起不再下发可信 token，业务提交（如注册）直接用这组凭证。
+            // 通过时把本轮的 challengeId + sessionId 一并回传宿主：
+            // 后端不再下发可信 token，业务提交（如注册）直接用这组凭证。
             result.challengeId = this.challengeId;
-            result.clientKey = this.clientKey;
+            result.sessionId = this.sessionId;
             if (result.passed) {
                 // 成功：按钮 lime 绿微放大，文字显示"验证通过"
                 this.activateBtn.classList.add("phantom-success");
@@ -408,7 +395,7 @@ class WidgetSession {
                 this.scheduleRetry(60000);
             }
             else if (code === 410) {
-                // 尝试次数耗尽 / challenge 过期：提示后自动重新拉题（新 challengeId + 新 clientKey）
+                // 尝试次数耗尽 / challenge 过期：提示后自动重新拉题（新 challengeId + 新 sessionId）
                 this.status.textContent = "验证已失效，请重新滑动";
                 this.activateBtn.textContent = "验证已失效";
                 this.scheduleRetry(800, "auto-restart");
@@ -429,7 +416,7 @@ class WidgetSession {
         this.retryTimer = window.setTimeout(() => {
             if (mode === "auto-restart") {
                 this.turnIntoRetryButton();
-                this.activateBtn.click(); // 立即触发：新 challengeId + 新 clientKey
+                this.activateBtn.click(); // 立即触发：新 challengeId + 新 sessionId
             }
             else {
                 this.turnIntoRetryButton();

@@ -1,7 +1,7 @@
 // 官方 Demo 页入口：用 Phantom.mount() 驱动 frontend/index.html。
 //
 // 这里展示【浏览器侧】的最简用法：mount + onSuccess/onFail 回调拿到验证凭证。
-// P0 新协议：后端不再签发 token，验证凭证 = 本轮的 { challengeId, clientKey }，
+// P0 新协议：后端不再签发 token，验证凭证 = 本轮的 { challengeId, sessionId }，
 // 由接入方把两者随业务请求一并提交后端（后端 GETDEL 一次性消费）。
 import { mount } from "./phantom.js";
 const apiBase = "https://willian-unheady-rawly.ngrok-free.dev";
@@ -43,12 +43,12 @@ function mountWidget(mode) {
         theme: resolvedTheme(mode),
         onSuccess: (r) => {
             console.log("验证通过，score =", (r.score || 0).toFixed(2), "challengeId =", r.challengeId);
-            // P0：后端不再下发 token；接入方请保存本轮的 challengeId + clientKey，
+            // P0：后端不再下发 token；接入方请保存本轮的 challengeId + sessionId，
             // 随业务请求（如注册）一并提交后端消费。这里仅在 window 上留档供宿主页读取。
             window.__phantomVerified = true;
             window.__phantomChallengeId = r.challengeId;
-            window.__phantomClientKey = r.clientKey;
-            window.dispatchEvent(new CustomEvent('phantom:verified', { detail: { challengeId: r.challengeId, clientKey: r.clientKey } }));
+            window.__phantomSessionId = r.sessionId;
+            window.dispatchEvent(new CustomEvent('phantom:verified', { detail: { challengeId: r.challengeId, sessionId: r.sessionId } }));
         },
         onFail: (r) => {
             console.log("验证未通过，detail =", r.detail);

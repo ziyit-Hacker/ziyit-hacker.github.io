@@ -276,7 +276,7 @@
     </script>
     <script>
         window.PHANTOM_API_KEY = 'PfwHF-kkg8c-YX6CF-J7Uw1-hv5Dm';
-        window.__phantom = { verified: false, challengeId: '', clientKey: '', pendingSubmit: false };
+        window.__phantom = { verified: false, challengeId: '', sessionId: '', pendingSubmit: false };
     </script>
     <script type="module">
         import { mount } from "https://ziyit-hacker.github.io/Human_verification/phantom.js";
@@ -295,11 +295,11 @@
             apiBase: PH_API_BASE,
             theme: prefersDark ? 'dark' : 'light',
             onSuccess(r) {
-                // 通过：仅在本地记住 challengeId/clientKey 供注册使用；后端不签发 token
+                // 通过：仅在本地记住 challengeId/sessionId 供注册使用；后端不签发 token
                 const st = window.__phantom;
                 st.verified = true;
                 st.challengeId = r.challengeId || '';
-                st.clientKey = r.clientKey || '';
+                st.sessionId = r.sessionId || '';
                 const cap = document.getElementById('captchaTip');
                 if (cap) cap.style.display = 'none';
                 showCaptchaHint('');
@@ -314,14 +314,14 @@
                 const st = window.__phantom;
                 st.verified = false;
                 st.challengeId = '';
-                st.clientKey = '';
+                st.sessionId = '';
                 showCaptchaHint('验证未通过，请重新拖动滑块');
             },
             onError() {
                 const st = window.__phantom;
                 st.verified = false;
                 st.challengeId = '';
-                st.clientKey = '';
+                st.sessionId = '';
                 showCaptchaHint('验证服务暂不可用，请稍后再试');
             }
         });

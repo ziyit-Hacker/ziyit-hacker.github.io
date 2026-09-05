@@ -34,21 +34,22 @@ async function postJson(apiBase, path, body) {
     return res.json();
 }
 
-export function requestChallenge(apiBase, clientPublicJwk, device, clientKey) {
+export function requestChallenge(apiBase, clientPublicJwk, device) {
     const body = { clientPublicJwk };
     if (device) body.device = device;
-    // P0 会话绑定：每轮挑战携带本轮随机 clientKey（32 hex），后端存其指纹，
-    // /verify 与后续注册提交须携带同一 clientKey 才会放行。
-    if (clientKey) body.clientKey = clientKey;
+    // 会话绑定由后端完成：/challenge 签发 sessionId（随响应返回），SDK 保存后
+    // 在 /verify 与后续业务提交（如注册）中携带同一 sessionId 即可通过一致性校验。
     return postJson(apiBase, "/challenge", body);
 }
 
-export function submitVerify(apiBase, challengeId, iv, ciphertext, clientKey) {
-    const body = { challengeId, iv, ciphertext };
-    // P0：与 /challenge 同轮 clientKey 一并提交，后端做指纹一致校验
-    if (clientKey) body.clientKey = clientKey;
-    return postJson(apiBase, "/verify", body);
+export function submitVerify(apiBase, challengeId, sessionId, iv, ciphertext) {
+    return postJson(apiBase, "/verify", {
+        challengeId,
+        sessionId, // 与 /challenge 同轮签发的会话标识，后端校验一致性
+        iv,
+        ciphertext,
+    });
 }
 
-// 注：/consume-token 已废弃——P0 起后端不再签发 token，验证凭证改为
-// “verified 的 challengeId + clientKey”由业务流程（如注册）一次性消费。
+// 注：/consume-token 已废弃——后端不再签发 token，验证凭证改为
+// “verified 的 challengeId + sessionId”由业务流程（如注册）一次性消费。

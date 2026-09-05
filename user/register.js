@@ -47,7 +47,7 @@
         if (!st) return;
         st.verified = false;
         st.challengeId = '';
-        st.clientKey = '';
+        st.sessionId = '';
         if (typeof st.reset === 'function') st.reset();
         hideTip('captchaHint');
     }
@@ -78,7 +78,7 @@
         hideTip('confirmPasswordError');
 
         // ===== 2) 未通过人机验证 → 挂起提交并弹出滑块 =====
-        if (!st || !st.verified || !st.challengeId) {
+        if (!st || !st.verified || !st.challengeId || !st.sessionId) {
             if (captchaTip) captchaTip.style.display = 'block';
             if (st) {
                 st.pendingSubmit = true;
@@ -97,7 +97,7 @@
         const md5Password = CryptoJS.MD5(password).toString(CryptoJS.enc.Base64);
 
         try {
-            await ZIYIT_API.register(username, email, md5Password, st.challengeId, st.clientKey);
+            await ZIYIT_API.register(username, email, md5Password, st.challengeId, st.sessionId);
             // 注册成功：显示邮箱验证提示并锁定表单
             const form = document.querySelector('form');
             const verifyTip = el('verifyTip');
