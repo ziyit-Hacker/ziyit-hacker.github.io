@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的密钥 - ZIYIT</title>
+    <meta name="description" content="ZIYIT 人机验证 API 密钥用量与设置管理。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/api-key.html">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: default !important;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--ziyit-primary);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: var(--ziyit-bg);
+        }
+
+        .page {
+            max-width: 860px;
+            margin: 20px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .page h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            margin: 6px 0 16px;
+        }
+
+        .back-link {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar button {
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .toolbar button:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        .toolbar button:disabled {
+            background-color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        .key-card {
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: var(--ziyit-bg);
+        }
+
+        .key-card.disabled {
+            opacity: .72;
+        }
+
+        .key-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .key-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex-wrap: wrap;
+        }
+
+        .key-value {
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 13px;
+            color: var(--ziyit-text-primary);
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            padding: 6px 10px;
+            border-radius: 6px;
+            word-break: break-all;
+        }
+
+        .key-copy {
+            border: 1px solid var(--ziyit-border);
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .key-copy:hover {
+            border-color: var(--ziyit-primary);
+            color: var(--ziyit-primary);
+        }
+
+        .badge {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge.ok {
+            background: rgba(16, 124, 16, .12);
+            color: var(--ziyit-success);
+        }
+
+        .badge.warn {
+            background: rgba(180, 83, 9, .14);
+            color: #b45309;
+        }
+
+        .badge.off {
+            background: rgba(164, 38, 44, .12);
+            color: var(--ziyit-danger);
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 640px) {
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .metric {
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+
+        .metric-title {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .metric-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 13px;
+            color: var(--ziyit-text-primary);
+            margin-bottom: 6px;
+        }
+
+        .metric-top b {
+            font-size: 14px;
+        }
+
+        .progress {
+            height: 6px;
+            background: var(--ziyit-border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .progress i {
+            display: block;
+            height: 100%;
+            border-radius: 3px;
+            background: var(--ziyit-primary);
+            transition: width .25s;
+        }
+
+        .progress i.full {
+            background: var(--ziyit-danger);
+        }
+
+        .metric-sub {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+        }
+
+        .key-foot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .key-foot .meta {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+        }
+
+        .key-foot .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-plain {
+            border: 1px solid var(--ziyit-border);
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .btn-plain:hover {
+            border-color: var(--ziyit-primary);
+            color: var(--ziyit-primary);
+        }
+
+        .btn-primary {
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            padding: 8px 22px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        .btn-primary:disabled {
+            background-color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        .empty,
+        .loading,
+        .error-box {
+            text-align: center;
+            padding: 40px 16px;
+            color: var(--ziyit-text-secondary);
+            font-size: 14px;
+        }
+
+        .error-box {
+            color: var(--ziyit-danger);
+        }
+
+        /* ---- 设置弹窗 ---- */
+        .ak-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 2000;
+            align-items: flex-start;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 40px 16px;
+        }
+
+        .ak-overlay.active {
+            display: flex;
+        }
+
+        .ak-box {
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 520px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
+        }
+
+        .ak-box h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            margin-bottom: 4px;
+        }
+
+        .ak-key-readonly {
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+            word-break: break-all;
+            margin-bottom: 14px;
+        }
+
+        .ak-row {
+            padding: 12px 0;
+            border-top: 1px solid var(--ziyit-border-light, var(--ziyit-border));
+        }
+
+        .ak-row:first-of-type {
+            border-top: none;
+        }
+
+        .ak-row-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .ak-row-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .ak-row-desc {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+            margin: 2px 0 8px;
+        }
+
+        .ak-row .month-info {
+            font-size: 13px;
+            color: var(--ziyit-text-primary);
+        }
+
+        /* 开关 */
+        .switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .switch input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch .track {
+            width: 40px;
+            height: 22px;
+            border-radius: 12px;
+            background: var(--ziyit-border);
+            position: relative;
+            transition: background .2s;
+            flex-shrink: 0;
+        }
+
+        .switch .track::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform .2s;
+        }
+
+        .switch input:checked+.track {
+            background: var(--ziyit-primary);
+        }
+
+        .switch input:checked+.track::after {
+            transform: translateX(18px);
+        }
+
+        .switch .state-label {
+            font-size: 13px;
+            color: var(--ziyit-text-primary);
+        }
+
+        .ak-inputs {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .ak-inputs input[type="number"] {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px 10px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 6px;
+            background: var(--ziyit-bg);
+            color: var(--ziyit-text-primary);
+            font-size: 14px;
+        }
+
+        .ak-inputs input[type="number"]:focus {
+            outline: none;
+            border-color: var(--ziyit-primary);
+        }
+
+        .ak-inputs input[type="number"]:disabled {
+            background: var(--ziyit-border-light, var(--ziyit-border));
+            cursor: not-allowed;
+        }
+
+        .chk {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .ak-box textarea {
+            width: 100%;
+            min-height: 84px;
+            resize: vertical;
+            padding: 8px 10px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 6px;
+            background: var(--ziyit-bg);
+            color: var(--ziyit-text-primary);
+            font-size: 13px;
+            font-family: Consolas, 'Courier New', monospace;
+            line-height: 1.6;
+        }
+
+        .ak-box textarea:focus {
+            outline: none;
+            border-color: var(--ziyit-primary);
+        }
+
+        .ak-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .ak-msg {
+            margin-top: 10px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .ak-msg.error {
+            color: var(--ziyit-danger);
+            display: block;
+        }
+
+        .ak-msg.success {
+            color: var(--ziyit-success);
+            display: block;
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) {}
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+</head>
+
+<body>
+    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page">
+        <h1>我的密钥</h1>
+        <a href="javascript:history.back()" class="back-link">返回</a>
+        <p class="page-sub">ZIYIT 人机验证（Phantom）API 密钥的用量与设置。验证只有通过才扣次数，失败重试不计费。</p>
+
+        <div class="toolbar">
+            <span id="listTip" style="font-size: 13px; color: var(--ziyit-text-secondary);"></span>
+            <button type="button" id="refreshBtn">刷新</button>
+        </div>
+        <div id="keyArea">
+            <div class="loading">
+                <span id="loadingText">加载中…</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 密钥设置弹窗 ===== -->
+    <div class="ak-overlay" id="settingsOverlay">
+        <div class="ak-box">
+            <h2>密钥设置</h2>
+            <div class="ak-key-readonly" id="setKey"></div>
+
+            <div class="ak-row">
+                <div class="ak-row-head">
+                    <span class="ak-row-title">启用状态</span>
+                    <label class="switch">
+                        <input type="checkbox" id="setStatus">
+                        <span class="track"></span>
+                        <span class="state-label" id="setStatusLabel">停用</span>
+                    </label>
+                </div>
+                <div class="ak-row-desc">停用后该密钥将无法发起验证，任何网站请求都会收到 403。</div>
+            </div>
+
+            <div class="ak-row">
+                <div class="ak-row-head">
+                    <span class="ak-row-title">今日额度</span>
+                    <label class="chk"><input type="checkbox" id="setDailyUnlimited"> 今日不限</label>
+                </div>
+                <div class="ak-inputs">
+                    <input type="number" id="setDaily" min="0" placeholder="输入每日可验证次数">
+                    <span style="font-size: 13px; color: var(--ziyit-text-secondary);">次 / 天（0 = 今天暂停验证）</span>
+                </div>
+            </div>
+
+            <div class="ak-row">
+                <div class="ak-row-head">
+                    <span class="ak-row-title">预警额度</span>
+                    <label class="chk"><input type="checkbox" id="setWarnOff"> 关闭预警</label>
+                </div>
+                <div class="ak-inputs">
+                    <input type="number" id="setWarn" min="0" placeholder="输入预警阈值">
+                    <span style="font-size: 13px; color: var(--ziyit-text-secondary);">本月用量达到阈值时邮件提醒（每月一次）</span>
+                </div>
+            </div>
+
+            <div class="ak-row">
+                <div class="ak-row-head"><span class="ak-row-title">允许来源（白名单）</span></div>
+                <div class="ak-row-desc">每行一个来源，支持完整地址（https://ziyit-hacker.github.io）或裸域名（ziyit-hacker.github.io）。留空 = 不限来源。</div>
+                <textarea id="setOrigins" placeholder="https://example.com&#10;example.org" spellcheck="false"></textarea>
+            </div>
+
+            <div class="ak-row">
+                <div class="ak-row-head"><span class="ak-row-title">月度额度（只读）</span></div>
+                <div class="month-info" id="setMonthInfo">-</div>
+            </div>
+
+            <div class="ak-actions">
+                <button type="button" class="btn-plain" id="cancelSettings">取消</button>
+                <button type="button" class="btn-primary" id="saveSettings">保存</button>
+            </div>
+            <div class="ak-msg" id="settingsMsg"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!ZIYIT_API.getToken()) {
+                alert('请先登录');
+                window.location.href = './';
+                return;
+            }
+
+            var keyList = [];
+            var editingIdx = -1;
+
+            var keyArea = document.getElementById('keyArea');
+            var refreshBtn = document.getElementById('refreshBtn');
+            var listTip = document.getElementById('listTip');
+            var overlay = document.getElementById('settingsOverlay');
+
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            function fmtNum(n) {
+                if (n === -1 || n === '-1' || n == null) return '不限';
+                return String(n);
+            }
+
+            function remText(n) {
+                return (n === -1 || n === '-1') ? '不限' : (String(n) + ' 次');
+            }
+
+            function setLoading(t) {
+                keyArea.innerHTML = '<div class="loading">' + esc(t || '加载中…') + '</div>';
+            }
+
+            function setError(msg) {
+                keyArea.innerHTML = '<div class="error-box">' + esc(msg) + '</div>';
+            }
+
+            // ---- 列表渲染 ----
+            function renderKeys() {
+                var area = keyArea;
+                area.innerHTML = '';
+                if (!keyList.length) {
+                    area.innerHTML = '<div class="empty">暂无密钥。可前往 <a href="../Human_verification.html">人机验证体验页</a> 点击「免费获取 API Key」创建（登录后每月最多 2 把），或联系管理员开通。</div>';
+                    return;
+                }
+                keyList.forEach(function (k, idx) {
+                    area.appendChild(buildCard(k, idx));
+                });
+            }
+
+            function statusOf(k) {
+                var active = k.status === 'active';
+                var reason = '';
+                if (active) {
+                    var mok = k.monthly_limit == null || k.monthly_limit === -1 || (k.used || 0) < k.monthly_limit;
+                    var dok = k.daily_limit == null || k.daily_limit === -1 || (k.daily_count || 0) < k.daily_limit;
+                    if (!mok) reason = '月额度已用完';
+                    else if (!dok) reason = '今日额度已用完';
+                }
+                return { active: active, reason: reason };
+            }
+
+            function buildCard(k, idx) {
+                var st = statusOf(k);
+                var monthlyUnlimited = k.monthly_limit === -1 || k.monthly_limit == null;
+                var dailyUnlimited = k.daily_limit === -1 || k.daily_limit == null;
+                var used = k.used || 0;
+                var dcount = k.daily_count || 0;
+                var card = document.createElement('div');
+                card.className = 'key-card' + (st.active ? '' : ' disabled');
+
+                var mPct = 0, dPct = 0;
+                if (!monthlyUnlimited && k.monthly_limit > 0) mPct = Math.min(100, Math.round(used / k.monthly_limit * 100));
+                if (!dailyUnlimited && k.daily_limit > 0) dPct = Math.min(100, Math.round(dcount / k.daily_limit * 100));
+
+                var badge = '';
+                if (!st.active) badge = '<span class="badge off">已停用</span>';
+                else if (st.reason) badge = '<span class="badge warn">' + esc(st.reason) + '</span>';
+                else badge = '<span class="badge ok">可用</span>';
+
+                card.innerHTML =
+                    '<div class="key-head">' +
+                    '<div class="key-line">' +
+                    '<span class="key-value" title="' + esc(k.api_key) + '">' + esc(k.api_key) + '</span>' +
+                    '<button type="button" class="key-copy" data-act="copy">复制</button>' +
+                    '</div>' + badge +
+                    '</div>' +
+                    '<div class="metrics">' +
+                    '<div class="metric">' +
+                    '<div class="metric-title">本月用量</div>' +
+                    '<div class="metric-top"><span>已用 <b>' + used + '</b> 次</span>' +
+                    '<span>' + (monthlyUnlimited ? '月度不限' : '限额 ' + k.monthly_limit + ' 次') + '</span></div>' +
+                    (monthlyUnlimited ? '' : '<div class="progress"><i style="width:' + mPct + '%"' + (mPct >= 100 ? ' class="full"' : '') + '></i></div>') +
+                    '<div class="metric-sub">月度剩余：' + remText(k.month_remaining) + '</div>' +
+                    '</div>' +
+                    '<div class="metric">' +
+                    '<div class="metric-title">今日用量</div>' +
+                    '<div class="metric-top"><span>今日 <b>' + dcount + '</b> 次</span>' +
+                    '<span>' + (dailyUnlimited ? '今日不限' : '限 ' + k.daily_limit + ' 次') + '</span></div>' +
+                    (dailyUnlimited ? '' : '<div class="progress"><i style="width:' + dPct + '%"' + (dPct >= 100 ? ' class="full"' : '') + '></i></div>') +
+                    '<div class="metric-sub">今日剩余：' + remText(k.day_remaining) + '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="key-foot">' +
+                    '<div class="meta">预警额度：' + fmtNum(k.warn_limit) + ' ｜ 来源白名单：' +
+                    ((k.allowed_origins && k.allowed_origins.length) ? ('已配置 ' + k.allowed_origins.length + ' 条') : '不限') +
+                    '</div>' +
+                    '<div class="actions"><button type="button" class="btn-plain" data-act="edit">设置</button></div>' +
+                    '</div>';
+
+                var valueEl = card.querySelector('.key-value');
+                card.querySelector('[data-act="copy"]').addEventListener('click', function () {
+                    copyText(k.api_key);
+                });
+                card.querySelector('[data-act="edit"]').addEventListener('click', function () {
+                    openSettings(idx);
+                });
+                return card;
+            }
+
+            function copyText(text) {
+                function done() {
+                    listTip.textContent = '密钥已复制到剪贴板';
+                    setTimeout(function () { listTip.textContent = ''; }, 2000);
+                }
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(done, function () {
+                        legacyCopy(text);
+                        done();
+                    });
+                } else {
+                    legacyCopy(text);
+                    done();
+                }
+            }
+
+            function legacyCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.cssText = 'position:fixed;opacity:0;';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (e) {}
+                document.body.removeChild(ta);
+            }
+
+            // ---- 加载列表 ----
+            function loadKeys(showLoading) {
+                if (showLoading) setLoading('加载中…');
+                refreshBtn.disabled = true;
+                return ZIYIT_API.request('/api-key/mine').then(function (data) {
+                    keyList = (data && data.keys) || [];
+                    keyList = keyList.map(function (v) { return v || {}; });
+                    renderKeys();
+                    refreshBtn.disabled = false;
+                }).catch(function (err) {
+                    refreshBtn.disabled = false;
+                    setError('加载失败：' + (((err && err.data && err.data.detail)) || (err && err.message) || err));
+                });
+            }
+
+            // ---- 设置弹窗 ----
+            function openSettings(idx) {
+                var k = keyList[idx];
+                if (!k) return;
+                editingIdx = idx;
+                document.getElementById('setKey').textContent = k.api_key;
+                var status = document.getElementById('setStatus');
+                status.checked = k.status === 'active';
+                syncStatusLabel();
+
+                var dUnlimited = k.daily_limit === -1 || k.daily_limit == null;
+                document.getElementById('setDailyUnlimited').checked = dUnlimited;
+                document.getElementById('setDaily').value = dUnlimited ? '' : (k.daily_limit != null ? k.daily_limit : '');
+                syncDailyState();
+
+                var warnOff = k.warn_limit === -1 || k.warn_limit == null;
+                document.getElementById('setWarnOff').checked = warnOff;
+                document.getElementById('setWarn').value = warnOff ? '' : (k.warn_limit != null ? k.warn_limit : '');
+                syncWarnState();
+
+                document.getElementById('setOrigins').value = (k.allowed_origins || []).join('\n');
+
+                var mu = k.monthly_limit === -1 || k.monthly_limit == null;
+                var info = mu ? '月度无限（已用 ' + (k.used || 0) + ' 次）' :
+                    ('月度限额 ' + k.monthly_limit + ' 次，已用 ' + (k.used || 0) + ' 次，剩余 ' + fmtNum(k.month_remaining) + ' 次（由系统/管理员决定，不可在此修改）');
+                document.getElementById('setMonthInfo').textContent = info;
+
+                showMsg('', '');
+                overlay.classList.add('active');
+            }
+
+            function syncStatusLabel() {
+                document.getElementById('setStatusLabel').textContent =
+                    document.getElementById('setStatus').checked ? '启用' : '停用';
+            }
+
+            function syncDailyState() {
+                var un = document.getElementById('setDailyUnlimited').checked;
+                document.getElementById('setDaily').disabled = un;
+                if (un) document.getElementById('setDaily').value = '';
+            }
+
+            function syncWarnState() {
+                var off = document.getElementById('setWarnOff').checked;
+                document.getElementById('setWarn').disabled = off;
+                if (off) document.getElementById('setWarn').value = '';
+            }
+
+            function showMsg(text, cls) {
+                var el = document.getElementById('settingsMsg');
+                el.textContent = text || '';
+                el.className = 'ak-msg ' + (cls || '');
+                if (!text) el.style.display = 'none';
+                else el.style.display = 'block';
+            }
+
+            function closeSettings() {
+                overlay.classList.remove('active');
+                editingIdx = -1;
+            }
+
+            function saveSettings() {
+                if (editingIdx < 0) return;
+                var k = keyList[editingIdx];
+                var body = {
+                    status: document.getElementById('setStatus').checked ? 'active' : 'disabled'
+                };
+
+                if (document.getElementById('setDailyUnlimited').checked) {
+                    body.daily_limit = -1;
+                } else {
+                    var d = parseInt(document.getElementById('setDaily').value, 10);
+                    if (isNaN(d) || d < 0) {
+                        showMsg('请输入有效的今日额度（≥0），或勾选「今日不限」', 'error');
+                        return;
+                    }
+                    body.daily_limit = d;
+                }
+
+                if (document.getElementById('setWarnOff').checked) {
+                    body.warn_limit = -1;
+                } else {
+                    var w = parseInt(document.getElementById('setWarn').value, 10);
+                    if (isNaN(w) || w < 0) {
+                        showMsg('请输入有效的预警额度（≥0），或勾选「关闭预警」', 'error');
+                        return;
+                    }
+                    body.warn_limit = w;
+                }
+
+                var origins = document.getElementById('setOrigins').value
+                    .split('\n')
+                    .map(function (s) { return s.trim(); })
+                    .filter(function (s) { return s; });
+                body.allowed_origins = origins;
+
+                var btn = document.getElementById('saveSettings');
+                btn.disabled = true;
+                showMsg('', '');
+                ZIYIT_API.request('/api-key/' + encodeURIComponent(k.api_key) + '/prefs', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                }).then(function (data) {
+                    // 保存成功后以后端返回的用量视图为准，就地刷新该 key，无需整页重查
+                    keyList[editingIdx] = data || k;
+                    renderKeys();
+                    closeSettings();
+                    listTip.textContent = '设置已保存';
+                    setTimeout(function () { listTip.textContent = ''; }, 2000);
+                }).catch(function (err) {
+                    var msg = (err && err.data && err.data.detail) || (err && err.message) || err;
+                    if (err && err.status === 401) msg = '登录已过期，请重新登录';
+                    showMsg('保存失败：' + msg, 'error');
+                }).finally(function () {
+                    btn.disabled = false;
+                });
+            }
+
+            document.getElementById('refreshBtn').addEventListener('click', function () { loadKeys(true); });
+            document.getElementById('setStatus').addEventListener('change', syncStatusLabel);
+            document.getElementById('setDailyUnlimited').addEventListener('change', syncDailyState);
+            document.getElementById('setWarnOff').addEventListener('change', syncWarnState);
+            document.getElementById('cancelSettings').addEventListener('click', closeSettings);
+            document.getElementById('saveSettings').addEventListener('click', saveSettings);
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) closeSettings();
+            });
+
+            loadKeys(true);
+        });
+    </script>
+    <script>
+        // 导航权限过滤（DESIGN.md §4.6.5，需登录页模式）：未登录全部隐藏，登录后按角色显示
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                const loginLink = document.getElementById('loginLink');
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

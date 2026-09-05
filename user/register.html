@@ -290,6 +290,47 @@
             else { el.style.display = 'none'; }
         }
 
+        // 403 API Key 语义失败提示：识别 origin/disabled/monthly/daily，给出跳转入口，不静默重试
+        function detectKeyDenied(e) {
+            if (!e || e.status !== 403) return null;
+            const raw = String(e.detail || e.message || '');
+            let reason = null;
+            if (/daily limit exceeded/i.test(raw)) reason = 'daily';
+            else if (/limit exceeded or invalid/i.test(raw)) reason = 'monthly';
+            else if (/\bdisabled\b/i.test(raw)) reason = 'disabled';
+            else if (/origin not allowed/i.test(raw)) reason = 'origin';
+            if (!reason) return null;
+            const tips = {
+                monthly: '该密钥本月可用次数已用完（或密钥无效），超额将在下个自然月自动重置。',
+                daily: '该密钥今日可用次数已达上限（次日自动重置），可在「我的密钥」中把今日额度设为不限。',
+                disabled: '该密钥已被停用，请到「我的密钥」中重新启用后再试。',
+                origin: '当前网站域名不在该密钥的“允许来源”白名单中，密钥所有者可在「我的密钥」中添加：https://' + (location.host || location.hostname || '')
+            }[reason];
+            return { reason, tips };
+        }
+
+        function resetPhantomToIdle() {
+            const st = window.__phantom;
+            if (!st) return;
+            st.verified = false;
+            st.challengeId = '';
+            st.sessionId = '';
+            st.pendingSubmit = false;
+            if (typeof st.reset === 'function') st.reset();
+        }
+
+        function showKeyDeniedHint(info) {
+            const el = document.getElementById('captchaHint');
+            if (!el) return;
+            // 已登录 → 直接去密钥管理；未登录 → 先登录（登录后可在「我的密钥」领取免费密钥）
+            const loggedIn = typeof ZIYIT_API !== 'undefined' && !!(ZIYIT_API.getToken && ZIYIT_API.getToken());
+            const href = loggedIn ? 'api-key.html' : './';
+            const label = loggedIn ? '前往「我的密钥」管理' : '先登录 ZIYIT（可领取免费密钥）';
+            el.innerHTML = info.tips +
+                '<br><a href="' + href + '" style="display:inline-block;margin-top:8px;color:#fff;background:#0078d4;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:13px;">' + label + '</a>';
+            el.style.display = 'block';
+        }
+
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         const handle = mount('#app', {
             apiBase: PH_API_BASE,
@@ -317,11 +358,15 @@
                 st.sessionId = '';
                 showCaptchaHint('验证未通过，请重新拖动滑块');
             },
-            onError() {
-                const st = window.__phantom;
-                st.verified = false;
-                st.challengeId = '';
-                st.sessionId = '';
+            onError(e) {
+                const kd = detectKeyDenied(e);
+                if (kd) {
+                    // 密钥被停用/超额/来源被拒：给出明确提示与跳转入口，复位滑块，不静默无限重试
+                    showKeyDeniedHint(kd);
+                    resetPhantomToIdle();
+                    return;
+                }
+                resetPhantomToIdle();
                 showCaptchaHint('验证服务暂不可用，请稍后再试');
             }
         });

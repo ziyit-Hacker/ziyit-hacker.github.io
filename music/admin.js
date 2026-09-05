@@ -1527,6 +1527,10 @@ function apiKeyFields(k) {
         status: k.status || 'active',
         limit: k.monthly_limit != null ? k.monthly_limit : (k.monthlyLimit != null ? k.monthlyLimit : -1),
         used: k.used_count != null ? k.used_count : (k.usedCount != null ? k.usedCount : 0),
+        daily: k.daily_limit != null ? k.daily_limit : (k.dailyLimit != null ? k.dailyLimit : -1),
+        dailyUsed: k.daily_count != null ? k.daily_count : (k.dailyCount != null ? k.dailyCount : 0),
+        warn: k.warn_limit != null ? k.warn_limit : (k.warnLimit != null ? k.warnLimit : -1),
+        origins: Array.isArray(k.allowed_origins) ? k.allowed_origins.slice() : (Array.isArray(k.allowedOrigins) ? k.allowedOrigins.slice() : []),
         resetMonth: k.reset_month || k.resetMonth || '',
         created: k.created_at || k.createdAt || k.createTime || k.created || ''
     };
@@ -1570,6 +1574,10 @@ function renderApiKeys() {
             + ' ｜ 已用: ' + escAdmin(f.used) + ' 次'
             + (f.resetMonth ? ' ｜ 重置月: ' + escAdmin(f.resetMonth) : '')
             + (f.created ? ' ｜ 创建: ' + escAdmin(String(f.created).slice(0, 10)) : '')
+            + '<br>每日限制: ' + (f.daily === -1 || f.daily === '-1' ? '不限' : escAdmin(f.daily) + ' 次')
+            + ' ｜ 今日已用: ' + escAdmin(f.dailyUsed) + ' 次'
+            + ' ｜ 预警: ' + (f.warn === -1 || f.warn === '-1' ? '关闭' : escAdmin(f.warn))
+            + ' ｜ 白名单: ' + (f.origins.length ? (f.origins.length + ' 条来源') : '不限来源')
             + '</div>'
             + '</div><div class="user-actions">'
             + '<button class="action-btn edit" data-act="edit" data-idx="' + idx + '">编辑</button>'
@@ -1628,7 +1636,37 @@ function openEditApiKey(key) {
     const limitInput = document.getElementById('apikey-edit-limit');
     limitInput.title = canAccess(4) ? '每月限制（-1 = 无限）' : '仅 4 级超级管理员可设置无限额度（-1）';
     limitInput.disabled = !canAccess(4);
+
+    // 今日额度：-1（不限）勾选「今日不限」；旧密钥无该字段时按「不限」兼容
+    const dailyUnlimited = !cur || cur.daily === -1 || cur.daily === '-1' || cur.daily == null;
+    document.getElementById('apikey-edit-daily-unlimited').checked = dailyUnlimited;
+    document.getElementById('apikey-edit-daily').value = dailyUnlimited ? '' : cur.daily;
+    setEditDailyDisabled();
+
+    // 预警额度：-1（关闭）勾选「关闭预警」；旧密钥无该字段默认无预警
+    const warnOff = !cur || cur.warn === -1 || cur.warn === '-1' || cur.warn == null;
+    document.getElementById('apikey-edit-warn-off').checked = warnOff;
+    document.getElementById('apikey-edit-warn').value = warnOff ? '' : cur.warn;
+    setEditWarnDisabled();
+
+    // 白名单：每行一个来源；空 = 不限来源
+    document.getElementById('apikey-edit-origins').value = cur ? cur.origins.join('\n') : '';
+
     document.getElementById('api-key-edit-modal').classList.add('active');
+}
+
+function setEditDailyDisabled() {
+    const un = document.getElementById('apikey-edit-daily-unlimited').checked;
+    const input = document.getElementById('apikey-edit-daily');
+    input.disabled = un;
+    if (un) input.value = '';
+}
+
+function setEditWarnDisabled() {
+    const off = document.getElementById('apikey-edit-warn-off').checked;
+    const input = document.getElementById('apikey-edit-warn');
+    input.disabled = off;
+    if (off) input.value = '';
 }
 
 function saveApiKeyEdit() {
@@ -1647,10 +1685,39 @@ function saveApiKeyEdit() {
         alert('当前等级额度上限为 ' + (maxQuota === Infinity ? '无限' : maxQuota) + '，不能设置更高额度');
         return;
     }
+    // 今日额度：勾选「今日不限」= -1，否则必须为 ≥0 的整数
+    let daily = -1;
+    if (!document.getElementById('apikey-edit-daily-unlimited').checked) {
+        daily = parseInt(document.getElementById('apikey-edit-daily').value, 10);
+        if (isNaN(daily) || daily < 0) {
+            alert('请输入有效的每日额度（≥0），或勾选「今日不限」');
+            return;
+        }
+    }
+    // 预警额度：勾选「关闭预警」= -1，否则必须为 ≥0 的整数
+    let warn = -1;
+    if (!document.getElementById('apikey-edit-warn-off').checked) {
+        warn = parseInt(document.getElementById('apikey-edit-warn').value, 10);
+        if (isNaN(warn) || warn < 0) {
+            alert('请输入有效的预警额度（≥0），或勾选「关闭预警」');
+            return;
+        }
+    }
+    // 白名单：每行一个来源，去空；传空数组 = 清除限制（不限来源）
+    const origins = document.getElementById('apikey-edit-origins').value
+        .split('\n')
+        .map(function (s) { return s.trim(); })
+        .filter(function (s) { return s; });
     ZIYIT_API.request('/admin/api-keys/' + encodeURIComponent(editingApiKey), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: status, monthly_limit: isNaN(limit) ? -1 : limit })
+        body: JSON.stringify({
+            status: status,
+            monthly_limit: isNaN(limit) ? -1 : limit,
+            daily_limit: daily,
+            warn_limit: warn,
+            allowed_origins: origins
+        })
     }).then(function () {
         alert('API Key 已更新');
         document.getElementById('api-key-edit-modal').classList.remove('active');
@@ -2161,6 +2228,8 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('cancel-api-key-edit').addEventListener('click', function () {
         document.getElementById('api-key-edit-modal').classList.remove('active');
     });
+    document.getElementById('apikey-edit-daily-unlimited').addEventListener('change', setEditDailyDisabled);
+    document.getElementById('apikey-edit-warn-off').addEventListener('change', setEditWarnDisabled);
 
     // MOD 模态框
     document.getElementById('confirm-mod').addEventListener('click', saveMod);

@@ -720,7 +720,7 @@
 
     <!-- 编辑 API Key 模态框 -->
     <div class="modal" id="api-key-edit-modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-height:92vh;overflow-y:auto;">
             <div class="modal-header">编辑 API Key</div>
             <div class="form-group">
                 <label class="form-label">API Key</label>
@@ -736,6 +736,28 @@
             <div class="form-group">
                 <label class="form-label">每月限制（-1 = 无限）</label>
                 <input type="number" class="form-input" id="apikey-edit-limit" placeholder="-1 或 N">
+            </div>
+            <div class="form-group">
+                <label class="form-label">今日额度（-1 = 今日不限）</label>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <input type="number" class="form-input" id="apikey-edit-daily" placeholder="每日可验证次数，如 100" style="flex:1;min-width:150px;">
+                    <label style="display:inline-flex;gap:6px;align-items:center;font-size:13px;white-space:nowrap;cursor:pointer;">
+                        <input type="checkbox" id="apikey-edit-daily-unlimited"> 今日不限（-1）
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">预警额度（-1 = 关闭预警）</label>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <input type="number" class="form-input" id="apikey-edit-warn" placeholder="月用量达阈值发邮件提醒，如 80" style="flex:1;min-width:150px;">
+                    <label style="display:inline-flex;gap:6px;align-items:center;font-size:13px;white-space:nowrap;cursor:pointer;">
+                        <input type="checkbox" id="apikey-edit-warn-off"> 关闭预警（-1）
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">允许来源（白名单，每行一个；留空 = 不限来源）</label>
+                <textarea class="form-input" id="apikey-edit-origins" rows="3" placeholder="https://ziyit-hacker.github.io&#10;example.org" spellcheck="false" style="resize:vertical;font-family:Consolas,'Courier New',monospace;"></textarea>
             </div>
             <div class="modal-actions">
                 <button type="button" class="user-btn danger" id="cancel-api-key-edit">取消</button>
