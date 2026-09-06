@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html
+<!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cn" lang="cn">
 
 <head>
     <title>Level NO DATA - “千奇百怪=)” - 只因游戏Backrooms维基</title>
     <link rel="icon" href="../../../assets/ziyit.png" type="image/x-icon">
-    <!-- <script src="../../../assets/f12check.js"></script> -->
+    
 
     <script type="text/javascript"
         src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/init.combined.js"></script>
@@ -14,7 +14,7 @@
         var URL_DOMAIN = 'wikidot.com';
         var USE_SSL = true;
         var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-        // global request information
+         
 
         var WIKIREQUEST = {};
         WIKIREQUEST.info = {};
@@ -61,10 +61,10 @@
 
 
     <style type="text/css" id="internal-style">
-        /* modules */
+         
 
 
-        /* theme */
+         
         @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
         @import url(https://cdn.scpwiki.com/theme/en/black-highlighter/css/min/normalize.min.css);
     </style>
@@ -168,14 +168,14 @@
         </div>
     </div>
     <script>
-        // 获取Cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        // 从user.json获取用户权限信息的函数
+         
         async function getUserPermission(username) {
             try {
                 const response = await fetch('/backrooms/user.json');
@@ -193,7 +193,7 @@
             }
         }
 
-        // 页面加载完成后执行登录状态检测
+         
         document.addEventListener('DOMContentLoaded', async function () {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             const usernameDisplay = document.getElementById('usernameDisplay');
@@ -209,11 +209,11 @@
                 const type = (user && ZIYIT_API.isVip(user)) ? 'ZC' : 'UR';
                 if (usernameDisplay) usernameDisplay.textContent = user ? user.username : '';
                 if (userTypeDisplay) {
-                    // 首先尝试从user.json获取权限信息
+                     
                     const userPermission = await getUserPermission(username);
 
                     if (userPermission) {
-                        // 根据权限类型显示相应的用户类型
+                         
                         switch (userPermission.permission) {
                             case 'Adminstrator':
                                 userTypeDisplay.textContent = 'ZIYIT最高管理员';
@@ -225,11 +225,11 @@
                                 userTypeDisplay.textContent = '管理员';
                                 break;
                             default:
-                                // 其他权限类型，根据用户类型显示VIP或普通用户
+                                 
                                 userTypeDisplay.textContent = type === 'ZC' ? 'VIP用户' : '普通用户';
                         }
                     } else {
-                        // 如果user.json中没有找到用户信息，使用原来的逻辑
+                         
                         userTypeDisplay.textContent = type === 'ZC' ? 'VIP用户' : '普通用户';
                     }
                 }
@@ -427,7 +427,7 @@
                         </div>
 
                     </div>
-                    <!-- These extra divs/spans may be used as catch-alls to add extra imagery. -->
+                    
                     <div id="extra-div-1"><span></span></div>
                     <div id="extra-div-2"><span></span></div>
                     <div id="extra-div-3"><span></span></div>
@@ -441,7 +441,7 @@
 
             </div>
             <div id="dummy-ondomready-block" style="display: none;"></div>
-            <!-- Google Analytics load -->
+            
             <script type="text/javascript">
                 (function () {
                     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
@@ -452,13 +452,13 @@
 </body>
 
 <style>
-    /* 生存难度容器居中 */
+     
     .sd-container {
         display: flex !important;
         flex-direction: column !important;
     }
 
-    /* 调整内容包装器 */
+     
     #content-wrap {
         margin-left: 0 !important;
         width: 100% !important;

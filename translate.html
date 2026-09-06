@@ -206,7 +206,7 @@
 </head>
 
 <body>
-    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -507,7 +507,7 @@
     </div>
 
     <script>
-        // 语言映射（必应翻译的语言代码）
+         
         const langMap = {
             'auto-detect': 'auto',
             'af': 'af', 'sq': 'sq', 'am': 'am', 'ar': 'ar', 'hy': 'hy',
@@ -534,7 +534,7 @@
             'yua': 'yua'
         };
 
-        // DOM元素
+         
         const translateBtn = document.getElementById('translateBtn');
         const inputText = document.getElementById('inputText');
         const outputText = document.getElementById('outputText');
@@ -543,31 +543,31 @@
         const cycleTimes = document.getElementById('cycleTimes');
         const targetLang = document.getElementById('targetLang');
 
-        // 搜索功能相关元素
+         
         const sourceLangSearch = document.getElementById('sourceLangSearch');
         const sourceLangOptions = document.getElementById('sourceLangOptions');
         const targetLangSearch = document.getElementById('targetLangSearch');
         const targetLangOptions = document.getElementById('targetLangOptions');
 
-        // 初始化搜索功能
+         
         function initSearchFunctionality() {
-            // 初始化源语言搜索
+             
             initSelectSearch('sourceLang', sourceLangSearch, sourceLangOptions);
-            // 初始化目标语言搜索
+             
             initSelectSearch('targetLang', targetLangSearch, targetLangOptions);
         }
 
-        // 初始化单个下拉框的搜索功能
+         
         function initSelectSearch(selectId, searchInput, optionsContainer) {
             const select = document.getElementById(selectId);
             const options = Array.from(select.options);
             
-            // 创建选项显示
+             
             function renderOptions(filterText = '') {
                 optionsContainer.innerHTML = '';
                 let hasVisibleOptions = false;
                 
-                // 只在初始渲染时设置搜索框的值
+                 
                 let isInitialRender = false;
                 if (filterText === '' && searchInput.value === '') {
                     isInitialRender = true;
@@ -577,7 +577,7 @@
                     const optionText = option.textContent;
                     const optionValue = option.value;
                     
-                    // 搜索逻辑：匹配语言编号或名称
+                     
                     const searchLower = filterText.toLowerCase();
                     const matches = filterText === '' || 
                         optionText.toLowerCase().includes(searchLower) ||
@@ -594,7 +594,7 @@
                         hasVisibleOptions = true;
                     }
                     
-                    // 设置选中状态 - 只在初始渲染时设置搜索框值
+                     
                     if (option.selected) {
                         optionElement.classList.add('selected');
                         if (isInitialRender) {
@@ -602,18 +602,18 @@
                         }
                     }
                     
-                    // 点击选项事件
+                     
                     optionElement.addEventListener('click', () => {
-                        // 更新select的选中状态
+                         
                         select.value = optionValue;
                         
-                        // 更新搜索框显示为选中项文本
+                         
                         searchInput.value = optionText;
                         
-                        // 隐藏选项列表
+                         
                         optionsContainer.style.display = 'none';
                         
-                        // 更新选中状态
+                         
                         optionsContainer.querySelectorAll('.select-option').forEach(el => {
                             el.classList.remove('selected');
                         });
@@ -623,7 +623,7 @@
                     optionsContainer.appendChild(optionElement);
                 });
                 
-                // 如果没有可见选项，显示提示
+                 
                 if (!hasVisibleOptions && filterText !== '') {
                     const noResults = document.createElement('div');
                     noResults.className = 'select-option';
@@ -634,42 +634,42 @@
                 }
             }
             
-            // 初始渲染
+             
             renderOptions();
             
-            // 搜索框输入事件
+             
             searchInput.addEventListener('input', (e) => {
                 const filterText = e.target.value;
                 renderOptions(filterText);
                 optionsContainer.style.display = 'block';
                 
-                // 确保程序能够识别到输入更改
+                 
                 const select = document.getElementById(selectId);
                 if (filterText === '') {
-                    // 如果搜索框为空，显示所有选项
+                     
                     renderOptions('');
                 } else {
-                    // 触发select元素的change事件，确保程序知道值已更改
+                     
                     select.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             });
             
-            // 搜索框焦点事件
+             
             searchInput.addEventListener('focus', () => {
-                // 保存当前值以便后续恢复
+                 
                 const currentValue = searchInput.value;
                 
-                // 清空搜索框以便重新搜索
+                 
                 searchInput.value = '';
                 renderOptions('');
                 optionsContainer.style.display = 'block';
                 
-                // 添加一个小的延迟，确保清空操作完成
+                 
                 setTimeout(() => {
-                    // 触发输入事件，确保程序识别到更改
+                     
                     searchInput.dispatchEvent(new Event('input', { bubbles: true }));
                     
-                    // 如果用户没有输入，恢复原来的值（可选）
+                     
                     setTimeout(() => {
                         if (searchInput.value === '' && currentValue) {
                             searchInput.value = currentValue;
@@ -679,14 +679,14 @@
                 }, 10);
             });
             
-            // 点击其他地方隐藏选项列表
+             
             document.addEventListener('click', (e) => {
                 if (!searchInput.contains(e.target) && !optionsContainer.contains(e.target)) {
                     optionsContainer.style.display = 'none';
                 }
             });
             
-            // 键盘导航
+             
             searchInput.addEventListener('keydown', (e) => {
                 const visibleOptions = optionsContainer.querySelectorAll('.select-option:not(.hidden)');
                 const currentSelected = optionsContainer.querySelector('.select-option.selected');
@@ -720,20 +720,20 @@
             });
         }
 
-        // 页面加载完成后初始化搜索功能
+         
         document.addEventListener('DOMContentLoaded', () => {
             initSearchFunctionality();
         });
 
-        // 核心翻译函数（优先使用微软，失败后重试2次，3次都失败换平台）
+         
         async function bingTranslate(text, fromLang, toLang) {
             if (!text.trim()) return '';
 
-            // 转换为必应的语言代码
+             
             const from = langMap[fromLang] || 'auto';
             const to = langMap[toLang] || 'zh';
 
-            // 方案1：优先使用微软翻译，最多重试3次
+             
             for (let retry = 0; retry < 3; retry++) {
                 try {
                     const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
@@ -756,7 +756,7 @@
                     if (!response.ok) throw new Error(`微软翻译接口请求失败: ${response.status}`);
 
                     const result = await response.json();
-                    // 解析翻译结果
+                     
                     if (result[0]?.translations?.length > 0) {
                         return result[0].translations[0].text || text;
                     } else {
@@ -767,17 +767,17 @@
                     if (retry === 2) {
                         statusText.textContent = `⚠️ 微软翻译3次尝试均失败，尝试谷歌翻译...`;
                     }
-                    // 如果不是最后一次重试，等待1秒后重试
+                     
                     if (retry < 2) {
                         await new Promise(resolve => setTimeout(resolve, 1000));
                     }
                 }
             }
 
-            // 方案2：微软翻译3次都失败，尝试谷歌翻译
+             
             try {
                 statusText.textContent = '🔄 尝试使用谷歌翻译...';
-                // 使用简单的谷歌翻译API（需要CORS代理）
+                 
                 const googleResponse = await fetch('https://cors-anywhere.herokuapp.com/https://translate.googleapis.com/translate_a/single?client=gtx&sl=' + from + '&tl=' + to + '&dt=t&q=' + encodeURIComponent(text));
                 
                 if (!googleResponse.ok) throw new Error(`谷歌翻译接口请求失败: ${googleResponse.status}`);
@@ -792,12 +792,12 @@
                 console.error('谷歌翻译失败:', googleError);
                 statusText.textContent = '🔄 谷歌翻译失败，尝试百度翻译...';
                 
-                // 方案3：谷歌翻译失败，尝试百度翻译
+                 
                 try {
-                    // 使用百度翻译API（需要CORS代理）
-                    const appid = '20260101000000000'; // 示例appid，实际使用时需要申请
+                     
+                    const appid = '20260101000000000';  
                     const salt = Date.now();
-                    const sign = ''; // 实际使用时需要计算签名
+                    const sign = '';  
                     
                     const baiduResponse = await fetch('https://cors-anywhere.herokuapp.com/https://fanyi-api.baidu.com/api/trans/vip/translate?q=' + encodeURIComponent(text) + '&from=' + from + '&to=' + to + '&appid=' + appid + '&salt=' + salt + '&sign=' + sign);
                     
@@ -812,22 +812,22 @@
                 } catch (baiduError) {
                     console.error('百度翻译失败:', baiduError);
                     statusText.textContent = '❌ 所有翻译平台均失败，返回原文本';
-                    return text; // 所有翻译都失败，返回原文本
+                    return text;  
                 }
             }
         }
 
-        // 定义循环翻译的语言序列
+         
         const cycleLanguages = ['en', 'fr', 'de', 'es', 'ja', 'ko', 'ru', 'ar', 'pt', 'it'];
 
-        // 循环翻译主逻辑
+         
         async function startCycleTranslate() {
             const text = inputText.value.trim();
             const times = parseInt(cycleTimes.value);
             const from = sourceLang.value;
             const to = targetLang.value;
 
-            // 输入验证
+             
             if (!text) {
                 alert('请先输入要翻译的文本！');
                 return;
@@ -837,39 +837,39 @@
                 return;
             }
 
-            // 禁用按钮，防止重复点击
+             
             translateBtn.disabled = true;
             statusText.textContent = `🚀 开始循环翻译（共${times}次）...`;
             outputText.value = '';
 
             try {
                 let currentText = text;
-                // 第一步：先把源文本翻译成第一个循环语言
+                 
                 let firstCycleLang = cycleLanguages[0];
                 currentText = await bingTranslate(currentText, from, firstCycleLang);
                 statusText.textContent = `进度: 1/${times}（当前语言：${firstCycleLang}）`;
 
-                // 循环翻译：在语言池里来回切换
+                 
                 for (let i = 1; i < times; i++) {
                     const prevLang = cycleLanguages[(i - 1) % cycleLanguages.length];
                     const nextLang = cycleLanguages[i % cycleLanguages.length];
 
-                    // 翻译到下一个语言
+                     
                     currentText = await bingTranslate(currentText, prevLang, nextLang);
 
-                    // 每10次更新一次输出，避免浏览器卡顿
+                     
                     if (i % 10 === 0) {
                         outputText.value = currentText;
                     }
 
-                    // 更新进度
+                     
                     statusText.textContent = `进度: ${i + 1}/${times}（当前语言：${nextLang}）`;
 
-                    // 加一点延迟，避免请求过快被屏蔽
+                     
                     await new Promise(resolve => setTimeout(resolve, 100));
                 }
 
-                // 最后一步：翻译成最终目标语言
+                 
                 const finalText = await bingTranslate(currentText, cycleLanguages[(times - 1) % cycleLanguages.length], to);
                 outputText.value = finalText;
                 statusText.textContent = `✅ 翻译完成！共循环${times}次，可双击输出框复制结果`;
@@ -877,15 +877,15 @@
             } catch (error) {
                 statusText.textContent = `❌ 翻译过程出错: ${error.message}`;
             } finally {
-                // 恢复按钮
+                 
                 translateBtn.disabled = false;
             }
         }
 
-        // 绑定按钮点击事件
+         
         translateBtn.addEventListener('click', startCycleTranslate);
 
-        // 双击输出框复制结果
+         
         outputText.addEventListener('dblclick', () => {
             outputText.select();
             document.execCommand('copy');
@@ -893,7 +893,7 @@
         });
     </script>
     <script>
-        // 导航权限过滤（DESIGN.md §4.6.5）：登录后按角色显示菜单项，未登录保留公开项
+         
         function checkLoginStatus() {
             const navItems = document.querySelectorAll('.nav-item');
             const loginLink = document.getElementById('loginLink');

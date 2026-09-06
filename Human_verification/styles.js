@@ -1,16 +1,16 @@
-// Widget 注入式样式：mount() 时把 <style> 注入宿主页面，并提供 dark/light 主题。
-// 所有类名加 `.phantom-` 前缀以防与宿主页面 CSS 冲突。
-//
-// 接入形态仿 Cloudflare Turnstile / reCAPTCHA v2：
-//   - 表单内只留紧凑复选框长条（.phantom-bar），几乎不占空间
-//   - 点击复选框弹出居中模态（.phantom-modal），主体（画布+按住按钮）在模态内
-//   - 验证成功后模态消失，复选框变为已验证态
-//
-// 视觉风格复刻 design-os（docs/ui-design/design-os）：暖中性 stone 调 + lime-500 强调，
-// DM Sans / IBM Plex Mono 字体。参见 index.html 设计 token。
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 let injected = false;
 const STYLE_ID = "phantom-widget-style";
-/** 幂等注入全局样式表。多次 mount 只注入一次。 */
+ 
 export function injectStyles() {
     if (injected)
         return;

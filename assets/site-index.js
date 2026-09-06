@@ -1,4 +1,4 @@
-/* 站内搜索页面清单：由 build_site_index.py 自动生成，请勿手动编辑 */
+ 
 var SITE_PAGES = [
     'Human_verification.html',
     'ModWiki/Flight-Management/index.html',

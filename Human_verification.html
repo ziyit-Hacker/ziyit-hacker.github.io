@@ -35,50 +35,48 @@
     href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@400;500&display=swap"
     rel="stylesheet" />
   <style>
-    /* ============================================================
-         Design tokens —— 复刻 design-os 的 Refined Utility 设计系统
-         暖中性 stone 调 + lime 强调色；DM Sans / IBM Plex Mono 字体。
-         ============================================================ */
+    
+
     :root {
       --radius: 0.5rem;
       --radius-sm: calc(var(--radius) - 4px);
-      /* 4px */
+       
       --radius-md: calc(var(--radius) - 2px);
-      /* 6px */
+       
       --radius-lg: var(--radius);
-      /* 8px */
+       
       --radius-xl: calc(var(--radius) + 4px);
-      /* 12px */
+       
       --radius-full: 999px;
 
       --font-display: "DM Sans", system-ui, sans-serif;
       --font-body: "DM Sans", system-ui, sans-serif;
       --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-      /* Light —— Warm Stone palette */
+       
       --bg: oklch(0.985 0.001 106.424);
-      /* stone-50 #FAFAF9 */
+       
       --fg: oklch(0.216 0.006 56.043);
-      /* stone-900 #1C1917 */
+       
       --card: oklch(1 0 0);
-      /* white */
+       
       --card-fg: oklch(0.216 0.006 56.043);
       --muted: oklch(0.97 0.001 106.424);
-      /* stone-100 */
+       
       --muted-fg: oklch(0.444 0.011 73.639);
-      /* stone-600 #57534E */
+       
       --subtle-fg: oklch(0.553 0.013 58.071);
-      /* stone-500 */
+       
       --border: oklch(0.923 0.003 48.717);
-      /* stone-200 #E7E5E4 */
+       
       --border-subtle: oklch(0.97 0.001 106.424);
-      /* stone-100 */
+       
       --primary: oklch(0.216 0.006 56.043);
-      /* stone-900 */
+       
       --primary-fg: oklch(0.985 0.001 106.424);
-      /* stone-50 */
+       
       --accent: oklch(0.648 0.2 131.684);
-      /* lime-500 */
+       
       --accent-soft: color-mix(in oklch, var(--accent) 25%, transparent);
       --link: #6ea8fe;
 
@@ -86,30 +84,30 @@
     }
 
     .dark {
-      /* Dark —— Warm Stone dark palette */
+       
       --bg: oklch(0.216 0.006 56.043);
-      /* stone-900 #1C1917 */
+       
       --fg: oklch(0.985 0.001 106.424);
-      /* stone-50 */
+       
       --card: oklch(0.268 0.007 34.298);
-      /* stone-800 #292524 */
+       
       --card-fg: oklch(0.985 0.001 106.424);
       --muted: oklch(0.318 0.008 43.185);
-      /* stone-700 */
+       
       --muted-fg: oklch(0.709 0.01 56.259);
-      /* stone-400 #A8A29E */
+       
       --subtle-fg: oklch(0.553 0.013 58.071);
-      /* stone-500 */
+       
       --border: oklch(0.370 0.010 67.558);
-      /* stone-600 */
+       
       --border-subtle: oklch(0.318 0.008 43.185);
-      /* stone-700 */
+       
       --primary: oklch(0.923 0.003 48.717);
-      /* stone-200 */
+       
       --primary-fg: oklch(0.216 0.006 56.043);
-      /* stone-900 */
+       
       --accent: oklch(0.648 0.2 131.684);
-      /* lime-500 */
+       
       --accent-soft: color-mix(in oklch, var(--accent) 25%, transparent);
       --link: #93c5fd;
 
@@ -172,14 +170,14 @@
       }
     }
 
-    /* ============================ Layout ============================ */
+     
     .shell {
       display: flex;
       flex-direction: column;
       min-height: 100vh;
     }
 
-    /* Header */
+     
     .header {
       position: sticky;
       top: 0;
@@ -242,7 +240,7 @@
       flex: 1;
     }
 
-    /* Theme toggle */
+     
     .theme-toggle {
       width: 32px;
       height: 32px;
@@ -267,7 +265,7 @@
       height: 16px;
     }
 
-    /* Main */
+     
     .main {
       flex: 1;
       width: 100%;
@@ -299,7 +297,7 @@
       box-shadow: 0 0 0 3px var(--accent-soft);
     }
 
-    /* Hero */
+     
     .hero h1 {
       font-size: clamp(1.9rem, 5vw, 2.75rem);
       line-height: 1.1;
@@ -338,7 +336,7 @@
       opacity: 0.6;
     }
 
-    /* Section heading */
+     
     .section {
       display: flex;
       flex-direction: column;
@@ -357,7 +355,7 @@
       max-width: 42rem;
     }
 
-    /* Feature grid */
+     
     .features {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -404,7 +402,7 @@
       margin: 0;
     }
 
-    /* Demo card */
+     
     .demo-card {
       background: var(--card);
       color: var(--card-fg);
@@ -440,7 +438,7 @@
       justify-content: center;
     }
 
-    /* Code block */
+     
     .code-block {
       margin: 0;
       background: var(--muted);
@@ -466,7 +464,7 @@
       color: var(--accent);
     }
 
-    /* Footer */
+     
     .footer {
       padding: 2rem 1.5rem;
       display: flex;
@@ -504,7 +502,7 @@
       margin: 0 auto;
     }
 
-    /* Responsive */
+     
     @media (max-width: 640px) {
       .main {
         padding: 2rem 1.25rem;
@@ -533,7 +531,7 @@
 
 <body>
   <div class="shell">
-    <!-- Header -->
+    
     <header class="header">
       <div class="header-inner">
         <div class="brand">
@@ -549,9 +547,9 @@
       </div>
     </header>
 
-    <!-- Main -->
+    
     <main class="main">
-      <!-- Hero -->
+      
       <section class="hero">
         <span class="eyebrow">动态显影 · Common Fate</span>
         <h1>无感人机验证<br />藏在噪声里的方块</h1>
@@ -567,7 +565,7 @@
         </div>
       </section>
 
-      <!-- Features -->
+      
       <section class="section">
         <h2 class="section-title">核心机制</h2>
         <p class="section-desc">
@@ -576,7 +574,7 @@
         <div class="features">
           <div class="feature-card">
             <span class="feature-icon" aria-hidden="true">
-              <!-- Lucide: Boxes -->
+              
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
                 stroke-linejoin="round">
                 <path d="M7 16.5 3 14.25v-4.5L7 7.5l4 2.25v4.5L7 16.5Z" />
@@ -592,7 +590,7 @@
 
           <div class="feature-card">
             <span class="feature-icon" aria-hidden="true">
-              <!-- Lucide: Lock -->
+              
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
                 stroke-linejoin="round">
                 <rect x="4" y="11" width="16" height="10" rx="2" />
@@ -607,7 +605,7 @@
 
           <div class="feature-card">
             <span class="feature-icon" aria-hidden="true">
-              <!-- Lucide: Puzzle -->
+              
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
                 stroke-linejoin="round">
                 <path
@@ -623,7 +621,7 @@
         </div>
       </section>
 
-      <!-- Live demo -->
+      
       <section class="section">
         <h2 class="section-title">在线体验</h2>
         <p class="section-desc">
@@ -642,7 +640,7 @@
     </main>
 
     <div class="footer-divider"></div>
-    <!-- Footer -->
+    
     <footer class="footer">
       <div>
         一键部署：<a href=".\人机验证使用方式.html" download>下载模板</a>
@@ -770,7 +768,7 @@
       btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2L3 12l6 3 3 6 9-18z"/><path d="M15 9l-6 6"/></svg>免费获取 API Key';
       btn.onclick = showApiKeyDialog;
 
-      // 「我的密钥」管理入口：仅登录用户可见
+       
       var myKeyBtn = null;
       if (getLocalToken()) {
         myKeyBtn = document.createElement('a');

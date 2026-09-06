@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html
+<!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cn" lang="cn">
 
@@ -15,7 +15,7 @@
         var URL_DOMAIN = 'wikidot.com';
         var USE_SSL = true;
         var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-        // global request information
+         
 
         var WIKIREQUEST = {};
         WIKIREQUEST.info = {};
@@ -102,8 +102,8 @@
     </script>
 
     <style>
-        /* Confirm box by OptimisticLucio
-Original code from https://scp-wiki.wikidot.com/system:join */
+        
+
         .confirm-wrapper,
         .confirm-wrapper>li {
             list-style: none;
@@ -176,7 +176,7 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             white-space: pre-wrap;
         }
 
-        /* 添加渐变过渡效果 */
+         
         #membership-apply-box p,
         #membership-by-apply-form {
             transition: opacity 0.5s ease-in-out, max-height 0.5s ease-in-out, transform 0.5s ease-in-out;
@@ -234,14 +234,14 @@ Original code from https://scp-wiki.wikidot.com/system:join */
         </div>
     </div>
     <script>
-        // 获取Cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        // 从user.json获取用户权限信息的函数（The Backrooms维基本地权限体系）
+         
         async function getUserPermission(username) {
             try {
                 const response = await fetch('/backrooms/user.json');
@@ -259,12 +259,12 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             }
         }
 
-        // 页面加载完成后执行登录状态检测（用户名来自后端账号，权限来自user.json）
+         
         document.addEventListener('DOMContentLoaded', async function () {
             const usernameDisplay = document.getElementById('usernameDisplay');
             const userTypeDisplay = document.getElementById('userTypeDisplay');
 
-            // 延迟获取表单元素，确保DOM完全加载
+             
             setTimeout(() => {
                 const membershipApplyBox = document.getElementById('membership-apply-box');
                 const membershipApplyForm = document.getElementById('membership-by-apply-form');
@@ -272,7 +272,7 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                 if (!ZIYIT_API.getToken()) {
                     if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';
                     if (userTypeDisplay) userTypeDisplay.textContent = '';
-                    // 未登录时显示登录提示，隐藏申请表单
+                     
                     if (membershipApplyBox) {
                         const loginPrompt = membershipApplyBox.querySelector('p');
                         if (loginPrompt) loginPrompt.classList.remove('hidden');
@@ -289,7 +289,7 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                             }
                         }
 
-                        // 已登录时隐藏登录提示，显示申请表单
+                         
                         if (membershipApplyBox) {
                             const loginPrompt = membershipApplyBox.querySelector('p');
                             if (loginPrompt) loginPrompt.classList.add('hidden');
@@ -305,16 +305,16 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                         if (membershipApplyForm) membershipApplyForm.style.display = 'none';
                     });
                 }
-            }, 100); // 延迟100ms确保DOM完全加载
+            }, 100);  
         });
 
-        // 获取管理员列表的函数
+         
         async function loadAdminList() {
             try {
                 const response = await fetch('/backrooms/user.json');
                 const userData = await response.json();
                 
-                // 筛选出管理员（Adminstrator和Admin权限的用户）
+                 
                 const adminUsers = [];
                 const adminEmails = [];
                 for (let i = 0; i < userData.Permission.length; i++) {
@@ -324,10 +324,10 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                     }
                 }
                 
-                // 找到管理员列表显示位置
+                 
                 const adminListSpan = document.getElementById('adminList');
                 if (adminListSpan && adminUsers.length > 0) {
-                    // 创建管理员列表HTML
+                     
                     let adminListHTML = '';
                     adminUsers.forEach((admin, index) => {
                         if (index > 0) {
@@ -335,7 +335,7 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                         }
                         const email = adminEmails[index];
                         const emailText = email !== '[NO DATA]' ? email : '暂无邮箱';
-                        // 添加mailto链接，点击会跳转到邮箱
+                         
                         adminListHTML += `<a href="mailto:${email}" title="邮箱: ${emailText}" class="admin-name">${admin}</a>`;
                     });
                     
@@ -343,7 +343,7 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                 }
             } catch (error) {
                 console.error('读取管理员列表失败:', error);
-                // 如果读取失败，显示默认管理员列表
+                 
                 const adminListSpan = document.getElementById('adminList');
                 if (adminListSpan) {
                     adminListSpan.innerHTML = '<a href="mailto:ziyitstudio@qq.com" title="邮箱: ziyitstudio@qq.com" class="admin-name">Minecraft_zy227</a>、<a href="mailto:ziyitstudio@qq.com" title="邮箱: ziyitstudio@qq.com" class="admin-name">19866824404</a>';
@@ -351,7 +351,7 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             }
         }
 
-        // 初始化出生日期选择框
+         
         function initializeBirthDateSelectors() {
             const yearSelect = document.getElementById('birth-year');
             const monthSelect = document.getElementById('birth-month');
@@ -359,7 +359,7 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             
             if (!yearSelect || !monthSelect || !daySelect) return;
             
-            // 初始化年份选择框（从1900年到当前年份）
+             
             const currentYear = new Date().getFullYear();
             for (let year = currentYear; year >= 1900; year--) {
                 const option = document.createElement('option');
@@ -368,7 +368,7 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                 yearSelect.appendChild(option);
             }
             
-            // 初始化月份选择框
+             
             for (let month = 1; month <= 12; month++) {
                 const option = document.createElement('option');
                 option.value = month;
@@ -376,12 +376,12 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                 monthSelect.appendChild(option);
             }
             
-            // 月份变化时更新日期选择框
+             
             monthSelect.addEventListener('change', updateDaySelector);
             yearSelect.addEventListener('change', updateDaySelector);
         }
         
-        // 更新日期选择框
+         
         function updateDaySelector() {
             const yearSelect = document.getElementById('birth-year');
             const monthSelect = document.getElementById('birth-month');
@@ -397,13 +397,13 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                 return;
             }
             
-            // 计算该月的天数
+             
             const daysInMonth = new Date(year, month, 0).getDate();
             
-            // 清空日期选择框
+             
             daySelect.innerHTML = '<option value="">选择日期</option>';
             
-            // 填充日期
+             
             for (let day = 1; day <= daysInMonth; day++) {
                 const option = document.createElement('option');
                 option.value = day;
@@ -412,24 +412,24 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             }
         }
 
-        // 验证身份证号码的函数
+         
         function validateIdCard(idCard) {
-            // 检查长度是否为12位
+             
             if (idCard.length !== 12) {
                 return { valid: false, error: '您的申请书未通过机械识别' };
             }
             
-            // 检查是否包含字母
+             
             if (!/^\d+$/.test(idCard)) {
                 return { valid: false, error: '您的申请书未通过机械识别' };
             }
             
-            // 提取出生日期信息（第一个数字不管，后面8个数字是出生日期）
+             
             const year = parseInt(idCard.substring(1, 5));
             const month = parseInt(idCard.substring(5, 7));
             const day = parseInt(idCard.substring(7, 9));
             
-            // 验证日期是否有效
+             
             const birthDate = new Date(year, month - 1, day);
             if (birthDate.getFullYear() !== year || 
                 birthDate.getMonth() !== month - 1 || 
@@ -437,13 +437,13 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                 return { valid: false, error: '您的申请书未通过机械识别' };
             }
             
-            // 检查是否超过120年
+             
             const currentYear = new Date().getFullYear();
             if (currentYear - year > 120) {
                 return { valid: false, error: '您的申请书未通过机械识别' };
             }
             
-            // 提取性别信息（第11位，奇数为男，偶数为女）
+             
             const genderDigit = parseInt(idCard.substring(10, 11));
             const gender = genderDigit % 2 === 0 ? 'female' : 'male';
             
@@ -457,15 +457,15 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             };
         }
 
-        // 验证申请书格式和年龄的函数
+         
         function validateApplicationFormat(text) {
-            // 检查是否以分号分隔格式
+             
             const parts = text.split('；');
             if (parts.length < 2) {
                 return { valid: false, error: '您的申请书未通过机械识别' };
             }
             
-            // 验证年龄部分
+             
             const agePart = parts[0].trim();
             const age = parseInt(agePart);
             
@@ -476,25 +476,25 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             return { valid: true, age: age };
         }
 
-        // 验证身份证年龄与申请书填写年龄是否一致的函数
+         
         function validateAgeConsistency(idCardValidation, formatValidation) {
-            // 计算身份证对应的实际年龄
+             
             const currentDate = new Date();
             const birthDate = idCardValidation.birthDate;
             
-            // 计算年龄（实岁）
+             
             let ageFromIdCard = currentDate.getFullYear() - birthDate.getFullYear();
             const monthDiff = currentDate.getMonth() - birthDate.getMonth();
             
-            // 如果当前月份小于出生月份，或者月份相同但日期小于出生日期，则年龄减1
+             
             if (monthDiff < 0 || (monthDiff === 0 && currentDate.getDate() < birthDate.getDate())) {
                 ageFromIdCard--;
             }
             
-            // 比较身份证年龄和申请书填写年龄
+             
             const ageFromApplication = formatValidation.age;
             
-            // 允许±1岁的误差（考虑到生日可能刚过或即将到来）
+             
             if (Math.abs(ageFromIdCard - ageFromApplication) > 1) {
                 return { 
                     valid: false, 
@@ -509,29 +509,29 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             };
         }
 
-        // 读取暗号文件的函数
+         
         async function readCodeWords() {
             try {
                 const response = await fetch('/backrooms/暗号');
                 const text = await response.text();
-                // 按行分割并过滤空行
+                 
                 const words = text.split('\n')
                     .map(line => line.trim())
                     .filter(line => line.length > 0);
                 return words;
             } catch (error) {
                 console.error('读取暗号文件失败:', error);
-                // 如果读取失败，返回默认的暗号词语
+                 
                 return ['安全', '稳定', '规则', '遵守', '文明'];
             }
         }
 
-        // 验证申请书是否包含暗号词语的函数
+         
         function validateApplicationContent(text, codeWords) {
             return codeWords.every(word => text.includes(word));
         }
 
-        // 复制文本到剪贴板的函数
+         
         function copyToClipboard(text) {
             const textarea = document.createElement('textarea');
             textarea.value = text;
@@ -548,20 +548,20 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             }
         }
 
-        // 获取超级管理员邮箱的函数
+         
         async function getSuperAdminEmail() {
             try {
                 const response = await fetch('/backrooms/user.json');
                 const userData = await response.json();
                 
-                // 查找超级管理员（Adminstrator权限的用户）
+                 
                 for (let i = 0; i < userData.Permission.length; i++) {
                     if (userData.Permission[i] === 'Administrator' && userData.Email[i] !== '[NO DATA]') {
                         return userData.Email[i];
                     }
                 }
                 
-                // 如果没有找到超级管理员，返回默认邮箱
+                 
                 return 'ziyitstudio@qq.com';
             } catch (error) {
                 console.error('获取超级管理员邮箱失败:', error);
@@ -569,7 +569,7 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             }
         }
 
-        // 检查是否在限制期内
+         
         function isSubmissionLimited() {
             const lastSubmissionTime = getCookie('lastSubmissionTime');
             if (!lastSubmissionTime) return false;
@@ -577,21 +577,21 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             const currentTime = new Date().getTime();
             const timeDiff = currentTime - parseInt(lastSubmissionTime);
             
-            return timeDiff < 60000; // 1分钟限制
+            return timeDiff < 60000;  
         }
 
-        // 设置提交限制
+         
         function setSubmissionLimit() {
             const currentTime = new Date().getTime();
-            document.cookie = `lastSubmissionTime=${currentTime}; max-age=60; path=/`; // 60秒过期
+            document.cookie = `lastSubmissionTime=${currentTime}; max-age=60; path=/`;  
         }
 
-        // 检查必读页面阅读次数的函数
+         
         function checkRequiredReadings() {
             const readCounts = JSON.parse(localStorage.getItem('docReadCounts') || '{}');
             const requiredPages = ['./site-rules.html', './criticism-policy.html'];
             
-            // 检查每个必读页面的阅读次数是否都超过3次
+             
             for (const page of requiredPages) {
                 const count = readCounts[page] || 0;
                 if (count < 3) {
@@ -608,9 +608,9 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             return { valid: true };
         }
 
-        // 为确认按钮添加点击事件处理程序
+         
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化出生日期选择框
+             
             initializeBirthDateSelectors();
             
             const confirmButton = document.getElementById('mba-apply');
@@ -619,13 +619,13 @@ Original code from https://scp-wiki.wikidot.com/system:join */
             
             if (confirmButton && applicationTextarea && idCardInput) {
                 confirmButton.addEventListener('click', async function() {
-                    // 检查是否在限制期内
+                     
                     if (isSubmissionLimited()) {
                         alert('请过一会再次提交申请');
                         return;
                     }
                     
-                    // 首先检查必读页面阅读次数
+                     
                     const readingCheck = checkRequiredReadings();
                     if (!readingCheck.valid) {
                         alert(readingCheck.message);
@@ -645,7 +645,7 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                         return;
                     }
                     
-                    // 验证身份证号码
+                     
                     const idCardValidation = validateIdCard(idCard);
                     if (!idCardValidation.valid) {
                         setSubmissionLimit();
@@ -653,7 +653,7 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                         return;
                     }
                     
-                    // 验证申请书格式和年龄
+                     
                     const formatValidation = validateApplicationFormat(applicationText);
                     if (!formatValidation.valid) {
                         setSubmissionLimit();
@@ -661,10 +661,10 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                         return;
                     }
                     
-                    // 读取暗号词语
+                     
                     const codeWords = await readCodeWords();
                     
-                    // 验证申请书是否包含暗号词语
+                     
                     const containsCodeWord = validateApplicationContent(applicationText, codeWords);
                     
                     if (!containsCodeWord) {
@@ -673,18 +673,18 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                         return;
                     }
                     
-                    // 所有验证通过，处理申请书
+                     
                     const copySuccess = copyToClipboard(applicationText);
                     
                     if (copySuccess) {
-                        // 获取超级管理员邮箱并打开邮件客户端
+                         
                         const superAdminEmail = await getSuperAdminEmail();
                         const mailtoLink = `mailto:${superAdminEmail}?subject=成员资格申请&body=申请书内容已复制到剪贴板，请粘贴到邮件正文中。`;
                         
-                        // 打开邮件客户端
+                         
                         window.location.href = mailtoLink;
                         
-                        // 显示提示信息
+                         
                         alert('申请书内容已复制到剪贴板！\n邮件客户端已打开，请将申请书内容粘贴到邮件正文中并发送。');
                     } else {
                         alert('复制申请书内容失败，请手动复制内容并发送邮件。');
@@ -930,7 +930,7 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                                                     <ul>
                                                         <li>如果这没有解决你的问题，请向以下管理员中的任意一名寻求帮助：
                                                             <span id="adminList">
-                                                                <!--自动从user.json读取管理员列表-->
+                                                                
                                                             </span>
                                                             。如果一段时间后仍没有答复，请放宽心，可能他临时有别的事要办，直接向其他管理员寻求帮助即可。
                                                         </li>
@@ -1036,12 +1036,12 @@ Original code from https://scp-wiki.wikidot.com/system:join */
                                     </div>
                                 </div>
                                 <script type="text/javascript">
-                                    //<![CDATA[
+                                     
                                     OZONE.dom.onDomReady(function () {
                                         var tabViewfe9cec0bebfc828c00de2c9db9f602a7 = new YAHOO.widget.TabView('wiki-tabview-fe9cec0bebfc828c00de2c9db9f602a7');
                                     }, "dummy-ondomready-block");
 
-                                    //]]>
+                                     
                                 </script>
 
 
@@ -1076,33 +1076,33 @@ Original code from https://scp-wiki.wikidot.com/system:join */
 </body>
 
 <style>
-    /* 生存难度容器居中 */
+     
     .sd-container {
         display: flex !important;
         flex-direction: column !important;
     }
 
-    /* 调整内容包装器 */
+     
     #content-wrap {
         margin-left: 0 !important;
         width: 100% !important;
     }
 
-    /* 管理员名字悬浮样式 */
+     
     .admin-name {
         cursor: pointer;
         position: relative;
         transition: all 0.3s ease;
-        color: inherit; /* 继承父元素颜色 */
-        text-decoration: none; /* 移除下划线 */
+        color: inherit;  
+        text-decoration: none;  
     }
 
     .admin-name:hover {
         color: #007bff;
-        text-decoration: underline; /* 悬浮时显示下划线 */
+        text-decoration: underline;  
     }
 
-    /* 自定义悬浮提示样式 */
+     
     .admin-name[title] {
         position: relative;
     }

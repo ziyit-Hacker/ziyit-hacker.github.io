@@ -1,8 +1,8 @@
-// 征信黑名单检查功能
+ 
 function checkCreditBlacklist() {
     console.log('开始检查征信黑名单...');
     
-    // 获取当前登录的用户名
+     
     const currentUser = getCurrentUser();
     console.log('当前用户:', currentUser);
     
@@ -11,7 +11,7 @@ function checkCreditBlacklist() {
         return false;
     }
     
-    // 异步加载黑名单文件
+     
     fetch('/zxbl.txt')
         .then(response => {
             console.log('黑名单文件响应状态:', response.status);
@@ -25,11 +25,11 @@ function checkCreditBlacklist() {
             const lines = data.split('\n');
             let foundInBlacklist = false;
             
-            // 在黑名单检查部分修改匹配逻辑
+             
             for (const line of lines) {
                 if (line.trim() === '') continue;
                 
-                // 解析格式："完整用户数据  \\  原因"
+                 
                 const parts = line.split('  \\\\  ');
                 console.log('解析行:', line, '分割结果:', parts);
                 
@@ -39,20 +39,20 @@ function checkCreditBlacklist() {
                     
                     console.log('黑名单用户数据:', blacklistUserData, '当前用户数据:', currentUser);
                     
-                    // 从黑名单用户数据中提取用户名（第二部分）
+                     
                     const blacklistDataParts = blacklistUserData.split('-');
                     const blacklistUsername = blacklistDataParts.length >= 2 ? blacklistDataParts[1] : blacklistUserData;
                     
-                    // 从当前用户数据中提取用户名（如果当前用户数据是完整格式）
+                     
                     const currentUserParts = currentUser.split('-');
                     const currentUsername = currentUserParts.length >= 2 ? currentUserParts[1] : currentUser;
                     
                     console.log('黑名单用户名:', blacklistUsername, '当前用户名:', currentUsername);
                     
-                    // 双重匹配：既匹配完整用户数据，也匹配用户名
+                     
                     if (blacklistUserData === currentUser || blacklistUsername === currentUsername) {
                         console.log('用户存在于黑名单中，原因:', reason);
-                        // 用户存在于黑名单中
+                         
                         showCreditWarning(reason);
                         foundInBlacklist = true;
                         return;
@@ -69,11 +69,11 @@ function checkCreditBlacklist() {
         });
 }
 
-// 显示征信警告
+ 
 function showCreditWarning(reason) {
     console.log('显示征信警告，原因:', reason);
     
-    // 创建征信警告元素
+     
     const creditWarning = document.createElement('div');
     creditWarning.id = 'credit-warning';
     creditWarning.innerHTML = `
@@ -116,7 +116,7 @@ function showCreditWarning(reason) {
     const creditBadge = document.getElementById('credit-badge');
     const creditDetails = document.getElementById('credit-details');
     
-    // 鼠标悬停显示详情（丝滑动画）
+     
     creditBadge.addEventListener('mouseenter', () => {
         creditDetails.style.opacity = '1';
         creditDetails.style.transform = 'translateY(0)';
@@ -129,13 +129,13 @@ function showCreditWarning(reason) {
         creditDetails.style.pointerEvents = 'none';
     });
     
-    // 随机删除页面75%的内容（除了征信警告）
+     
     setTimeout(() => {
         removeRandomElements();
     }, 1000);
 }
 
-// 随机删除页面元素
+ 
 function removeRandomElements() {
     console.log('开始删除页面元素...');
     const elementsToRemove = [];
@@ -143,17 +143,17 @@ function removeRandomElements() {
     
     console.log('页面元素总数:', allElements.length);
     
-    // 计算需要删除的元素数量（25%到75%中随机一个百分比）
-    const randomPercentage = 0.25 + Math.random() * 0.5; // 生成25%到75%之间的随机数
+     
+    const randomPercentage = 0.25 + Math.random() * 0.5;  
     const removeCount = Math.floor(allElements.length * randomPercentage);
     console.log('随机删除比例:', (randomPercentage * 100).toFixed(1) + '%', '需要删除的元素数量:', removeCount);
     
-    // 随机选择要删除的元素
+     
     while (elementsToRemove.length < removeCount && allElements.length > 0) {
         const randomIndex = Math.floor(Math.random() * allElements.length);
         const element = allElements[randomIndex];
         
-        // 确保不重复选择且不是征信警告相关元素
+         
         if (!elementsToRemove.includes(element) && 
             !element.closest('#credit-warning')) {
             elementsToRemove.push(element);
@@ -162,7 +162,7 @@ function removeRandomElements() {
     
     console.log('即将删除的元素数量:', elementsToRemove.length);
     
-    // 删除选中的元素
+     
     elementsToRemove.forEach(element => {
         if (element.parentNode) {
             element.parentNode.removeChild(element);
@@ -172,11 +172,11 @@ function removeRandomElements() {
     console.log('元素删除完成');
 }
 
-// 获取当前用户（根据用户数据格式解析）
+ 
 function getCurrentUser() {
     console.log('开始获取当前用户...');
     
-    // 检查URL参数中的用户信息
+     
     const urlParams = new URLSearchParams(window.location.search);
     const urlUser = urlParams.get('user');
     if (urlUser) {
@@ -184,7 +184,7 @@ function getCurrentUser() {
         return urlUser;
     }
     
-    // 从cookie获取当前用户信息（优先），然后回退到localStorage
+     
     const userData = getCookie('authToken') || localStorage.getItem('authToken');
     console.log('从cookie/localStorage获取的用户数据:', userData);
     
@@ -194,12 +194,12 @@ function getCurrentUser() {
     }
     
     try {
-        // 解析用户数据格式："用户类型-用户名-加密后的密码-是否为ZTG用户"
+         
         const parts = userData.split('-');
         console.log('解析用户数据部分:', parts);
         
         if (parts.length >= 2) {
-            // 返回用户名（第二部分）
+             
             const username = parts[1];
             console.log('解析出的用户名:', username);
             return username;
@@ -209,10 +209,10 @@ function getCurrentUser() {
     }
     
     console.log('用户数据解析失败，返回原始数据:', userData);
-    return userData; // 如果解析失败，返回原始数据
+    return userData;  
 }
 
-// 获取cookie值的辅助函数
+ 
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -220,13 +220,13 @@ function getCookie(name) {
     return null;
 }
 
-// 页面加载完成后检查黑名单
+ 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('页面加载完成，开始检查征信黑名单');
     checkCreditBlacklist();
 });
 
-// 添加手动检查函数，用于调试
+ 
 window.manualCheckBlacklist = function() {
     console.log('手动触发征信检查');
     checkCreditBlacklist();

@@ -108,12 +108,12 @@
 
         .slider {
             width: 560px;
-            max-width: 100%;   /* 移动端防止横向溢出 */
+            max-width: 100%;    
             height: 400px;
             overflow: hidden;
         }
 
-        /* 轮播图右侧内容区 */
+         
         .home-hero {
             display: flex;
             align-items: flex-start;
@@ -287,7 +287,7 @@
             }
         }
 
-        /* 添加backrooms导航栏的颜色变量 */
+         
         :root {
             --gray-monochrome: 128, 128, 128;
             --pale-gray-monochrome: 240, 240, 240;
@@ -297,7 +297,7 @@
             --mono-font: 'Courier New', monospace;
         }
 
-        /* 折叠导航栏样式 - 修改为backrooms风格 */
+         
         .top-bar {
             background-color: rgb(var(--gray-monochrome));
             padding: 0.5rem 1rem;
@@ -374,7 +374,7 @@
             background-color: rgb(var(--white-monochrome));
         }
 
-        /* 移动端导航栏样式 - 修改为backrooms风格 */
+         
         .mobile-top-bar {
             display: none;
             background-color: rgb(var(--gray-monochrome));
@@ -448,7 +448,7 @@
             align-items: center;
         }
 
-        /* 响应式设计 */
+         
         @media (max-width: 768px) {
             .top-bar {
                 display: none;
@@ -459,7 +459,7 @@
             }
         }
 
-        /* Cookie提示样式 */
+         
         .cookie-consent {
             position: fixed;
             bottom: 0;
@@ -668,7 +668,7 @@
             font-size: 14px;
         }
 
-        /* 自定义下拉箭头 */
+         
         #lang::after {
             content: "▼";
             position: absolute;
@@ -681,7 +681,7 @@
             z-index: 1001;
         }
 
-        /* 移动端适配 */
+         
         @media (max-width: 768px) {
             #lang {
                 top: 15px;
@@ -700,7 +700,7 @@
             }
         }
 
-        /* 动画效果 */
+         
         @keyframes languageSwitch {
             0% {
                 transform: scale(1);
@@ -770,7 +770,7 @@
     <h1>ZIYIT主页</h1>
 
     <hr>
-    <!-- ===== 导航栏（DESIGN.md §4.6，参照 ui-test.html site-nav 规范） ===== -->
+    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -892,7 +892,7 @@
         <p class="tit">&copy;2026 ZIYIT <strong>版权所有，侵权必究</strong></p>
     </footer>
 
-    <!-- Cookie同意提示 -->
+    
     <div class="cookie-overlay" id="cookieOverlay"></div>
     <div class="cookie-consent" id="cookieConsent">
         <div class="cookie-content">
@@ -912,29 +912,29 @@
     </div>
 
     <script>
-        // Cookie同意提示功能
+         
         function initCookieConsent() {
             const cookieConsent = document.getElementById('cookieConsent');
             const cookieOverlay = document.getElementById('cookieOverlay');
             const cookieAccept = document.getElementById('cookieAccept');
             const cookieReject = document.getElementById('cookieReject');
 
-            // 检查元素是否存在
+             
             if (!cookieConsent || !cookieOverlay || !cookieAccept || !cookieReject) {
                 console.error('Cookie提示元素未找到');
                 return;
             }
 
-            // 检查是否已经做出Cookie选择
+             
             const cookieChoice = localStorage.getItem('Cookie');
 
             if (cookieChoice === null) {
-                // 如果还没有选择，显示Cookie提示
+                 
                 setTimeout(() => {
                     cookieConsent.classList.add('active');
                     cookieOverlay.classList.add('active');
 
-                    // 禁用页面其他内容，但确保Cookie按钮可以点击
+                     
                     document.body.style.overflow = 'hidden';
                     document.querySelectorAll('a, button, input, select, textarea').forEach(element => {
                         if (!element.classList.contains('cookie-btn')) {
@@ -943,15 +943,15 @@
                     });
                 }, 1000);
             } else {
-                // 如果已经选择，根据选择处理
+                 
                 handleCookieChoice(cookieChoice);
             }
 
-            // 接受Cookie
+             
             cookieAccept.addEventListener('click', function (e) {
                 e.stopPropagation();
                 console.log('接受按钮被点击');
-                // 使用Cookie管理器设置状态
+                 
                 if (window.cookieManager) {
                     window.cookieManager.setCookieStatus(true);
                 } else {
@@ -960,11 +960,11 @@
                 hideCookieConsent();
             });
 
-            // 拒绝Cookie
+             
             cookieReject.addEventListener('click', function (e) {
                 e.stopPropagation();
                 console.log('拒绝按钮被点击');
-                // 使用Cookie管理器设置状态
+                 
                 if (window.cookieManager) {
                     window.cookieManager.setCookieStatus(false);
                 } else {
@@ -977,7 +977,7 @@
                 cookieConsent.classList.remove('active');
                 cookieOverlay.classList.remove('active');
 
-                // 恢复页面功能
+                 
                 document.body.style.overflow = '';
                 document.querySelectorAll('a, button, input, select, textarea').forEach(element => {
                     element.style.pointerEvents = '';
@@ -985,18 +985,18 @@
             }
 
             function handleCookieChoice(choice) {
-                // 使用Cookie管理器处理选择
+                 
                 if (window.cookieManager) {
                     window.cookieManager.setCookieStatus(choice === 'True');
                 }
             }
         }
 
-        // 确保DOM完全加载后再初始化
+         
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initCookieConsent);
         } else {
-            // DOM已经加载完成
+             
             initCookieConsent();
         }
     </script>
@@ -1028,7 +1028,7 @@
             }
             toggle()
         })
-        // 在toggle函数中添加点击事件
+         
         function toggle() {
             img.src = data[i].url
             p.innerHTML = data[i].title
@@ -1036,7 +1036,7 @@
             document.querySelector('.slider-indicator .active').classList.remove('active')
             document.querySelector(`.slider-indicator li:nth-child(${i + 1})`).classList.add('active')
 
-            // 添加点击跳转功能
+             
             img.onclick = function () {
                 if (data[i].link) {
                     window.open(data[i].link, '_blank')
@@ -1067,13 +1067,13 @@
     </script>
 
     <script>
-        // 移动端导航栏折叠功能：点击一次 ≡ 展开，再点击一次 ≡ 折叠；默认折叠，不自动折叠
+         
         document.addEventListener('DOMContentLoaded', function () {
             const openMenuLink = document.querySelector('.mobile-top-bar .open-menu a');
             const mobileMenu = document.getElementById('mobile-menu');
 
             if (openMenuLink && mobileMenu) {
-                // ≡ 恒为菜单开关，不随登录态变化
+                 
                 openMenuLink.textContent = '≡';
                 openMenuLink.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -1081,14 +1081,14 @@
                 });
             }
 
-            // 移动端子菜单折叠功能
+             
             const mobileMenuItems = document.querySelectorAll('#mobile-menu > li');
             mobileMenuItems.forEach(item => {
                 const subMenu = item.querySelector('ul');
                 if (subMenu) {
-                    // 为有子菜单的项添加点击事件
+                     
                     item.addEventListener('click', function (e) {
-                        if (e.target.tagName === 'A') return; // 如果是链接点击，不阻止
+                        if (e.target.tagName === 'A') return;  
                         e.stopPropagation();
                         subMenu.style.display = subMenu.style.display === 'block' ? 'none' : 'block';
                     });
@@ -1100,7 +1100,7 @@
     </script>
 
     <script>
-        // 从cookie获取用户信息的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
@@ -1108,26 +1108,26 @@
             return null;
         }
 
-        // 获取当前用户认证信息
+         
         function getCurrentUser() {
-            // 优先从cookie获取
+             
             const authToken = getCookie('authToken');
             if (authToken) {
                 return authToken;
             }
-            // 如果cookie中没有，尝试从localStorage获取（兼容旧版本）
+             
             return localStorage.getItem('authToken');
         }
 
-        // 检查用户是否登录（优先以本地凭据 ziyit_cred 为准，兼容旧 authToken）
+         
         function isLoggedIn() {
             return !!(getCurrentUser() || (ZIYIT_API.getCredentials && ZIYIT_API.getCredentials()));
         }
 
-        // 检查黑名单函数
+         
         async function checkBlacklist(authToken) {
-            // 这里应该调用blacklist.js中的检查逻辑
-            // 暂时返回false，实际应该与blacklist.js集成
+             
+             
             return false;
         }
 
@@ -1162,7 +1162,7 @@
                 return;
             }
 
-            // 实时验证登录态：旧 Cookie 中的无效 token/凭据立即清理，避免功能区块与登录同时出现
+             
             let meUser = null;
             let authError = null;
             try {
@@ -1257,8 +1257,8 @@
                 return;
             }
 
-            // 管理员身份缓存：null=未检测，0=非管理员，1-4=管理员等级
-            // （避免每 250ms 轮询都请求后端 /admin/me）
+             
+             
             let adminLevelCache = null;
 
             setInterval(() => {
@@ -1279,7 +1279,7 @@
                 ZIYIT_API.currentUser().then(function (user) {
                     const isVip = ZIYIT_API.isVip(user);
                     const uname = user.username || '';
-                    // 管理员判定：首次登录时检测一次并缓存；非管理员记 0 不再重试
+                     
                     let isAdmin = adminLevelCache > 0;
                     if (adminLevelCache === null) {
                         isAdmin = false;
@@ -1296,7 +1296,7 @@
                         const role = item.getAttribute('data-role');
 
                         if (uname === 'Minecraft_zy227') {
-                            // 超管：所有后台/开发者入口全部可见
+                             
                             if (role === 'all' || role === 'admin' || role === 'adminstr') {
                                 item.classList.add('visible');
                                 item.classList.remove('hidden');
@@ -1305,9 +1305,9 @@
                                 item.classList.remove('visible');
                             }
                         } else {
-                            // 普通用户 / VIP / 管理员：
-                            // - admin 角色（开发者选项等）：VIP 或任意等级管理员可见
-                            // - adminstr 角色（后台管理/开发者工具）：仅管理员可见
+                             
+                             
+                             
                             if (role === 'all' ||
                                 ((isVip || isAdmin) && role === 'admin') ||
                                 (isAdmin && role === 'adminstr') ||
@@ -1343,7 +1343,7 @@
                         }
                     });
                 }).catch(function () {
-                    // 轮询时发现登录态失效：清理残留的无效 token（无凭据时）
+                     
                     if (getCurrentUser() && !(ZIYIT_API.getCredentials && ZIYIT_API.getCredentials())) {
                         ZIYIT_API.clearToken();
                     }
@@ -1356,133 +1356,14 @@
         window.addEventListener('DOMContentLoaded', checkLoginStatus);
     </script>
 
-    <!-- <script>
-        // 广告数据列表 正常广告ad开头，广告位招租asfl
-        const adsData = [
-            { img: 'images/asfl.png', title: '广告位招租', link: 'mailto:ziyitstudio@qq.com' },
-            // 可以添加更多广告数据
-        ];
-
-        const MAX_AD_DISPLAY = 5; // 每日最大广告显示次数
-        let adDisplayCount = 0; // 当前广告显示计数
-        let currentAd = null; // 当前显示的广告
-        let shakeCount = 0; // 摇动计数
-        let adTimer = null; // 广告计时器
-
-        // 显示广告
-        function showAd() {
-            const isMobile = window.innerWidth <= 768; // 使用屏幕宽度判断
-            
-            if (!isMobile || adDisplayCount >= MAX_AD_DISPLAY) return;
-            
-            currentAd = getRandomAd();
-            adDisplayCount++;
-            
-            // 创建广告层
-            const adLayer = document.createElement('div');
-            adLayer.id = 'ad-layer';
-            adLayer.style.position = 'fixed';
-            adLayer.style.top = '0';
-            adLayer.style.left = '0';
-            adLayer.style.width = '100%';
-            adLayer.style.height = '100%';
-            adLayer.style.zIndex = '9999';
-            adLayer.style.backgroundColor = '#000';
-            adLayer.style.display = 'flex';
-            adLayer.style.justifyContent = 'center';
-            adLayer.style.alignItems = 'center';
-            
-            // 检查是否是视频广告
-            const isVideo = currentAd.img.endsWith('.mp4');
-            
-            if (isVideo) {
-                // 创建视频元素
-                const video = document.createElement('video');
-                video.src = currentAd.img;
-                video.style.maxWidth = '100%';
-                video.style.maxHeight = '100%';
-                video.controls = false;
-                video.autoplay = true;
-                video.loop = false;
-                video.muted = true; // 默认静音
-                
-                // 点击视频跳转
-                video.addEventListener('click', function() {
-                    window.location.href = currentAd.link;
-                    document.body.removeChild(adLayer);
-                    window.removeEventListener('devicemotion', handleShake);
-                    clearTimeout(adTimer);
-                });
-                
-                // 视频结束处理
-                video.addEventListener('ended', function() {
-                    window.location.href = currentAd.link;
-                    document.body.removeChild(adLayer);
-                    window.removeEventListener('devicemotion', handleShake);
-                    clearTimeout(adTimer);
-                });
-                
-                adLayer.appendChild(video);
-            } else {
-                // 创建图片广告
-                const adImgContainer = document.createElement('div');
-                adImgContainer.style.maxWidth = '100%';
-                adImgContainer.style.maxHeight = '100%';
-                
-                const adImg = document.createElement('img');
-                adImg.src = currentAd.img;
-                adImg.style.maxWidth = '100%';
-                adImg.style.maxHeight = '100%';
-                adImg.style.objectFit = 'contain';
-                
-                adImg.addEventListener('click', function() {
-                    window.location.href = currentAd.link;
-                    document.body.removeChild(adLayer);
-                    window.removeEventListener('devicemotion', handleShake);
-                    clearTimeout(adTimer);
-                });
-                
-                adImgContainer.appendChild(adImg);
-                adLayer.appendChild(adImgContainer);
-            }
-            
-            // 创建跳过按钮
-            const skipBtn = document.createElement('button');
-            skipBtn.id = 'skip-ad-btn';
-            skipBtn.textContent = '跳过广告';
-            skipBtn.style.position = 'absolute';
-            skipBtn.style.top = '20px';
-            skipBtn.style.right = '20px';
-            skipBtn.style.padding = '10px 20px';
-            skipBtn.style.backgroundColor = '#ff0000';
-            skipBtn.style.color = '#fff';
-            skipBtn.style.border = 'none';
-            skipBtn.style.borderRadius = '5px';
-            skipBtn.style.cursor = 'not-allowed';
-            skipBtn.disabled = true;
-            
-            skipBtn.addEventListener('click', handleSkipAd);
-            
-            adLayer.appendChild(skipBtn);
-            document.body.appendChild(adLayer);
-            
-            // 15秒后自动跳转
-            adTimer = setTimeout(() => {
-                if (shakeCount < 10) {
-                    window.location.href = currentAd.link;
-                }
-            }, 15000);
-            
-            window.addEventListener('devicemotion', handleShake);
-        }
-    </script> -->
+    
 
     <script>
-        // 语言切换功能
+         
         function changeLanguage(lang) {
             const select = document.getElementById('languageSelect');
 
-            // 添加动画效果
+             
             select.classList.add('language-switch-animation');
             setTimeout(() => {
                 select.classList.remove('language-switch-animation');
@@ -1495,12 +1376,12 @@
             }
         }
 
-        // 页面加载时设置当前语言
+         
         document.addEventListener('DOMContentLoaded', function () {
             const currentPath = window.location.pathname;
             const select = document.getElementById('languageSelect');
 
-            // 根据当前路径设置选中状态
+             
             if (currentPath.includes('/ikun/')) {
                 select.value = './ikun/';
             } else {

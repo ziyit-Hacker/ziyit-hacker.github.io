@@ -1,11 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cn" lang="cn">
     <head>
-        <!--ziyit-head-->
+        
         <script src="https://ziyit-hacker.github.io/assets/f12check.js"></script>
         <script src="https://ziyit-hacker.github.io/assets/ziyit_api.js"></script>
         <link rel="icon" href="https://ziyit-hacker.github.io/assets/logo.ico">
-        <!--/ziyit-head-->
+        
         <title>永恒资料库 - The Backrooms中文维基</title>
         <script type="text/javascript" src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/init.combined.js"></script>
         <script  type="text/javascript">
@@ -13,7 +13,7 @@
         var URL_DOMAIN = 'wikidot.com';
         var USE_SSL =  true ;
         var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-        // global request information
+         
         
         var WIKIREQUEST = {};
         WIKIREQUEST.info = {};
@@ -56,9 +56,9 @@
         <script type="text/javascript" src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/WIKIDOT.combined.js"></script>
         <style type="text/css" id="internal-style">
         
-        /* modules */
+         
 
-        /* theme */
+         
 @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
 @import url(https://d3g0gp89917ko0.cloudfront.net/v--291054f06006/common--theme/base/css/style.css);
 </style>
@@ -264,18 +264,18 @@ div.preview { display: none; }
 @import url(https://brsandbox-pro.wdfiles.com/local--code/theme%3Aaeternum-repositorium/1);
 
 :root {
-    /* For SD Compatibility - Added by Lupus Caeruleus */
+     
     --gray-monochrome: var(--basalt-bright-element-color);
     --swatch-text-secondary-color: var(--basalt-primary-color);
 }
 
-/* Sidebar Fix */
+ 
 #side-bar .menu-item a[href='/'], #side-bar .menu-item a[href='/forum:start'] {
     text-align: left;
     font-weight: 400;
 }
 
-/* Tags */
+ 
 #main-content .page-tags span::before {
     content: "标签";
 }
@@ -290,11 +290,8 @@ div.preview { display: none; }
 @import url(https://brsandbox-pro.wdfiles.com/local--code/theme%3Aaeternum-repositorium/3)
 </style>
         <style>
-/*
-    Aeternum Repositorium Theme
-    [Koshchei Extension]
-    by exotichive
-*/
+
+
 
 @import url("https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&amp;display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&amp;display=swap");
@@ -852,13 +849,13 @@ span.learnmore {
     --tab-background-color: var(--basalt-secondary-color);
     scrollbar-color: rgb(var(--scrollbar-thumb-color)) transparent;
 
-    /* Default hidden state */
+     
     display: flex;
     visibility: hidden;
     opacity: 0;
     pointer-events: none;
 
-    /* Transition for both in and out */
+     
     transition: opacity 0.3s ease, visibility 0.3s ease, backdrop-filter 0.3s ease;
 }
 
@@ -1227,7 +1224,7 @@ span.learnmore {
     pointer-events: none;
     transition: opacity 0.15s;
 }
-/* safari-specific fix */
+ 
 @media not all and (min-resolution:.001dpcm)
 { @supports (-webkit-appearance:none) and (stroke-color:transparent) {
 .authorlink-wrapper .authorbox {
@@ -1278,7 +1275,7 @@ span.learnmore {
     pointer-events: all;
 }
 
-/* Without this, touchscreen doesn't work */
+ 
 @media (pointer: coarse) {
     #page-content .authorlink-wrapper > a:hover + .authorbox,
     #page-content .authorbox:hover {
@@ -1287,13 +1284,10 @@ span.learnmore {
     }
 }
 
-/*--  --{$no-right-margin}/
-:root {
-    --author-right-adjust: 0rem;
-}
-/*-- --*/
 
-/*--  --*/
+
+
+ 
 :root {
     --author-right-adjust: 0rem;
 }
@@ -1307,7 +1301,7 @@ span.learnmore {
 #page-content .authorbox::before {
     right: calc(50% - 10px);
 }
-/*-- --*/
+ 
 </style>
         <style>
 .licensebox blockquote * {
@@ -1322,21 +1316,21 @@ span.learnmore {
                 <div id="container-wrap">
                     <div id="container">
                         <div id="header">
-                            <!--ziyit-login-->
+                            
                             <div style="position: absolute; right: 10px; top: 10px; text-align: center;">
                                 <div id="userInfo" style="color: black; font-size: 18px;"> <strong><span id="usernameDisplay">您还未登录，<a href="https://ziyit-hacker.github.io/user/">登录</a> 或 <a href="../normal-levels/levels/register.html">注册</a></span></strong>
                                     <br> <strong><span id="userTypeDisplay"></span></strong>
                                 </div>
                             </div>
                             <script>
-        // 获取Cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        // 从user.json获取用户权限信息的函数
+         
         async function getUserPermission(username) {
             try {
                 const response = await fetch('https://ziyit-hacker.github.io/backrooms/user.json');
@@ -1354,7 +1348,7 @@ span.learnmore {
             }
         }
 
-        // 页面加载完成后执行登录状态检测
+         
         document.addEventListener('DOMContentLoaded', async function () {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             const usernameDisplay = document.getElementById('usernameDisplay');
@@ -1379,10 +1373,10 @@ span.learnmore {
             }
         });
     </script>
-                            <!--/ziyit-login-->
+                            
                             <h1><a href="/"><span>The Backrooms中文维基</span></a></h1>
                             <h2><span>你曾经来过这里</span></h2>
-                            <!--ziyit-topbar-->
+                            
                             <div id="top-bar">
                                 <div class="top-bar">
                                     <ul>
@@ -1418,7 +1412,7 @@ span.learnmore {
                                     </ul>
                                 </div>
                             </div>
-                            <!--/ziyit-topbar-->
+                            
                         </div>
                         <div id="content-wrap">
                             <div id="main-content">
@@ -1620,12 +1614,12 @@ span.learnmore {
                                             </div>
                                         </div>
                                         <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabViewea582b66dd775e9dc1485d966b390a54 = new YAHOO.widget.TabView('wiki-tabview-ea582b66dd775e9dc1485d966b390a54');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                         <div class="corebreaker"></div>
                                         <div class="coolquote" style="text-align: justify;">
@@ -1722,12 +1716,12 @@ OZONE.dom.onDomReady(function(){
                                                 </div>
                                             </div>
                                             <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabViewf4c16d05f46de0260416daf9709b36cf = new YAHOO.widget.TabView('wiki-tabview-f4c16d05f46de0260416daf9709b36cf');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                         </div>
                                         <div class="corebreaker"></div>
@@ -1825,12 +1819,12 @@ OZONE.dom.onDomReady(function(){
                                                 </div>
                                             </div>
                                             <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabView02e8d995bf6f073b349b8a0d5d822ae7 = new YAHOO.widget.TabView('wiki-tabview-02e8d995bf6f073b349b8a0d5d822ae7');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                         </div>
                                         <div class="corebreaker"></div>
@@ -1952,12 +1946,12 @@ OZONE.dom.onDomReady(function(){
                                                 </div>
                                             </div>
                                             <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabView85af00ef2d5a5499df06ff5370c5c8bc = new YAHOO.widget.TabView('wiki-tabview-85af00ef2d5a5499df06ff5370c5c8bc');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                         </div>
                                         <div class="breaker"></div>
@@ -2034,12 +2028,12 @@ OZONE.dom.onDomReady(function(){
                                                 </div>
                                             </div>
                                             <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabView50797bded201b4ad2a3cb2e49a39e2e0 = new YAHOO.widget.TabView('wiki-tabview-50797bded201b4ad2a3cb2e49a39e2e0');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                         </div>
                                         <div class="breaker"></div>
@@ -2249,12 +2243,12 @@ OZONE.dom.onDomReady(function(){
                                                 </div>
                                             </div>
                                             <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabViewac0ad4767b12465e760f4ad31646334e = new YAHOO.widget.TabView('wiki-tabview-ac0ad4767b12465e760f4ad31646334e');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                         </div>
                                         <div class="breaker"></div>
@@ -2393,12 +2387,12 @@ OZONE.dom.onDomReady(function(){
                                                 </div>
                                             </div>
                                             <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabViewfe539cb8d3d88df575a051f2af88e5aa = new YAHOO.widget.TabView('wiki-tabview-fe539cb8d3d88df575a051f2af88e5aa');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                         </div>
                                         <div class="breaker"></div>
@@ -2587,12 +2581,12 @@ OZONE.dom.onDomReady(function(){
                                                 </div>
                                             </div>
                                             <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabViewee32cdddc2317aa0d8b631ccd2565d99 = new YAHOO.widget.TabView('wiki-tabview-ee32cdddc2317aa0d8b631ccd2565d99');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                         </div>
                                         <div class="breaker"></div>
@@ -2624,12 +2618,12 @@ OZONE.dom.onDomReady(function(){
                                                     </div>
                                                 </div>
                                                 <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabView0dce568cba5809afa863286713dce645 = new YAHOO.widget.TabView('wiki-tabview-0dce568cba5809afa863286713dce645');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                             </div>
                                             <div style="height: 0.5rem;"></div>
@@ -2661,12 +2655,12 @@ OZONE.dom.onDomReady(function(){
                                                     </div>
                                                 </div>
                                                 <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabView2ae216796e22c7022c9f66b7039be267 = new YAHOO.widget.TabView('wiki-tabview-2ae216796e22c7022c9f66b7039be267');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                             </div>
                                             <div style="height: 0.5rem;"></div>
@@ -2702,12 +2696,12 @@ OZONE.dom.onDomReady(function(){
                                                     </div>
                                                 </div>
                                                 <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabViewf92e9c66eea8bb5f8bb61bb20330109c = new YAHOO.widget.TabView('wiki-tabview-f92e9c66eea8bb5f8bb61bb20330109c');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                             </div>
                                         </div>
@@ -3017,12 +3011,12 @@ OZONE.dom.onDomReady(function(){
                                                                     </div>
                                                                 </div>
                                                                 <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabView46b5f102db0de6654a44fd71e1495547 = new YAHOO.widget.TabView('wiki-tabview-46b5f102db0de6654a44fd71e1495547');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                                             </div>
                                                         </div>
@@ -3076,12 +3070,12 @@ OZONE.dom.onDomReady(function(){
                                                                     </div>
                                                                 </div>
                                                                 <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabView6620731a0de141b0f913647d5a948ff4 = new YAHOO.widget.TabView('wiki-tabview-6620731a0de141b0f913647d5a948ff4');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                                             </div>
                                                         </div>
@@ -3172,12 +3166,12 @@ OZONE.dom.onDomReady(function(){
                                                                     </div>
                                                                 </div>
                                                                 <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabView8d22cf26716ad49efa84ab9c04d0538a = new YAHOO.widget.TabView('wiki-tabview-8d22cf26716ad49efa84ab9c04d0538a');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                                             </div>
                                                         </div>
@@ -3286,12 +3280,12 @@ OZONE.dom.onDomReady(function(){
                                                         </div>
                                                     </div>
                                                     <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabView7b42ffc6981e1a6eb30e9ccd09b154c9 = new YAHOO.widget.TabView('wiki-tabview-7b42ffc6981e1a6eb30e9ccd09b154c9');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                                     <div style="height: .75rem;"></div>
                                                     <p>此外，强烈推荐使用如下的模板：</p>
@@ -3437,12 +3431,12 @@ OZONE.dom.onDomReady(function(){
                                                                     </div>
                                                                 </div>
                                                                 <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabViewe12783d338a9c34e2f3f35f472dd8a55 = new YAHOO.widget.TabView('wiki-tabview-e12783d338a9c34e2f3f35f472dd8a55');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                                             </div>
                                                         </div>
@@ -3499,12 +3493,12 @@ OZONE.dom.onDomReady(function(){
                                                             </div>
                                                         </div>
                                                         <script type="text/javascript">
-//<![CDATA[
+ 
 OZONE.dom.onDomReady(function(){
         var tabViewa4dd8d9213631988157172497694a2e0 = new YAHOO.widget.TabView('wiki-tabview-a4dd8d9213631988157172497694a2e0');
                 }, "dummy-ondomready-block");
         
-//]]>
+ 
 </script>
                                                     </div>
                                                     <div style="height: 0.5rem;"></div>
@@ -3590,28 +3584,28 @@ OZONE.dom.onDomReady(function(){
         })();
     </script>
     </body>
-    <!--ziyit-body-->
+    
     <style>
-    /* 生存难度容器居中 */
+     
     .sd-container {
         display: flex !important;
         flex-direction: column !important;
     }
 
-    /* 调整内容包装器 */
+     
     #content-wrap {
         margin-left: 0 !important;
         width: 100% !important;
     }
 
-    /* 修复黑高亮主题 grid 布局把正文压窄的问题 */
+     
     #main-content {
         display: block !important;
         grid-template-columns: none !important;
         grid-template-areas: none !important;
     }
 
-    /* 保留 The Backrooms 标题，本站登录控件置于最上层不被标题遮挡 */
+     
     # header > div[style*="position: absolute"] {
         position: absolute !important;
         right: 10px !important;
@@ -3619,5 +3613,5 @@ OZONE.dom.onDomReady(function(){
         z-index: 999 !important;
     }
 </style>
-    <!--/ziyit-body-->
+    
 </html>

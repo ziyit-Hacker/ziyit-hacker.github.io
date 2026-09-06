@@ -80,7 +80,7 @@
             display: inline-block !important;
         }
 
-        /* 用户信息区域样式 */
+         
         #brui strong {
             display: inline-block;
             margin: 0 5px;
@@ -89,49 +89,49 @@
             font-weight: bold;
         }
 
-        /* 经验值样式 */
+         
         #brui strong:nth-child(1) {
             background-color: rgba(75, 192, 192, 0.7);
             color: #2d3748;
             border-left: 3px solid #2b6cb0;
         }
 
-        /* SAM值样式 */
+         
         #brui strong:nth-child(3) {
             background-color: rgba(245, 158, 11, 0.7);
             color: #2d3748;
             border-left: 3px solid #c05621;
         }
 
-        /* 生命值样式 */
+         
         #brui strong:nth-child(5) {
             background-color: rgba(239, 68, 68, 0.7);
             color: #2d3748;
             border-left: 3px solid #9b2c2c;
         }
 
-        /* 饱食度样式 */
+         
         #brui strong:nth-child(7) {
             background-color: rgba(16, 185, 129, 0.7);
             color: #2d3748;
             border-left: 3px solid #065f46;
         }
 
-        /* 所在层级样式 */
+         
         #brui strong:nth-child(9) {
             background-color: rgba(139, 92, 246, 0.7);
             color: #2d3748;
             border-left: 3px solid #5b21b6;
         }
 
-        /* 代理AI样式 */
+         
         #brui strong:nth-child(11) {
             background-color: rgba(59, 130, 246, 0.7);
             color: #2d3748;
             border-left: 3px solid #1e40af;
         }
 
-        /* 背包物品样式 */
+         
         #brui strong:nth-child(13) {
             background-color: rgba(156, 163, 175, 0.7);
             color: #2d3748;
@@ -163,7 +163,7 @@
 <body>
     <h1>游戏用户信息</h1>
     <script>
-        // 获取cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
@@ -171,7 +171,7 @@
             return null;
         }
 
-        // 检查用户权限
+         
         function checkUserPermission() {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             if (!authToken) {
@@ -181,11 +181,11 @@
             }
         }
 
-        // 页面加载时检查权限
+         
         document.addEventListener('DOMContentLoaded', checkUserPermission);
     </script>
     <hr>
-    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -296,7 +296,7 @@
     </footer>
 
     <script>
-        // 从ztg.txt读取数据并匹配当前用户
+         
         fetch('ztg.txt')
             .then(response => response.text())
             .then(text => {
@@ -307,20 +307,20 @@
                     const [lineUsername, exp, sam, hp, satiety, level, ai, backpack] = line.split(' - ');
                     if (lineUsername.trim() === username.trim()) {
 
-                        // 检查NO DATA情况
+                         
                         if (exp === 'NO DATA' || sam === 'NO DATA' || hp === 'NO DATA' || satiety === 'NO DATA') {
                             alert('数据在数据转移或服务器更新时被破坏');
                             console.error('数据在数据转移或服务器更新时被破坏，用户数据为:', line);
                         }
 
-                        // 检查SAM值
+                         
                         const samValue = parseInt(sam);
                         if (samValue < 50) {
                             alert('SAM值过低请立即饮用杏仁水');
                             console.log('SAM值过低', line);
                         }
 
-                        // 创建美观的提示框
+                         
                         const alertDiv = document.createElement('div');
                         alertDiv.style.position = 'fixed';
                         alertDiv.style.top = '20px';
@@ -336,13 +336,13 @@
                         alertDiv.innerHTML = '数据已从ZTG服务器迁移至ZIYIT根服务器，如出现数据错误或数据为NO DATA和其他问题请联系管理员';
                         document.body.appendChild(alertDiv);
                         
-                        // 5秒后自动消失
+                         
                         setTimeout(() => {
                             alertDiv.style.animation = 'fadeOut 0.5s';
                             setTimeout(() => alertDiv.remove(), 500);
                         }, 5000);
 
-                        // 填充数据
+                         
                         document.getElementById('expDisplay').textContent = exp;
                         document.getElementById('samDisplay').textContent = sam;
                         document.getElementById('hpDisplay').textContent = hp;
@@ -363,7 +363,7 @@
 </body>
 
 <style>
-    /* 链接 */
+     
     a {
         color: #8b4513;
         transition: all 0.3s ease;
@@ -377,7 +377,7 @@
         text-shadow: 0 0 2px rgba(139, 69, 19, 0.3);
     }
 
-    /* 标题 */
+     
     h1,
     h2,
     h3 {
@@ -386,7 +386,7 @@
         margin: 15px 0;
     }
 
-    /* 用户信息区域 */
+     
     #brui {
         background-color: rgba(245, 230, 66, 0.7);
         padding: 15px;
@@ -396,7 +396,7 @@
         margin: 20px 0;
     }
 
-    /* 游戏特权卡片 */
+     
     div[style*="background: rgba(255,255,255,0.1)"] {
         background: rgba(245, 230, 66, 0.5) !important;
         border: 1px solid #d4c93d;
@@ -408,7 +408,7 @@
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
 
-    /* 响应式设计 */
+     
     @media (max-width: 768px) {
         #brui strong {
             display: block;

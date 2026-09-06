@@ -35,7 +35,7 @@
         .b-rewritten { background: #fff0dc; color: #a35200; }
         .empty { color: #999; font-size: 13px; padding: 20px 4px; text-align: center; }
         .count { color: #777; font-size: 12px; margin-bottom: 10px; }
-        /* wikidot 同款重写标记样式 */
+         
         .rew { display: inline-block; vertical-align: middle; margin-left: 6px; }
         .rew span { display: block; width: 14px; height: 9px; background: #4caf50; border-radius: 2px; }
         .toast { position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%); background: #22262c; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; z-index: 9999; display: none; }
@@ -95,7 +95,7 @@
         function idOf(it) { return it.levelId || it.id; }
         function nameOf(it) { return it.name || ''; }
         function badge(status) { var s = STATUS_CN[status] || [status || '未知', 'b-rejected']; return '<span class="badge ' + s[1] + '">' + esc(s[0]) + '</span>'; }
-        // wikidot 同款重写标记
+         
         function rewMark() { return '<span class="rew"><span style="white-space: pre-wrap;"> </span></span>'; }
 
         function render() {
@@ -132,7 +132,7 @@
             var tr = e.target.closest('tr[data-id]');
             if (!tr) return;
             var id = tr.getAttribute('data-id');
-            // Blob 方式打开：避免跳转后端域名造成 Cookie 隔离（无法登录/评分）
+             
             ZIYIT_API.backroomsOpenLevel(id).catch(function (err) {
                 toast('打开失败：' + ((err && err.message) || err));
             });
@@ -153,7 +153,7 @@
 
         load();
 
-        // 支持 ?open_level=层级ID 直达：以 Blob 临时地址打开后端层级（避免跨域 Cookie 隔离）
+         
         (function () {
             var m = location.search.match(/[?&]open_level=([^&]*)/);
             if (!m) return;

@@ -7,7 +7,7 @@
     <title>后室层级文档创建器</title>
     <link href="/assets/logo.ico" rel="icon" type="image/x-icon">
     <style>
-        /* 与 levels.html 完全一致的主题链：WIKIDOT 基础样式 + BHL/liminal + 生存难度组件 */
+         
         @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
         @import url(https://cdn.scpwiki.com/theme/en/black-highlighter/css/min/normalize.min.css);
         @import url("https://github.backroomswiki.cn/New_BHL/css/liminal.css");
@@ -28,7 +28,7 @@
         .top-actions .top-link:hover { background: #4a5562; }
         .main-layout { display: flex; height: calc(100vh - 50px); overflow: hidden; }
 
-        /* ===== 登录门禁：未登录时整页遮挡，阻止使用创建器 ===== */
+         
         .login-gate { display: none; position: fixed; inset: 0; z-index: 9999; background: #f0f1f3; align-items: center; justify-content: center; }
         .login-gate.show { display: flex; }
         .login-gate-card { background: #fff; border: 1px solid #d9dce1; border-radius: 12px; padding: 36px 44px; text-align: center; max-width: 420px; box-shadow: 0 8px 30px rgba(0, 0, 0, .08); }
@@ -62,7 +62,7 @@
         .html-field { display: block; min-height: 22px; }
         .html-field:empty::before { content: '（点击编辑，支持 HTML）'; color: #999; font-size: 12px; }
 
-        /* 描述/基地段落编辑（面板） */
+         
         .para-row { display: flex; gap: 6px; margin-bottom: 8px; align-items: flex-start; }
         .para-row textarea { flex: 1; min-height: 60px; resize: vertical; border: 1px solid #cfd3d9; border-radius: 5px; font-size: 13px; font-family: inherit; padding: 6px 8px; box-sizing: border-box; background: #fff; color: #1f2328; }
         .para-row .row-del { padding: 5px 8px; border: 1px solid #d66; color: #c33; background: #fff; border-radius: 5px; cursor: pointer; }
@@ -70,13 +70,13 @@
         .block-paras { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e0e3e8; }
         .block-paras .para-label { font-size: 11px; color: #888; margin-bottom: 6px; }
 
-        /* 描述/基地段落与插入区块（预览） */
+         
         .preview-add-para, .preview-add-block { display: inline-block; margin: 8px 0 14px; padding: 4px 12px; border: 1px dashed #b9bec6; border-radius: 5px; background: #f6f7f8; color: #555; font-size: 12px; cursor: pointer; }
         .preview-add-para:hover, .preview-add-block:hover { background: #eceef0; border-color: #0078d4; color: #0078d4; }
         #desc-paras-preview p, #base-paras-preview p { margin: 0 0 8px; }
         #desc-paras-preview p.editable:hover, #base-paras-preview p.editable:hover { outline: 1px dashed #7fb4e0; cursor: pointer; }
 
-        /* 入口/出口列表条目的删除与添加按钮（仅预览可见，导出不含） */
+         
         .li-del-btn { margin-left: 8px; padding: 1px 8px; font-size: 11px; border: 1px solid #d66; color: #c33; background: #fff; border-radius: 4px; cursor: pointer; vertical-align: baseline; }
         .li-del-btn:hover { background: #fdeaea; }
         .li-add-row { list-style: none; }
@@ -113,7 +113,7 @@
         #modal-cancel { background: #e9ebee; color: #333; }
         .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 9px 18px; border-radius: 6px; font-size: 13px; z-index: 1000; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
 
-        /* ===== 图片库弹窗 ===== */
+         
         .img-mgr-modal { width: 720px; max-width: calc(100vw - 40px); }
         .img-mgr-quota { font-size: 12px; color: #666; font-weight: 400; margin-left: 8px; }
         .img-mgr-upload { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
@@ -129,7 +129,7 @@
         .img-mgr-tile .img-mgr-del:hover { background: #fdeaea !important; }
         .img-mgr-empty { text-align: center; color: #999; font-size: 13px; padding: 30px 0; }
 
-        /* 我的评分：选择绑定（与图片库同风格） */
+         
         .rate-mgr-tile { border: 1px solid #e2e5ea; border-radius: 8px; padding: 8px; background: #fafbfc; }
         .rate-mgr-code { font-family: Consolas, monospace; font-weight: 700; font-size: 14px; }
         .rate-mgr-id { font-size: 10px; color: #888; font-weight: 400; margin-left: 6px; }
@@ -143,8 +143,8 @@
         .rate-mgr-actions .rate-mgr-del { border-color: #d66; color: #c33; }
 
         .preview .sd-container {
-            /* levels.html 依赖的 BHL 主题变量链（liminal.css → black-highlighter）在此补齐，
-               否则 main.css 中 rgb(var(--gray-monochrome)) / rgb(var(--swatch-text-secondary-color)) 全部失效 */
+            
+
             --gray-monochrome: 72, 69, 60;
             --swatch-text-secondary-color: 252, 252, 252;
             --sd-font: Poppins, "Noto Sans SC", "Noto Serif SC", sans-serif;
@@ -156,9 +156,8 @@
             --sd-symbol: var(--gray-monochrome, 90, 29, 27);
         }
 
-        /* 覆盖组件 CSS：非数字等级（死区/宜居/未分级/修正/终结/不适用/等待分级等）的名称
-           不再由 .bottom-text::after 伪元素（content:"等级：死区"）显示，
-           改用可编辑的 a 标签（.editable）文本显示，与 1-5 级行为一致 */
+        
+
         .preview .sd-container .top-box .bottom-text p {
             display: block !important;
         }
@@ -179,7 +178,7 @@
         var URL_DOMAIN = 'wikidot.com';
         var USE_SSL = true;
         var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-        // global request information
+         
 
         var WIKIREQUEST = {};
         WIKIREQUEST.info = {};
@@ -305,7 +304,7 @@
 
 <body>
 
-    <!-- ===== 登录门禁：未登录时整页遮挡 ===== -->
+    
     <div class="login-gate" id="login-gate">
         <div class="login-gate-card">
             <h2>🔒 需要登录</h2>
@@ -329,7 +328,7 @@
     </header>
 
     <div class="main-layout">
-        <!-- ============ 左侧编辑面板 ============ -->
+        
         <aside class="panel" id="panel">
             <section class="panel-sec">
                 <h3>我的图片库</h3>
@@ -409,7 +408,7 @@
             </section>
         </aside>
 
-        <!-- ============ 右侧预览 ============ -->
+        
         <main class="preview" id="preview">
             <div class="preview-shell">
                 <div id="main-content">
@@ -450,7 +449,7 @@
         </main>
     </div>
 
-    <!-- ============ 编辑弹窗 ============ -->
+    
     <div class="modal-overlay hidden" id="modal-overlay">
         <div class="modal">
             <h3 id="modal-title">编辑内容</h3>
@@ -462,7 +461,7 @@
         </div>
     </div>
 
-    <!-- ============ 图片库弹窗 ============ -->
+    
     <div class="modal-overlay hidden" id="img-mgr-overlay">
         <div class="modal img-mgr-modal">
             <h3>📁 我的图片库<span id="img-mgr-quota" class="img-mgr-quota"></span></h3>
@@ -499,7 +498,7 @@
         (function () {
             'use strict';
 
-            /* ================= 状态 ================= */
+             
             var rawTemplate = '';
             var doc = {
                 titlePrefix: '[NO DATA]',
@@ -518,7 +517,7 @@
                 intro: '[NO DATA]',
                 customBlocks: [],
                 descImages: [],
-                // 描述 / 基地、前哨和社区：多段落内容（每段一个字符串，导出为 <p>）
+                 
                 descParas: ['[NO DATA]'],
                 baseParas: ['[NO DATA]'],
                 entryIntro: '[NO DATA]',
@@ -526,7 +525,7 @@
                 exitIntro: '[NO DATA]',
                 exitItems: ['[NO DATA]'],
                 footerCode: '',
-                // 文档类型标识：默认 levels，后续可用 create-document.html?type=item|entity|phenomenon 区分
+                 
                 type: 'levels'
             };
 
@@ -547,7 +546,7 @@
                 { key: 'custom', name: '自定义…', cls: '' }
             ];
 
-            /* ================= 工具函数 ================= */
+             
             function $(id) { return document.getElementById(id); }
 
             function escHtml(s) {
@@ -558,7 +557,7 @@
 
             var SITE_BASE = 'https://ziyit-hacker.github.io';
 
-            // 相对路径转绝对 URL：/xxx、../xxx、./xxx → https://ziyit-hacker.github.io/xxx
+             
             function toAbsUrl(u) {
                 u = String(u == null ? '' : u).trim();
                 if (!u) return u;
@@ -569,7 +568,7 @@
                 return SITE_BASE + p;
             }
 
-            // 把 HTML 字符串里的 src/href/url(...) 转为绝对 URL
+             
             function absolutizeHtml(html) {
                 return String(html == null ? '' : html)
                     .replace(/(\b(?:src|href)\s*=\s*["'])(.*?)(["'])/g, function (m, pre, url, post) {
@@ -580,7 +579,7 @@
                     });
             }
 
-            // ${x} 形式的占位符 → class 用 {$x}（与 levels.html 模板一致）
+             
             function placeholderClass(v) {
                 var m = String(v == null ? '' : v).match(/^\$\{(.+)\}$/);
                 return m ? '{$' + m[1] + '}' : v;
@@ -594,10 +593,10 @@
                 setTimeout(function () { t.remove(); }, 2600);
             }
 
-            /* ================= 文档类型标识（?type=levels|item|entity|phenomenon） ================= */
+             
             var TYPE_LABELS = { levels: '层级', item: '物品', entity: '实体', phenomenon: '现象' };
 
-            // 从 URL 读取 ?type=，非法值回退到 levels
+             
             function parseType() {
                 var m = (location.search || '').match(/[?&]type=([^&]+)/);
                 var t = m ? decodeURIComponent(m[1]).toLowerCase() : 'levels';
@@ -605,17 +604,17 @@
                 doc.type = t;
             }
 
-            // 顶栏徽章：显示当前文档类型（层级/物品/实体/现象）
+             
             function updateTypeBadge() {
                 var badge = $('page-type-badge');
                 if (badge) badge.textContent = '（' + (TYPE_LABELS[doc.type] || '层级') + '文档）';
             }
 
-            /* ================= 图片库（GET/POST/DELETE /img/*） ================= */
-            // target：sdImage=填充菱形图；descImage=添加到描述区；copy=仅复制地址
+             
+             
             var imgMgr = { target: 'copy' };
 
-            // 与 ziyit_api.js 一致的生效地址：优先 localStorage 自定义，否则默认 BASE
+             
             function imgApiBase() {
                 var b = '';
                 try { b = localStorage.getItem('ziyit_api_base') || ''; } catch (e) {}
@@ -623,7 +622,7 @@
                 return b;
             }
 
-            // 相对路径 /img/{id} → 绝对地址（缩略图、插入文档均用绝对地址）
+             
             function imgAbsUrl(p) {
                 p = String(p == null ? '' : p);
                 if (/^(https?:)?\/\//i.test(p) || /^data:/i.test(p)) return p;
@@ -655,7 +654,7 @@
                 });
             }
 
-            // 配额：4级（超级管理员）不限制 → 后端返回 null/负数时显示"不限"
+             
             function fmtQuota(d) {
                 d = d || {};
                 var used = (d.total != null ? d.total : 0);
@@ -689,7 +688,7 @@
                 });
             }
 
-            // 「使用」：按打开时的目标把图片地址写入文档相应位置
+             
             function useImage(im) {
                 var path = im.url || ('/img/' + (im.id || ''));
                 var abs = imgAbsUrl(path);
@@ -708,7 +707,7 @@
                 }
             }
 
-            // 复制 /img/{id} 路径（Markdown 图片地址）
+             
             function copyImagePath(im) {
                 var path = im.url || ('/img/' + (im.id || ''));
                 function done() { toast('已复制图片地址：' + path); }
@@ -731,7 +730,7 @@
                 ta.remove();
             }
 
-            // 上传：multipart FormData 字段 file
+             
             function uploadImage(file) {
                 if (!file) return;
                 if (!window.ZIYIT_API) { toast('API 组件未加载'); return; }
@@ -760,17 +759,17 @@
                 });
             }
 
-            /* ================= 评分控件（下载时注入：免责声明下、生存难度上） ================= */
-            // 编号字母：层级 L / 实体 E / 物品 O / 现象 P
+             
+             
             var RATE_LETTER = { levels: 'L', item: 'O', entity: 'E', phenomenon: 'P' };
 
-            // 评分编号：类型字母 + 页面编号（如 L111、Lc258、E2、O3）
+             
             function ratingCode() {
                 var letter = RATE_LETTER[doc.type] || 'L';
                 return letter + String(doc.titlePrefix || '').trim();
             }
 
-            // 已创建评分的 id 持久绑定（code → id）：localStorage + 内存双缓存，重复下载不再重复创建
+             
             var ratingIdCache = {};
 
             function loadRatingIds() {
@@ -792,7 +791,7 @@
                 return ratingIdCache[code] != null ? ratingIdCache[code] : null;
             }
 
-            // 解除绑定（清除内存与 localStorage 中的 code → id 记录）
+             
             function unbindRating(code) {
                 delete ratingIdCache[code];
                 var ids = loadRatingIds();
@@ -800,8 +799,8 @@
                 try { localStorage.setItem('ziyit_rating_ids', JSON.stringify(ids)); } catch (e) {}
             }
 
-            // 当前文档绑定的评分档案（用户在「我的评分」中真正绑定到本文档的评分）
-            // 导出时优先使用它，避免用自动拼出的编号（ratingCode）导致绑定不生效
+             
+             
             var DOC_RATING_KEY = 'ziyit_doc_rating_bindings';
 
             function saveDocBinding(bcode, bid) {
@@ -825,13 +824,13 @@
                 try { localStorage.setItem(DOC_RATING_KEY, JSON.stringify(map)); } catch (e) {}
             }
 
-            // 控件样式：仿 wikidot page-rate-widget-box 的深灰圆角盒
+             
             var RATING_WIDGET_CSS = '.ziyit-rate{display:inline-block;background:#f4f4f0;border:1px solid #d8d8d0;border-radius:8px;padding:6px 10px;margin-bottom:14px;font-size:13px;color:#444;}.ziyit-rate .ziyit-rate-points{margin-right:8px;}.ziyit-rate .ziyit-rate-num{font-weight:700;color:#222;margin-left:4px;}.ziyit-rate .ziyit-rate-up,.ziyit-rate .ziyit-rate-down{display:inline-block;width:26px;height:24px;line-height:22px;text-align:center;border:1px solid #aaa;border-radius:5px;background:#fff;cursor:pointer;margin-left:5px;vertical-align:middle;}.ziyit-rate .ziyit-rate-up a,.ziyit-rate .ziyit-rate-down a{text-decoration:none;color:#333;display:block;font-weight:700;}.ziyit-rate .ziyit-rate-up:hover,.ziyit-rate .ziyit-rate-down:hover{border-color:#333;background:#f0f0f0;}';
 
-            // 控件脚本：显示评价值 + 好评/差评（依赖导出页已加载的 ziyit_api.js）
+             
             var RATING_WIDGET_JS = '(function(){function refresh(box){var code=box.getAttribute("data-code"),num=box.querySelector(".ziyit-rate-num");if(!window.ZIYIT_API){num.textContent="—";return;}ZIYIT_API.request("/ratings/"+encodeURIComponent(code)+"/value").then(function(d){var v=d?(d.value||0):0;num.textContent=(v>0?"+":"")+v;}).catch(function(){num.textContent="—";});}window.ziyitRate=function(el,dir){var box=el.closest(".ziyit-rate"),rid=box.getAttribute("data-rid");if(!rid){alert("该评分尚未创建，暂时无法投票");return;}if(!window.ZIYIT_API){alert("评分组件加载失败");return;}ZIYIT_API.request("/ratings/"+encodeURIComponent(rid)+(dir>0?"/up":"/down"),{method:"POST"}).then(function(){refresh(box);}).catch(function(e){alert("投票失败："+((e&&e.message)||"未知错误"));});};function init(){var boxes=document.querySelectorAll(".ziyit-rate");for(var i=0;i<boxes.length;i++)refresh(boxes[i]);}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();})();';
 
-            // 控件 HTML（rid 为空时仅显示评价值，投票按钮提示未创建）
+             
             function ratingWidgetExportHtml(rid, code) {
                 return '<div class="ziyit-rate" data-code="' + escHtml(code) + '" data-rid="' + escHtml(rid == null ? '' : rid) + '">'
                     + '<span class="ziyit-rate-points">评分:<span class="ziyit-rate-num">…</span></span>'
@@ -840,7 +839,7 @@
                     + '</div>';
             }
 
-            /* ================= 我的评分（选择绑定，类似图片库） ================= */
+             
             function openRatingManager() {
                 $('rate-mgr-code-input').value = ratingCode();
                 $('rate-mgr-overlay').classList.remove('hidden');
@@ -911,7 +910,7 @@
                 });
             }
 
-            // 删除我的评分（DELETE /ratings/my/{id}）
+             
             function deleteMyRating(r) {
                 if (!window.confirm('确定删除评分 ' + r.code + '（ID ' + r.id + '）？')) return;
                 ZIYIT_API.request('/ratings/my/' + encodeURIComponent(r.id), { method: 'DELETE' }).then(function (d) {
@@ -922,7 +921,7 @@
                 });
             }
 
-            // 创建评分并绑定（POST /ratings，编号可自行输入，默认当前文档的编号）
+             
             function createCurrentRating() {
                 var code = ($('rate-mgr-code-input').value || '').trim();
                 if (!code) { toast('请填写评分编号'); return; }
@@ -943,15 +942,15 @@
                 });
             }
 
-            /* ================= 模板加载（读取 levels.html） ================= */
+             
 
-            // 识别自定义章节（含 h1 标题的 div 等）：剔除标准章节标题与标准内容节点
+             
             function collectSection(n, pos) {
                 var tag = (n.tagName || '').toLowerCase();
                 if (tag === 'span' || tag === 'br' || tag === 'p' || tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'em' || tag === 'ul') return;
                 if (!(n.textContent || '').trim()) return;
                 if (tag === 'div' && n.querySelector('.scp-image-block')) return;
-                // 标准章节标题（h1/h2：描述/基地/入口和出口）不收集
+                 
                 var h = n.querySelector('h1, h2');
                 var title = h ? (h.textContent || '').trim() : '';
                 if (title && (title.indexOf('描述') >= 0 || title.indexOf('基地') >= 0 || title.indexOf('入口和出口') >= 0)) return;
@@ -960,7 +959,7 @@
                     var hd = clone.querySelector('h1, h2');
                     if (hd) hd.parentNode.removeChild(hd);
                 }
-                // 提取段落：区块内的 <p> 拆为段落数组，其余 HTML 留在 content
+                 
                 var paras = [];
                 Array.prototype.forEach.call(clone.querySelectorAll('p'), function (pEl) {
                     var t = (pEl.textContent || '').replace(/\s+/g, ' ').trim();
@@ -975,9 +974,9 @@
                 if (title || content || paras.length) doc.customBlocks.push({ title: title, content: content, pos: pos, paras: paras });
             }
 
-            /* ================= 正文解析（模板 / 导出文件共用） ================= */
+             
 
-            // 重置正文相关字段，避免加载新文件后残留旧内容
+             
             function resetBodyFields() {
                 doc.titlePrefix = '[NO DATA]';
                 doc.titleName = '[NO DATA]';
@@ -995,18 +994,18 @@
                 doc.footerCode = '';
             }
 
-            // 自身就是 .scp-image-block 的 div（真实文档里直接作为 page-content 子节点的图片块）
+             
             function isImageBlockSelf(n) {
                 return n.classList && n.classList.contains('scp-image-block');
             }
 
-            // 自定义区块的包裹 div（导出时为 <div style="text-align:center;margin-bottom:14px;">）
+             
             function isCustomBlockWrap(n) {
                 var st = (n.getAttribute && n.getAttribute('style')) || '';
                 return st.indexOf('text-align:center') >= 0 && st.indexOf('margin-bottom') >= 0;
             }
 
-            // 从容器 div 中提取描述图片（scp-image-block）
+             
             function extractImagesFrom(n) {
                 Array.prototype.forEach.call(n.querySelectorAll('.scp-image-block'), function (b) {
                     var imgEl = b.querySelector('img');
@@ -1019,7 +1018,7 @@
                 });
             }
 
-            // 从容器元素提取段落数组：优先按 <p> 拆分，否则整体一段
+             
             function parasFromEl(n) {
                 var c = n.cloneNode(true);
                 Array.prototype.forEach.call(c.querySelectorAll('.scp-image-block'), function (b) {
@@ -1040,7 +1039,7 @@
                 return out;
             }
 
-            // 追加一段（默认占位 [NO DATA] 时替换）
+             
             function appendPara(arr, n) {
                 var t = n.textContent.replace(/\s+/g, ' ').trim();
                 if (!t) return;
@@ -1048,13 +1047,13 @@
                 else arr.push(t);
             }
 
-            // 统一解析 sd-container 之后的正文：识别章节、消费描述/基地容器、收集自定义区块与尾部代码
+             
             function parseBodyLoop(nodes, startIdx) {
                 var body = nodes.slice(startIdx + 1);
                 var stage = 'intro';
-                var exitDone = false; // 出口列表之后的内容视为尾部自定义代码
+                var exitDone = false;  
                 var footerParts = [];
-                var descDivDone = false, baseDivDone = false; // 描述/基地文本容器只消费一次
+                var descDivDone = false, baseDivDone = false;  
                 body.forEach(function (n) {
                     var tag = (n.tagName || '').toLowerCase();
                     if (exitDone) {
@@ -1065,7 +1064,7 @@
                             : (n.outerHTML || ''));
                         return;
                     }
-                    // 引导段：首个 p，或首个普通 div（非图片块、非自定义区块）
+                     
                     if (tag === 'p' && stage === 'intro') {
                         var itx = n.textContent.replace(/\s+/g, ' ').trim();
                         if (itx && (!doc.intro || doc.intro === '[NO DATA]')) doc.intro = itx;
@@ -1073,36 +1072,36 @@
                     if (tag === 'div' && stage === 'intro' && !isImageBlockSelf(n) && !isCustomBlockWrap(n) && !n.querySelector('h1, h2')) {
                         var itd = n.textContent.replace(/\s+/g, ' ').trim();
                         if (itd) doc.intro = itd;
-                        return; // 已消费，避免被当自定义区块
+                        return;  
                     }
-                    // 章节标题（h1/h2 均可，兼容真实文档用 h2 做章节头）
+                     
                     if (tag === 'h1' || tag === 'h2') {
                         var t = (n.textContent || '').trim();
                         if (t.indexOf('描述') >= 0) { stage = 'desc'; descDivDone = false; }
                         else if (t.indexOf('基地') >= 0) { stage = 'base'; baseDivDone = false; }
                         else if (t.indexOf('入口和出口') >= 0) stage = 'entrance';
                     }
-                    // 描述区图片块（自身是 scp-image-block 的 div）：提取图片，不当作文本容器
+                     
                     if (tag === 'div' && stage === 'desc' && isImageBlockSelf(n)) {
                         extractImagesFrom(n);
                         return;
                     }
-                    // 描述容器：紧跟「描述」章节头后的第一个普通 div（非图片块、非自定义区块）
+                     
                     if (tag === 'div' && stage === 'desc' && !descDivDone && !isImageBlockSelf(n) && !isCustomBlockWrap(n)) {
                         descDivDone = true;
                         extractImagesFrom(n);
                         var paras = parasFromEl(n);
                         if (paras.length) doc.descParas = paras;
-                        return; // 已消费，避免被当自定义区块
+                        return;  
                     }
-                    // 基地容器：紧跟「基地」章节头后的第一个普通 div
+                     
                     if (tag === 'div' && stage === 'base' && !baseDivDone && !isImageBlockSelf(n) && !isCustomBlockWrap(n)) {
                         baseDivDone = true;
                         var bparas = parasFromEl(n);
                         if (bparas.length) doc.baseParas = bparas;
-                        return; // 已消费，避免被当自定义区块
+                        return;  
                     }
-                    // 松散段落（真实文档常见：段落直接是 page-content 子节点）
+                     
                     if (tag === 'p' && stage === 'desc' && !n.closest('.scp-image-caption')) appendPara(doc.descParas, n);
                     if (tag === 'p' && stage === 'base' && !n.closest('.scp-image-caption')) appendPara(doc.baseParas, n);
                     if (tag === 'em' && stage === 'entrance') doc.entryIntro = n.textContent.replace(/\s+/g, ' ').trim() || doc.entryIntro;
@@ -1121,19 +1120,19 @@
                         }
                     }
 
-                    // 自定义章节：描述与基地之间 → base-before；基地与入口和出口之间 → base-after
+                     
                     if (stage === 'desc' || stage === 'base') collectSection(n, stage === 'desc' ? 'base-before' : 'base-after');
                 });
                 if (footerParts.length) doc.footerCode = footerParts.join('\n');
             }
 
-            // 页顶自定义区块收集（生存难度之前、面包屑之后）
+             
             function collectTopBlocks(nodes, startIdx) {
                 if (startIdx > 0) {
                     nodes.slice(0, startIdx).forEach(function (n) {
                         var tag = (n.tagName || '').toLowerCase();
                         if (tag === 'span' || tag === 'br') return;
-                        if (n.className && String(n.className).indexOf('ziyit-rate') >= 0) return; // 跳过评分控件
+                        if (n.className && String(n.className).indexOf('ziyit-rate') >= 0) return;  
                         if (!(n.textContent || '').trim()) return;
                         var h1 = n.querySelector('h1');
                         var title = h1 ? (h1.textContent || '').trim() : '';
@@ -1163,7 +1162,7 @@
             function parseTemplate(html) {
                 rawTemplate = html;
                 var p = new DOMParser().parseFromString(html, 'text/html');
-                resetBodyFields(); // 先清空旧内容，避免残留
+                resetBodyFields();  
 
                 var pt = p.querySelector('#page-title');
                 if (pt) {
@@ -1183,8 +1182,8 @@
 
                 var sdEl = p.querySelector('#page-content .sd-container');
                 if (sdEl) {
-                    // 采用模板自身的等级：从顶框读取 class，从底框读取「等级名称」，
-                    // 使加载后「等级 X」、菱形符号、默认要点都与模板一致（用户仍可下拉切换）。
+                     
+                     
                     var tb = sdEl.querySelector('.top-box');
                     if (tb) {
                         var tbCls = String(tb.className || '');
@@ -1192,7 +1191,7 @@
                             return c.indexOf('class-') === 0;
                         })[0];
                         if (tcls) doc.sd.cls = tcls;
-                        // 自定义颜色：color-#xxxxxx / --custom-color（与 level-!+.html 的「天堂」一致）
+                         
                         var colorM = tbCls.match(/color-(#[0-9a-fA-F]{6})/);
                         var styleColor = (((tb.getAttribute('style') || '').match(/--custom-color:\s*([^;]+)/)) || [])[1];
                         var col = colorM ? colorM[1] : (styleColor ? styleColor.trim() : '');
@@ -1209,7 +1208,7 @@
                     if (img) {
                         var um = ((img.getAttribute('style') || '')).match(/url\(["']?(.*?)["']?\)/);
                         var url = um ? um[1].trim() : '';
-                        // 模板占位符（{$image} 等）或 style 无值时，尝试从 class 中取真实 URL
+                         
                         if (!url || /[{$]/.test(url)) {
                             var cm = (img.className || '').match(/https?:\/\/\S+|data:image\/[^\s"']+/i);
                             url = cm ? cm[0].replace(/["']+$/, '') : '';
@@ -1222,10 +1221,10 @@
                     sdKeys.forEach(function (k, i) {
                         var li = lis[i];
                         if (!li) return;
-                        // 取 li 第一个 span（default 里的嵌套空格 span 会干扰 first-child 索引）
+                         
                         var sp = li.querySelector('span');
                         var v = sp ? (sp.textContent || '').trim() : '';
-                        // ${x} 占位符不覆盖（保留当前示例值）
+                         
                         if (v && !/^\$\{.+\}$/.test(v)) doc.sd[k] = v;
                     });
                 }
@@ -1237,7 +1236,7 @@
                     if (n.className && String(n.className).indexOf('sd-container') >= 0) startIdx = i;
                 });
 
-                // 页顶区块（生存难度之前）与正文（生存难度之后）统一解析
+                 
                 collectTopBlocks(nodes, startIdx);
                 parseBodyLoop(nodes, startIdx);
 
@@ -1247,20 +1246,20 @@
                 toast('模板已加载');
             }
 
-            /* ================= 上传 HTML 自动读取（把导出的文档解析回编辑器） ================= */
+             
             function parseExportedHtml(html) {
                 var p = new DOMParser().parseFromString(html, 'text/html');
                 if (p.querySelector('parsererror')) { toast('无法解析该 HTML 文件'); return; }
-                resetBodyFields(); // 先清空旧内容，避免残留/重复
+                resetBodyFields();  
 
-                // 文档类型标识
+                 
                 var tm = p.querySelector('meta[name="doc-type"]');
                 if (tm) {
                     var t = (tm.getAttribute('content') || '').toLowerCase();
                     if (t === 'levels' || t === 'item' || t === 'entity' || t === 'phenomenon') doc.type = t;
                 }
 
-                // 评分绑定：读取控件上的编号与评分 ID，写入 localStorage（创建后即可绑定）
+                 
                 var rateBox = p.querySelector('.ziyit-rate');
                 if (rateBox) {
                     var rcode = (rateBox.getAttribute('data-code') || '').trim();
@@ -1284,7 +1283,7 @@
                     if (rest[1]) doc.crumb2 = rest[1].trim();
                 }
 
-                // 生存难度
+                 
                 var sdEl = p.querySelector('#page-content .sd-container');
                 if (sdEl) {
                     var tb = sdEl.querySelector('.top-box');
@@ -1294,7 +1293,7 @@
                             return c.indexOf('class-') === 0;
                         })[0];
                         if (tcls) doc.sd.cls = tcls;
-                        // 自定义颜色：color-#xxxxxx / --custom-color（与 level-!+.html 的「天堂」一致）
+                         
                         var colorM = tbCls.match(/color-(#[0-9a-fA-F]{6})/);
                         var styleColor = (((tb.getAttribute('style') || '').match(/--custom-color:\s*([^;]+)/)) || [])[1];
                         var col = colorM ? colorM[1] : (styleColor ? styleColor.trim() : '');
@@ -1329,7 +1328,7 @@
                     });
                 }
 
-                // 正文各区块（含自定义区块三位置 + 尾部自定义代码）统一解析
+                 
                 var pc = p.querySelector('#page-content');
                 var nodes = pc ? Array.prototype.slice.call(pc.children) : [];
                 var startIdx = -1;
@@ -1346,7 +1345,7 @@
                 toast('已读取 HTML 文件，可继续编辑');
             }
 
-            /* ================= 渲染 ================= */
+             
             function render() {
                 renderPreview();
                 renderParaEditors();
@@ -1355,7 +1354,7 @@
                 updateRatingStatus();
             }
 
-            // 面板「基本信息」中显示评分绑定状态
+             
             function updateRatingStatus() {
                 var el = $('rating-status');
                 if (!el) return;
@@ -1400,7 +1399,7 @@
                     $('f-sd-image-thumb').style.display = 'none';
                 }
 
-                // 文档尾部自定义代码（HTML/JS）：重新插入 <script> 使其执行
+                 
                 var fc = $('footer-code');
                 fc.innerHTML = doc.footerCode.replace(/<\/script/gi, '<\\/script');
                 fc.querySelectorAll('script').forEach(function (s) {
@@ -1410,18 +1409,18 @@
                 });
             }
 
-            // 允许 HTML 的字段：直接插入
+             
             function setHtml(sel, html) {
                 var el = document.querySelector(sel);
                 if (el) el.innerHTML = html == null ? '' : String(html);
             }
 
-            // 段落数组 → 导出 HTML（每段一个 <p>）
+             
             function parasExportHtml(paras) {
                 return (paras || []).map(function (p) { return '<p>' + absolutizeHtml(p) + '</p>'; }).join('');
             }
 
-            // 段落数组 → 预览 HTML（每段可点击编辑）
+             
             function parasPreviewHtml(paras, prefix) {
                 return (paras || []).map(function (p, i) {
                     var t = String(p == null ? '' : p);
@@ -1430,7 +1429,7 @@
                 }).join('');
             }
 
-            // 面板段落编辑器：描述/基地 各自的文本域 + 删除按钮
+             
             function renderParaEditors() {
                 [['descPara', 'desc-para-list', doc.descParas], ['basePara', 'base-para-list', doc.baseParas]].forEach(function (conf) {
                     var prefix = conf[0], listId = conf[1], paras = conf[2];
@@ -1465,19 +1464,19 @@
                 });
             }
 
-            // 输入时仅同步预览中对应段落，避免重建编辑器丢失焦点
+             
             function syncParaPreview(prefix, i, text) {
                 var el = document.querySelector('[data-field="' + prefix + ':' + i + '"]');
                 if (el) el.textContent = text || '（空段落，点击编辑）';
             }
 
-            // 输入时同步预览中对应自定义区块段落（data-field=customPara:blockIdx:paraIdx）
+             
             function syncCustomParaPreview(bi, pi, text) {
                 var el = document.querySelector('[data-field="customPara:' + bi + ':' + pi + '"]');
                 if (el) el.textContent = text || '（空段落，点击编辑）';
             }
 
-            // 自定义区块（按位置）：top=页顶（居中），base-before=基地前（左对齐），base-after=基地后（左对齐）
+             
             function customBlocksHtml(pos) {
                 var align = (pos || 'top') === 'top' ? 'text-align:center' : 'text-align:left';
                 return doc.customBlocks.filter(function (b) { return (b.pos || 'top') === (pos || 'top'); }).map(function (b) {
@@ -1498,7 +1497,7 @@
                 }).join('');
             }
 
-            // 描述区多张图片
+             
             function descImagesHtml() {
                 return doc.descImages.map(function (img, i) {
                     if (!img.image) return '';
@@ -1509,7 +1508,7 @@
                 }).join('');
             }
 
-            // 入口/出口列表：条目可点击编辑、可单独删除，末尾可添加新条目
+             
             function renderList(id, items, prefix) {
                 var ul = $(id);
                 ul.innerHTML = '';
@@ -1550,8 +1549,8 @@
                 ul.appendChild(addLi);
             }
 
-            // 菱形图片：无自定义图时按模板渲染 {$image} 占位样式（显示当前等级的默认符号 --img-N），
-            // 有图时用 --custom-image 显示上传/填写的图片
+             
+             
             function diamondImgHtml(cls, image) {
                 var img = image == null ? doc.sd.image : image;
                 if (!img) {
@@ -1562,9 +1561,9 @@
                     + ' style="--custom-image: url(&quot;' + img.replace(/"/g, '&quot;') + '&quot;)"></div>';
             }
 
-            // 要点条目：${x} 占位符渲染成 levels.html L283-292 的模板形式（span.{$x} + .default），
-            // 让 main.css 按当前等级自动显示默认要点（class-1=安全/稳定/极少量实体，死区=环境危害/…）；
-            // 真实内容渲染为可点击编辑的 <a>
+             
+             
+             
             function sdLiHtml(field, val) {
                 if (/^\$\{.+\}$/.test(val)) {
                     return '<li><span class="' + escHtml(placeholderClass(val)) + '">' + escHtml(val) + '</span>'
@@ -1599,11 +1598,11 @@
                     + '</ul></div>';
             }
 
-            /* ================= 面板同步 ================= */
+             
             function syncPanel() {
                 function setVal(id, v) {
                     var el = $(id);
-                    // 正在编辑的输入框不移位光标
+                     
                     if (document.activeElement === el) return;
                     el.value = v;
                 }
@@ -1620,7 +1619,7 @@
                 renderBlockRows();
             }
 
-            // 描述区图片行
+             
             function renderDescImgRows() {
                 var box = $('desc-img-list');
                 box.innerHTML = '';
@@ -1676,7 +1675,7 @@
                 });
             }
 
-            // 页顶区块行
+             
             function renderBlockRows() {
                 var box = $('custom-block-list');
                 box.innerHTML = '';
@@ -1721,7 +1720,7 @@
                         toast('已删除区块');
                     });
 
-                    // 区块段落：每段一个 textarea（输入时同步预览），可删除
+                     
                     var paraList = row.querySelector('.block-para-list');
                     b.paras.forEach(function (p, j) {
                         var pRow = document.createElement('div');
@@ -1759,7 +1758,7 @@
             function initPresetSelect() {
                 var sel = $('f-sd-preset');
                 sel.innerHTML = '';
-                // 名称与任一预设均不符 → 视为自定义名称，下拉选中「自定义…」
+                 
                 var nameIsCustom = SD_PRESETS.every(function (p) { return p.name !== doc.sd.name; });
                 SD_PRESETS.forEach(function (p) {
                     var o = document.createElement('option');
@@ -1771,7 +1770,7 @@
                 });
             }
 
-            /* ================= 弹窗编辑 ================= */
+             
             var modal = { field: null, extra: null };
 
             function openModal(title, value, field, extra, opts) {
@@ -1835,7 +1834,7 @@
                 render();
             }
 
-            /* ================= 事件绑定 ================= */
+             
             function bindEvents() {
                 $('preview').addEventListener('click', function (e) {
                     var a = e.target.closest ? e.target.closest('.editable') : null;
@@ -1881,12 +1880,12 @@
                 bindInput('f-crumb2', function (v) { doc.crumb2 = v; render(); });
                 bindInput('f-sd-name', function (v) {
                     doc.sd.name = v;
-                    // 名称不属于任何预设 → 预设下拉同步为「自定义…」（仅视觉，不影响样式 class，
-                    // 与 level-!+.html 把死区改成「天堂」时保留 class-deadzone 的做法一致）
+                     
+                     
                     initPresetSelect();
                     render();
                 });
-                // 中文输入法 / 失焦等场景的兜底同步
+                 
                 $('f-sd-name').addEventListener('change', function () {
                     doc.sd.name = this.value;
                     initPresetSelect();
@@ -1898,21 +1897,21 @@
                 bindInput('f-sd-three', function (v) { doc.sd.three = v; render(); });
                 bindInput('f-footer-code', function (v) { doc.footerCode = v; render(); });
 
-                // 添加描述图片
+                 
                 $('btn-desc-img-add').addEventListener('click', function () {
                     doc.descImages.push({ image: '', alt: '图片 ' + (doc.descImages.length + 1), caption: '' });
                     render();
                     toast('已添加图片，请填写 URL 或上传');
                 });
 
-                // 添加自定义区块（默认位置：页顶）
+                 
                 $('btn-block-add').addEventListener('click', function () {
                     doc.customBlocks.push({ title: '', content: '', pos: 'top', paras: [] });
                     render();
                     toast('已添加区块，请填写标题与内容');
                 });
 
-                // 描述/基地：增加段落（预览 + 面板）
+                 
                 $('btn-desc-para-add').addEventListener('click', function () {
                     doc.descParas.push('');
                     render();
@@ -1938,7 +1937,7 @@
                     if (tas.length) tas[tas.length - 1].focus();
                 });
 
-                // 在描述与基地之间插入自定义区块（弹窗输入标题）
+                 
                 $('btn-block-insert').addEventListener('click', function () {
                     openModal('输入新区块标题', '', 'newBlockTitle', null, { placeholder: '例如：特殊性质 / 环境描述' });
                 });
@@ -1951,8 +1950,8 @@
                     var p = SD_PRESETS.filter(function (x) { return x.key === key; })[0];
                     if (!p) return;
                     if (key === 'custom') {
-                        // 自定义等级名称：保留当前样式 class（如 class-deadzone），
-                        // 仅允许自定义名称与颜色（与 level-!+.html 把死区改成「天堂」的做法一致）
+                         
+                         
                         if (!doc.sd.cls || doc.sd.cls.indexOf('class-') !== 0) doc.sd.cls = 'class-1';
                         if (!doc.sd.customColor) doc.sd.customColor = $('f-sd-color').value;
                         if (!doc.sd.name || /^\$\{.+\}$/.test(doc.sd.name)) doc.sd.name = '自定义';
@@ -1966,12 +1965,12 @@
                 });
 
                 $('f-sd-color').addEventListener('input', function () {
-                    // 只设置自定义颜色，不影响等级样式 class（class-deadzone 等保持不变）
+                     
                     doc.sd.customColor = this.value;
                     render();
                 });
 
-                // 图片上传（生存难度菱形图）
+                 
                 $('f-sd-image-file').addEventListener('change', function () {
                     var f = this.files && this.files[0];
                     if (!f) return;
@@ -1981,19 +1980,19 @@
                     this.value = '';
                 });
 
-                // 弹窗
+                 
                 $('modal-cancel').addEventListener('click', closeModal);
                 $('modal-ok').addEventListener('click', saveModal);
                 $('modal-overlay').addEventListener('click', function (e) {
                     if (e.target === this) closeModal();
                 });
 
-                // 修改标题按钮
+                 
                 $('btn-edit-title').addEventListener('click', function () {
                     openModal('修改标题', doc.titleName, 'titleName');
                 });
 
-                // 加载模板 / 上传 HTML / 导出
+                 
                 $('btn-load-template').addEventListener('click', loadTemplate);
                 $('btn-upload-html').addEventListener('click', function () { $('f-html-file').click(); });
                 $('f-html-file').addEventListener('change', function (e) {
@@ -2002,17 +2001,17 @@
                     var reader = new FileReader();
                     reader.onload = function (ev) { parseExportedHtml(ev.target.result); };
                     reader.readAsText(file, 'utf-8');
-                    e.target.value = ''; // 允许再次选择同一文件
+                    e.target.value = '';  
                 });
                 $('btn-export').addEventListener('click', exportHtml);
 
-                // 图片库
+                 
                 $('btn-img-lib-open').addEventListener('click', function () { openImageManager('copy'); });
                 $('btn-sd-image-lib').addEventListener('click', function () { openImageManager('sdImage'); });
                 $('btn-desc-img-lib').addEventListener('click', function () { openImageManager('descImage'); });
                 $('img-mgr-close').addEventListener('click', closeImageManager);
 
-                // 我的评分（选择绑定）
+                 
                 $('btn-rate-open').addEventListener('click', openRatingManager);
                 $('rate-mgr-close').addEventListener('click', closeRatingManager);
                 $('rate-mgr-refresh').addEventListener('click', loadRatingManager);
@@ -2032,8 +2031,8 @@
                 });
             }
 
-            /* ================= 导出完整 HTML ================= */
-            // 下载绑定的评分控件：使用用户在「我的评分」里创建/绑定的评分（按当前文档编号查找），不自动创建
+             
+             
             function exportHtml() {
                 var slug = (doc.titleName || 'level').replace(/[^\w\u4e00-\u9fa5-]+/g, '-').replace(/^-+|-+$/g, '') || 'level';
                 var code = ratingCode();
@@ -2054,7 +2053,7 @@
                 toast('已导出 ' + slug + '.html');
             }
 
-            /* 导出版的生存难度（无 editable） */
+             
             function sdExportHtml() {
                 var sd = doc.sd;
                 var cls = sd.cls || 'class-1';
@@ -2101,7 +2100,7 @@
                 }).join('');
             }
 
-            // 用户正文（sd-container 之后的部分）
+             
             function userBodyExportHtml() {
                 var entryHtml = doc.entryItems.map(function (x) { return '<li><p>' + escHtml(x) + '</p></li>'; }).join('');
                 var exitHtml = doc.exitItems.map(function (x) { return '<li><p>' + escHtml(x) + '</p></li>'; }).join('');
@@ -2122,7 +2121,7 @@
                     + '<ul>' + exitHtml + '</ul>\n';
             }
 
-            // 导出文档的导航栏（绝对 URL 版本：下载后本地打开也能正常跳转，注册按钮指向 GitHub 托管的注册页）
+             
             var EXPORT_TOPBAR_HTML =
                 '<!--ziyit-topbar-->\n' +
                 '<div id="top-bar">\n' +
@@ -2162,7 +2161,7 @@
                 '</div>\n' +
                 '<!--/ziyit-topbar-->';
 
-            // 基于完整 levels.html 骨架导出（导航栏/登录/header/head 全部资源）
+             
             function buildFullFromTemplate(rid, codeOverride) {
                 if (!rawTemplate) return '';
                 var p = new DOMParser().parseFromString(rawTemplate, 'text/html');
@@ -2170,7 +2169,7 @@
 
                 if (p.title !== undefined) p.title = doc.titlePrefix + ' - “' + doc.titleName + '” - The Backrooms 中文维基';
 
-                // 导航栏替换为绝对 URL 版本（下载后本地打开也能正常跳转）
+                 
                 var tb = p.getElementById('top-bar');
                 if (tb) {
                     var tbHolder = p.createElement('div');
@@ -2179,13 +2178,13 @@
                     tb.parentNode.removeChild(tb);
                 }
 
-                // 文档类型标识（levels/item/entity/phenomenon）
+                 
                 if (p.head) {
                     var typeMeta = p.createElement('meta');
                     typeMeta.setAttribute('name', 'doc-type');
                     typeMeta.setAttribute('content', doc.type);
                     p.head.appendChild(typeMeta);
-                    // 评分控件样式
+                     
                     var st = p.createElement('style');
                     st.textContent = RATING_WIDGET_CSS;
                     p.head.appendChild(st);
@@ -2197,14 +2196,14 @@
                 var bc = p.getElementById('breadcrumbs');
                 if (bc) bc.innerHTML = '<a>' + escHtml(doc.crumb1) + '</a> &raquo; ' + escHtml(doc.crumb2);
 
-                // 站点 logo 链接固定为 /backrooms/
+                 
                 var h1a = p.querySelector('#header h1 a');
                 if (h1a) h1a.setAttribute('href', '/backrooms/');
 
                 var pc = p.getElementById('page-content');
                 var sdEl = pc ? pc.querySelector('.sd-container') : null;
                 if (sdEl) {
-                    // 页顶区块（如免责声明）：插到生存难度之前
+                     
                     if (doc.customBlocks.length) {
                         var frag = p.createDocumentFragment();
                         var tmp = p.createElement('div');
@@ -2212,13 +2211,13 @@
                         while (tmp.firstChild) frag.appendChild(tmp.firstChild);
                         sdEl.parentNode.insertBefore(frag, sdEl);
                     }
-                    // 评分控件：免责声明（页顶区块）下方、生存难度上方
+                     
                     var tmpR = p.createElement('div');
                     tmpR.innerHTML = ratingWidgetExportHtml(rid, code);
                     while (tmpR.firstChild) sdEl.parentNode.insertBefore(tmpR.firstChild, sdEl);
-                    // 生存难度
+                     
                     sdEl.innerHTML = sdExportHtml();
-                    // 移除其后所有模板残留（使用说明等），插入用户正文
+                     
                     var cursor = sdEl.nextSibling;
                     while (cursor) {
                         var nx = cursor.nextSibling;
@@ -2228,7 +2227,7 @@
                     var tmp2 = p.createElement('div');
                     tmp2.innerHTML = userBodyExportHtml();
                     while (tmp2.firstChild) pc.appendChild(tmp2.firstChild);
-                    // 文档尾部自定义代码（HTML/JS）
+                     
                     if (doc.footerCode) {
                         var tmp3 = p.createElement('div');
                         tmp3.innerHTML = absolutizeHtml(doc.footerCode);
@@ -2236,14 +2235,14 @@
                     }
                 }
 
-                // 评分控件脚本（放到 body 末尾）
+                 
                 if (p.body) {
                     var sc = p.createElement('script');
                     sc.textContent = RATING_WIDGET_JS;
                     p.body.appendChild(sc);
                 }
 
-                // 登录/注册链接绝对化（下载后本地打开也能正常跳转）
+                 
                 return '<!DOCTYPE html>\n' + absolutizeHtml(p.documentElement.outerHTML)
                     .replace(/href="\/user\/"/g, 'href="https://ziyit-hacker.github.io/user/"')
                     .replace(/href="\/user\/register"/g, 'href="https://ziyit-hacker.github.io/user/register"');
@@ -2255,7 +2254,7 @@
                     if (full) return full;
                 }
                 var code = codeOverride || ratingCode();
-                // 未加载模板时的简化版
+                 
                 return '<!DOCTYPE html>\n'
                     + '<html lang="zh-CN">\n<head>\n'
                     + '<meta charset="UTF-8">\n'
@@ -2302,24 +2301,24 @@
                     + '</div>\n</div>\n<\/body>\n<\/html>';
             }
 
-            /* ================= 初始化 ================= */
+             
             function init() {
-                // 登录门禁：编辑 / 加载模板 / 上传 HTML / 导出均需登录后才能使用，
-                // 未登录时整页遮挡并给出登录入口
+                 
+                 
                 checkLoginThen(function () {
                     parseType();
                     initPresetSelect();
                     bindEvents();
                     render();
-                    // 自动尝试加载模板（通过本地服务器时生效）
+                     
                     setTimeout(loadTemplate, 300);
                 });
             }
 
-            // 校验登录态：通过后执行 cb；失败时显示整页门禁
+             
             function checkLoginThen(cb) {
                 if (!window.ZIYIT_API) { showGate('API 组件加载失败，请刷新页面后重试'); return; }
-                // 走 request()：自动带 Token，且凭据存在时可自动重登，避免误判未登录
+                 
                 ZIYIT_API.request('/auth/user-type').then(function () {
                     cb();
                 }).catch(function (err) {
@@ -2331,7 +2330,7 @@
                 });
             }
 
-            // 显示登录门禁（整页遮挡）
+             
             function showGate(msg) {
                 var gate = document.getElementById('login-gate');
                 var sub = document.getElementById('login-gate-sub');

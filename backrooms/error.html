@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -231,14 +231,14 @@
         </div>
     </div>
     <script>
-        // 获取Cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        // 从user.json获取用户权限信息的函数
+         
         async function getUserPermission(username) {
             try {
                 const response = await fetch('/backrooms/user.json');
@@ -256,7 +256,7 @@
             }
         }
 
-        // 页面加载完成后执行登录状态检测
+         
         document.addEventListener('DOMContentLoaded', async function () {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             const usernameDisplay = document.getElementById('usernameDisplay');
@@ -325,10 +325,10 @@
     </div>
 
     <script>
-        // Display current timestamp
+         
         document.getElementById('current-time').textContent = new Date().toLocaleString();
 
-        // Add page load time tracking
+         
         window.addEventListener('load', function () {
             console.log('404 Error Page loaded successfully');
         });

@@ -24,7 +24,7 @@
     <style>
         @media (max-width: 768px) {
 
-            /* 手机端样式 */
+             
             body {
                 font-size: 16px;
             }
@@ -117,7 +117,7 @@
         background-size:100% 100%;
         background-attachment: fixed;">
     <script>
-        // 检查用户权限
+         
         function checkUserPermission() {
             if (!ZIYIT_API.getToken()) {
                 alert('请先登录以访问该页面');
@@ -126,7 +126,7 @@
             }
         }
 
-        // 页面加载时检查权限
+         
         document.addEventListener('DOMContentLoaded', checkUserPermission);
     </script>
     <a href="javascript:history.back()">返回</a>
@@ -135,9 +135,7 @@
     <h4>我们会提供对你们有帮助的工具，使用商业版需要产品密钥或额外付费，部分为商业VIP使用！</h4>
     <h3>以下是只因科技提供的产品，请自行查看</h3>
     <hr class="brg" />
-    <!-- <video crossorigin="anonymous" preload="auto"
-        src="blob:https://www.bilibili.com/e5e94ab6-b01f-446b-b3ba-d9dd38366f4a"></video>
-    <hr class="brg"> -->
+    
     <a href="mod">点我去“Minecraft_寒坤”的病毒库</a>
     <br>
     <a href="#" id="key">获得云储存提交密钥</a>
@@ -211,7 +209,7 @@
     </script>
 
     <script>
-        // 添加密钥获取功能
+         
         document.getElementById('key').addEventListener('click', function(e) {
             e.preventDefault();
 
@@ -235,19 +233,19 @@
                             return;
                         }
 
-                        // 随机选择一行密钥
+                         
                         const randomIndex = Math.floor(Math.random() * keys.length);
                         const upk = keys[randomIndex].trim();
 
-                        // 生成时间戳
+                         
                         const now = new Date();
                         const timeStr = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
 
-                        // 创建用户信息字符串（数据以后端为准）
+                         
                         const userInfo = `ZC-${user.username}`;
                         const message = `请将网盘获取代码：${userInfo}/${upk}\\${timeStr}用短信发送到13258227085`;
 
-                        // 创建提示框
+                         
                         const msgDiv = document.createElement('div');
                         msgDiv.style.position = 'fixed';
                         msgDiv.style.top = '50%';
@@ -274,7 +272,7 @@
 
                         document.body.appendChild(msgDiv);
 
-                        // 复制到剪贴板
+                         
                         navigator.clipboard.writeText(`${userInfo}/${upk}\\${timeStr}`);
                     })
                     .catch(error => {
@@ -287,7 +285,7 @@
         });
     </script>
     <script>
-        /* Toast 通知：替代原生 alert（DESIGN.md §4.9） */
+         
         (function () {
             'use strict';
             var CSS = '.ziyit-toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483001;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;max-width:90vw}.ziyit-toast{pointer-events:auto;background:var(--ziyit-bg-card,#1f2229);color:var(--ziyit-text-primary,#fff);border:1px solid var(--ziyit-border,#3a3f48);border-left:4px solid var(--ziyit-primary,#0078d4);padding:10px 18px;border-radius:8px;font-size:14px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .25s;max-width:60vw}.ziyit-toast.show{opacity:1;transform:translateY(0)}.ziyit-toast.hide{opacity:0;transform:translateY(-8px)}.ziyit-toast.success{border-left-color:var(--ziyit-success,#28a745)}.ziyit-toast.error{border-left-color:var(--ziyit-danger,#f25767)}.ziyit-toast.warning{border-left-color:var(--ziyit-warning,#f3a707)}';

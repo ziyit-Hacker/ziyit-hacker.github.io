@@ -71,7 +71,7 @@
         </div>
     </header>
 
-    <!-- 无权限门禁 -->
+    
     <div class="gate" id="gate">
         <div class="gate-card">
             <h2>⛔ 无权访问</h2>
@@ -109,7 +109,7 @@
         </div>
     </main>
 
-    <!-- 通用弹窗 -->
+    
     <div class="modal-mask" id="modal-mask">
         <div class="modal" id="modal-box"></div>
     </div>
@@ -149,7 +149,7 @@
         function closeModal() { $('modal-mask').classList.remove('show'); $('modal-box').innerHTML = ''; }
         document.getElementById('modal-mask').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 
-        // 带 Token 拉取层级 HTML（作者本人/管理员可看非公开稿件，不报 404；响应含后端注入的审核中提示条）
+         
         function fetchLevelHtml(id) {
             var token = window.ZIYIT_API && ZIYIT_API.getToken ? ZIYIT_API.getToken() : '';
             return fetch(BASE + '/backrooms/levels/' + encodeURIComponent(id), {
@@ -162,7 +162,7 @@
                 return res.text();
             });
         }
-        // 查看：新标签打开（blob 方式，携带登录态渲染）
+         
         function levelView(id) {
             fetchLevelHtml(id).then(function (html) {
                 var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
@@ -171,7 +171,7 @@
                 setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
             }).catch(function (err) { toast('查看失败：' + errText(err)); });
         }
-        // 下载：保存为 HTML 文件（管理员下载后交给自己的 AI 审核）
+         
         function levelDownload(id) {
             fetchLevelHtml(id).then(function (html) {
                 var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
@@ -183,7 +183,7 @@
             }).catch(function (err) { toast('下载失败：' + errText(err)); });
         }
 
-        // ============ 审核标准下载 ============
+         
         $('btn-standard').addEventListener('click', function () {
             var b = this; b.disabled = true; b.textContent = '下载中…';
             ZIYIT_API.backroomsDownloadStandard().then(function () {
@@ -193,8 +193,8 @@
             });
         });
 
-        // ============ 基础审核列表（Lv.1-2） ============
-        var BASIC_ITEMS = []; // 缓存当前列表，供本地生成提示词使用
+         
+        var BASIC_ITEMS = [];  
 
         function renderBasic(items) {
             BASIC_ITEMS = items;
@@ -219,7 +219,7 @@
                 }).join('') + '</tbody></table>';
         }
 
-        // ============ 高级审核列表（Lv.2+） ============
+         
         function renderAdvanced(items) {
             var el = $('advanced-list');
             $('advanced-count').textContent = items.length + ' 条';
@@ -241,7 +241,7 @@
                 }).join('') + '</tbody></table>';
         }
 
-        // ============ 已收录列表（重写/删除） ============
+         
         function renderApproved(items) {
             var el = $('approved-list');
             if (!items.length) { el.innerHTML = '<div class="empty">暂无已收录的层级。</div>'; return; }
@@ -277,7 +277,7 @@
             });
         }
 
-        // ============ 事件代理 ============
+         
         document.getElementById('main').addEventListener('click', function (e) {
             var btn = e.target.closest('button[data-act]');
             if (!btn) return;
@@ -296,7 +296,7 @@
         $('btn-advanced-refresh').addEventListener('click', function () { loadList('advanced'); });
         $('btn-approved-refresh').addEventListener('click', function () { loadList('approved'); });
 
-        // 本地生成 AI 初审提示词（后端不提供 AI，管理员用自有 AI 审核后粘贴结果回来）
+         
         function genPrompt(id) {
             var item = null;
             for (var i = 0; i < BASIC_ITEMS.length; i++) {
@@ -334,7 +334,7 @@
             });
         }
 
-        // 提交审核结果
+         
         function openSubmitModal(id) {
             openModal('<h3>🤖 提交 AI 审核结果 <span style="font-weight:400;font-size:12px;color:#888">' + esc(id) + '</span></h3>'
                 + '<textarea id="m-reply" placeholder="把 AI 初审回复全文粘贴到这里…"></textarea>'
@@ -387,7 +387,7 @@
             box.innerHTML = html;
         }
 
-        // 高级审核：通过
+         
         function approveAdvanced(id) {
             if (!confirm('确认通过 ' + id + ' 的高级审核（收录为公开层级）？')) return;
             ZIYIT_API.backroomsAdvancedReview(id, 'approve').then(function (d) {
@@ -396,7 +396,7 @@
             }).catch(function (err) { toast('操作失败：' + errText(err)); });
         }
 
-        // 高级审核：拒绝（填理由）
+         
         function openRejectModal(id) {
             openModal('<h3>✘ 拒绝 ' + esc(id) + '</h3>'
                 + '<textarea id="m-reason" placeholder="填写拒绝理由（会随邮件发送给作者）"></textarea>'
@@ -412,7 +412,7 @@
             });
         }
 
-        // 重写（下架 + 保留原文件）
+         
         function rewriteLevel(id) {
             if (!confirm('确认对 ' + id + ' 执行重写？\n该层级将被下架（不再公开显示），原文件保留。')) return;
             ZIYIT_API.backroomsRewrite(id).then(function (d) {
@@ -421,7 +421,7 @@
             }).catch(function (err) { toast('操作失败：' + errText(err)); });
         }
 
-        // 管理员删除
+         
         function adminDelete(id) {
             if (!confirm('确认删除 ' + id + ' ？\n该操作不可恢复，请谨慎！')) return;
             ZIYIT_API.backroomsAdminDelete(id).then(function (d) {
@@ -430,12 +430,12 @@
             }).catch(function (err) { toast('操作失败：' + errText(err)); });
         }
 
-        // 关闭按钮
+         
         document.getElementById('modal-box').addEventListener('click', function (e) {
             if (e.target.closest('[data-close]')) closeModal();
         });
 
-        // ============ 初始化：鉴权 + 按等级显示 ============
+         
         function init() {
             ZIYIT_API.adminMe().then(function (me) {
                 LEVEL = Number(me && (me.level != null ? me.level : 0));

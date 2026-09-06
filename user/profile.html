@@ -214,7 +214,7 @@
 </head>
 
 <body>
-    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -416,14 +416,14 @@
                 });
             }
 
-            // ===== 登录记录 & IP 封禁管理 =====
+             
             const ipLocCache = {};
             const ipStatusCache = {};
             const myBannedIps = JSON.parse(localStorage.getItem('ziyit_my_banned_ips') || '{}');
-            const CONFIRM_EXPIRE_MS = 15 * 60 * 1000; // 确认链接有效期（与后端一致）
+            const CONFIRM_EXPIRE_MS = 15 * 60 * 1000;  
             let latestUser = null;
 
-            // 清理已过期的待确认记录（封禁/解封确认链接过期后恢复原状态）
+             
             function cleanExpiredBans() {
                 const now = Date.now();
                 let changed = false;
@@ -437,7 +437,7 @@
                 if (changed) localStorage.setItem('ziyit_my_banned_ips', JSON.stringify(myBannedIps));
             }
 
-            // 按钮状态：优先使用后端 /ip/{ip}/status 的权威状态，本地记录仅作降级
+             
             function getBanButtonState(ip) {
                 cleanExpiredBans();
                 const st = ipStatusCache[ip];
@@ -451,11 +451,11 @@
                 if (s && s.pending) {
                     return { label: s.pending === 'unban' ? '解封确认中' : '邮箱验证中', disabled: true, color: '#b45309' };
                 }
-                // 后端状态未确认（查询失败）时，本地非待确认记录不可信，一律显示"封禁IP"
+                 
                 return { label: '封禁IP', disabled: false, color: '' };
             }
 
-            // 刷新页面上所有 IP 操作按钮的状态
+             
             function refreshIpButtons() {
                 document.querySelectorAll('[data-ip-ops]').forEach(function (btn) {
                     const ip = btn.getAttribute('data-ip-ops');
@@ -467,7 +467,7 @@
                 renderIpManage();
             }
 
-            // 从后端查询某个 IP 的真实状态并刷新
+             
             function refreshIpStatus(ip) {
                 if (!ip || ip === '-' || ipStatusCache[ip] !== undefined) return;
                 ZIYIT_API.getIpStatus(ip).then(function (s) {
@@ -478,14 +478,14 @@
                 });
             }
 
-            // 提交封禁/解封后使缓存失效，重新从后端拉取真实状态
+             
             function invalidateIpStatus(ip) {
                 delete ipStatusCache[ip];
                 refreshIpButtons();
                 refreshIpStatus(ip);
             }
 
-            // 统一处理 IP 操作按钮点击（封禁/解封）
+             
             function handleIpAction(btn) {
                 const ip = btn.getAttribute('data-ip-ops');
                 if (!ip) return;
@@ -547,7 +547,7 @@
                     area.innerHTML = '<p style="color: #64748b;">暂无登录记录</p>';
                     return;
                 }
-                // 从旧到新显示，index 对应原数组下标（0 开始）
+                 
                 const items = list.map(function (rec, index) {
                     return {
                         index: index,
@@ -601,7 +601,7 @@
                     });
                 });
 
-                // 从后端查询每个 IP 的真实封禁状态
+                 
                 const seen = {};
                 items.forEach(function (it) {
                     if (it.ip && it.ip !== '-' && !seen[it.ip]) {
@@ -614,7 +614,7 @@
             function renderIpManage() {
                 cleanExpiredBans();
                 const area = document.getElementById('ipManageArea');
-                // 收集相关 IP：本地记录 + 登录记录中出现过的 IP
+                 
                 const allIps = {};
                 Object.keys(myBannedIps).forEach(function (k) { allIps[k] = true; });
                 if (latestUser && Array.isArray(latestUser.loginHistory)) {
@@ -656,7 +656,7 @@
                         + '</div>';
                 });
                 area.innerHTML = html;
-                // 事件绑定（封禁/解封）
+                 
                 area.querySelectorAll('[data-ip-ops]').forEach(function (btn) {
                     btn.addEventListener('click', function () { handleIpAction(btn); });
                 });
@@ -713,7 +713,7 @@
                             result.className = 'result error';
                             result.style.display = 'block';
                         }).finally(function () {
-                            // 无论成功失败（含超时）都恢复按钮，避免卡在"提交中..."
+                             
                             btn.disabled = false;
                             btn.innerHTML = '申请注销';
                         });
@@ -848,7 +848,7 @@
         });
     </script>
 <script>
-        // 导航权限过滤（DESIGN.md §4.6.5，需登录页模式）：未登录全部隐藏，登录后按角色显示
+         
         function checkLoginStatus() {
             const navItems = document.querySelectorAll('.nav-item');
             if (!ZIYIT_API.getToken()) {

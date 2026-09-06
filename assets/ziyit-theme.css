@@ -1,10 +1,7 @@
-/* ============================================================
-   ZIYIT 设计体系（DESIGN.md §2 / §4.14）
-   明暗双主题 Token + 基础组件覆盖 + 主题切换按钮
-   全站界面共享：替换历史失效背景图，统一使用纯色背景
-   ============================================================ */
 
-/* ---------- 设计 Token：浅色（默认） ---------- */
+
+
+ 
 :root {
     --ziyit-primary: #0078d4;
     --ziyit-primary-dark: #005a9e;
@@ -27,7 +24,7 @@
     color-scheme: light;
 }
 
-/* ---------- 深色 Token（仅交换中性色，品牌主色不变） ---------- */
+ 
 [data-theme="dark"] {
     --ziyit-bg: #16181d;
     --ziyit-bg-card: #1f2229;
@@ -41,7 +38,7 @@
     color-scheme: dark;
 }
 
-/* ---------- 基础层 ---------- */
+ 
 html {
     -webkit-text-size-adjust: 100%;
 }
@@ -78,7 +75,7 @@ code, pre {
     font-family: Consolas, "Courier New", monospace;
 }
 
-/* ---------- 深色模式通用覆盖（修正页面遗留的硬编码浅色） ---------- */
+ 
 [data-theme="dark"] input,
 [data-theme="dark"] select,
 [data-theme="dark"] textarea {
@@ -109,7 +106,7 @@ code, pre {
     color: #c9d1d9;
 }
 
-/* 常见内容容器深色化（避免深色模式下"白底浅字"的对比问题） */
+ 
 [data-theme="dark"] .container,
 [data-theme="dark"] .wrap,
 [data-theme="dark"] .box,
@@ -137,7 +134,7 @@ code, pre {
     color: var(--ziyit-text-secondary);
 }
 
-/* ---------- 主题切换按钮（悬浮右下角） ---------- */
+ 
 #ziyit-theme-toggle {
     position: fixed;
     right: 16px;
@@ -181,12 +178,8 @@ code, pre {
     }
 }
 
-/* ============================================================
-   ZIYIT 导航栏组件（DESIGN.md §4.6，参照 ui-test.html site-nav）
-   明暗双主题自适应：浅色模式白底浅灰边 + 深色文字，
-   深色模式深底 + 浅色文字；下拉菜单与分隔线随主题切换
-   响应式：桌面 ≥769px 水平下拉；移动 ≤768px 汉堡菜单折叠
-   ============================================================ */
+
+
 .site-nav {
     position: relative;
     z-index: 1050;
@@ -238,7 +231,7 @@ code, pre {
     margin: 0 10px;
     flex-shrink: 0;
 }
-/* 二级下拉（hover 展开） */
+ 
 .site-nav-menu ul {
     display: none;
     position: absolute;
@@ -257,7 +250,7 @@ code, pre {
 .site-nav-menu > li:hover > ul {
     display: block;
 }
-/* 桥接 li 与下拉面板之间 6px 空隙：鼠标移入时 hover 不中断 */
+ 
 .site-nav-menu ul::before {
     content: '';
     position: absolute;
@@ -279,24 +272,24 @@ code, pre {
     color: var(--ziyit-primary);
     background: var(--ziyit-bg-hover);
 }
-/* 修正页面内全局 ul li{display:inline-block;line-height:35px} 规则对导航菜单的干扰：
-   一级项在 flex 容器中保持 flex item，二级下拉每个按钮独占一行（垂直分行） */
+
+
 .site-nav-menu > li,
 .site-nav-menu ul li {
     display: block;
     line-height: 1.6;
 }
-/* 基础显隐控制类：权限脚本用 .hidden 隐藏无权限菜单项 */
+ 
 .hidden {
     display: none !important;
 }
-/* 登录态下权限脚本会给 .nav-item 添加 .visible（display:inline-block !important），
-   会破坏二级下拉菜单的垂直分行布局，此处强制拉回 block */
+
+
 .site-nav-menu > li.visible,
 .site-nav-menu ul li.visible {
     display: block !important;
 }
-/* 汉堡按钮（仅移动端显示） */
+ 
 .site-nav-toggle {
     display: none;
     background: none;
@@ -356,13 +349,10 @@ code, pre {
     }
 }
 
-/* ============================================================
-   深色模式全面适配（DESIGN.md §4.14）
-   兜底覆盖：修正页面遗留的硬编码浅色背景、深色文字与链接
-   !important 用于压过页面内联样式（非 !important）
-   ============================================================ */
 
-/* 常见内容容器深色化（含登录/注册/管理后台等自定义容器） */
+
+
+ 
 [data-theme="dark"] :is(.container, .wrap, .box, .panel, .card, .content, .main,
     .form, .login, .dialog, .list, .item, .info, .notice,
     .form-container, .login-box, .auth-box, .signin-box, .register-box,
@@ -376,7 +366,7 @@ code, pre {
     color: var(--ziyit-text-primary) !important;
 }
 
-/* 表格深色化（含无类名 table） */
+ 
 [data-theme="dark"] table {
     background-color: var(--ziyit-bg-card);
     color: var(--ziyit-text-primary);
@@ -386,13 +376,13 @@ code, pre {
     background-color: transparent;
 }
 
-/* 深色模式下正文标题/段落/单元格文字兜底为浅色 */
+ 
 [data-theme="dark"] :is(h1, h2, h3, h4, h5, h6, p, li, td, th, label,
     dt, dd, figcaption, legend) {
     color: var(--ziyit-text-primary) !important;
 }
 
-/* 深色模式下链接统一为浅蓝（导航链接随 token 保持页面文字色） */
+ 
 [data-theme="dark"] a {
     color: #8ab4f8 !important;
 }
@@ -403,13 +393,13 @@ code, pre {
     color: var(--ziyit-primary) !important;
 }
 
-/* 深色模式下次要文字兜底 */
+ 
 [data-theme="dark"] :is(.muted, .hint, .desc, .subtitle, .tip, .small,
     .secondary, .text-muted, .caption, .remark, .notice-text, .sub-info) {
     color: var(--ziyit-text-secondary) !important;
 }
 
-/* 管理系统（music/admin）深色适配：标题与用户信息卡 */
+ 
 [data-theme="dark"] .admin-title {
     color: var(--ziyit-text-primary) !important;
 }
@@ -424,8 +414,8 @@ code, pre {
     color: var(--ziyit-text-secondary) !important;
 }
 
-/* ============ 加载界面（DESIGN.md §4.12） ============ */
-/* 容器：按钮加载 + 品牌滑动进度条，居中纵向排列 */
+ 
+ 
 .ziyit-loading {
     display: flex;
     flex-direction: column;
@@ -434,7 +424,7 @@ code, pre {
     gap: 18px;
     padding: 24px 20px;
 }
-/* 按钮内加载转圈（浅色按钮底上使用，白边） */
+ 
 .ziyit-loading .spinner {
     width: 14px;
     height: 14px;
@@ -446,7 +436,7 @@ code, pre {
     margin-right: 6px;
     animation: spin .7s linear infinite;
 }
-/* 按钮中加载：主色按钮 + 转圈 */
+ 
 .ziyit-loading-btn {
     display: inline-flex;
     align-items: center;
@@ -462,7 +452,7 @@ code, pre {
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
-/* 主加载进度条：ZIYIT 品牌标题 + Cloudflare 风格左右滑动加载条 */
+ 
 .ziyit-loader { text-align: center; }
 .ziyit-loader .loader-title {
     display: flex;
@@ -502,7 +492,7 @@ code, pre {
     95%  { transform: translateX(-100%) scaleX(1.524); }
     100% { transform: translateX(-100%) scaleX(1); }
 }
-/* 紧凑行内转圈：用于小字段加载（浅色/深色背景通用） */
+ 
 .spinner-inline {
     width: 14px;
     height: 14px;

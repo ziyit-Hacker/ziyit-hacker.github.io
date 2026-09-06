@@ -15,7 +15,7 @@
         var URL_DOMAIN = 'wikidot.com';
         var USE_SSL = true;
         var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-        // global request information
+         
 
         var WIKIREQUEST = {};
         WIKIREQUEST.info = {};
@@ -67,10 +67,10 @@
 
 
     <style type="text/css" id="internal-style">
-        /* modules */
+         
 
 
-        /* theme */
+         
         @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
         @import url(https://github.backroomswiki.cn/Old_BHL/css/liminal-impact.css);
     </style>
@@ -115,7 +115,7 @@
     <style>
         @import url('https://use.fontawesome.com/releases/v5.11.2/css/all.css');
 
-        /* Intro 和 Style Block */
+         
         .intro {
             display: grid;
             grid-template: 'in others' 'in out' 'toc toc';
@@ -270,7 +270,7 @@
             border-bottom: none;
         }
 
-        /* Icons */
+         
         .infomark::before {
             content: "\f05a";
             font-weight: 900;
@@ -329,7 +329,7 @@
             color: rgb(var(--dark-accent));
         }
 
-        /* Other */
+         
         #page-title {
             padding-bottom: 0.1rem;
             border-bottom: rgb(var(--gray-monochrome)) solid 0.2rem;
@@ -370,7 +370,7 @@
             margin: 0 0 1em;
         }
 
-        /* Mobile */
+         
         @media only screen and (max-width: 768px) {
             .intro {
                 grid-template: 'in' 'out' 'others' 'toc';
@@ -410,66 +410,64 @@
         }
     </style>
     <style>
-        /* =================
-杨任东竹石体
-YRDZST
-=================*/
+        
+
         @import url(https://fastly.jsdelivr.net/gh/Crimone/typefaces@main/YRDZST/subsets/YRDZST.css);
     </style>
     <style>
-        /* 字体 */
+         
         @import url('https://fonts.googleapis.com/css2?family=Audiowide&amp;display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Orbitron&amp;display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&amp;display=swap');
 
-        /* Level 256 - “演示场景” */
+         
         .demoscene {
             color: #631c1a;
             background-color: #eeeeee;
         }
 
-        /* Level 158 - “猛攻站” */
+         
         .Wicked {
             font-family: 'Audiowide', monospace;
         }
 
-        /* Level 317 - “霓虹沙壶球” */
+         
         .Neon {
             font-family: 'Orbitron', monospace;
         }
 
-        /* Level 23 - “石化花园”等 */
+         
         .txt-1 {
             font-family: 'Zhi Mang Xing', cursive;
         }
 
-        /* Level 149 - “椰树岛” */
+         
         .Kavivanar {
             font-family: 'YRDZST';
         }
 
-        /* Level 60 - “海湾步道” */
+         
         .Chakra {
             font-family: 'Noto Serif SC', sans-serif;
         }
 
-        /* Level 599 - “群星” */
+         
         .aster a {
             color: #19beff;
         }
 
-        /* Level 999 */
+         
         .black a {
             color: #000000;
         }
 
-        /* Level 610 */
+         
         .melan {
             color: #ffffff;
             background-color: #000000;
         }
 
-        /* Level 742 */
+         
         .glitch {
             font-family: "heiti", heiti, 黑体, 微软雅黑, serif;
             font-weight: 400;
@@ -518,14 +516,14 @@ YRDZST
                             </div>
                         </div>
                         <script>
-                            // 获取Cookie值的函数
+                             
                             function getCookie(name) {
                                 const value = `; ${document.cookie}`;
                                 const parts = value.split(`; ${name}=`);
                                 if (parts.length === 2) return parts.pop().split(';').shift();
                             }
 
-                            // 从user.json获取用户权限信息的函数
+                             
                             async function getUserPermission(username) {
                                 try {
                                     const response = await fetch('https://ziyit-hacker.github.io/backrooms/user.json');
@@ -543,7 +541,7 @@ YRDZST
                                 }
                             }
 
-                            // 页面加载完成后执行登录状态检测
+                             
                             document.addEventListener('DOMContentLoaded', async function () {
                                 const authToken = getCookie('authToken') || localStorage.getItem('authToken');
                                 const usernameDisplay = document.getElementById('usernameDisplay');
@@ -568,7 +566,7 @@ YRDZST
                                 }
                             });
                         </script>
-                        <!--ziyit-topbar-->
+                        
                         <div id="top-bar">
                             <div class="top-bar">
                                 <ul>
@@ -604,7 +602,7 @@ YRDZST
                                 </ul>
                             </div>
                         </div>
-                        <!--/ziyit-topbar-->
+                        
                     </div>
 
                     <div id="content-wrap">
@@ -2895,13 +2893,13 @@ YRDZST
     </div>
 
     <style>
-        /* 生存难度容器居中 */
+         
         .sd-container {
             display: flex !important;
             flex-direction: column !important;
         }
 
-        /* 调整内容包装器 */
+         
         #content-wrap {
             margin-left: 0 !important;
             width: 100% !important;
@@ -2909,9 +2907,9 @@ YRDZST
     </style>
 
     <script>
-        // ===== 动态合并后端层级到静态列表 =====
-        // 规则：Level-[999及以内数字] 进入对应的正常区间列表；其余进入"特殊层级"列表。
-        // 已有条目：非 class="newpage" 的不替换；newpage 占位条目用真实数据替换；不存在的追加。
+         
+         
+         
         (function () {
             var BASE = (function () {
                 try {
@@ -2971,7 +2969,7 @@ YRDZST
                         var isNum = /^\d+$/.test(tail);
                         var n = parseInt(tail, 10);
                         var key = normId(tail);
-                        // 定位目标列表：数字且 <=999 进正常区间；其余进特殊层级
+                         
                         var ul;
                         if (isNum && !isNaN(n) && n <= 999) {
                             ul = sectionUl('toc' + Math.floor(n / 100));
@@ -2981,7 +2979,7 @@ YRDZST
                         if (!ul) return;
                         var existing = findExisting(ul, key);
                         if (existing) {
-                            // 已有非 newpage 条目不替换
+                             
                             if (!isNewpage(existing)) return;
                             var li = existing.closest ? existing.closest('li') : existing.parentNode;
                             if (li) li.outerHTML = makeLi(id, it);
@@ -2991,10 +2989,10 @@ YRDZST
                         li.innerHTML = makeLi(id, it);
                         ul.appendChild(li);
                     });
-                }).catch(function () { /* 后端不可用时静默，保留静态列表 */ });
+                }).catch(function () {   });
             }
 
-            // 动态新增层级的点击：以 Blob 临时地址打开（避免跳转后端域名造成 Cookie 隔离，无法登录/评分）
+             
             document.addEventListener('click', function (e) {
                 var a = e.target && e.target.closest ? e.target.closest('a.dyn-level') : null;
                 if (!a) return;
@@ -3014,14 +3012,14 @@ YRDZST
                 merge();
             }
 
-            // 支持 ?open_level=层级ID 直达：以 Blob 临时地址打开后端层级（避免跨域 Cookie 隔离）
+             
             (function () {
                 var m = location.search.match(/[?&]open_level=([^&]*)/);
                 if (!m) return;
                 var openId = '';
                 try { openId = decodeURIComponent(m[1]); } catch (e) { openId = m[1]; }
                 if (!openId) return;
-                // 清除参数，避免刷新重复打开
+                 
                 try { history.replaceState(null, '', location.pathname); } catch (e) {}
                 if (window.ZIYIT_API && ZIYIT_API.backroomsOpenLevel) {
                     ZIYIT_API.backroomsOpenLevel(openId).catch(function (err) {

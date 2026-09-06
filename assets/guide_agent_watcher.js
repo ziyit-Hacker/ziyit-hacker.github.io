@@ -1,28 +1,16 @@
-/* ============================================================
-   管理员全局通知（watcher）
-   由 ziyit-theme.js 动态注入到所有页面，仅管理员生效：
-   1) 客服名单管理员：每 10 秒轮询 /guide/human/inbox，发现新转人工会话
-      → 右下角通知 + <a> 跳转后台「在线客服」区块；
-      收件箱为"读后即删"，通知到的会话写入 localStorage（ziyit_guide_pending），
-      后台 admin.js 打开时自动恢复，避免被本脚本消费后客服队列丢失
-   2) 任意管理员：每 10 秒轮询 /admin/chat/inbox（私聊 + 全局消息）
-      → 右下角通知；消息内容写入 recv_msgs Cookie（与后台 admin.js 同格式），
-        后台刷新时 chatLoadHistory() 自动恢复历史
-   使用原生 fetch（不走 ZIYIT_API.request），401/403 静默处理，
-   不会触发全局"登录已过期"逻辑，也不会影响普通用户
-   admin.html（后台）与 guide.html（客服对话页）自身不运行本脚本
-   ============================================================ */
+
+
 (function () {
     'use strict';
     if (!window.ZIYIT_API) return;
-    // 后台页面与客服对话页不运行（避免与后台/客服控制台轮询抢收件箱）
+     
     if (/admin\.html/i.test(location.pathname)) return;
     if (/guide\.html/i.test(location.pathname)) return;
 
     var POLL_MS = 10000;
     var DEFAULT_BASE = 'https://willian-unheady-rawly.ngrok-free.dev';
-    var notifiedKey = 'ziyit_guide_notified';  // 已通知的 sessionId（持久，避免刷新重复弹）
-    var pendingKey = 'ziyit_guide_pending';    // 待后台恢复的会话信息
+    var notifiedKey = 'ziyit_guide_notified';   
+    var pendingKey = 'ziyit_guide_pending';     
     var notified = {};
     var guideTimer = null, chatTimer = null;
     var guideStopped = false, chatStopped = false;
@@ -61,7 +49,7 @@
         } catch (e) { return ''; }
     }
 
-    // 原生 fetch：不经 ZIYIT_API.request，避免 401 触发全局重登/清理逻辑
+     
     function api(path, method, body) {
         var bases = [];
         try { if (window.ZIYIT_API && window.ZIYIT_API.getBases) bases = window.ZIYIT_API.getBases(); } catch (e) {}
@@ -86,7 +74,7 @@
         });
     }
 
-    // 后台管理页面的相对路径（按当前页面目录深度推导，兼容子路径部署）
+     
     function adminUrl() {
         var p = location.pathname;
         var dir = p.substring(0, p.lastIndexOf('/') + 1);
@@ -102,7 +90,7 @@
         });
     }
 
-    // ---------- 统一通知容器（右下角堆叠，最多 4 条） ----------
+     
     var WRAP_CSS = 'position:fixed;right:16px;bottom:128px;z-index:2147483000;display:flex;flex-direction:column;'
         + 'gap:8px;width:320px;max-width:calc(100vw - 32px);';
     var CARD_CSS = 'position:relative;background:var(--ziyit-bg-card,#1f2229);color:var(--ziyit-text-primary,#f2f3f5);'
@@ -121,7 +109,7 @@
         return w;
     }
 
-    // opts: {icon,title,user,preview,accent,href,hrefText}
+     
     function showNotify(opts) {
         var wrap = getWrap();
         var card = document.createElement('div');
@@ -142,7 +130,7 @@
         while (wrap.children.length > 4) wrap.removeChild(wrap.firstChild);
     }
 
-    // guide 新转人工会话通知
+     
     function showGuideCard(m, total) {
         var user = (m && (m.fromUsername || ('用户#' + (m.fromUserId != null ? m.fromUserId : '?')))) || '用户';
         var preview = (m && m.content) || '';
@@ -157,7 +145,7 @@
         });
     }
 
-    // ---------- Cookie 读写（recv_msgs，与后台 admin.js 同格式） ----------
+     
     var CHAT_COOKIE_MAX = 40;
     var CHAT_COOKIE_BYTES = 3500;
     function chatGetCookie(name) {
@@ -177,7 +165,7 @@
         document.cookie = name + '=' + encodeURIComponent(s) + '; expires=' + exp + '; path=/';
     }
 
-    // 私聊/全局消息 → 右下角通知 + 写入 recv_msgs Cookie
+     
     function notifyAdminMsg(m) {
         if (!m || !m.content) return;
         var isBcast = !!m.broadcast;
@@ -193,13 +181,13 @@
             href: adminUrl() + '#admin-chat',
             hrefText: '前往后台查看 →'
         });
-        // 消息内容存 Cookie（与后台同格式），后台刷新时 chatLoadHistory() 恢复
+         
         var saved = chatGetCookie('recv_msgs');
         saved.push(m);
         chatSetCookie('recv_msgs', saved);
     }
 
-    // 每 10 秒：管理员私聊 + 全局消息（任意管理员）
+     
     function pollAdminChat() {
         if (chatStopped) return;
         api('/admin/chat/inbox').then(function (data) {
@@ -209,12 +197,12 @@
                 notifyAdminMsg(m);
             });
         }).catch(function (err) {
-            // 401/403：非管理员或登录态失效，停止轮询（静默）
+             
             if (err && (err.status === 401 || err.status === 403)) chatStopped = true;
         });
     }
 
-    // 每 10 秒：新转人工会话（客服名单管理员）
+     
     function pollGuide() {
         if (guideStopped) return;
         api('/guide/human/inbox').then(function (data) {
@@ -230,27 +218,27 @@
             });
             if (fresh.length) showGuideCard(fresh[fresh.length - 1], fresh.length);
         }).catch(function (err) {
-            // 401/403：非客服名单管理员或登录态失效，停止轮询（静默）
+             
             if (err && (err.status === 401 || err.status === 403)) guideStopped = true;
         });
     }
 
-    // 启动：无 token 直接退出（普通访客零副作用）；
-    // adminMe 用原生 fetch 判断管理员，非管理员静默退出
+     
+     
     function start() {
         if (!getToken()) return;
         api('/admin/me').then(function (me) {
             if (!me || me.level == null) return Promise.reject(new Error('not admin'));
-            // 任意管理员：私聊 + 全局消息轮询
+             
             pollAdminChat();
             chatTimer = setInterval(pollAdminChat, POLL_MS);
-            // 同步客服身份（写 guide_token Cookie 供后端识别），失败不阻塞
+             
             return api('/guide/auth/sync', 'POST', { token: getToken() }).catch(function () { return null; });
         }).then(function () {
-            // 客服名单管理员：转人工会话轮询
+             
             pollGuide();
             guideTimer = setInterval(pollGuide, POLL_MS);
-        }).catch(function () { /* 非管理员/网络异常：静默退出 */ });
+        }).catch(function () {   });
     }
 
     if (document.readyState === 'loading') {

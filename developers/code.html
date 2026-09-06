@@ -23,7 +23,7 @@
     </script>
     <link rel="stylesheet" href="../assets/ziyit-theme.css">
     <style>
-        /* ===== 网页代码评判页面样式（DESIGN.md 设计体系） ===== */
+         
         .bid {
             color: var(--ziyit-danger);
             font-size: 12px;
@@ -61,7 +61,7 @@
 
 <body>
     <script>
-        // 获取cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
@@ -69,7 +69,7 @@
             return null;
         }
 
-        // 检查用户权限
+         
         function checkUserPermission() {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             if (!authToken) {
@@ -85,11 +85,11 @@
             }
         }
 
-        // 页面加载时检查权限
+         
         document.addEventListener('DOMContentLoaded', checkUserPermission);
     </script>
 
-    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    
     <div class="site-nav" id="up">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -132,7 +132,7 @@
         </div>
     </div>
 
-    <!-- 页面主体 -->
+    
     <header class="page-header">
         <h1>网页代码评判</h1>
         <p>ZIYIT Developers</p>
@@ -143,7 +143,7 @@
     </footer>
 
     <script>
-        // 导航权限过滤（DESIGN.md §4.6.5）：登录后按角色显示菜单项
+         
         function checkLoginStatus() {
             const navItems = document.querySelectorAll('.nav-item');
             if (!ZIYIT_API.getToken()) {

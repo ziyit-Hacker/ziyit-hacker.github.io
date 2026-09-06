@@ -31,7 +31,7 @@ body {
     padding: 20px;
 }
 
-/* 头部导航 */
+ 
 .admin-header {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -109,7 +109,7 @@ body {
     opacity: 0.9;
 }
 
-/* 主要内容区域 */
+ 
 .admin-content {
     display: grid;
     grid-template-columns: 300px 1fr;
@@ -152,7 +152,7 @@ body {
     gap: 20px;
 }
 
-/* 内容区域样式 */
+ 
 .content-section {
     display: none;
     background: rgba(255, 255, 255, 0.95);
@@ -177,7 +177,7 @@ body {
     align-items: center;
 }
 
-/* 用户管理样式 */
+ 
 .user-management {
     max-height: 600px;
     overflow-y: auto;
@@ -386,7 +386,7 @@ body {
     background: #c0392b;
 }
 
-/* 模态框样式 */
+ 
 .modal {
     display: none;
     position: fixed;
@@ -462,7 +462,7 @@ body {
     margin-top: 20px;
 }
 
-/* 音乐播放器 */
+ 
 .music-player-admin {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -540,7 +540,7 @@ body {
     transition: width 0.1s;
 }
 
-/* 歌词显示区域 */
+ 
 .lyrics-admin {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -575,7 +575,7 @@ body {
     overflow-y: auto;
 }
 
-/* 音乐列表 */
+ 
 .music-list-admin {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -668,7 +668,7 @@ body {
     color: rgba(255, 255, 255, 0.8);
 }
 
-/* 系统信息 */
+ 
 .system-info {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -704,7 +704,7 @@ body {
     color: var(--accent-color);
 }
 
-/* 响应式设计 */
+ 
 @media (max-width: 1024px) {
     .admin-content {
         grid-template-columns: 1fr;
@@ -760,7 +760,7 @@ body {
     }
 }
 
-/* 滚动条样式 */
+ 
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -805,10 +805,10 @@ body {
 
 .user-status.ztg {
     background: #9b59b6;
-    /* 紫色表示ZTG用户 */
+     
 }
 
-/* LRC转换功能样式 */
+ 
 .lrc-controls {
     display: flex;
     align-items: center;
@@ -919,7 +919,7 @@ body {
     background: #f8f9fa;
 }
 
-/* 歌词编辑样式 */
+ 
 .lyrics-content.editable {
     background: #f8f9fa;
     border: 1px solid var(--border-color);
@@ -1039,7 +1039,7 @@ body {
     flex: 1;
 }
 
-/* 坤币验钞机样式 */
+ 
 .coin-verifier {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -1284,7 +1284,7 @@ plainText .verifier-header {
     font-weight: 600;
 }
 
-/* 宽列表项（API Key / MOD / RC 密钥管理）：覆盖默认6列grid，改为弹性两段布局 */
+ 
 .user-item.wide-item {
     display: flex;
     justify-content: space-between;
@@ -1307,10 +1307,8 @@ plainText .verifier-header {
     word-break: break-all;
 }
 
-/* ============================================================
-   深色模式全面适配（DESIGN.md §4.14）
-   切换本文件自定义变量 + 覆盖硬编码浅色卡片/浅色块/输入框
-   ============================================================ */
+
+
 [data-theme="dark"] {
     --primary-color: #e6e6e6;
     --secondary-color: #a8adb8;
@@ -1318,13 +1316,12 @@ plainText .verifier-header {
     --light-color: #262a33;
     --border-color: #3a3f48;
 }
-/* 深色模式下背景改为纯色深底（替代亮紫渐变） */
+ 
 [data-theme="dark"] body {
     background: #16181d;
 }
-/* 恢复 .modal 全屏遮罩与 .stat-card 渐变蓝卡（避免被 ziyit-theme.css 兜底压成卡片底色）
-   body 前缀提高特异性，压过 ziyit-theme.css 后加载的 .modal 不透明兜底；
-   深色下页面背景本身很暗，遮罩 alpha 调淡以免整屏近乎全黑、看不到后方内容 */
+
+
 [data-theme="dark"] body .modal {
     background: rgba(0, 0, 0, 0.35) !important;
 }
@@ -1335,7 +1332,7 @@ plainText .verifier-header {
 [data-theme="dark"] .input-group {
     background: transparent !important;
 }
-/* 白底玻璃拟态卡片 → 深色卡片 */
+ 
 [data-theme="dark"] .admin-header,
 [data-theme="dark"] .sidebar,
 [data-theme="dark"] .content-section,
@@ -1348,7 +1345,7 @@ plainText .verifier-header {
     border-color: var(--ziyit-border);
     box-shadow: 0 8px 32px rgba(0, 0, 0, .45);
 }
-/* 浅色块（列表项/统计卡/信息项/歌词区/转换面板）→ 深色 hover 块 */
+ 
 [data-theme="dark"] .user-stat-card,
 [data-theme="dark"] .user-item,
 [data-theme="dark"] .music-item,
@@ -1367,18 +1364,18 @@ plainText .verifier-header {
 [data-theme="dark"] .music-details {
     color: var(--ziyit-text-secondary);
 }
-/* 模态框 */
+ 
 [data-theme="dark"] .modal-content {
     background: var(--ziyit-bg-card);
     border: 1px solid var(--ziyit-border);
 }
-/* 可编辑文本域 / 预览框 */
+ 
 [data-theme="dark"] .lyrics-content.editable,
 [data-theme="dark"] #lrc-preview-content {
     background: #1a1d23;
     color: var(--ziyit-text-primary);
 }
-/* 滚动条 */
+ 
 [data-theme="dark"] ::-webkit-scrollbar-track {
     background: #1a1d23;
 }
@@ -1389,8 +1386,8 @@ plainText .verifier-header {
     background: #4a505b;
 }
 
-/* ============ 列表加载骨架屏 ============ */
-/* 骨架行与 .user-item 等列表行结构一致：头像 + 详情 + 角色 + 状态 + 时间 + 操作 */
+ 
+ 
 .skeleton-row {
     display: grid;
     grid-template-columns: 50px 1fr 120px 100px 100px 100px;
@@ -1416,7 +1413,7 @@ plainText .verifier-header {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
-/* 数据加载完成后列表内容的平滑过渡（替换骨架屏） */
+ 
 .user-list > *,
 #dlc-list > *,
 #api-key-list > *,
@@ -1429,7 +1426,7 @@ plainText .verifier-header {
     to { opacity: 1; transform: none; }
 }
 
-/* ==================== 管理员私聊 & 全局消息 ==================== */
+ 
 .chat-modal-content {
     width: 860px;
     max-width: 96vw;
@@ -1645,7 +1642,7 @@ plainText .verifier-header {
     cursor: not-allowed;
 }
 
-/* 暗色适配 */
+ 
 [data-theme="dark"] .chat-sessions {
     background: rgba(255, 255, 255, 0.03);
 }

@@ -47,7 +47,7 @@ a {
     cursor: default !important;
 }
 
-/* 音乐播放器样式 */
+ 
 .music-player {
     background-color: rgba(255, 255, 255, 0.9);
     border-radius: 10px;
@@ -88,13 +88,13 @@ a {
     width: 50px;
     height: 50px;
     font-size: 0;
-    /* 隐藏文本，只显示背景图片 */
+     
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* 移除Unicode字符，只使用外部图片 */
+ 
 #loop-btn.loop-off::before,
 #loop-btn.loop-list::before,
 #loop-btn.loop-single::before,
@@ -102,22 +102,22 @@ a {
     content: none;
 }
 
-/* 顺序播放模式 */
+ 
 #loop-btn.loop-off {
     background-image: url('https://img.icons8.com/ios-filled/50/ffffff/play.png');
 }
 
-/* 列表循环模式 */
+ 
 #loop-btn.loop-list {
     background-image: url('https://img.icons8.com/ios-filled/50/ffffff/repeat.png');
 }
 
-/* 单曲循环模式 */
+ 
 #loop-btn.loop-single {
     background-image: url('https://img.icons8.com/ios-filled/50/ffffff/repeat-one.png');
 }
 
-/* 随机播放模式 */
+ 
 #loop-btn.loop-random {
     background-image: url('https://img.icons8.com/ios-filled/50/ffffff/shuffle.png');
 }
@@ -183,7 +183,7 @@ a {
     transition: width 0.1s;
 }
 
-/* 播放器容器布局 */
+ 
 .player-container {
     display: flex;
     gap: 20px;
@@ -194,7 +194,7 @@ a {
     flex: 1;
 }
 
-/* 分享按钮样式 */
+ 
 #share-container {
     display: flex;
     justify-content: center;
@@ -247,7 +247,7 @@ a {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* 视频容器样式 */
+ 
 .video-container {
     margin: 15px 0;
     transition: all 0.3s ease;
@@ -277,7 +277,7 @@ a {
     display: none;
 }
 
-/* 进度条容器样式 */
+ 
 .progress-container {
     display: flex;
     align-items: center;
@@ -292,7 +292,7 @@ a {
     min-width: 40px;
 }
 
-/* 更多控制按钮容器 */
+ 
 .more {
     display: flex;
     justify-content: center;
@@ -306,7 +306,7 @@ a {
     align-items: center;
 }
 
-/* 歌词容器样式 */
+ 
 .lyrics-container {
     background-color: rgba(255, 255, 255, 0.9);
     border-radius: 10px;
@@ -317,12 +317,12 @@ a {
     overflow-y: auto;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 
-    /* 自定义滚动条样式 */
+     
     scrollbar-width: thin;
     scrollbar-color: #0078d4 rgba(0, 0, 0, 0.1);
 }
 
-/* Webkit浏览器自定义滚动条 */
+ 
 .lyrics-container::-webkit-scrollbar {
     width: 12px;
 }
@@ -347,13 +347,13 @@ a {
     background: transparent;
 }
 
-/* 歌词内容样式优化 */
+ 
 .lyrics-content {
     font-size: 14px;
     line-height: 1.6;
     text-align: center;
     padding-right: 5px;
-    /* 为滚动条留出空间 */
+     
 }
 
 .lyrics-header {
@@ -422,7 +422,7 @@ a {
     background-color: rgba(0, 120, 212, 0.2);
 }
 
-/* VIP音乐样式 */
+ 
 .music-item.vip {
     background-color: #fff3cd !important;
     border-left: 4px solid #ffc107 !important;
@@ -449,7 +449,7 @@ a {
     width: 100%;
 }
 
-/* 下载按钮样式 */
+ 
 .download-btn {
     background-color: #28a745;
     color: white;
@@ -470,7 +470,7 @@ a {
     cursor: not-allowed;
 }
 
-/* 下载进度条样式 */
+ 
 .download-progress-container {
     display: flex;
     align-items: center;
@@ -503,7 +503,7 @@ a {
     font-weight: bold;
 }
 
-/* 下载状态提示 */
+ 
 .download-status {
     font-size: 12px;
     color: #6c757d;
@@ -512,7 +512,7 @@ a {
     font-style: italic;
 }
 
-/* 下载状态提示 */
+ 
 .download-status {
     font-size: 12px;
     color: #6c757d;
@@ -521,7 +521,7 @@ a {
     font-style: italic;
 }
 
-/* 专业下载信息样式 */
+ 
 .download-info-container {
     display: flex;
     flex-wrap: wrap;
@@ -550,7 +550,7 @@ a {
     color: #495057;
 }
 
-/* 连接节点显示 */
+ 
 .connection-nodes {
     display: flex;
     gap: 5px;
@@ -584,7 +584,7 @@ a {
     }
 }
 
-/* 下载队列样式 */
+ 
 .download-queue {
     position: fixed;
     top: 20px;
@@ -718,7 +718,7 @@ a {
     margin-bottom: 3px;
 }
 
-/* 响应式设计 */
+ 
 @media (max-width: 768px) {
     .export-controls {
         flex-direction: column;
@@ -730,7 +730,7 @@ a {
     }
 }
 
-/* 基础样式重置和现代化设计 */
+ 
 * {
     margin: 0;
     padding: 0;
@@ -742,7 +742,7 @@ body {
     font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
 }
 
-/* 导航栏美化 */
+ 
 nav {
     display: flex;
     justify-content: space-between;
@@ -783,14 +783,14 @@ nav {
     transform: translateY(-2px);
 }
 
-/* 主容器美化 */
+ 
 .main-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 40px 20px;
 }
 
-/* 音乐播放器现代化设计 */
+ 
 .music-player {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
@@ -808,7 +808,7 @@ nav {
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2);
 }
 
-/* 播放器控制按钮美化 */
+ 
 .player-controls {
     display: flex;
     justify-content: center;
@@ -839,7 +839,7 @@ nav {
     transform: scale(0.95);
 }
 
-/* 播放器信息美化 */
+ 
 .player-info {
     text-align: center;
     margin: 20px 0;
@@ -859,7 +859,7 @@ nav {
     font-weight: 500;
 }
 
-/* 音乐列表现代化设计 */
+ 
 .music-list {
     list-style: none;
     padding: 0;
@@ -914,7 +914,7 @@ nav {
     box-shadow: 0 8px 25px rgba(0, 120, 212, 0.3);
 }
 
-/* 进度条美化 */
+ 
 .progress-container {
     display: flex;
     align-items: center;
@@ -962,7 +962,7 @@ nav {
     box-shadow: 0 2px 8px rgba(0, 120, 212, 0.5);
 }
 
-/* VIP音乐特殊样式 */
+ 
 .vip-badge {
     background: linear-gradient(135deg, #ffc107, #ffd54f);
     color: #856404;
@@ -973,7 +973,7 @@ nav {
     box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
 }
 
-/* 下载按钮美化 */
+ 
 .download-btn {
     background: linear-gradient(135deg, #28a745, #20c997);
     color: white;
@@ -991,7 +991,7 @@ nav {
     box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
 }
 
-/* 响应式设计优化 */
+ 
 @media (max-width: 768px) {
     .main-container {
         padding: 20px 10px;
@@ -1034,7 +1034,7 @@ nav {
     }
 }
 
-/* 动画效果 */
+ 
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -1052,7 +1052,7 @@ nav {
     animation: fadeIn 0.6s ease-out;
 }
 
-/* 加载动画 */
+ 
 .loading {
     display: inline-block;
     width: 20px;

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html
+<!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cn" lang="cn">
 
@@ -14,7 +14,7 @@
         var URL_DOMAIN = 'wikidot.com';
         var USE_SSL = true;
         var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-        // global request information
+         
 
         var WIKIREQUEST = {};
         WIKIREQUEST.info = {};
@@ -61,10 +61,10 @@
 
 
     <style type="text/css" id="internal-style">
-        /* modules */
+         
 
 
-        /* theme */
+         
         @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
         @import url(https://cdn.scpwiki.com/theme/en/black-highlighter/css/min/normalize.min.css);
     </style>
@@ -178,28 +178,28 @@
             --swatch-topmenu-bg-color: 230, 214, 147;
             --pale-gray-monochrome: 145, 175, 217;
 
-            /*   --white-monochrome: 255, 30, 24; */
+             
             --gray-monochrome: 76, 49, 81;
-            /*   --black-monochrome: 220, 0, 0; */
-            /*   --bright-accent: 190, 0, 0; */
-            /*   --medium-accent: 132, 6, 12; */
+             
+             
+             
             --dark-accent: 99, 56, 108;
             --visited-link-color: 250, 30, 38;
-            /*   --pale-accent: 190, 0, 0; */
-            /* --swatch-text-secondary-color: 76, 49, 81; */
+             
+             
             --swatch-tertiary-color: 230, 214, 147;
 
-            /*  --swatch-text-light: 255, 146, 96; */
-            /*  --swatch-menutxt-light-color: 15, 15, 15; */
-            /*  --rating-module-button-plus-color: 150, 150, 150; */
-            /*  --rating-module-button-negative-color: 150, 150, 150; */
-            /*  --rating-module-button-cancel-color: 150, 150, 150; */
-            /*  --rating-module-button-credit-color: 150, 150, 150; */
-            /*  --link-color: var(--pale-accent); */
-            /*  --visited-link-color: var(--swatch-primary-darkest); */
-            /*  --hover-link-color: var(--swatch-primary); */
-            /*  --newpage-color: var(--alt-accent); */
-            /* --swatch-menubg-dark-color: 77, 3, 3; */
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
 
         }
 
@@ -250,14 +250,14 @@
         </div>
     </div>
     <script>
-        // 获取Cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        // 从user.json获取用户权限信息的函数
+         
         async function getUserPermission(username) {
             try {
                 const response = await fetch('/backrooms/user.json');
@@ -275,7 +275,7 @@
             }
         }
 
-        // 页面加载完成后执行登录状态检测
+         
         document.addEventListener('DOMContentLoaded', async function () {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             const usernameDisplay = document.getElementById('usernameDisplay');
@@ -291,11 +291,11 @@
                 const type = (user && ZIYIT_API.isVip(user)) ? 'ZC' : 'UR';
                 if (usernameDisplay) usernameDisplay.textContent = user ? user.username : '';
                 if (userTypeDisplay) {
-                    // 首先尝试从user.json获取权限信息
+                     
                     const userPermission = await getUserPermission(username);
 
                     if (userPermission) {
-                        // 根据权限类型显示相应的用户类型
+                         
                         switch (userPermission.permission) {
                             case 'Adminstrator':
                                 userTypeDisplay.textContent = 'ZIYIT最高管理员';
@@ -307,11 +307,11 @@
                                 userTypeDisplay.textContent = '管理员';
                                 break;
                             default:
-                                // 其他权限类型，根据用户类型显示VIP或普通用户
+                                 
                                 userTypeDisplay.textContent = type === 'ZC' ? 'VIP用户' : '普通用户';
                         }
                     } else {
-                        // 如果user.json中没有找到用户信息，使用原来的逻辑
+                         
                         userTypeDisplay.textContent = type === 'ZC' ? 'VIP用户' : '普通用户';
                     }
                 }
@@ -356,7 +356,7 @@
 
                     <div id="content-wrap">
 
-                        <!-- google_ad_section_end -->
+                        
 
                         <div id="main-content">
                             <div id="action-area-top"></div>
@@ -406,203 +406,7 @@
                                                             style="white-space: pre-wrap;"> </span></span></li>
                                             </ul>
                                         </div>
-                                        <!-- <div style="display: none;">
-
-
-                                        <hr />
-                                        <h1><span>如何使用：</span></h1>
-                                        <div class="code">
-                                            <p><span
-                                                    style="white-space: pre-wrap;">[[include&#32;:backrooms-wiki-cn:component:level-class</span><br />
-                                                |class=等级<br />
-                                                ]]</p>
-                                        </div>
-                                        <br />
-                                        <tt>class</tt> 处的可用参数包括以下内容，支持简繁体及英文输入。
-                                        <table class="wiki-content-table cntr">
-                                            <tr>
-                                                <th colspan="6">English</th>
-                                                <th colspan="6">简体中文</th>
-                                                <th colspan="6">繁體中文</th>
-                                            </tr>
-                                            <tr>
-                                                <td>0</td>
-                                                <td>1</td>
-                                                <td>2</td>
-                                                <td>3</td>
-                                                <td>4</td>
-                                                <td>5</td>
-                                                <td>0</td>
-<td>1</td>
-                                                <td>2</td>
-                                                <td>3</td>
-                                                <td>4</td>
-                                                <td>5</td>
-                                                <td>0</td>
-                                                <td>1</td>
-                                                <td>2</td>
-                                                <td>3</td>
-                                                <td>4</td>
-                                                <td>5</td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="6">unknown</td>
-                                                <td colspan="6">未知</td>
-                                                <td colspan="6">未知</td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="6">habitable</td>
-                                                <td colspan="6">宜居</td>
-                                                <td colspan="6">宜居</td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="6">deadzone</td>
-                                                <td colspan="6">死区</td>
-                                                <td colspan="6">死區</td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="6">pending</td>
-                                                <td colspan="6">等待分级</td>
-                                                <td colspan="6">等待分級</td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="6">n/a</td>
-                                                <td colspan="6">不适用</td>
-                                                <td colspan="6">不適用</td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="6">amended</td>
-                                                <td colspan="6">修正</td>
-                                                <td colspan="6">修正</td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="6">omega</td>
-                                                <td colspan="6">终结</td>
-                                                <td colspan="6">終結</td>
-                                            </tr>
-                                        </table>
-                                        <p>该组件支持简繁切换，如下方代码所示：</p>
-                                        <div class="code">
-                                            <p><span
-                                                    style="white-space: pre-wrap;">[[include&#32;:backrooms-wiki-cn:component:level-class</span><br />
-                                                |lang=cn/tr<br />
-                                                |class=等级<br />
-                                                ]]</p>
-                                        </div>
-                                        <br />
-                                        在 <tt>lang</tt> 处选择语言，cn 表示简体中文，tr 表示繁体中文，不填默认选择简体中文。
-                                        <hr />
-                                        <h2><span>自定义等级</span></h2>
-                                        <div class="code">
-                                            <p><span
-                                                    style="white-space: pre-wrap;">[[include&#32;:backrooms-wiki-cn:component:level-class</span><br />
-                                                |lang=cn/tr<br />
-                                                |class=等级名字<br />
-                                                |color=#000000（带有井号的十六进制色号代码。）<br />
-                                                |image=链接（至图片的链接。）<br />
-                                                |one=在这<br />
-                                                |two=随便<br />
-                                                |three=放文字<br />
-                                                // 确保生存难度显示为天堂 */
-                                                .sd-container .bottom-text .lang-cn,
-                                                .sd-container .bottom-text .lang-tr {
-                                                    content: "天堂" !important;
-                                                }
-                                                </div>
-                                            </div>
-                                            <br />
-                                                <span style="white-space: pre-wrap;">]]</span>
-                                            </p>
-                                        </div>
-                                        <h1><span>使用 CSS 进行自定义：</span></h1>
-                                        <p>你可以使用 CSS 进行额外的自定义，将代码放入到 <tt><span
-                                                    style="white-space: pre-wrap;">[[module&#32;css]]</span></tt>
-                                            中或者是放入到页面的版式内都可以。<strong>在这一组件中，不要把 <tt><span
-                                                        style="white-space: pre-wrap;">[[module&#32;css]]</span></tt> 放在
-                                                <tt><span style="white-space: pre-wrap;">[[include]]</span></tt>
-                                                里面，把它放在那个的下面或者是页面的顶部或底部。</strong><br />
-                                            将这些代码放入到你的页面/版式中以编辑所有的颜色，因为组件的 <tt>|color=</tt> 部分仅能控制背景：</p>
-    <div class="code">
-                                            <p><span style="white-space: pre-wrap;">[[module&#32;css]]</span><br />
-                                                .sd-container {<br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;/*&#32;字体&#32;*/</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--sd-font:&#32;Poppins,&#32;Noto&#32;Sans&#32;SC,&#32;Noto&#32;Serif&#32;SC;</span>
-                                            </p>
-                                            <p><span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;/*&#32;边框&#32;*/</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--sd-border:&#32;var(--gray-monochrome);&#32;/*&#32;大多数等级&#32;*/</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--sd-border-secondary:&#32;0,&#32;0,&#32;0;&#32;/*&#32;不适用&#32;*/</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--sd-border-deadzone:&#32;20,&#32;0,&#32;0;&#32;/*&#32;死区&#32;*/</span>
-                                            </p>
-                                            <p><span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;/*&#32;标志&#32;*/</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--sd-symbol:&#32;var(--sd-border)&#32;!important;&#32;/*&#32;大多数标志&#32;*/</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--sd-symbol-secondary:&#32;255,&#32;255,&#32;255;&#32;/*&#32;4&#32;级以上的是白色&#32;*/</span>
-                                            </p>
-                                            <p><span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;/*&#32;文本&#32;*/</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--sd-bullets:&#32;var(--sd-border)&#32;!important;&#32;/*&#32;点句符文本颜色&#32;*/</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--sd-text:&#32;var(--swatch-text-secondary-color);&#32;/*&#32;顶部框文本颜色&#32;*/</span>
-                                            </p>
-                                            <p><span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;/*&#32;等级颜色&#32;*/</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-0:&#32;247,&#32;227,&#32;117;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-1:&#32;247,&#32;227,&#32;117;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-1:&#32;255,&#32;201,&#32;14;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-2:&#32;245,&#32;156,&#32;0;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-3:&#32;249,&#32;90,&#32;0;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-4:&#32;254,&#32;23,&#32;1;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-5:&#32;175,&#32;6,&#32;6;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-unknown:&#32;38,&#32;38,&#32;38;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-habitable:&#32;26,&#32;128,&#32;111;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-deadzone:&#32;44,&#32;13,&#32;12;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-pending:&#32;182,&#32;182,&#32;182;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-n-a:&#32;38,&#32;38,&#32;38;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-amended:&#32;185,&#32;135,&#32;212;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;&#32;--class-omega:&#32;25,&#32;46,&#32;255;</span><br />
-                                                }<br />
-                                                <span style="white-space: pre-wrap;">[[/module]]</span>
-                                            </p>
-                                        </div>
-                                        <h2><span>旧版颜色：</span></h2>
-                                        <p>如果你不喜欢新版的样式，想要用回旧版的红色边框色，只需要在你的页面中与组件一同引入下方的代码：</p>
-                                        <div class="code">
-                                            <p><span style="white-space: pre-wrap;">[[module&#32;css]]</span><br />
-                                                .sd-container {<br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;--sd-border:&#32;90,&#32;29,&#32;27;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;--sd-image:&#32;90,&#32;29,&#32;27;</span><br />
-                                                <span
-                                                    style="white-space: pre-wrap;">&#32;&#32;&#32;--sd-symbol:&#32;90,&#32;29,&#32;27;</span><br />
-                                                }<br />
-                                                <span style="white-space: pre-wrap;">[[/module]]</span>
-                                            </p>
-                                        </div>
-                                    </div> -->
+                                        
                                         <p>Level !+ 是一处<span class="password">天堂</span>，你有时该去看看。<span
                                                 class="password"></span></p>
                                         <h1 id="toc2"><span class="password">描述</span></h1>
@@ -676,15 +480,15 @@
                                                     class="collapsible-block-link" href="javascript:;">进入后门</a></div>
                                         </div>
                                         <script>
-                                            // 密码生成函数
+                                             
                                             function generateRandomPassword() {
-                                                // 字母字符集
+                                                 
                                                 const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                                                // 可用符号字符集
+                                                 
                                                 const symbols = '~!@#$%^&*()_+=-<>?:"{}|[]\\;\',./';
 
-                                                // 生成5-29个随机字母
-                                                const letterCount = Math.floor(Math.random() * 25) + 5; // 5-29
+                                                 
+                                                const letterCount = Math.floor(Math.random() * 25) + 5;  
                                                 let password = '';
 
                                                 for (let i = 0; i < letterCount; i++) {
@@ -692,14 +496,14 @@
                                                     password += letters[randomIndex];
                                                 }
 
-                                                // 生成1-5个随机符号
-                                                const symbolCount = Math.floor(Math.random() * 5) + 1; // 1-5
+                                                 
+                                                const symbolCount = Math.floor(Math.random() * 5) + 1;  
                                                 for (let i = 0; i < symbolCount; i++) {
                                                     const randomIndex = Math.floor(Math.random() * symbols.length);
                                                     password += symbols[randomIndex];
                                                 }
 
-                                                // 将密码字符随机打乱顺序
+                                                 
                                                 const passwordArray = password.split('');
                                                 for (let i = passwordArray.length - 1; i > 0; i--) {
                                                     const j = Math.floor(Math.random() * (i + 1));
@@ -710,7 +514,7 @@
                                             }
 
                                             function distributePasswordToSpans(password) {
-                                                // 获取所有class为password的span标签，但排除图片标题中的span
+                                                 
                                                 const passwordSpans = document.querySelectorAll('span.password:not(.scp-image-caption span.password)');
 
                                                 if (passwordSpans.length === 0) {
@@ -718,10 +522,10 @@
                                                     return;
                                                 }
 
-                                                // 将密码字符拆分成数组
+                                                 
                                                 const passwordChars = password.split('');
 
-                                                // 保存所有span的原始内容（如果还没有保存的话）
+                                                 
                                                 passwordSpans.forEach(span => {
                                                     if (!span.hasAttribute('data-original')) {
                                                         const originalContent = span.textContent;
@@ -729,10 +533,10 @@
                                                     }
                                                 });
 
-                                                // 计算需要留空的span数量（至少2个）
+                                                 
                                                 const emptySpanCount = Math.max(2, Math.floor(passwordSpans.length / 3));
 
-                                                // 计算需要分配密码的span数量
+                                                 
                                                 const passwordSpanCount = passwordSpans.length - emptySpanCount;
 
                                                 if (passwordSpanCount <= 0) {
@@ -740,25 +544,25 @@
                                                     return;
                                                 }
 
-                                                // 随机选择哪些span留空（至少2个）
+                                                 
                                                 const emptyIndices = new Set();
                                                 while (emptyIndices.size < emptySpanCount) {
                                                     const randomIndex = Math.floor(Math.random() * passwordSpans.length);
                                                     emptyIndices.add(randomIndex);
                                                 }
 
-                                                // 创建密码分配计划：为每个非空span分配不同数量的字符
+                                                 
                                                 const passwordPlan = [];
                                                 let remainingChars = passwordChars.length;
 
-                                                // 为每个非空span随机分配1到剩余字符数的字符
+                                                 
                                                 for (let i = 0; i < passwordSpans.length; i++) {
                                                     if (!emptyIndices.has(i)) {
-                                                        // 为当前span随机分配字符数量（至少1个，最多不超过剩余字符数）
+                                                         
                                                         const maxCharsForSpan = Math.max(1, Math.min(remainingChars, Math.floor(Math.random() * 8) + 1));
                                                         const charsForThisSpan = Math.floor(Math.random() * maxCharsForSpan) + 1;
 
-                                                        // 确保最后一个span能分配到剩余的所有字符
+                                                         
                                                         if (passwordPlan.filter(p => !p.isEmpty).length === passwordSpanCount - 1) {
                                                             passwordPlan.push({
                                                                 spanIndex: i,
@@ -788,7 +592,7 @@
                                                     }
                                                 }
 
-                                                // 如果还有剩余字符，分配到第一个非空span中
+                                                 
                                                 if (remainingChars > 0) {
                                                     const firstNonEmpty = passwordPlan.find(p => !p.isEmpty);
                                                     if (firstNonEmpty) {
@@ -799,25 +603,25 @@
 
                                                 let charIndex = 0;
 
-                                                // 按照分配计划为每个span分配密码字符
+                                                 
                                                 for (const plan of passwordPlan) {
                                                     const span = passwordSpans[plan.spanIndex];
 
                                                     if (plan.isEmpty) {
-                                                        // 留空的span恢复原始内容
+                                                         
                                                         const originalContent = span.getAttribute('data-original');
                                                         span.textContent = originalContent || '';
                                                         continue;
                                                     }
 
-                                                    // 为当前span分配指定数量的字符
+                                                     
                                                     let spanContent = '';
                                                     for (let j = 0; j < plan.charCount && charIndex < passwordChars.length; j++) {
                                                         spanContent += passwordChars[charIndex];
                                                         charIndex++;
                                                     }
 
-                                                    // 替换span内容为密码字符
+                                                     
                                                     span.textContent = spanContent;
                                                 }
 
@@ -831,23 +635,23 @@
                                                 })));
                                             }
 
-                                            // 为collapsible-block-link添加点击事件
+                                             
                                             document.addEventListener('DOMContentLoaded', function () {
                                                 const collapsibleLinks = document.querySelectorAll('.collapsible-block-link');
-                                                let currentPassword = ''; // 存储当前生成的密码
+                                                let currentPassword = '';  
 
                                                 collapsibleLinks.forEach(link => {
                                                     link.addEventListener('click', function (e) {
                                                         e.preventDefault();
 
-                                                        // 检查是否已经添加过输入框
+                                                         
                                                         if (this.closest('.collapsible-block-unfolded').querySelector('.password-input-container')) {
-                                                            // 如果已经添加了输入框就删除它
+                                                             
                                                             this.closest('.collapsible-block-unfolded').querySelector('.password-input-container').remove();
                                                             this.textContent = '进入后门';
                                                             this.style.pointerEvents = 'auto';
 
-                                                            // 重置所有password span的内容
+                                                             
                                                             const passwordSpans = document.querySelectorAll('span.password');
                                                             passwordSpans.forEach(span => {
                                                                 const originalContent = span.getAttribute('data-original');
@@ -860,27 +664,27 @@
                                                             return;
                                                         }
 
-                                                        // 生成新的随机密码
+                                                         
                                                         currentPassword = generateRandomPassword();
-                                                        console.log('当前密码:', currentPassword); // 调试用，可以在控制台查看密码
+                                                        console.log('当前密码:', currentPassword);  
 
-                                                        // 将密码拆分到各个span标签中
+                                                         
                                                         distributePasswordToSpans(currentPassword);
 
-                                                        // 显示等待提示
+                                                         
                                                         const originalText = this.textContent;
                                                         this.textContent = '正在加载...';
                                                         this.style.pointerEvents = 'none';
 
-                                                        // 生成9-12秒的随机等待时间
-                                                        const waitTime = Math.floor(Math.random() * 3) + 9; // 9-12秒
+                                                         
+                                                        const waitTime = Math.floor(Math.random() * 3) + 9;  
 
                                                         setTimeout(() => {
-                                                            // 恢复原始文本
+                                                             
                                                             this.textContent = '关闭输入框';
                                                             this.style.pointerEvents = 'auto';
 
-                                                            // 创建密码输入框容器
+                                                             
                                                             const passwordContainer = document.createElement('div');
                                                             passwordContainer.className = 'password-input-container';
                                                             passwordContainer.style.marginTop = '10px';
@@ -889,7 +693,7 @@
                                                             passwordContainer.style.borderRadius = '5px';
                                                             passwordContainer.style.border = '1px solid #ddd';
 
-                                                            // 创建输入框
+                                                             
                                                             const input = document.createElement('input');
                                                             input.type = 'text';
                                                             input.placeholder = '输入密码...';
@@ -900,7 +704,7 @@
                                                             input.style.width = '400px';
                                                             input.style.fontSize = '14px';
 
-                                                            // 创建确定按钮
+                                                             
                                                             const button = document.createElement('button');
                                                             button.textContent = '确定';
                                                             button.style.padding = '8px 16px';
@@ -911,7 +715,7 @@
                                                             button.style.cursor = 'pointer';
                                                             button.style.fontSize = '14px';
 
-                                                            // 添加按钮悬停效果
+                                                             
                                                             button.addEventListener('mouseover', function () {
                                                                 this.style.backgroundColor = '#45a049';
                                                             });
@@ -919,14 +723,14 @@
                                                                 this.style.backgroundColor = '#4CAF50';
                                                             });
 
-                                                            // 添加按钮点击事件
+                                                             
                                                             button.addEventListener('click', function () {
                                                                 const password = input.value;
                                                                 const authToken = getCookie('authToken') || localStorage.getItem('authToken');
                                                                 const username = authToken ? authToken.split('-')[1] : '';
 
                                                                 if (password) {
-                                                                    // 检查密码是否正确
+                                                                     
                                                                     if (password === currentPassword) {
                                                                         input.type = 'text';
                                                                         input.value = '密码正确，欢迎进入，欢迎您Entity 1-“人类”进入后门文档！！！';
@@ -936,7 +740,7 @@
                                                                             window.location.href = './level-!+-1';
                                                                         }, 1250);
                                                                     } else if (username === 'Minecraft_zy227') {
-                                                                        // 管理员特权用户：只有不输入密码才能进入后门
+                                                                         
                                                                         input.type = 'text';
                                                                         input.value = 'ZIYIT最高管理员，后门密码是' + currentPassword + '，请输入正确的密码或留空。';
                                                                         setTimeout(() => {
@@ -966,21 +770,21 @@
                                                                 }
                                                             });
 
-                                                            // 添加回车键提交功能
+                                                             
                                                             input.addEventListener('keypress', function (e) {
                                                                 if (e.key === 'Enter') {
                                                                     button.click();
                                                                 }
                                                             });
 
-                                                            // 将输入框和按钮添加到容器
+                                                             
                                                             passwordContainer.appendChild(input);
                                                             passwordContainer.appendChild(button);
 
-                                                            // 将容器插入到链接下方
+                                                             
                                                             this.closest('.collapsible-block-unfolded').appendChild(passwordContainer);
 
-                                                        }, waitTime * 1000); // 转换为毫秒
+                                                        }, waitTime * 1000);  
                                                     });
                                                 });
                                             });
@@ -996,7 +800,7 @@
                     </div>
 
                 </div>
-                <!-- These extra divs/spans may be used as catch-alls to add extra imagery. -->
+                
                 <div id="extra-div-1"><span></span></div>
                 <div id="extra-div-2"><span></span></div>
                 <div id="extra-div-3"><span></span></div>
@@ -1007,7 +811,7 @@
         </div>
     </div>
     <div id="dummy-ondomready-block" style="display: none;"></div>
-    <!-- Google Analytics load -->
+    
     <script type="text/javascript">
         (function () {
             var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
@@ -1017,13 +821,13 @@
     </script>
 
     <style>
-        /* 生存难度容器居中 */
+         
         .sd-container {
             display: flex !important;
             flex-direction: column !important;
         }
 
-        /* 调整内容包装器 */
+         
         #content-wrap {
             margin-left: 0 !important;
             width: 100% !important;

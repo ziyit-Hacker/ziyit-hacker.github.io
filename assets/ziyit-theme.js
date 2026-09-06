@@ -1,8 +1,5 @@
-/* ============================================================
-   ZIYIT 主题切换（DESIGN.md §4.14）
-   悬浮按钮循环切换：浅色 → 深色 → 跟随系统 → 浅色
-   偏好以 cookie（ziyit-theme）持久化，有效期 1 年
-   ============================================================ */
+
+
 (function () {
     'use strict';
 
@@ -69,7 +66,7 @@
         buildBtn();
     }
 
-    /* 跟随系统：系统主题变化时自动响应（仅 auto 偏好） */
+     
     if (MEDIA) {
         MEDIA.addEventListener('change', function () {
             var pref = document.documentElement.getAttribute('data-theme-pref') || 'auto';
@@ -78,10 +75,8 @@
     }
 })();
 
-/* ============================================================
-   导航栏：移动端汉堡菜单折叠（DESIGN.md §4.6）
-   点击 ☰ 展开/收起 .site-nav-menu，默认收起
-   ============================================================ */
+
+
 (function () {
     'use strict';
     var toggle = document.querySelector('.site-nav-toggle');
@@ -92,11 +87,8 @@
     });
 })();
 
-/* ============================================================
-   Toast 通知（DESIGN.md §4.9）：全站替代原生 alert
-   通过覆盖 window.alert 实现，页面现有 alert(...) 调用自动生效
-   样式随主题 token 变化；无 token 环境回退为深底白字
-   ============================================================ */
+
+
 (function () {
     'use strict';
     var CSS = '.ziyit-toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483001;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;max-width:90vw}.ziyit-toast{pointer-events:auto;background:var(--ziyit-bg-card,#1f2229);color:var(--ziyit-text-primary,#fff);border:1px solid var(--ziyit-border,#3a3f48);border-left:4px solid var(--ziyit-primary,#0078d4);padding:10px 18px;border-radius:8px;font-size:14px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .25s;max-width:60vw}.ziyit-toast.show{opacity:1;transform:translateY(0)}.ziyit-toast.hide{opacity:0;transform:translateY(-8px)}.ziyit-toast.success{border-left-color:var(--ziyit-success,#28a745)}.ziyit-toast.error{border-left-color:var(--ziyit-danger,#f25767)}.ziyit-toast.warning{border-left-color:var(--ziyit-warning,#f3a707)}';
@@ -136,11 +128,8 @@
     if (document.body) getWrap(); else document.addEventListener('DOMContentLoaded', getWrap);
 })();
 
-/* ============================================================
-   站内搜索定位（search.html 站内搜索联动）
-   URL 携带 ?zq=关键词 时：高亮正文首个匹配位置并平滑滚动到该处
-   仅正文命中时 search.html 会附加该参数；纯标题命中不附加
-   ============================================================ */
+
+
 (function () {
     function getZq() {
         var m = /[?&]zq=([^&]*)/.exec(window.location.search);
@@ -151,7 +140,7 @@
 
     function locate() {
         var low = kw.toLowerCase();
-        // 找到正文中首个包含关键词的文本节点
+         
         var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
             acceptNode: function (n) {
                 var p = n.parentNode;
@@ -178,12 +167,12 @@
         mark.style.padding = '0 2px';
         mark.style.borderRadius = '3px';
         try { range.surroundContents(mark); } catch (e) { }
-        // 平滑滚动到内容出现位置，并短暂描边提示
+         
         mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setTimeout(function () {
             mark.style.outline = '2px solid var(--ziyit-warning, #f3a707)';
         }, 600);
-        // 清理 URL 上的定位参数，避免刷新后重复定位
+         
         try {
             history.replaceState(null, '', window.location.pathname + window.location.hash);
         } catch (e) { }
@@ -196,11 +185,8 @@
     }
 })();
 
-/* ============================================================
-   在线客服：管理员全局新会话通知（watcher）动态加载
-   所有页面自动生效；脚本内部自行判断管理员身份，非管理员零副作用。
-   通过 currentScript 定位同目录下的 guide_agent_watcher.js
-   ============================================================ */
+
+
 (function () {
     'use strict';
     if (window.ZIYIT_GUIDE_WATCHER_LOADED) return;
@@ -214,11 +200,8 @@
     (document.head || document.documentElement).appendChild(s);
 })();
 
-/* ============================================================
-   在线客服：全站显眼浮动入口按钮（用户端）
-   右下角胶囊按钮（🎧 在线客服），点击进入 guide.html
-   后台 admin.html / 客服对话页 guide.html 自身不显示
-   ============================================================ */
+
+
 (function () {
     'use strict';
     if (window.ZIYIT_GUIDE_FAB_LOADED) return;
@@ -226,7 +209,7 @@
     if (/guide\.html/i.test(location.pathname)) return;
     window.ZIYIT_GUIDE_FAB_LOADED = true;
 
-    // 当前页面相对根目录的深度，推导 guide.html 相对路径（兼容子路径部署）
+     
     var p = location.pathname;
     var dir = p.substring(0, p.lastIndexOf('/') + 1);
     var up = (dir.match(/\//g) || []).length - 1;

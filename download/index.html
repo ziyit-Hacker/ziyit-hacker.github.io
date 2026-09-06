@@ -35,7 +35,7 @@
     </script>
     <link rel="stylesheet" href="../assets/ziyit-theme.css">
     <style>
-        /* ===== 下载中心页面样式（DESIGN.md 设计体系） ===== */
+         
         .bid {
             color: var(--ziyit-danger);
             font-size: 12px;
@@ -85,7 +85,7 @@
             color: #fff;
         }
 
-        /* 搜索框 */
+         
         .search-box {
             max-width: 600px;
             margin: 20px auto;
@@ -123,7 +123,7 @@
             flex-shrink: 0;
         }
 
-        /* 产品卡片网格 */
+         
         .product-grid {
             list-style: none;
             padding: 0;
@@ -202,7 +202,7 @@
         document.addEventListener('DOMContentLoaded', checkUserPermission);
     </script>
 
-    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    
     <div class="site-nav" id="up">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -244,7 +244,7 @@
         </div>
     </div>
 
-    <!-- 页面主体 -->
+    
     <header class="page-header">
         <h1>下载中心</h1>
         <p>在 ZIYIT STUDIO 的下载主页你可以下载付费程序和免费程序。</p>
@@ -337,7 +337,7 @@
     </script>
 
     <script>
-        // 导航权限过滤（DESIGN.md §4.6.5）：登录后按角色显示菜单项
+         
         function checkLoginStatus() {
             const navItems = document.querySelectorAll('.nav-item');
             if (!ZIYIT_API.getToken()) {

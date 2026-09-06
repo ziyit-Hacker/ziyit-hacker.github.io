@@ -58,7 +58,7 @@
         }
 
         .navbar {
-            /* iOS 毛玻璃：半透明背景 + backdrop 模糊 */
+             
             background: rgba(255, 255, 255, 0.72);
             -webkit-backdrop-filter: saturate(180%) blur(20px);
             backdrop-filter: saturate(180%) blur(20px);
@@ -994,20 +994,20 @@
             display: none;
         }
 
-        /* ---- 深色模式适配 ---- */
-        /* 顶栏深色毛玻璃 */
+         
+         
         [data-theme="dark"] .navbar {
             background: rgba(31, 34, 41, 0.72);
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
-        /* hero 标题的深色渐变在深色背景下不可见，改为浅色渐变 */
+         
         [data-theme="dark"] .hero h1 {
             background: linear-gradient(135deg, #e2e8f0, #60a5fa);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent !important;
         }
-        /* 深色下代码块 chip 提亮边框，保持可辨识 */
+         
         [data-theme="dark"] .version-rule-code {
             background: #2a2e36;
             color: #e2e8f0;
@@ -1364,7 +1364,7 @@
             <div id="mod-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;"></div>
         </div>
 
-        <!-- 上传我的 MOD 模态框 -->
+        
         <div id="modSubmitModal" class="modal-overlay">
             <div class="modal-container" style="max-width:520px;">
                 <div class="modal-header">上传我的 MOD</div>
@@ -3081,7 +3081,7 @@
                 return;
             }
 
-            // 显示加载进度条
+             
             list.innerHTML = '<div class="ziyit-loading">' +
                 '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>' +
                 '<div class="ziyit-loader">' +
@@ -3194,7 +3194,7 @@
 
         loadModDownload();
 
-        // ===== 上传我的 MOD =====
+         
         (function () {
             const submitModal = document.getElementById('modSubmitModal');
             const submitBtn = document.getElementById('mod-submit-btn');

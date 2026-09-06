@@ -6,10 +6,8 @@
     <meta name="robots" content="noindex, nofollow">
     <title>ZIYIT UI 设计体系测试页 v1.9</title>
     <script>
-        /* 主题初始化（置于 head：避免切换主题时页面闪烁）
-           data-theme     = 实际生效的配色（light / dark），驱动全部 CSS
-           data-theme-pref= 用户偏好（light / dark / auto），驱动控件高亮
-           偏好以 cookie（ziyit-theme）持久化，有效期 1 年 */
+        
+
         (function () {
             var pref = 'auto';
             try {
@@ -23,7 +21,7 @@
         })();
     </script>
     <style>
-        /* ============ 设计 Token（DESIGN.md §2） ============ */
+         
         :root {
             --ziyit-primary: #0078d4;
             --ziyit-primary-dark: #005a9e;
@@ -72,7 +70,7 @@
             background: #f0f0f0; padding: 2px 6px; border-radius: 4px;
         }
 
-        /* ============ Hero（品牌渐变，DESIGN.md §2.3） ============ */
+         
         .hero {
             background: linear-gradient(135deg, #0078d4, #005a9e);
             color: #fff; padding: 56px 20px 40px; text-align: center; margin-bottom: 0;
@@ -81,18 +79,18 @@
         .hero p { font-size: 15px; opacity: .9; margin-top: 12px; }
         .hero .tag { display: inline-block; margin-top: 20px; padding: 4px 14px; border-radius: 20px; background: rgba(255,255,255,.18); font-size: 13px; }
 
-        /* ============ 色彩色板 ============ */
+         
         .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
         .swatch { border: 1px solid var(--ziyit-border-light); border-radius: 8px; overflow: hidden; background: var(--ziyit-bg-card); }
         .swatch .block { height: 64px; }
         .swatch .info { padding: 8px 12px; font-size: 12px; color: var(--ziyit-text-secondary); }
         .swatch .info b { display: block; font-size: 13px; color: var(--ziyit-text-primary); }
 
-        /* ============ 排版 ============ */
+         
         .type-sample { display: flex; align-items: baseline; gap: 16px; padding: 10px 0; border-bottom: 1px dashed var(--ziyit-border-light); }
         .type-sample .lbl { font-size: 12px; color: var(--ziyit-text-disabled); width: 130px; flex-shrink: 0; }
 
-        /* ============ 按钮（DESIGN.md §4.1） ============ */
+         
         .btn {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
             border: none; border-radius: 6px; cursor: pointer; font-size: 15px;
@@ -121,15 +119,15 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ============ 表单（DESIGN.md §4.2-4.4） ============ */
+         
         .form-group { margin-bottom: 16px; }
-        /* 输入框标签：仅作用于无 class 的 label，避免覆盖 .switch/.check/.radio 组件的自身 display */
+         
         .form-group label:not([class]) { display: block; font-size: 13px; color: var(--ziyit-text-secondary); margin-bottom: 8px; }
         .input, .select {
             width: 100%; max-width: 360px; height: 36px; padding: 0 12px;
             border: 1px solid var(--ziyit-border); border-radius: 6px; font-size: 15px;
             font-family: inherit; outline: none; color: var(--ziyit-text-primary);
-            background: var(--ziyit-bg-card); /* 跟随主题：深色模式下避免白底 */
+            background: var(--ziyit-bg-card);  
             transition: border-color .2s, box-shadow .2s;
         }
         .input:focus, .select:focus { border-color: var(--ziyit-primary); box-shadow: 0 0 0 3px var(--ziyit-primary-light); }
@@ -142,54 +140,54 @@
 
         .check, .radio { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; min-height: 44px; margin-right: 20px; }
         .check input, .radio input { width: 16px; height: 16px; accent-color: var(--ziyit-primary); }
-        /* ============ 开关 Switch（DESIGN.md §4.4） ============ */
-        /* 形态：胶囊形框架（短边半圆弧）——关闭：内部透明 + 蓝框；开启：内部蓝 + 白框；禁用：内部灰 + 蓝框 */
+         
+         
         .switch {
             position: relative; display: inline-flex; align-items: center; gap: 8px;
             cursor: pointer; min-height: 44px; margin-right: 20px; font-size: 15px;
             user-select: none; -webkit-tap-highlight-color: transparent;
         }
-        /* 输入框视觉隐藏但保留焦点，保证键盘可操作（display:none 会丢失焦点） */
+         
         .switch input {
             position: absolute; width: 1px; height: 1px; margin: 0;
             opacity: 0; overflow: hidden; clip: rect(0 0 0 0);
         }
         .switch .track {
-            display: inline-block;                       /* span 默认 inline，显式块级化 width/height 才生效（否则宽度塌陷为 0） */
-            width: 52px; min-width: 52px; height: 24px;  /* 长度 52px 标准规格，短边半圆弧；高度保持 24px */
+            display: inline-block;                        
+            width: 52px; min-width: 52px; height: 24px;   
             border-radius: 12px;
-            background: transparent;                      /* 关：内部透明 */
-            border: 2px solid var(--ziyit-primary);       /* 关：边框蓝 */
+            background: transparent;                       
+            border: 2px solid var(--ziyit-primary);        
             position: relative; flex-shrink: 0;
             transition: background .25s, border-color .25s, box-shadow .2s;
         }
         .switch .track::after {
             content: ''; position: absolute; top: 2px; left: 2px;
             width: 16px; height: 16px; border-radius: 50%;
-            background: var(--ziyit-primary);             /* 透明芯上的圆点用主色保证可见 */
+            background: var(--ziyit-primary);              
             transition: left .25s cubic-bezier(.4, 0, .2, 1), background .25s;
         }
         .switch input:checked + .track {
-            background: var(--ziyit-primary);             /* 开：内部蓝 */
-            border-color: var(--ziyit-text-inverse);      /* 开：边框白 */
+            background: var(--ziyit-primary);              
+            border-color: var(--ziyit-text-inverse);       
         }
         .switch input:checked + .track::after {
-            left: 30px;                                   /* 圆点精准滑动到右侧 */
-            background: var(--ziyit-text-inverse);        /* 蓝芯上的圆点用白色 */
+            left: 30px;                                    
+            background: var(--ziyit-text-inverse);         
         }
         .switch:hover .track { box-shadow: 0 0 0 2px var(--ziyit-primary-light); }
         .switch input:focus-visible + .track { box-shadow: 0 0 0 3px var(--ziyit-primary-light); }
-        /* 禁用：内部灰、边框保持蓝 */
+         
         .switch input:disabled + .track { background: var(--ziyit-border); cursor: not-allowed; }
         .switch input:disabled + .track::after { background: var(--ziyit-bg-card); }
         .switch input:disabled ~ .switch-label { color: var(--ziyit-text-disabled); }
         .switch .switch-label { transition: color .2s; }
-        /* 小号开关（紧凑场景） */
+         
         .switch-sm .track { display: inline-block; width: 40px; min-width: 40px; height: 18px; border-radius: 9px; }
         .switch-sm .track::after { width: 12px; height: 12px; top: 1px; left: 1px; }
         .switch-sm input:checked + .track::after { left: 23px; }
 
-        /* ============ 卡片（DESIGN.md §4.5） ============ */
+         
         .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
         .card {
             background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border-light);
@@ -202,7 +200,7 @@
         .card.clickable { cursor: pointer; }
         .card.clickable:hover { box-shadow: 0 4px 12px rgba(0,0,0,.12); transform: translateY(-2px); }
 
-        /* ============ 导航（DESIGN.md §4.6） ============ */
+         
         .topbar { background: var(--ziyit-bg-card); border-bottom: 1px solid var(--ziyit-border-light); padding: 0 20px; height: 56px; display: flex; align-items: center; gap: 32px; }
         .topbar .logo { font-size: 18px; font-weight: 700; color: var(--ziyit-text-primary); display: flex; align-items: center; gap: 8px; }
         .logo-mark { width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #0078d4, #005a9e); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; }
@@ -240,8 +238,8 @@
             .sidebar { width: 100%; }
         }
 
-        /* ============ 页面级导航（参照 index.html .site-nav 结构，DESIGN.md §4.6） ============ */
-        /* 明暗双主题自适应：浅色白底深字、深色深底浅字，下拉菜单随主题切换 */
+         
+         
         .site-nav { position: relative; background: var(--ziyit-bg-card); border-bottom: 1px solid var(--ziyit-border); }
         .site-nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 16px; padding: 0 16px; height: 52px; }
         .site-nav-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ziyit-text-primary); font-weight: 700; font-size: 16px; text-decoration: none; }
@@ -250,14 +248,14 @@
         .site-nav-menu > li > a, .site-nav-menu > .has-sub { display: block; padding: 8px 14px; border-radius: 6px; color: var(--ziyit-text-primary); font-size: 14px; text-decoration: none; cursor: pointer; transition: color .2s, background .2s; }
         .site-nav-menu > li > a:hover, .site-nav-menu > .has-sub:hover { color: var(--ziyit-primary); background: var(--ziyit-bg-hover); }
         .site-nav-menu .line { width: 1px; height: 20px; background: var(--ziyit-border); margin: 0 10px; }
-        /* 二级下拉（hover 展开） */
+         
         .site-nav-menu ul { display: none; position: absolute; top: 100%; left: 0; margin-top: 6px; min-width: 190px; padding: 6px; background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); border-radius: 8px; box-shadow: 0 8px 20px rgba(0, 0, 0, .18); list-style: none; z-index: 20; }
         .site-nav-menu > li:hover > ul { display: block; }
-        /* 桥接 li 与下拉面板之间 6px 空隙：鼠标移入时 hover 不中断，可正常点击下拉项 */
+         
         .site-nav-menu ul::before { content: ''; position: absolute; top: -6px; left: 0; right: 0; height: 6px; }
         .site-nav-menu ul a { display: block; padding: 8px 12px; border-radius: 6px; color: var(--ziyit-text-primary); font-size: 13px; text-decoration: none; transition: color .2s, background .2s; }
         .site-nav-menu ul a:hover { color: var(--ziyit-primary); background: var(--ziyit-bg-hover); }
-        /* 移动端：汉堡按钮 + 折叠菜单 */
+         
         .site-nav-toggle { display: none; background: none; border: 0; color: var(--ziyit-text-primary); font-size: 22px; line-height: 1; padding: 4px 8px; cursor: pointer; }
         @media (max-width: 768px) {
             .site-nav-toggle { display: block; }
@@ -270,7 +268,7 @@
             .site-nav-menu.open ul { display: block; }
         }
 
-        /* ============ 模态框（DESIGN.md §4.7） ============ */
+         
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100;
             display: none; align-items: center; justify-content: center; padding: 16px;
@@ -287,7 +285,7 @@
         .modal .foot { display: flex; justify-content: flex-end; gap: 8px; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
-        /* ============ 表格（DESIGN.md §4.8） ============ */
+         
         .table-wrap { border: 1px solid var(--ziyit-border-light); border-radius: 8px; overflow: hidden; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         thead th { background: var(--ziyit-bg); color: var(--ziyit-text-secondary); font-size: 13px; font-weight: 400; text-align: left; padding: 10px 12px; height: 40px; }
@@ -296,7 +294,7 @@
         tbody tr:hover { background: var(--ziyit-bg-hover); }
         tbody td .ops { display: flex; gap: 8px; justify-content: flex-end; }
 
-        /* ============ 标签与徽章（DESIGN.md §4.10） ============ */
+         
         .tag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; font-size: 13px; margin-right: 8px; }
         .tag.vip { background: var(--ziyit-accent); color: #fff; }
         .tag.ban { background: #fdecee; color: var(--ziyit-danger); }
@@ -304,15 +302,15 @@
         .tag.primary { background: var(--ziyit-primary-light); color: var(--ziyit-primary); }
         .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 50%; background: var(--ziyit-primary); color: #fff; font-size: 12px; }
 
-        /* ============ 分页（DESIGN.md §4.11） ============ */
+         
         .pagination { display: flex; gap: 4px; align-items: center; }
         .pagination button { width: 32px; height: 32px; border: none; border-radius: 6px; background: transparent; color: var(--ziyit-text-primary); font-size: 14px; cursor: pointer; transition: background .2s, color .2s; }
         .pagination button:hover { background: var(--ziyit-bg-hover); }
         .pagination button.active { background: var(--ziyit-primary); color: #fff; }
         .pagination button:disabled { color: var(--ziyit-text-disabled); cursor: not-allowed; background: transparent; }
 
-        /* ============ 加载（DESIGN.md §4.12） ============ */
-        /* 主加载指示器：ZIYIT 品牌主题 + Cloudflare 风格左右滑动加载条 */
+         
+         
         .ziyit-loader { text-align: center; }
         .ziyit-loader .loader-title {
             display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -331,14 +329,8 @@
             background: linear-gradient(90deg, var(--ziyit-primary), var(--ziyit-primary-dark));
             animation: loaderSlide 2s infinite;
         }
-        /* 往返滑动，每次行程滑出轨道完全消失后停留 0.1s 再折返：
-           去程 0→45% 时间（左外→滑过轨道→右外消失）→ 停留 0.1s(45→50%)
-           回程 50→95% 时间（右外→滑回→左外消失）→ 停留 0.1s(95→100%)，循环
-           速度与拉伸联动：速度:拉伸 = 7.5%:2.5%（3:1），速度越快滑块被拉得越长
-           基准宽 35%，行程速度 45%→100%（增量 55%）→ 拉伸 55%×(2.5/7.5)≈18.3%
-           最大宽 35%+18.3%≈53.3%，scaleX 最大 = 53.3/35 ≈ 1.524
-           停留段（45→50% / 95→100%）速度归零 → 缩回 35%
-           cubic-bezier(0.33,0.45,0.67,0)：起点斜率 1.35(=45%) → 终点斜率 3(=100%) */
+        
+
         @keyframes loaderSlide {
             0%   { transform: translateX(-100%) scaleX(1);    animation-timing-function: cubic-bezier(0.33, 0.45, 0.67, 0); }
             45%  { transform: translateX(260%)  scaleX(1.524); }
@@ -350,14 +342,14 @@
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
         .skeleton-line { height: 14px; margin-bottom: 10px; }
 
-        /* ============ 空状态（DESIGN.md §4.13） ============ */
+         
         .empty { text-align: center; padding: 40px 20px; }
         .empty .icon { font-size: 48px; color: #cccccc; }
         .empty .icon img { width: 48px; height: 48px; object-fit: contain; }
         .empty h4 { font-size: 16px; font-weight: 600; margin: 12px 0 4px; color: var(--ziyit-text-primary); }
         .empty p { font-size: 13px; color: var(--ziyit-text-secondary); margin-bottom: 16px; }
 
-        /* ============ Toast（DESIGN.md §4.9） ============ */
+         
         #toast-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
         .toast {
             display: flex; align-items: center; gap: 8px; background: rgba(51,51,51,.92); color: #fff;
@@ -368,12 +360,12 @@
         .toast.err { border-left-color: var(--ziyit-danger); }
         .toast .x { background: none; border: none; color: rgba(255,255,255,.7); cursor: pointer; font-size: 14px; margin-left: 8px; }
 
-        /* ============ 图标尺寸 ============ */
+         
         .icons { display: flex; gap: 32px; align-items: flex-end; flex-wrap: wrap; }
         .icons .ic { text-align: center; color: var(--ziyit-primary); }
         .icons .ic span { display: block; font-size: 12px; color: var(--ziyit-text-secondary); margin-top: 6px; }
 
-        /* ============ 阴影层级 ============ */
+         
         .elev { padding: 16px; border-radius: 8px; background: var(--ziyit-bg-card); text-align: center; font-size: 13px; color: var(--ziyit-text-secondary); }
         .e1 { box-shadow: 0 1px 3px rgba(0,0,0,.08); }
         .e2 { box-shadow: 0 4px 12px rgba(0,0,0,.12); }
@@ -381,8 +373,8 @@
 
         footer { text-align: center; font-size: 12px; color: var(--ziyit-text-secondary); padding: 24px 0 40px; }
 
-        /* ============ 深色模式（DESIGN.md §2.4 / §4.14） ============ */
-        /* 仅交换中性色 token 与功能性浅底，品牌主色保持不变 */
+         
+         
         [data-theme="dark"] {
             --ziyit-bg: #16181d;
             --ziyit-bg-card: #1f2229;
@@ -393,9 +385,9 @@
             --ziyit-border: #3a3f48;
             --ziyit-border-light: #2c3038;
             --ziyit-primary-light: rgba(0, 120, 212, .18);
-            color-scheme: dark; /* 原生控件（输入框/下拉/滚动条等）随主题渲染 */
+            color-scheme: dark;  
         }
-        /* 深色模式下仍需修正的硬编码浅色 */
+         
         [data-theme="dark"] code { background: #2a2e36; color: #c9d1d9; }
         [data-theme="dark"] tbody tr:nth-child(even) { background: #23262d; }
         [data-theme="dark"] .input:disabled, [data-theme="dark"] .select:disabled { background: #23262d; }
@@ -405,7 +397,7 @@
         [data-theme="dark"] .tag.normal { background: #23262d; }
         [data-theme="dark"] .hero { background: linear-gradient(135deg, #0b4d80, #07385f); }
 
-        /* ============ 主题切换（DESIGN.md §4.14） ============ */
+         
         .theme-switch { display: inline-flex; align-items: center; gap: 4px; padding: 4px; background: var(--ziyit-bg); border: 1px solid var(--ziyit-border-light); border-radius: 8px; }
         .theme-opt {
             display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px;
@@ -425,7 +417,7 @@
 </head>
 <body>
 
-    <!-- ===== 页面级导航（参照 index.html .top-bar 结构，DESIGN.md §4.6） ===== -->
+    
     <div class="site-nav">
         <div class="site-nav-inner">
             <a class="site-nav-brand" href="../index.html"><span class="logo-mark">Z</span>ZIYIT</a>
@@ -461,7 +453,7 @@
         </div>
     </div>
 
-    <!-- ===== Hero：品牌渐变（§2.3） ===== -->
+    
     <div class="hero">
         <h1>ZIYIT STUDIO UI 设计体系</h1>
         <p>DESIGN.md v1.1 · 全站视觉与交互标准 · 控件测试页</p>
@@ -470,7 +462,7 @@
 
     <div class="page">
 
-        <!-- ===== 色彩系统 ===== -->
+        
         <div class="section" id="color">
             <h2>2. 色彩系统</h2>
             <p class="desc">品牌主色、强调色、功能色与中性色 Token（DESIGN.md §2）。</p>
@@ -499,7 +491,7 @@
             </div>
         </div>
 
-        <!-- ===== 排版 ===== -->
+        
         <div class="section" id="type">
             <h2>3. 排版层级</h2>
             <p class="desc">字号 / 行高 / 字重规范（DESIGN.md §3）。</p>
@@ -514,7 +506,7 @@
             </div>
         </div>
 
-        <!-- ===== 按钮 ===== -->
+        
         <div class="section" id="buttons">
             <h2>4.1 按钮</h2>
             <p class="desc">五种类型 × 三种规格 + 禁用 + 加载态（DESIGN.md §4.1）。</p>
@@ -542,7 +534,7 @@
             </div>
         </div>
 
-        <!-- ===== 表单 ===== -->
+        
         <div class="section" id="form">
             <h2>4.2-4.4 表单控件</h2>
             <p class="desc">输入框状态、下拉、复选框 / 单选框 / 开关（DESIGN.md §4.2-4.4）。</p>
@@ -581,7 +573,7 @@
             </div>
         </div>
 
-        <!-- ===== 卡片 ===== -->
+        
         <div class="section" id="cards">
             <h2>4.5 卡片</h2>
             <p class="desc">普通卡片与可点击卡片（DESIGN.md §4.5）。</p>
@@ -604,7 +596,7 @@
             </div>
         </div>
 
-        <!-- ===== 导航 ===== -->
+        
         <div class="section" id="nav">
             <h2>4.6 导航</h2>
             <p class="desc">顶部导航 / 侧边栏 / 下拉菜单 / 移动端折叠（DESIGN.md §4.6）。</p>
@@ -645,7 +637,7 @@
             </div>
         </div>
 
-        <!-- ===== 模态框 ===== -->
+        
         <div class="section" id="modal">
             <h2>4.7 模态框</h2>
             <p class="desc">打开演示：遮罩淡入 + 面板上移淡入；Esc / 遮罩 / 取消关闭（DESIGN.md §4.7）。</p>
@@ -657,7 +649,7 @@
             </div>
         </div>
 
-        <!-- ===== 表格 ===== -->
+        
         <div class="section" id="table">
             <h2>4.8 表格</h2>
             <p class="desc">表头 / 斑马纹 / 行悬停 / 操作列（DESIGN.md §4.8）。</p>
@@ -681,7 +673,7 @@
             </div>
         </div>
 
-        <!-- ===== 标签与徽章 ===== -->
+        
         <div class="section" id="tags">
             <h2>4.10 标签与徽章</h2>
             <p class="desc">VIP / 封禁 / 普通 / 主色标签 与 计数徽章（DESIGN.md §4.10）。</p>
@@ -696,7 +688,7 @@
             </div>
         </div>
 
-        <!-- ===== 加载 ===== -->
+        
         <div class="section" id="loading">
             <h2>4.12 加载指示器</h2>
             <p class="desc">主加载指示器/ 骨架屏 / 按钮加载（DESIGN.md §4.12）。</p>
@@ -717,7 +709,7 @@
             </div>
         </div>
 
-        <!-- ===== 空状态 ===== -->
+        
         <div class="section" id="empty">
             <h2>4.13 空状态</h2>
             <p class="desc">无数据引导，必须提供下一步动作（DESIGN.md §4.13）。</p>
@@ -731,7 +723,7 @@
             </div>
         </div>
 
-        <!-- ===== 主题切换 ===== -->
+        
         <div class="section" id="theme">
             <h2>4.14 主题切换</h2>
             <p class="desc">浅色 / 深色 / 跟随系统（DESIGN.md §4.14）。偏好自动保存至 cookie（key：ziyit-theme，有效期 1 年），刷新后保持；"跟随系统"实时响应系统设置。</p>
@@ -757,7 +749,7 @@
             </div>
         </div>
 
-        <!-- ===== Toast ===== -->
+        
         <div class="section" id="toast">
             <h2>4.9 Toast 提示</h2>
             <p class="desc">成功 / 错误 / 信息，自动消失，替代 alert()（DESIGN.md §4.9）。</p>
@@ -770,7 +762,7 @@
             </div>
         </div>
 
-        <!-- ===== 图标 ===== -->
+        
         <div class="section" id="icons">
             <h2>5. 图标系统</h2>
             <p class="desc">线性风格，四档尺寸（DESIGN.md §5）。</p>
@@ -784,7 +776,7 @@
             </div>
         </div>
 
-        <!-- ===== 阴影 ===== -->
+        
         <div class="section" id="elevation">
             <h2>7. 深度与层级</h2>
             <p class="desc">Elevation 1-3 阴影系统（DESIGN.md §7）。</p>
@@ -798,7 +790,7 @@
         <footer>© 2026 ZIYIT STUDIO · 设计体系测试页 v1.9 · 本页 noindex</footer>
     </div>
 
-    <!-- ===== 模态框 ===== -->
+    
     <div class="modal-overlay" id="modal-normal">
         <div class="modal">
             <h3>编辑用户信息 <button class="close" onclick="closeModal('modal-normal')">×</button></h3>
@@ -828,7 +820,7 @@
     <div id="toast-box"></div>
 
     <script>
-        // ===== 模态框：Esc 关闭 =====
+         
         function openModal(id) { document.getElementById('modal-' + id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
         document.addEventListener('keydown', function (e) {
@@ -838,7 +830,7 @@
             overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.classList.remove('active'); });
         });
 
-        // ===== Toast =====
+         
         function showToast(type, text) {
             var box = document.getElementById('toast-box');
             var t = document.createElement('div');
@@ -849,7 +841,7 @@
             setTimeout(function () { t.remove(); }, type === 'ok' ? 2000 : 4000);
         }
 
-        // ===== 按钮加载演示 =====
+         
         function demoLoading(btn) {
             var html = btn.innerHTML;
             btn.innerHTML = '<span class="spinner"></span>提交中…';
@@ -861,7 +853,7 @@
             }, 1500);
         }
 
-        // ===== 骨架屏演示 =====
+         
         function toggleSkeleton(btn) {
             var area = document.getElementById('skeletonArea');
             if (area.style.display === 'none') {
@@ -873,7 +865,7 @@
             }
         }
 
-        // ===== 页面导航：移动端汉堡菜单折叠 =====
+         
         (function () {
             var toggle = document.querySelector('.site-nav-toggle');
             if (!toggle) return;
@@ -883,8 +875,8 @@
             });
         })();
 
-        // ===== 主题切换（浅色 / 深色 / 跟随系统，DESIGN.md §4.14） =====
-        // cookie 读写工具（偏好 key: ziyit-theme，有效期 1 年）
+         
+         
         function getCookie(name) {
             var m = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
             return m ? decodeURIComponent(m[1]) : '';
@@ -895,7 +887,7 @@
             document.cookie = name + '=' + encodeURIComponent(value) + '; path=/; expires=' + d.toUTCString();
         }
         var themeMedia = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-        // 根据偏好解析实际配色：auto 跟随系统
+         
         function resolveTheme(pref) {
             return (pref === 'dark' || (pref === 'auto' && themeMedia && themeMedia.matches)) ? 'dark' : 'light';
         }
@@ -923,7 +915,7 @@
         document.querySelectorAll('.theme-opt').forEach(function (b) {
             b.addEventListener('click', function () { setTheme(b.getAttribute('data-theme-opt')); });
         });
-        // 系统主题变化时，"跟随系统"模式自动响应（其他偏好不受影响）
+         
         if (themeMedia) {
             themeMedia.addEventListener('change', function () {
                 var pref = document.documentElement.getAttribute('data-theme-pref') || 'auto';
@@ -932,14 +924,14 @@
         }
         updateThemeUI();
 
-        // ===== 开关演示：切换反馈 + 功能联动（标签为固定功能用途文本，不做状态翻转） =====
+         
         document.querySelectorAll('.switch input').forEach(function (input) {
             input.addEventListener('change', function () {
                 var name = input.closest('.switch').getAttribute('data-name') || '开关';
                 showToast(input.checked ? 'ok' : 'info', name + '：' + (input.checked ? '已开启' : '已关闭'));
             });
         });
-        // 联动示例：自动更新开关控制输入框禁用状态
+         
         var swAuto = document.getElementById('sw-auto');
         var iUpdate = document.getElementById('i-update');
         if (swAuto && iUpdate) {

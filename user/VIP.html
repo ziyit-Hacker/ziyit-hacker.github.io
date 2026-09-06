@@ -26,7 +26,7 @@
     </script>
     <link rel="stylesheet" href="../assets/ziyit-theme.css">
     <style>
-        /* ===== VIP 升级页样式（DESIGN.md 设计体系，token 化） ===== */
+         
         body {
             background: var(--ziyit-bg);
         }
@@ -183,7 +183,7 @@
 </head>
 
 <body>
-    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -259,7 +259,7 @@
     </div>
     <script src="../assets/ziyit_api.js"></script>
     <script>
-        // VIP 升级：邮件联系站长人工开通（用户信息以 ZIYIT 后端为准）
+         
         var adminEmail = 'ziyitstudio@qq.com';
         var currentVipUser = null;
 
@@ -269,7 +269,7 @@
             return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
         }
 
-        // 自动生成包含用户ID、用户名的邮件内容
+         
         function buildMailBody(user) {
             var lines = [
                 'VIP升级申请（人工审核）',
@@ -348,7 +348,7 @@
     </script>
 
     <script>
-        // 导航权限过滤（DESIGN.md §4.6.5，需登录页模式）：未登录全部隐藏，登录后按角色显示
+         
         function checkLoginStatus() {
             const navItems = document.querySelectorAll('.nav-item');
             if (!ZIYIT_API.getToken()) {

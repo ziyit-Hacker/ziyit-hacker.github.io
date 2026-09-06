@@ -71,7 +71,7 @@
         </div>
     </header>
 
-    <!-- 登录门禁 -->
+    
     <div class="gate" id="gate">
         <div class="gate-card">
             <h2>🔒 需要登录</h2>
@@ -105,7 +105,7 @@
         </div>
     </main>
 
-    <!-- 修改弹窗 -->
+    
     <div class="modal-mask" id="modal-mask">
         <div class="modal" id="modal-box"></div>
     </div>
@@ -115,7 +115,7 @@
     <script>
         var USERNAME = '';
         var BASE = (function () { try { return (localStorage.getItem('ziyit_api_base') || 'https://willian-unheady-rawly.ngrok-free.dev').replace(/\/$/, ''); } catch (e) { return 'https://willian-unheady-rawly.ngrok-free.dev'; } })();
-        var MAX_SIZE = 1024 * 1024; // 1MB
+        var MAX_SIZE = 1024 * 1024;  
 
         var STATUS_CN = {
             pending: ['待审核', 'b-pending'],
@@ -140,7 +140,7 @@
         });
         function fmtSize(n) { n = Number(n); if (n < 1024) return n + ' B'; if (n < 1048576) return (n / 1024).toFixed(1) + ' KB'; return (n / 1048576).toFixed(2) + ' MB'; }
 
-        // 带 Token 拉取层级 HTML（作者本人可看自己未公开稿件，不报 404；响应含"正在审核中"提示条）
+         
         function fetchLevelHtml(id) {
             var token = window.ZIYIT_API && ZIYIT_API.getToken ? ZIYIT_API.getToken() : '';
             return fetch(BASE + '/backrooms/levels/' + encodeURIComponent(id), {
@@ -153,7 +153,7 @@
                 return res.text();
             });
         }
-        // 查看：新标签打开（blob 方式，携带登录态渲染）
+         
         function viewLevelHtml(id) {
             fetchLevelHtml(id).then(function (html) {
                 var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
@@ -162,7 +162,7 @@
                 setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
             }).catch(function (err) { toast('查看失败：' + errText(err)); });
         }
-        // 下载：保存为 HTML 文件
+         
         function downloadLevelHtml(id) {
             fetchLevelHtml(id).then(function (html) {
                 var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
@@ -174,7 +174,7 @@
             }).catch(function (err) { toast('下载失败：' + errText(err)); });
         }
 
-        // ============ 提交 ============
+         
         $('btn-submit').addEventListener('click', function () {
             var id = $('f-id').value.trim();
             var name = $('f-name').value.trim();
@@ -199,7 +199,7 @@
             });
         });
 
-        // ============ 我的层级 ============
+         
         function loadMine() {
             ZIYIT_API.backroomsList().then(function (d) {
                 var levels = (d && (d.levels || d.data || d)) || [];
@@ -248,7 +248,7 @@
 
         $('btn-refresh').addEventListener('click', loadMine);
 
-        // 修改：重选文件（可改名称）
+         
         function openEditModal(id) {
             var item = null;
             ZIYIT_API.backroomsList().then(function (d) {
@@ -283,7 +283,7 @@
             }).catch(function (err) { toast('加载失败：' + errText(err)); });
         }
 
-        // 删除
+         
         function doDelete(id) {
             if (!confirm('确认删除 ' + id + ' ？\n删除后不可恢复，请谨慎！')) return;
             ZIYIT_API.backroomsDelete(id).then(function (d) {
@@ -295,13 +295,13 @@
             });
         }
 
-        // ============ 弹窗 ============
+         
         function openModal(html) { $('modal-box').innerHTML = html; $('modal-mask').classList.add('show'); }
         function closeModal() { $('modal-mask').classList.remove('show'); $('modal-box').innerHTML = ''; }
         $('modal-mask').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
         $('modal-box').addEventListener('click', function (e) { if (e.target.closest('[data-close]')) closeModal(); });
 
-        // ============ 初始化 ============
+         
         function init() {
             ZIYIT_API.currentUsername().then(function (name) {
                 if (!name) {

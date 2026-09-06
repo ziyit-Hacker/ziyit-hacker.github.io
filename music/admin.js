@@ -1,39 +1,22 @@
-// 管理页面JS代码
-
-
-/*
+ 
 
 
 
 
 
 
-菜单切换相关事件监听
-主要功能:
-1. 切换不同的内容区域
-2. 更新系统信息
-3. 渲染不同的菜单状态
-
-
-
-
-
-
-*/
-
-
-// 菜单切换功能（全局：权限校验后也会调用）
+ 
 function switchSection(sectionId) {
-    // 隐藏所有内容区域
+     
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
     });
 
-    // 显示选中的内容区域
+     
     const target = document.getElementById(sectionId);
     if (target) target.classList.add('active');
 
-    // 更新菜单项active状态
+     
     document.querySelectorAll('.menu-item').forEach(item => {
         item.classList.remove('active');
     });
@@ -42,64 +25,64 @@ function switchSection(sectionId) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    // 音乐管理菜单点击
+     
     document.querySelector('[data-section="music-management"]').addEventListener('click', function () {
         switchSection('music-management');
         updateSystemInfo('切换到音乐管理');
     });
 
-    // 用户管理菜单点击
+     
     document.querySelector('[data-section="user-management"]').addEventListener('click', function () {
-        // 切换到用户管理页面
+         
         document.querySelectorAll('.content-section').forEach(section => {
             section.classList.remove('active');
         });
         document.getElementById('user-management').classList.add('active');
 
-        // 更新菜单项active状态
+         
         document.querySelectorAll('.menu-item').forEach(item => {
             item.classList.remove('active');
         });
         this.classList.add('active');
 
-        // 加载用户数据
+         
         loadUsers();
     });
 
-    // 刷新用户列表
+     
     document.getElementById('refresh-users').addEventListener('click', function () {
         loadUsers();
         updateSystemInfo('用户列表已刷新');
     });
 
-    // 搜索用户
+     
     document.getElementById('user-search').addEventListener('input', searchUsers);
 
-    // 导出用户数据
+     
     document.getElementById('export-users').addEventListener('click', exportUsers);
 
-    // API Key 管理菜单点击
+     
     document.querySelector('[data-section="api-key-management"]').addEventListener('click', function () {
         switchSection('api-key-management');
         updateSystemInfo('切换到 API Key 管理');
         loadApiKeys();
     });
 
-    // MOD/DLC 管理菜单点击
+     
     document.querySelector('[data-section="mod-management"]').addEventListener('click', function () {
         switchSection('mod-management');
         updateSystemInfo('切换到 MOD/DLC 管理');
         loadMods();
     });
 
-    // RC 软件密钥管理菜单点击
+     
     document.querySelector('[data-section="rc-key-management"]').addEventListener('click', function () {
         switchSection('rc-key-management');
         updateSystemInfo('切换到 RC 软件密钥管理');
         loadRcKeys();
     });
 
-    // API Key 管理按钮
+     
     document.getElementById('add-api-key-btn').addEventListener('click', function () {
         document.getElementById('apikey-userid').value = '';
         document.getElementById('api-key-modal').classList.add('active');
@@ -110,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('api-key-search').addEventListener('input', renderApiKeys);
 
-    // MOD/DLC 管理按钮
+     
     document.getElementById('add-mod-btn').addEventListener('click', openAddMod);
     document.getElementById('refresh-mods').addEventListener('click', function () {
         loadMods();
@@ -118,35 +101,35 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('mod-search').addEventListener('input', renderMods);
 
-    // RC 软件密钥按钮
+     
     document.getElementById('refresh-rc-keys').addEventListener('click', function () {
         loadRcKeys();
         updateSystemInfo('密钥列表已刷新');
     });
     document.getElementById('rc-key-search').addEventListener('input', renderRcKeys);
 
-    // 管理员管理菜单点击
+     
     document.querySelector('[data-section="admin-management"]').addEventListener('click', function () {
         switchSection('admin-management');
         updateSystemInfo('切换到管理员管理');
         loadAdmins();
     });
 
-    // 后室成员管理菜单点击
+     
     document.querySelector('[data-section="backrooms-members"]').addEventListener('click', function () {
         switchSection('backrooms-members');
         updateSystemInfo('切换到后室成员管理');
         loadBackroomsMembers();
     });
 
-    // 在线客服控制台菜单点击
+     
     document.querySelector('[data-section="guide-console"]').addEventListener('click', function () {
         switchSection('guide-console');
         updateSystemInfo('切换到在线客服');
         guideStartPolling();
     });
 
-    // 管理员管理按钮
+     
     document.getElementById('add-admin-btn').addEventListener('click', openAddAdminModal);
     document.getElementById('refresh-admins').addEventListener('click', function () {
         loadAdmins();
@@ -158,20 +141,20 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('cancel-admin-edit').addEventListener('click', closeAdminEditModal);
     document.getElementById('confirm-admin-edit').addEventListener('click', confirmEditAdmin);
 
-    // 后室成员管理按钮
+     
     document.getElementById('refresh-backrooms-members').addEventListener('click', function () {
         loadBackroomsMembers();
         updateSystemInfo('成员列表已刷新');
     });
     document.getElementById('backrooms-member-search').addEventListener('input', renderBackroomsMembers);
 
-    // 升级用户模态框
+     
     document.getElementById('cancel-promote-user').addEventListener('click', closePromoteModal);
     document.getElementById('confirm-promote-user').addEventListener('click', confirmPromoteUser);
 });
 
-// 列表加载骨架屏（DESIGN.md §4.12 配套）：顶部品牌进度条 + 与列表结构一致的骨架行
-// 数据加载完成后由渲染函数替换为真实列表，配合 listFadeIn 平滑过渡
+ 
+ 
 function loadingHTML() {
     var rows = '';
     for (var i = 0; i < 5; i++) {
@@ -192,12 +175,12 @@ function loadingHTML() {
         '</div>';
 }
 
-// 权限检查（后端数据为准）
-// 当前管理员等级（后端 /admin/me）：1-4 级；0 表示未验证
+ 
+ 
 let currentAdminLevel = 0;
 let currentAdminInfo = null;
 
-// 管理员等级名称
+ 
 function adminLevelName(level) {
     level = Number(level);
     if (level === 4) return '超级管理员';
@@ -207,7 +190,7 @@ function adminLevelName(level) {
     return '非管理员';
 }
 
-// 按当前等级渲染侧边栏菜单（未授权菜单直接不渲染，不依赖接口 403）
+ 
 function applyMenuByLevel() {
     const level = currentAdminLevel || 0;
     document.querySelectorAll('.sidebar-menu .menu-item[data-level]').forEach(function (item) {
@@ -216,7 +199,7 @@ function applyMenuByLevel() {
     });
 }
 
-// 当前等级是否允许某功能（needLevel 为所需最低等级）
+ 
 function canAccess(needLevel) {
     return (currentAdminLevel || 0) >= needLevel;
 }
@@ -230,7 +213,7 @@ function checkUserPermission() {
         return;
     }
 
-    // 401 时清除 Token 并跳转登录页
+     
     window.ZIYIT_ON_UNAUTHORIZED = function () {
         if (window.location.href.indexOf('music/admin') === -1) return;
         alert('登录已过期，请重新登录');
@@ -252,7 +235,7 @@ function checkUserPermission() {
         currentAdminLevel = level;
         currentAdminInfo = me;
 
-        // 显示用户角色
+         
         const userRole = document.getElementById('user-role');
         if (userRole) {
             userRole.textContent = adminLevelName(level) + '（Lv.' + level + '）';
@@ -261,7 +244,7 @@ function checkUserPermission() {
         if (userNameEl && me.username) userNameEl.textContent = me.username;
 
         applyMenuByLevel();
-        // 管理员私聊/全局消息初始化
+         
         chatLoadHistory();
         const bcastBtn = document.getElementById('broadcast-btn');
         if (bcastBtn) bcastBtn.style.display = canAccess(2) ? '' : 'none';
@@ -269,7 +252,7 @@ function checkUserPermission() {
             chatPollTimer = setInterval(pollChatInbox, 5000);
             setTimeout(pollChatInbox, 300);
         }
-        // 默认显示的首个 section 必须在当前等级内
+         
         const firstVisible = document.querySelector('.sidebar-menu .menu-item[data-level]:not([style*="display: none"])');
         if (firstVisible && firstVisible.getAttribute('data-section')) {
             switchSection(firstVisible.getAttribute('data-section'));
@@ -288,28 +271,8 @@ function checkUserPermission() {
 }
 
 
-/*
 
 
-
-
-
-
-音乐管理相关事件监听
-主要功能:
-1. 加载音乐数据
-2. 更新音乐统计信息
-3. 渲染音乐表格
-4. 刷新音乐数据
-5. 导出音乐数据
-6. 导入音乐数据
-
-
-
-
-
-
-*/
 
 
 let currentMusicIndex = -1;
@@ -331,7 +294,7 @@ const lyricsInfo = document.getElementById('lyrics-info');
 const totalSongs = document.getElementById('total-songs');
 const playingSong = document.getElementById('playing-song');
 
-// 格式化时间为 MM:SS 格式
+ 
 function formatTime(seconds) {
     if (isNaN(seconds) || seconds === Infinity) {
         return '00:00';
@@ -341,13 +304,13 @@ function formatTime(seconds) {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-// 更新当前时间和总时长显示
+ 
 function updateTimeDisplay() {
     currentTimeElement.textContent = formatTime(audioPlayer.currentTime);
     totalTimeElement.textContent = formatTime(audioPlayer.duration);
 }
 
-// 加载歌词
+ 
 async function loadLyrics(lyricsPath) {
     if (lyricsPath === '[NO DATA]') {
         lyricsContent.innerHTML = '暂无歌词数据';
@@ -363,11 +326,11 @@ async function loadLyrics(lyricsPath) {
         }
         const lyricsText = await response.text();
 
-        // 直接显示歌词文件中的所有内容
+         
         lyricsContent.innerHTML = lyricsText;
         lyricsInfo.textContent = '已加载';
 
-        // 更新系统信息
+         
         updateSystemInfo('歌词加载成功');
     } catch (error) {
         console.error('加载歌词失败:', error);
@@ -377,7 +340,7 @@ async function loadLyrics(lyricsPath) {
     }
 }
 
-// 渲染音乐列表
+ 
 function renderMusicList() {
     musicListElement.innerHTML = '';
     musicList.forEach((music, index) => {
@@ -399,11 +362,11 @@ function renderMusicList() {
         musicListElement.appendChild(item);
     });
 
-    // 更新统计信息
+     
     totalSongs.textContent = musicList.length;
 }
 
-// 播放音乐
+ 
 function playMusic(index) {
     if (index < 0 || index >= musicList.length) return;
 
@@ -413,16 +376,16 @@ function playMusic(index) {
     currentSong.textContent = name;
     playingSong.textContent = name;
 
-    // 更新列表样式
+     
     document.querySelectorAll('.music-item').forEach((item, i) => {
         item.classList.toggle('playing', i === index);
     });
 
-    // 重置时间显示
+     
     currentTimeElement.textContent = '00:00';
     totalTimeElement.textContent = '00:00';
 
-    // 加载歌词
+     
     loadLyrics(lyricsPath);
 
     audioPlayer.play();
@@ -433,7 +396,7 @@ function playMusic(index) {
     updateSystemInfo(`正在播放: ${name}`);
 }
 
-// 加载音乐列表
+ 
 fetch('music.txt')
     .then(response => response.text())
     .then(data => {
@@ -446,7 +409,7 @@ fetch('music.txt')
         updateSystemInfo('音乐列表加载失败');
     });
 
-// 播放/暂停控制
+ 
 playBtn.addEventListener('click', () => {
     if (currentMusicIndex === -1 && musicList.length > 0) {
         playMusic(0);
@@ -465,7 +428,7 @@ playBtn.addEventListener('click', () => {
     isPlaying = !isPlaying;
 });
 
-// 上一首
+ 
 prevBtn.addEventListener('click', () => {
     if (musicList.length === 0) return;
     let newIndex = currentMusicIndex - 1;
@@ -473,7 +436,7 @@ prevBtn.addEventListener('click', () => {
     playMusic(newIndex);
 });
 
-// 下一首
+ 
 nextBtn.addEventListener('click', () => {
     if (musicList.length === 0) return;
     let newIndex = currentMusicIndex + 1;
@@ -481,14 +444,14 @@ nextBtn.addEventListener('click', () => {
     playMusic(newIndex);
 });
 
-// 更新进度条和时间显示
+ 
 audioPlayer.addEventListener('timeupdate', () => {
     const progressPercent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
     progress.style.width = progressPercent + '%';
     updateTimeDisplay();
 });
 
-// 点击进度条跳转
+ 
 document.querySelector('.progress-bar').addEventListener('click', (e) => {
     const rect = e.target.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
@@ -500,12 +463,12 @@ document.querySelector('.progress-bar').addEventListener('click', (e) => {
     }
 });
 
-// 当音频元数据加载完成时更新总时长
+ 
 audioPlayer.addEventListener('loadedmetadata', () => {
     updateTimeDisplay();
 });
 
-// 搜索功能
+ 
 document.getElementById('search-button').addEventListener('click', function (e) {
     e.preventDefault();
     const searchInput = document.getElementById('search-input').value.toLowerCase();
@@ -519,11 +482,11 @@ document.getElementById('search-button').addEventListener('click', function (e) 
     updateSystemInfo(`搜索: ${searchInput}`);
 });
 
-// 系统信息更新
-// 初始化系统信息（每5秒拉取真实服务器状态）
+ 
+ 
 setInterval(loadServerStats, 5000);
 
-// 页面加载时检查权限
+ 
 document.addEventListener('DOMContentLoaded', () => {
     checkUserPermission();
     loadServerStats();
@@ -531,36 +494,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-/*
 
 
 
 
-
-
-LRC歌词转换相关事件监听
-主要功能:
-1. 加载歌词
-2. 转换歌词为LRC格式
-3. 显示转换后的LRC内容
-4. 导出LRC文件
-
-
-
-
-
-
-*/
-
-
-// LRC歌词转换相关事件监听
+ 
 let lrcConversionActive = false;
 let currentLyricsLines = [];
 let currentLrcIndex = 0;
 let lrcContent = '';
-let timeUpdateInterval = null; // 新增：时间更新定时器
+let timeUpdateInterval = null;  
 
-// 实时更新当前时间显示
+ 
 function updateCurrentTimeDisplay() {
     if (!lrcConversionActive) return;
     
@@ -576,40 +521,40 @@ function updateCurrentTimeDisplay() {
     }
 }
 
-// 开始LRC转换
+ 
 document.getElementById('start-lrc-conversion').addEventListener('click', function () {
-    // 检查是否已加载歌词
+     
     const lyricsContent = document.getElementById('lyrics-content');
     if (!lyricsContent || lyricsContent.innerHTML.trim() === '') {
         alert('请先选择一首歌曲并加载歌词');
         return;
     }
 
-    // 获取当前显示的歌词内容（支持编辑后的内容）
-    // 修复：使用innerHTML而不是textContent/innerText，因为编辑后的内容包含HTML标签
+     
+     
     const lyricsText = lyricsContent.innerHTML;
 
-    // 将HTML内容转换为纯文本，正确处理换行
+     
     const normalizedText = lyricsText
         .replace(/<br\s*\/?>/gi, '\n')
         .replace(/<div[^>]*>/gi, '\n')
         .replace(/<\/div>/gi, '\n')
         .replace(/<p[^>]*>/gi, '\n')
         .replace(/<\/p>/gi, '\n')
-        .replace(/\r\n/g, '\n')  // 处理Windows换行符
-        .replace(/\r/g, '\n')    // 处理Mac换行符
-        .replace(/\n+/g, '\n')  // 合并多个连续换行符
-        .replace(/<[^>]*>/g, '') // 移除所有剩余的HTML标签
+        .replace(/\r\n/g, '\n')   
+        .replace(/\r/g, '\n')     
+        .replace(/\n+/g, '\n')   
+        .replace(/<[^>]*>/g, '')  
         .trim();
 
-    // 调试：显示原始内容和处理后的内容
+     
     console.log('原始歌词内容:', lyricsText);
     console.log('处理后的歌词内容:', normalizedText);
 
-    // 分割歌词为行
+     
     const allLyricsLines = normalizedText.split('\n').filter(line => line.trim() !== '');
 
-    // 调试：显示分割后的行数
+     
     console.log('分割后的歌词行数:', allLyricsLines.length);
     console.log('分割后的歌词行:', allLyricsLines);
 
@@ -618,14 +563,14 @@ document.getElementById('start-lrc-conversion').addEventListener('click', functi
         return;
     }
 
-    // 过滤掉已经包含时间戳的行（使用更宽松的检测）
+     
     const lrcTimeRegex = /\[\d{1,2}[:：]\d{1,2}(?:\.\d{1,2})?\].*/;
     const linesToProcess = allLyricsLines.filter(line => {
         const trimmedLine = line.trim();
         return !lrcTimeRegex.test(trimmedLine);
     });
 
-    // 调试信息
+     
     console.log('总歌词行数:', allLyricsLines.length);
     console.log('需要处理的行数:', linesToProcess.length);
     console.log('被过滤的行:', allLyricsLines.filter(line => lrcTimeRegex.test(line.trim())));
@@ -638,11 +583,11 @@ document.getElementById('start-lrc-conversion').addEventListener('click', functi
     lrcConversionActive = true;
     currentLrcIndex = 0;
     lrcContent = '';
-    // 保存原始歌词行和需要处理的行
-    window.allLyricsLines = allLyricsLines; // 保存所有歌词行
-    currentLyricsLines = linesToProcess; // 只处理需要转换的行
+     
+    window.allLyricsLines = allLyricsLines;  
+    currentLyricsLines = linesToProcess;  
 
-    // 显示转换面板
+     
     document.getElementById('lrc-conversion-panel').style.display = 'block';
     document.getElementById('current-line-index').textContent = '0';
     document.getElementById('total-lines').textContent = currentLyricsLines.length;
@@ -651,20 +596,20 @@ document.getElementById('start-lrc-conversion').addEventListener('click', functi
     document.getElementById('start-lrc-conversion').disabled = true;
     document.getElementById('download-lrc').disabled = true;
 
-    // 新增：启动时间更新定时器
+     
     if (timeUpdateInterval) {
         clearInterval(timeUpdateInterval);
     }
-    timeUpdateInterval = setInterval(updateCurrentTimeDisplay, 100); // 每100ms更新一次
+    timeUpdateInterval = setInterval(updateCurrentTimeDisplay, 100);  
 
     updateSystemInfo(`开始LRC歌词转换，需要处理${currentLyricsLines.length}行歌词`);
 });
 
-// 下一行歌词
+ 
 document.getElementById('next-line-btn').addEventListener('click', function () {
     if (!lrcConversionActive || currentLrcIndex >= currentLyricsLines.length) return;
 
-    // 自动获取当前播放时间
+     
     const currentTime = audioPlayer.currentTime;
     const minutes = Math.floor(currentTime / 60);
     const seconds = Math.floor(currentTime % 60);
@@ -673,21 +618,21 @@ document.getElementById('next-line-btn').addEventListener('click', function () {
     const timeString = `[${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}]`;
     const currentLine = currentLyricsLines[currentLrcIndex];
 
-    // 添加到LRC内容
+     
     lrcContent += timeString + currentLine + '\n';
     document.getElementById('lrc-preview-content').value = lrcContent;
 
-    // 更新进度
+     
     currentLrcIndex++;
     document.getElementById('current-line-index').textContent = currentLrcIndex;
 
-    // 检查是否完成
+     
     if (currentLrcIndex >= currentLyricsLines.length) {
         lrcConversionActive = false;
         document.getElementById('lrc-status').textContent = '转换完成';
         document.getElementById('download-lrc').disabled = false;
         
-        // 新增：停止时间更新定时器
+         
         if (timeUpdateInterval) {
             clearInterval(timeUpdateInterval);
             timeUpdateInterval = null;
@@ -699,7 +644,7 @@ document.getElementById('next-line-btn').addEventListener('click', function () {
     }
 });
 
-// 重置转换
+ 
 document.getElementById('reset-lrc-btn').addEventListener('click', function () {
     lrcConversionActive = false;
     currentLyricsLines = [];
@@ -715,7 +660,7 @@ document.getElementById('reset-lrc-btn').addEventListener('click', function () {
     document.getElementById('start-lrc-conversion').disabled = false;
     document.getElementById('download-lrc').disabled = true;
 
-    // 新增：停止时间更新定时器
+     
     if (timeUpdateInterval) {
         clearInterval(timeUpdateInterval);
         timeUpdateInterval = null;
@@ -724,15 +669,15 @@ document.getElementById('reset-lrc-btn').addEventListener('click', function () {
     updateSystemInfo('LRC转换已重置');
 });
 
-// 下载LRC文件
+ 
 document.getElementById('download-lrc').addEventListener('click', function () {
     if (lrcContent.trim() === '') {
         alert('没有可下载的LRC内容');
         return;
     }
 
-    // 直接使用转换过程中构建的lrcContent，确保预览和下载内容完全一致
-    // 清理内容：移除空行，保留所有转换的行（包括重复歌词）
+     
+     
     const finalLrcContent = lrcContent.split('\n')
         .filter(line => line.trim() !== '')
         .join('\n');
@@ -740,7 +685,7 @@ document.getElementById('download-lrc').addEventListener('click', function () {
     const currentSongName = document.getElementById('current-song').textContent;
     const fileName = currentSongName + '.lrc';
 
-    // 创建下载链接
+     
     const blob = new Blob([finalLrcContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -754,19 +699,19 @@ document.getElementById('download-lrc').addEventListener('click', function () {
     updateSystemInfo(`已下载LRC文件: ${fileName}`);
 });
 
-// 加载歌词
+ 
 async function loadLyrics(lyricsPath) {
-    // 保存当前歌词路径，用于编辑保存
+     
     window.currentLyricsPath = lyricsPath;
 
     if (lyricsPath === '[NO DATA]') {
-        // 显示空白内容而不是"暂无歌词数据"，允许直接编辑
+         
         lyricsContent.innerHTML = '';
         lyricsContent.classList.add('editable');
         lyricsContent.contentEditable = true;
         lyricsInfo.textContent = '无歌词 - 可编辑';
 
-        // 自动进入编辑模式
+         
         setTimeout(() => {
             startEditLyrics();
         }, 100);
@@ -781,23 +726,23 @@ async function loadLyrics(lyricsPath) {
         }
         const lyricsText = await response.text();
 
-        // 直接显示歌词文件中的所有内容
+         
         lyricsContent.innerHTML = lyricsText;
         lyricsContent.classList.remove('editable');
         lyricsContent.contentEditable = false;
         lyricsInfo.textContent = '已加载';
 
-        // 更新系统信息
+         
         updateSystemInfo('歌词加载成功');
     } catch (error) {
         console.error('加载歌词失败:', error);
-        // 显示空白内容而不是"暂无歌词数据"，允许直接编辑
+         
         lyricsContent.innerHTML = '';
         lyricsContent.classList.add('editable');
         lyricsContent.contentEditable = true;
         lyricsInfo.textContent = '加载失败 - 可编辑';
 
-        // 自动进入编辑模式
+         
         setTimeout(() => {
             startEditLyrics();
         }, 100);
@@ -805,23 +750,23 @@ async function loadLyrics(lyricsPath) {
     }
 }
 
-// 歌词编辑功能
+ 
 let isEditingLyrics = false;
 let originalLyricsContent = '';
 
-// 开始编辑歌词
+ 
 function startEditLyrics() {
     if (isEditingLyrics) return;
 
     isEditingLyrics = true;
     originalLyricsContent = lyricsContent.innerHTML;
 
-    // 启用编辑模式
+     
     lyricsContent.classList.add('editable');
     lyricsContent.contentEditable = true;
     lyricsContent.focus();
 
-    // 显示编辑控制按钮
+     
     document.getElementById('lyrics-controls').style.display = 'flex';
     document.getElementById('edit-lyrics-btn').style.display = 'none';
     document.getElementById('save-lyrics-btn').style.display = 'inline-block';
@@ -830,18 +775,18 @@ function startEditLyrics() {
     updateSystemInfo('进入歌词编辑模式');
 }
 
-// 取消编辑
+ 
 function cancelEditLyrics() {
     if (!isEditingLyrics) return;
 
     isEditingLyrics = false;
 
-    // 恢复原始内容
+     
     lyricsContent.innerHTML = originalLyricsContent;
     lyricsContent.classList.remove('editable');
     lyricsContent.contentEditable = false;
 
-    // 隐藏编辑控制按钮
+     
     document.getElementById('lyrics-controls').style.display = 'none';
     document.getElementById('edit-lyrics-btn').style.display = 'inline-block';
     document.getElementById('save-lyrics-btn').style.display = 'none';
@@ -850,20 +795,20 @@ function cancelEditLyrics() {
     updateSystemInfo('取消歌词编辑');
 }
 
-// 保存歌词
+ 
 async function saveLyrics() {
     if (!isEditingLyrics) return;
 
     const newLyricsContent = lyricsContent.innerHTML.trim();
 
-    // 检查是否有内容
+     
     if (!newLyricsContent) {
         alert('请输入歌词内容');
         return;
     }
 
     try {
-        // 如果是新歌词（没有歌词文件），提示用户保存到文件
+         
         if (window.currentLyricsPath === '[NO DATA]') {
             const songName = document.getElementById('current-song').textContent;
             const fileName = prompt('请输入歌词文件名（不含扩展名）:', songName);
@@ -873,29 +818,29 @@ async function saveLyrics() {
                 return;
             }
 
-            // 创建新的歌词文件路径
+             
             const newLyricsPath = `Lyrics/${fileName}.txt`;
 
-            // 这里需要实现保存到服务器的逻辑
-            // 由于是前端演示，这里只显示保存成功信息
+             
+             
             alert(`歌词已保存到: ${newLyricsPath}`);
 
-            // 更新歌词信息
+             
             lyricsInfo.textContent = '已保存';
             updateSystemInfo(`歌词已保存: ${newLyricsPath}`);
         } else {
-            // 更新现有歌词文件
+             
             alert(`歌词本地已更新到: ${window.currentLyricsPath}`);
             lyricsInfo.textContent = '已更新';
             updateSystemInfo(`歌词已本地更新: ${window.currentLyricsPath}`);
         }
 
-        // 退出编辑模式
+         
         isEditingLyrics = false;
         lyricsContent.classList.remove('editable');
         lyricsContent.contentEditable = false;
 
-        // 隐藏编辑控制按钮
+         
         document.getElementById('lyrics-controls').style.display = 'none';
         document.getElementById('edit-lyrics-btn').style.display = 'inline-block';
         document.getElementById('save-lyrics-btn').style.display = 'none';
@@ -907,13 +852,13 @@ async function saveLyrics() {
     }
 }
 
-// 绑定编辑按钮事件
+ 
 document.getElementById('edit-lyrics-btn').addEventListener('click', startEditLyrics);
 document.getElementById('cancel-edit-btn').addEventListener('click', cancelEditLyrics);
 document.getElementById('confirm-save-btn').addEventListener('click', saveLyrics);
 document.getElementById('save-lyrics-btn').addEventListener('click', saveLyrics);
 
-// ESC键取消编辑
+ 
 document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && isEditingLyrics) {
         cancelEditLyrics();
@@ -921,28 +866,8 @@ document.addEventListener('keydown', function (e) {
 });
 
 
-/*
 
 
-
-
-
-
-用户管理相关事件监听
-主要功能:
-1. 加载用户数据
-2. 更新用户统计信息
-3. 渲染用户表格
-4. 刷新用户数据
-5. 导出用户数据
-6. 导入用户数据
-
-
-
-
-
-
-*/
 
 
 let userList = [];
@@ -1072,7 +997,7 @@ function renderUserList(list) {
 
         const statusBan = document.createElement('div');
         statusBan.className = 'user-status ' + (banned ? 'blacklisted' : (pendingDel ? 'pending' : 'safe'));
-        // 定时封禁显示到期时间
+         
         const banUntil = banned && parseDate(user.bannedUntil || user.banned_until || user.banExpiresAt || user.expiresAt || user.expires_at);
         statusBan.textContent = banned
             ? ('已封禁' + (banUntil && !isNaN(banUntil.getTime()) ? ' ·至 ' + formatDateTime(banUntil) : ''))
@@ -1080,7 +1005,7 @@ function renderUserList(list) {
 
         const actions = document.createElement('div');
         actions.className = 'user-actions';
-        // ID=1 超级管理员不可被编辑/删除/封禁（后端拦截，前端禁用）
+         
         const isSuper = String(userId) === '1' || user.userId === 1;
         const mkBtn = function (cls, text, fn, disable) {
             const b = document.createElement('button');
@@ -1093,7 +1018,7 @@ function renderUserList(list) {
         actions.appendChild(mkBtn('action-btn edit', '记录', function () { showLoginHistory(user); }, isSuper));
         actions.appendChild(mkBtn('action-btn edit', 'DLC', function () { showDlcManager(user); }, isSuper));
         actions.appendChild(mkBtn('action-btn edit', '编辑', function () { openEditModal(user); }, isSuper));
-        // 升级（管理员/VIP）仅 4 级超级管理员可操作
+         
         if (canAccess(4) && !isSuper) {
             actions.appendChild(mkBtn('action-btn edit', '升级', function () { openPromoteModal(user); }, false));
         }
@@ -1159,7 +1084,7 @@ function updateUserStats() {
     }
 }
 
-// ===== IP 封禁管理 =====
+ 
 let ipBans = [];
 
 function formatBanTime(t) {
@@ -1209,7 +1134,7 @@ function renderIpBans() {
         const by = b.banned_by || b.bannedBy || b.addedBy || b.banner || b.admin || b.by || b.operator || '-';
         const reason = b.reason || '-';
         const time = formatBanTime(b.banned_at || b.bannedAt || b.addedAt || b.time || b.created_at || b.createdAt);
-        // 定时封禁显示到期时间（自动解封时刻）
+         
         const exp = b.bannedUntil || b.banned_until || b.expiresAt || b.expireAt || b.expires_at || b.unbanAt;
         const expTip = exp ? '<br><span style="color:var(--ziyit-text-secondary);font-size:12px;">到期 ' + formatBanTime(exp) + '</span>' : '';
         html += '<div class="user-item" style="' + cols + '">'
@@ -1235,7 +1160,7 @@ function renderIpBans() {
     });
 }
 
-// 构造用户的搜索文本（用户名/邮箱/ID/角色/状态/登录IP）
+ 
 function userSearchText(user) {
     const uid = user.userId != null ? user.userId
         : (user.id != null ? user.id : (user.user_id != null ? user.user_id : ''));
@@ -1358,7 +1283,7 @@ function closeDeleteUserModal() {
     deletingUser = null;
 }
 
-// 查看用户的登录记录（含 IP 与归属地）
+ 
 function showLoginHistory(user) {
     document.getElementById('lh-user-label').textContent = (user.username || '-') + '（ID: ' + (user.userId ?? '-') + '）的登录记录';
     const area = document.getElementById('login-history-list');
@@ -1368,7 +1293,7 @@ function showLoginHistory(user) {
         document.getElementById('login-history-modal').classList.add('active');
         return;
     }
-    // 从旧到新显示，index 对应原数组下标（0 开始）
+     
     const items = list.map(function (rec, index) {
         return {
             index: index,
@@ -1385,7 +1310,7 @@ function showLoginHistory(user) {
     area.innerHTML = html;
     document.getElementById('login-history-modal').classList.add('active');
 
-    // 查询每个 IP 的归属地
+     
     area.querySelectorAll('[data-loc-ip]').forEach(function (span) {
         const ip = span.getAttribute('data-loc-ip');
         if (!ip || ip === '-') {
@@ -1405,7 +1330,7 @@ function closeLoginHistory() {
     document.getElementById('login-history-modal').classList.remove('active');
 }
 
-// ==================== 用户 DLC 管理 ====================
+ 
 let dlcManagerUser = null;
 
 function showDlcManager(user) {
@@ -1509,12 +1434,12 @@ function closeDlcManager() {
     dlcManagerUser = null;
 }
 
-// ==================== 通用工具 ====================
+ 
 function escAdmin(str) {
     return String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// ==================== API Key 管理 ====================
+ 
 let apiKeyList = [];
 let editingApiKey = null;
 
@@ -1605,7 +1530,7 @@ function createApiKey() {
     }
     const btn = document.getElementById('confirm-api-key');
     btn.disabled = true;
-    // 管理员创建密钥时额度按等级自动分配（由后端决定），前端不传额度的用户仅指定 userId
+     
     ZIYIT_API.request('/admin/api-keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1632,24 +1557,24 @@ function openEditApiKey(key) {
     });
     document.getElementById('apikey-edit-status').value = cur && String(cur.status).toLowerCase() === 'disabled' ? 'disabled' : 'active';
     document.getElementById('apikey-edit-limit').value = cur ? cur.limit : -1;
-    // 无限额度（-1）仅 4 级超级管理员可设置：低等级时隐藏该能力并给出提示
+     
     const limitInput = document.getElementById('apikey-edit-limit');
     limitInput.title = canAccess(4) ? '每月限制（-1 = 无限）' : '仅 4 级超级管理员可设置无限额度（-1）';
     limitInput.disabled = !canAccess(4);
 
-    // 今日额度：-1（不限）勾选「今日不限」；旧密钥无该字段时按「不限」兼容
+     
     const dailyUnlimited = !cur || cur.daily === -1 || cur.daily === '-1' || cur.daily == null;
     document.getElementById('apikey-edit-daily-unlimited').checked = dailyUnlimited;
     document.getElementById('apikey-edit-daily').value = dailyUnlimited ? '' : cur.daily;
     setEditDailyDisabled();
 
-    // 预警额度：-1（关闭）勾选「关闭预警」；旧密钥无该字段默认无预警
+     
     const warnOff = !cur || cur.warn === -1 || cur.warn === '-1' || cur.warn == null;
     document.getElementById('apikey-edit-warn-off').checked = warnOff;
     document.getElementById('apikey-edit-warn').value = warnOff ? '' : cur.warn;
     setEditWarnDisabled();
 
-    // 白名单：每行一个来源；空 = 不限来源
+     
     document.getElementById('apikey-edit-origins').value = cur ? cur.origins.join('\n') : '';
 
     document.getElementById('api-key-edit-modal').classList.add('active');
@@ -1674,7 +1599,7 @@ function saveApiKeyEdit() {
     const status = document.getElementById('apikey-edit-status').value;
     const limitRaw = document.getElementById('apikey-edit-limit').value;
     const limit = parseInt(limitRaw, 10);
-    // 非 4 级不允许设无限额度（-1），且不可超过其等级额度（3级=10 / 2级=5 / 1级=5）
+     
     const maxQuota = currentAdminLevel === 4 ? Infinity : (currentAdminLevel === 3 ? 10 : 5);
     if (isNaN(limit) || limit === -1) {
         if (!canAccess(4)) {
@@ -1685,7 +1610,7 @@ function saveApiKeyEdit() {
         alert('当前等级额度上限为 ' + (maxQuota === Infinity ? '无限' : maxQuota) + '，不能设置更高额度');
         return;
     }
-    // 今日额度：勾选「今日不限」= -1，否则必须为 ≥0 的整数
+     
     let daily = -1;
     if (!document.getElementById('apikey-edit-daily-unlimited').checked) {
         daily = parseInt(document.getElementById('apikey-edit-daily').value, 10);
@@ -1694,7 +1619,7 @@ function saveApiKeyEdit() {
             return;
         }
     }
-    // 预警额度：勾选「关闭预警」= -1，否则必须为 ≥0 的整数
+     
     let warn = -1;
     if (!document.getElementById('apikey-edit-warn-off').checked) {
         warn = parseInt(document.getElementById('apikey-edit-warn').value, 10);
@@ -1703,7 +1628,7 @@ function saveApiKeyEdit() {
             return;
         }
     }
-    // 白名单：每行一个来源，去空；传空数组 = 清除限制（不限来源）
+     
     const origins = document.getElementById('apikey-edit-origins').value
         .split('\n')
         .map(function (s) { return s.trim(); })
@@ -1737,13 +1662,13 @@ function deleteApiKey(key) {
     });
 }
 
-// ==================== MOD / DLC 管理 ====================
+ 
 let modList = [];
 let editingMod = null;
 
 function modFields(m) {
     if (!m) return {};
-    // modVersion 可能是数组（多版本）或字符串（最新版本）
+     
     var v = m.modVersion != null ? m.modVersion : m.versions;
     return {
         id: m.modId != null ? m.modId : (m.id != null ? m.id : '-'),
@@ -1810,14 +1735,14 @@ function renderMods() {
     });
 }
 
-// 填充作者下拉（用户列表，值为用户ID，展示用户名）
+ 
 function fillModAuthorOptions(selected) {
     const sel = document.getElementById('mod-author');
     if (!userList.length) {
         ZIYIT_API.request('/admin/users').then(function (data) {
             userList = Array.isArray(data) ? data : (data.users || data.data || []);
             fillModAuthorOptions(selected);
-        }).catch(function () { /* 忽略，下拉保持空 */ });
+        }).catch(function () {   });
         return;
     }
     let html = '<option value="">（未选择）</option>';
@@ -1829,7 +1754,7 @@ function fillModAuthorOptions(selected) {
         if (isSel) matched = true;
         html += '<option value="' + uid + '"' + (isSel ? ' selected' : '') + '>' + escAdmin(uname) + '（ID: ' + uid + '）</option>';
     });
-    // 编辑时原作者已不在用户列表（如已注销），保留原值占位，避免丢失
+     
     if (selected !== '' && !matched) {
         html += '<option value="' + escAdmin(selected) + '" selected>' + escAdmin(selected) + '（原作者，不在当前用户列表）</option>';
     }
@@ -1869,7 +1794,7 @@ function saveMod() {
     }
     const versions = document.getElementById('mod-versions').value.split(',')
         .map(function (v) { return v.trim(); }).filter(function (v) { return v.length > 0; });
-    // 作者下拉值为用户ID，转 int 提交；空值传 null
+     
     const authorVal = document.getElementById('mod-author').value.trim();
     let modAuthor = null;
     if (authorVal !== '') {
@@ -1916,7 +1841,7 @@ function deleteMod(m) {
     });
 }
 
-// ==================== RC 软件密钥管理 ====================
+ 
 let rcKeyList = [];
 let keyTargetUser = null;
 
@@ -2070,7 +1995,7 @@ function confirmDeleteUser() {
     }).catch(function (err) {
         alert('删除失败: ' + (err.message || err));
     }).finally(function () {
-        // 无论成功失败（含超时），都恢复按钮状态，避免卡死
+         
         btn.disabled = false;
         btn.innerHTML = '确认删除';
     });
@@ -2109,32 +2034,32 @@ function saveAddUser(e) {
     });
 }
 
-// 用户管理相关事件监听
+ 
 document.addEventListener('DOMContentLoaded', function () {
-    // 在线人数：进入页面立即请求，之后每 30 秒刷新（不依赖用户管理是否打开）
+     
     loadOnlineStats();
     setInterval(loadOnlineStats, 30000);
 
-    // 用户管理菜单点击
+     
     document.querySelector('[data-section="user-management"]').addEventListener('click', function () {
-        // 切换到用户管理页面
+         
         document.querySelectorAll('.content-section').forEach(section => {
             section.classList.remove('active');
         });
         document.getElementById('user-management').classList.add('active');
 
-        // 加载用户数据
+         
         loadUsers();
         loadIpBans();
     });
 
-    // 刷新用户列表
+     
     document.getElementById('refresh-users').addEventListener('click', function () {
         loadUsers();
         updateSystemInfo('用户列表已刷新');
     });
 
-    // IP 封禁管理
+     
     document.getElementById('admin-ban-ip-btn').addEventListener('click', function () {
         const ip = document.getElementById('ip-ban-input').value.trim();
         const reason = document.getElementById('ip-reason-input').value.trim();
@@ -2170,13 +2095,13 @@ document.addEventListener('DOMContentLoaded', function () {
         updateSystemInfo('IP 封禁列表已刷新');
     });
 
-    // 搜索用户
+     
     document.getElementById('user-search').addEventListener('input', searchUsers);
 
-    // 导出用户数据
+     
     document.getElementById('export-users').addEventListener('click', exportUsers);
 
-    // 编辑用户
+     
     document.getElementById('user-form').addEventListener('submit', saveEditUser);
     document.getElementById('cancel-edit').addEventListener('click', closeEditModal);
     document.getElementById('user-modal').addEventListener('click', function (e) {
@@ -2185,7 +2110,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // 添加用户
+     
     document.getElementById('add-user-btn').addEventListener('click', openAddUserModal);
     document.getElementById('add-user-form').addEventListener('submit', saveAddUser);
     document.getElementById('cancel-add-user').addEventListener('click', closeAddUserModal);
@@ -2195,7 +2120,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // 删除用户
+     
     document.getElementById('confirm-delete-user').addEventListener('click', confirmDeleteUser);
     document.getElementById('cancel-delete-user').addEventListener('click', closeDeleteUserModal);
     document.getElementById('cancel-login-history').addEventListener('click', closeLoginHistory);
@@ -2210,7 +2135,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // DLC 模态框
+     
     document.getElementById('confirm-grant-dlc').addEventListener('click', grantDlc);
     document.getElementById('cancel-dlc').addEventListener('click', closeDlcManager);
     document.getElementById('dlc-modal').addEventListener('click', function (e) {
@@ -2219,7 +2144,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // API Key 模态框
+     
     document.getElementById('confirm-api-key').addEventListener('click', createApiKey);
     document.getElementById('cancel-api-key').addEventListener('click', function () {
         document.getElementById('api-key-modal').classList.remove('active');
@@ -2231,19 +2156,19 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('apikey-edit-daily-unlimited').addEventListener('change', setEditDailyDisabled);
     document.getElementById('apikey-edit-warn-off').addEventListener('change', setEditWarnDisabled);
 
-    // MOD 模态框
+     
     document.getElementById('confirm-mod').addEventListener('click', saveMod);
     document.getElementById('cancel-mod').addEventListener('click', function () {
         document.getElementById('mod-modal').classList.remove('active');
     });
 
-    // RC 密钥模态框
+     
     document.getElementById('confirm-key-add').addEventListener('click', saveKeyAdd);
     document.getElementById('cancel-key-add').addEventListener('click', function () {
         document.getElementById('key-add-modal').classList.remove('active');
     });
 
-    // 新模态框遮罩关闭
+     
     ['api-key-modal', 'api-key-edit-modal', 'mod-modal', 'key-add-modal'].forEach(function (id) {
         document.getElementById(id).addEventListener('click', function (e) {
             if (e.target === this) {
@@ -2253,7 +2178,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// 系统信息更新（补充）：仅更新「最后更新」（本地时间），服务器时间由 loadServerStats 拉取
+ 
 function updateSystemInfo(message) {
     const lastUpdate = document.getElementById('last-update');
     const now = new Date();
@@ -2262,7 +2187,7 @@ function updateSystemInfo(message) {
     console.log(`[系统] ${message}`);
 }
 
-// 字节数格式化
+ 
 function fmtBytes(bytes, digits) {
     digits = digits === undefined ? 1 : digits;
     if (bytes === null || bytes === undefined || isNaN(bytes)) return '-';
@@ -2272,16 +2197,16 @@ function fmtBytes(bytes, digits) {
     return bytes + ' B';
 }
 
-// 服务器时间格式化：显示服务器本地时间，不做浏览器时区换算
+ 
 function fmtServerTime(st) {
     if (st == null || st === '') return '';
     if (typeof st === 'number') {
-        const ms = st < 1e12 ? st * 1000 : st; // 秒级时间戳
+        const ms = st < 1e12 ? st * 1000 : st;  
         const d = new Date(ms);
         return isNaN(d.getTime()) ? String(st) : d.toLocaleString();
     }
     if (typeof st === 'string') {
-        // 形如 2026-08-03T12:00:00.123456+00:00：取日期时间部分（即偏移下的服务器本地时间）
+         
         const m = st.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[T ](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
         if (m) {
             const p = function (n) { return n < 10 ? '0' + n : '' + n; };
@@ -2294,21 +2219,21 @@ function fmtServerTime(st) {
     return String(st);
 }
 
-// 实时加载服务器状态（真实数据，每5秒一次）
+ 
 let serverStatsTimer = null;
 function loadServerStats() {
     ZIYIT_API.request('/admin/server/stats', null, 0, false, true).then(function (res) {
         const data = res && res.data ? res.data : res;
         if (!data) return;
 
-        // 服务器时间：优先后端返回的时间字段，其次 HTTP Date 响应头（真实服务器时间）
+         
         const serverTimeEl = document.getElementById('server-time');
         if (serverTimeEl) {
             const st = data.server_time || data.serverTime || data.timestamp || data.time || data.current_time || data.datetime || data.date;
             if (st != null && st !== '') {
                 serverTimeEl.textContent = fmtServerTime(st);
             } else if (res && res.date) {
-                // HTTP Date 响应头为 UTC，按服务器（UTC）时间显示，不做本地时区换算
+                 
                 const d = new Date(res.date);
                 if (!isNaN(d.getTime())) serverTimeEl.textContent = d.toUTCString().replace('GMT', 'UTC');
             }
@@ -2353,7 +2278,7 @@ function loadServerStats() {
     });
 }
 
-// ==================== 管理员管理（仅4级，二次验证） ====================
+ 
 let adminList = [];
 let editingAdmin = null;
 
@@ -2375,7 +2300,7 @@ function openAdminEditModal(admin) {
     document.getElementById('admin-edit-username').value = admin.username || admin.name || '-';
     const levelSel = document.getElementById('admin-edit-level');
     levelSel.value = String(admin.level || 1);
-    // ID=1 / Adminstrator 不可修改等级（后端拦截，前端禁用）
+     
     levelSel.disabled = isSuper;
     document.getElementById('admin-edit-modal').classList.add('active');
 }
@@ -2390,7 +2315,7 @@ function adminFields(a) {
     const uname = a.username || a.userName || a.name || a.Username || a.UserName || a.USERNAME || a.Name || a.nickname || a.nickName;
     return {
         userId: uid !== '' && uid != null ? uid : '-',
-        // 取不到用户名时用 ID 兜底，避免列表显示成 "-"
+         
         username: uname || (uid !== '' && uid != null ? 'ID ' + uid : '-'),
         level: a.level != null ? Number(a.level) : 1,
         type: a.type || a.role || a.permission || a.user_type || a.Permission || '',
@@ -2405,8 +2330,8 @@ function loadAdmins() {
         adminList = Array.isArray(data) ? data
             : (data && (data.admins || data.list || data.items || data.result || data.data || data.records)) || [];
         if (!Array.isArray(adminList)) adminList = [];
-        // 可见性：同级及所有低级管理员 + 向上最近一个实际存在等级的管理员
-        // 例：admin_list.json 仅 4级+1级 时，1级见{1,4}、2级见{1,2,4}、3级见{1,2,3,4}、4级见{1,2,3,4}
+         
+         
         const myLevel = currentAdminLevel || 4;
         const existLevels = {};
         adminList.forEach(function (a) {
@@ -2534,14 +2459,14 @@ function removeAdmin(admin) {
     });
 }
 
-// ==================== 后室成员管理（2级查看/3级编辑） ====================
+ 
 let backroomsMembers = [];
 
 function loadBackroomsMembers() {
     const area = document.getElementById('backrooms-member-list');
     if (area) area.innerHTML = loadingHTML();
     return ZIYIT_API.adminListBackroomsMembers().then(function (data) {
-        // 后端返回 { ID[], Permission[], Email[] }（ID 为用户 ID，可能为大小写变体）
+         
         const norm = data || {};
         const ids = norm.ID || norm.id || norm.Id || norm.ids || norm.userIds || norm.UserIds || norm.usernames || norm.names || [];
         const perms = norm.Permission || norm.permission || norm.permissions || norm.Permissions || [];
@@ -2555,7 +2480,7 @@ function loadBackroomsMembers() {
                 email: emails[i] != null ? emails[i] : ''
             });
         }
-        // 兼容直接返回对象数组
+         
         if (!max && Array.isArray(data)) {
             backroomsMembers = data.map(function (m) {
                 return {
@@ -2605,7 +2530,7 @@ function renderBackroomsMembers() {
             + '</div></div>';
     });
     area.innerHTML = html;
-    // 3级+ 可编辑：下拉改变即保存
+     
     if (canAccess(3)) {
         area.querySelectorAll('.member-perm').forEach(function (sel) {
             sel.addEventListener('change', function () {
@@ -2624,7 +2549,7 @@ function renderBackroomsMembers() {
     }
 }
 
-// ==================== 升级用户（仅4级） ====================
+ 
 let promoteTarget = null;
 
 function openPromoteModal(user) {
@@ -2659,14 +2584,14 @@ function confirmPromoteUser() {
     });
 }
 
-// ==================== 管理员私聊 & 全局消息 ====================
-// 收件箱接口读后即删，故消息本地持久化到 Cookie：
-//   sent_msgs —— 发出的消息（JSON 数组）
-//   recv_msgs —— 收到的消息（JSON 数组，含 broadcast:true 的全局消息）
-const CHAT_COOKIE_MAX = 40;       // 每个 Cookie 最多保留条数
-const CHAT_COOKIE_BYTES = 3500;   // 防超 Cookie 4KB 上限
-let chatData = {};                // key: 'peer:<userId>' 或 'peer:broadcast'
-let chatActivePeer = null;        // 当前选中会话的对方 userId（'broadcast' 为系统广播）
+ 
+ 
+ 
+ 
+const CHAT_COOKIE_MAX = 40;        
+const CHAT_COOKIE_BYTES = 3500;    
+let chatData = {};                 
+let chatActivePeer = null;         
 let chatPollTimer = null;
 
 function chatGetCookie(name) {
@@ -2687,7 +2612,7 @@ function chatSetCookie(name, arr) {
     document.cookie = name + '=' + encodeURIComponent(s) + '; expires=' + exp + '; path=/';
 }
 
-// 按 sentAt 升序排列消息（老在上、新在下）；无时间戳的排最后
+ 
 function chatSortMsgs(arr) {
     if (!Array.isArray(arr)) return arr;
     arr.sort(function (a, b) {
@@ -2701,7 +2626,7 @@ function chatSortMsgs(arr) {
     return arr;
 }
 
-// 追加一条消息到会话，可选持久化到 Cookie
+ 
 function chatAddMsg(m, persist) {
     const peerId = m.broadcast ? 'broadcast' : (m.mine ? m.toUserId : m.fromUserId);
     const peerName = m.broadcast ? '系统广播'
@@ -2710,7 +2635,7 @@ function chatAddMsg(m, persist) {
     if (!chatData[key]) chatData[key] = { peerId: peerId, peerName: peerName, msgs: [], unread: 0 };
     if (chatData[key].peerName !== '系统广播') chatData[key].peerName = peerName;
     chatData[key].msgs.push(m);
-    // 服务器返回顺序不可靠，始终按时间戳排序，保证最新消息显示在正确位置
+     
     chatSortMsgs(chatData[key].msgs);
     if (persist) {
         const cookie = chatGetCookie(m.mine ? 'sent_msgs' : 'recv_msgs');
@@ -2719,14 +2644,14 @@ function chatAddMsg(m, persist) {
     }
 }
 
-// 从 Cookie 恢复历史消息（页面刷新后调用一次）
+ 
 function chatLoadHistory() {
     chatData = {};
     chatGetCookie('sent_msgs').forEach(function (m) { m.mine = true; chatAddMsg(m, false); });
     chatGetCookie('recv_msgs').forEach(function (m) { m.mine = false; chatAddMsg(m, false); });
 }
 
-// Toast 轻提示（非阻断）
+ 
 function showToast(text, type) {
     let wrap = document.getElementById('ziyit-toast-wrap');
     if (!wrap) {
@@ -2743,7 +2668,7 @@ function showToast(text, type) {
     setTimeout(function () { el.remove(); }, 2600);
 }
 
-// 错误码统一文案：401 未登录 / 403 无权限 / 404 接收者非管理员 / 429 限流
+ 
 function chatErrText(err, fallback) {
     if (err && err.status === 401) return '登录已过期，请重新登录';
     if (err && err.status === 403) return '无权限操作';
@@ -2760,7 +2685,7 @@ function chatTime(iso) {
     return p(d.getHours()) + ':' + p(d.getMinutes());
 }
 
-// 从管理员列表点"私聊"进入：选中会话并打开面板
+ 
 function openChatWith(admin) {
     const f = adminFields(admin);
     if (!chatData['peer:' + f.userId]) {
@@ -2797,7 +2722,7 @@ function renderChatSessions() {
         box.innerHTML = '<div class="chat-empty">暂无会话</div>';
         return;
     }
-    // 按最近消息时间倒序
+     
     keys.sort(function (a, b) {
         const ma = chatData[a].msgs;
         const mb = chatData[b].msgs;
@@ -2839,7 +2764,7 @@ function renderChatMessages() {
         return;
     }
     if (title) title.textContent = (s.peerId === 'broadcast' ? '📢 系统广播' : escAdmin(s.peerName));
-    // 渲染前防御性排序（兼容旧 Cookie 中已存的乱序数据）
+     
     chatSortMsgs(s.msgs);
     if (!s.msgs.length) {
         box.innerHTML = '<div class="chat-empty">暂无消息</div>';
@@ -2890,7 +2815,7 @@ function chatSend() {
     });
 }
 
-// 轮询收件箱：接口读后即删，必须持续拉取并本地保存，否则消息丢失
+ 
 function pollChatInbox() {
     if (!currentAdminLevel) return Promise.resolve();
     return ZIYIT_API.adminChatInbox().then(function (data) {
@@ -2905,12 +2830,12 @@ function pollChatInbox() {
         renderChatSessions();
         if (chatModalOpen()) renderChatMessages();
     }).catch(function (err) {
-        if (err && err.status === 401) { /* 401 由全局回调统一跳转登录 */ }
-        if (err && err.status === 429) { /* 轮询被限流：静默，下轮再试 */ }
+        if (err && err.status === 401) {   }
+        if (err && err.status === 429) {   }
     });
 }
 
-// ==================== 全局消息（广播） ====================
+ 
 function openBroadcastModal() {
     if (!canAccess(2)) { showToast('1级管理员无广播权限', 'error'); return; }
     document.getElementById('broadcast-content').value = '';
@@ -2945,7 +2870,7 @@ function confirmBroadcast() {
     });
 }
 
-// 私聊 / 全局消息控件绑定
+ 
 document.addEventListener('DOMContentLoaded', function () {
     const chatBtn = document.getElementById('admin-chat-btn');
     if (chatBtn) chatBtn.addEventListener('click', function () { openChatModal(); });
@@ -2971,18 +2896,18 @@ document.addEventListener('DOMContentLoaded', function () {
     if (confirmB) confirmB.addEventListener('click', confirmBroadcast);
 });
 
-// ==================== 在线客服控制台（/guide/human，任意管理员） ====================
+ 
 
 var guideConsole = {
-    polling: false,       // 是否在轮询中
-    sessions: {},         // sessionId -> { sessionId, user, userId, msgs: [], unread, accepted }
-    msgSeen: {},          // 已渲染消息 id（去重）
+    polling: false,        
+    sessions: {},          
+    msgSeen: {},           
     activeSession: null,
     myUserId: null
 };
 
-// 恢复全局 watcher 通知过的待处理会话。
-// 收件箱"读后即删"：消息可能已被任意页面上的 watcher 消费，从 localStorage 恢复避免客服队列丢失。
+ 
+ 
 function guideRestorePending() {
     var raw = null;
     try { raw = localStorage.getItem('ziyit_guide_pending'); } catch (e) {}
@@ -3013,29 +2938,29 @@ function guideRestorePending() {
 }
 
 function guideInit() {
-    // 先取管理员自身信息（myUserId 用于区分"我/对方"消息），再恢复待处理会话与渲染，
-    // 否则刷新后自己发送的消息会被误判为对方消息
+     
+     
     ZIYIT_API.adminMe().then(function (me) {
         guideConsole.myUserId = (me && (me.userId || me.user_id)) || null;
         guideRestorePending();
         if (guideConsole.activeSession) guideRenderSessionMessages(guideConsole.activeSession);
-        // 客服名单管理：仅超级管理员（level 4）可见
+         
         if (me && Number(me.level) === 4) {
             const panel = document.getElementById('guide-agents-panel');
             if (panel) panel.style.display = '';
             guideLoadAgents();
         }
     }).catch(function () {
-        // adminMe 失败时仍恢复待处理会话（消息归属判断退化为全部按"对方"显示）
+         
         guideRestorePending();
     });
 }
 
-// 轮询待接入会话（每 3 秒；离开区块自动停止）
+ 
 function guideStartPolling() {
     if (guideConsole.polling) return;
-    // 先调 /guide/auth/sync 写入 HttpOnly Cookie guide_token（后端 /guide/human/* 依赖它识别身份）。
-    // 带现有 Token 同步：Token 有效则直接写 Cookie 不调 login；失效时自动重登一次；仍失败才停止轮询
+     
+     
     ZIYIT_API.guideAuthSync().then(function () {
         guideConsole.polling = true;
         guidePollInbox();
@@ -3052,7 +2977,7 @@ function guideStartPolling() {
 function guidePollInbox() {
     if (!guideConsole.polling) return Promise.resolve();
     return ZIYIT_API.guideHumanInbox().then(function (data) {
-        // 区块已隐藏则停止轮询
+         
         const sec = document.getElementById('guide-console');
         if (!sec || !sec.classList.contains('active')) { guideConsole.polling = false; return; }
         const list = (data && data.messages) || [];
@@ -3085,7 +3010,7 @@ function guidePollInbox() {
         const sec = document.getElementById('guide-console');
         if (!sec || !sec.classList.contains('active')) { guideConsole.polling = false; return; }
         if (err && (err.status === 401 || err.status === 403)) {
-            // 身份校验失败 / 不在客服名单：停止轮询，避免反复请求（401 由后台全局处理跳登录）
+             
             guideConsole.polling = false;
             const box = document.getElementById('guide-inbox-list');
             if (box) {
@@ -3106,7 +3031,7 @@ function guideRenderInbox() {
     if (!box) return;
     const ids = Object.keys(guideConsole.sessions);
     if (!ids.length) { box.innerHTML = '<div class="chat-empty">暂无待接入会话</div>'; return; }
-    // 按最新消息时间倒序
+     
     ids.sort(function (a, b) {
         const ma = guideConsole.sessions[a].msgs, mb = guideConsole.sessions[b].msgs;
         const ta = ma.length ? ma[ma.length - 1].ts || ma[ma.length - 1].sentAt || '' : '';
@@ -3170,7 +3095,7 @@ function guideAcceptSession(sid) {
     }).catch(function (err) { guideHandleErr(err); });
 }
 
-// 拉取会话完整历史并渲染
+ 
 function guideLoadHumanSession(sid) {
     ZIYIT_API.guideHumanSession(sid).then(function (d) {
         const msgs = (d && (d.messages || d.msgs)) || [];
@@ -3184,7 +3109,7 @@ function guideLoadHumanSession(sid) {
         });
         guideConsole.sessions[sid] = s;
         guideRenderSessionMessages(sid);
-        // 申诉会话（banInfo 存在）：被分配客服/超管可直接结束对话
+         
         if (s.banInfo) {
             const endBtn = document.getElementById('guide-console-end');
             if (endBtn) endBtn.disabled = false;
@@ -3192,14 +3117,14 @@ function guideLoadHumanSession(sid) {
     }).catch(function (err) { guideHandleErr(err); });
 }
 
-// 客服视角渲染消息：自己右、用户左
+ 
 function guideRenderSessionMessages(sid) {
     const box = document.getElementById('guide-console-messages');
     if (!box) return;
     const s = guideConsole.sessions[sid];
     if (!s || !s.msgs.length) { box.innerHTML = '<div class="chat-empty">暂无消息</div>'; return; }
     let html = '';
-    // 申诉会话：展示封禁信息卡片
+     
     if (s.banInfo) {
         const b = s.banInfo;
         const remain = String(b.remainingDays) === 'inf'
@@ -3221,8 +3146,8 @@ function guideRenderSessionMessages(sid) {
             html += '<div class="chat-broadcast chat-msg"><div class="chat-msg-bubble">🔄 ' + escAdmin(content || '请求转接人工客服') + '</div></div>';
             return;
         }
-        // 消息归属：优先 fromUserId，后端全量历史用 sender 字段（用户端格式）时以 sender 兜底，
-        // 避免刷新后自己发送的消息被误判为对方
+         
+         
         const msgId = m.fromUserId != null ? m.fromUserId : (m.sender != null ? m.sender : null);
         const mine = guideConsole.myUserId != null && msgId != null && String(msgId) === String(guideConsole.myUserId);
         const fromName = m.fromUsername || (mine ? '我' : s.user);
@@ -3261,7 +3186,7 @@ function guideSendReply() {
     });
 }
 
-// 客服结束已接管的人工会话：POST /guide/human/close（申诉会话同样适用，被分配客服/超管可结束）
+ 
 function guideEndSession() {
     const sid = guideConsole.activeSession;
     const s = sid && guideConsole.sessions[sid];
@@ -3276,12 +3201,12 @@ function guideEndSession() {
     }).catch(function (err) {
         if (btn) { btn.disabled = false; btn.textContent = '结束对话'; }
         if (err && err.status === 400) {
-            // 后端认为会话已结束：同样在本地移除并复位
+             
             guideCloseLocalSession(sid, true);
             return;
         }
         if (err && err.status === 404) {
-            // 会话不存在/已失效：静默移除，不提醒
+             
             guideRemoveSessionSilent(sid);
             return;
         }
@@ -3290,7 +3215,7 @@ function guideEndSession() {
     });
 }
 
-// 本地结束会话后的 UI 复位（从队列移除、清空聊天区、禁用输入）
+ 
 function guideCloseLocalSession(sid, toast) {
     delete guideConsole.sessions[sid];
     guideConsole.activeSession = null;
@@ -3308,7 +3233,7 @@ function guideCloseLocalSession(sid, toast) {
     if (toast) showToast('会话已结束', 'success');
 }
 
-// 会话失效：静默从队列移除并复位界面（不弹提示）
+ 
 function guideRemoveSessionSilent(sid) {
     if (!sid) return;
     delete guideConsole.sessions[sid];
@@ -3333,7 +3258,7 @@ function guideHandleErr(err) {
     if (err.status === 401) { showToast('登录已过期，请重新登录', 'error'); return; }
     if (err.status === 403) { showToast('无权限操作（仅限客服管理员/超级管理员）', 'error'); return; }
     if (err.status === 404) {
-        // 会话不存在或已失效：静默移除，不提醒
+         
         if (guideConsole.activeSession) guideRemoveSessionSilent(guideConsole.activeSession);
         return;
     }
@@ -3342,12 +3267,12 @@ function guideHandleErr(err) {
     showToast('网络错误：' + ((err && err.message) || '未知错误'), 'error');
 }
 
-// 客服名单：加载
+ 
 function guideLoadAgents() {
     ZIYIT_API.guideHumanAgents().then(function (d) {
         guideRenderAgents((d && d.agents) || []);
     }).catch(function (err) {
-        // 失败时替换"加载中..."占位，避免一直转圈；点击刷新可重试
+         
         const box = document.getElementById('guide-agents-list');
         if (box) {
             box.innerHTML = '<p style="padding:16px; color:var(--ziyit-text-secondary);">名单加载失败' +
@@ -3358,7 +3283,7 @@ function guideLoadAgents() {
     });
 }
 
-// 客服名单：渲染（在线状态 + 移除按钮）
+ 
 function guideRenderAgents(list) {
     const box = document.getElementById('guide-agents-list');
     if (!box) return;
@@ -3403,15 +3328,15 @@ function fmtChatTime(t) {
     return p(d.getHours()) + ':' + p(d.getMinutes());
 }
 
-// 离线确认令牌：URL 携带 guide_resolve 参数时提交 POST /guide/human/offline-resolve，
-// 成功后提示"离线已处理"并清除 URL 参数（避免刷新重复提交）。
-// 用于解决"客服离线次数累计导致无辜被移出名单"的问题。
+ 
+ 
+ 
 function guideResolveCheck() {
     var params = new URLSearchParams(location.search);
     var token = params.get('guide_resolve');
     if (!token) return;
 
-    // 带离线确认令牌进入后台：自动切入「在线客服」区块并启动轮询
+     
     switchSection('guide-console');
     updateSystemInfo('切换到在线客服');
     guideStartPolling();
@@ -3428,11 +3353,11 @@ function guideResolveCheck() {
         clearParam();
     }).catch(function (err) {
         if (err && err.status === 400) {
-            // 令牌无效/已过期：令牌已作废，清除参数避免每次刷新重复弹错
+             
             showToast((err.data && err.data.detail) || '令牌无效或已过期', 'error');
             clearParam();
         } else if (err && err.status === 401) {
-            // 未登录/登录态失效：交由统一登录流程处理，保留参数以便重新登录后提交
+             
         } else if (err && err.status === 403) {
             showToast('无权限处理该离线确认', 'error');
             clearParam();
@@ -3442,11 +3367,11 @@ function guideResolveCheck() {
     });
 }
 
-// 客服控制台控件绑定
+ 
 document.addEventListener('DOMContentLoaded', function () {
     guideResolveCheck();
     guideInit();
-    // 从任意页面通知卡片跳转直达：#guide-console 自动切入在线客服区块并启动轮询
+     
     if (location.hash === '#guide-console') {
         switchSection('guide-console');
         updateSystemInfo('切换到在线客服');
@@ -3465,7 +3390,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (input) input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); guideSendReply(); }
     });
-    // 客服名单管理控件（仅超管面板内存在）
+     
     const addId = document.getElementById('guide-agent-add-id');
     const addBtn = document.getElementById('guide-agent-add-btn');
     if (addId && addBtn) addBtn.addEventListener('click', function () {

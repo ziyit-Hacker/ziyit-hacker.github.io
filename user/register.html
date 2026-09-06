@@ -29,7 +29,7 @@
     </script>
     <link rel="stylesheet" href="../assets/ziyit-theme.css">
     <style>
-        /* ===== 注册页样式（DESIGN.md 设计体系，token 化） ===== */
+         
         body {
             background: var(--ziyit-bg);
         }
@@ -128,7 +128,7 @@
             font-size: 12px;
         }
 
-        /* 防重复点击提示 */
+         
         #dupTip {
             display: none;
             margin-top: 10px;
@@ -137,7 +137,7 @@
             color: var(--ziyit-warning);
         }
 
-        /* 注册成功后的邮箱验证提示条 */
+         
         .verify-tip {
             display: none;
             margin-top: 16px;
@@ -178,7 +178,7 @@
 </head>
 
 <body>
-    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -290,7 +290,7 @@
             else { el.style.display = 'none'; }
         }
 
-        // 403 API Key 语义失败提示：识别 origin/disabled/monthly/daily，给出跳转入口，不静默重试
+         
         function detectKeyDenied(e) {
             if (!e || e.status !== 403) return null;
             const raw = String(e.detail || e.message || '');
@@ -322,7 +322,7 @@
         function showKeyDeniedHint(info) {
             const el = document.getElementById('captchaHint');
             if (!el) return;
-            // 已登录 → 直接去密钥管理；未登录 → 先登录（登录后可在「我的密钥」领取免费密钥）
+             
             const loggedIn = typeof ZIYIT_API !== 'undefined' && !!(ZIYIT_API.getToken && ZIYIT_API.getToken());
             const href = loggedIn ? 'api-key.html' : './';
             const label = loggedIn ? '前往「我的密钥」管理' : '先登录 ZIYIT（可领取免费密钥）';
@@ -336,7 +336,7 @@
             apiBase: PH_API_BASE,
             theme: prefersDark ? 'dark' : 'light',
             onSuccess(r) {
-                // 通过：仅在本地记住 challengeId/sessionId 供注册使用；后端不签发 token
+                 
                 const st = window.__phantom;
                 st.verified = true;
                 st.challengeId = r.challengeId || '';
@@ -344,14 +344,14 @@
                 const cap = document.getElementById('captchaTip');
                 if (cap) cap.style.display = 'none';
                 showCaptchaHint('');
-                // 注册按钮曾触发“先验证后提交”：通过后自动继续提交注册
+                 
                 if (st.pendingSubmit) {
                     st.pendingSubmit = false;
                     if (typeof window.__phantomSubmit === 'function') window.__phantomSubmit();
                 }
             },
             onFail() {
-                // 失败不区分原因，统一提示；滑块由 SDK 进入“重试”态（自动拉取新 challenge）
+                 
                 const st = window.__phantom;
                 st.verified = false;
                 st.challengeId = '';
@@ -361,8 +361,14 @@
             onError(e) {
                 const kd = detectKeyDenied(e);
                 if (kd) {
-                    // 密钥被停用/超额/来源被拒：给出明确提示与跳转入口，复位滑块，不静默无限重试
+                     
                     showKeyDeniedHint(kd);
+                    resetPhantomToIdle();
+                    return;
+                }
+                if (e && e.code === 'ENV_AUTOMATION') {
+                     
+                    showCaptchaHint('检测到自动化工具环境，请使用真实浏览器完成验证');
                     resetPhantomToIdle();
                     return;
                 }
@@ -370,13 +376,13 @@
                 showCaptchaHint('验证服务暂不可用，请稍后再试');
             }
         });
-        // 宿主接口：open() 程序化弹滑块；reset() 复位（凭证失效/403 后重新验证）
+         
         window.__phantom.open = function () { if (handle) handle.open(); };
         window.__phantom.reset = function () { if (handle) handle.reset(); };
     </script>
 
     <script>
-        // 导航权限过滤（DESIGN.md §4.6.5，公开页模式）：未登录仅保留登录入口与返回，登录后按角色显示
+         
         function checkLoginStatus() {
             const navItems = document.querySelectorAll('.nav-item');
             const loginLink = document.getElementById('loginLink');
@@ -384,7 +390,7 @@
             const isAuthPage = !ZIYIT_API.getToken();
             if (isAuthPage) {
                 navItems.forEach(item => {
-                    // 登录/注册页未登录时：隐藏功能区、图书馆、用户中心等，只显示登录链接与返回
+                     
                     const show = item.contains(loginLink) || item.contains(backNavLink);
                     item.classList.toggle('visible', show);
                     item.classList.toggle('hidden', !show);
@@ -409,7 +415,7 @@
                 });
                 if (loginLink) loginLink.style.display = 'none';
             }).catch(function () {
-                // token 验证失败（已失效）：回到未登录状态，仅显示登录入口与返回
+                 
                 navItems.forEach(item => {
                     const show = item.contains(loginLink) || item.contains(backNavLink);
                     item.classList.toggle('visible', show);

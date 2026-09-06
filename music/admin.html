@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow">
     <meta name="description" content="ZIYIT 管理员后台，请勿公开分享。">
     <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
-    <!-- <script src="../assets/f12check.js"></script> -->
+    
     <script src="../assets/blacklist.js"></script>
     <script src="../assets/ziyit_api.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +29,7 @@
 
 <body>
     <div class="admin-container">
-        <!-- 头部导航 -->
+        
         <header class="admin-header">
             <div class="header-top">
                 <h1 class="admin-title">音乐管理系统</h1>
@@ -61,9 +61,9 @@
             </div>
         </header>
 
-        <!-- 主要内容区域 -->
+        
         <div class="admin-content">
-            <!-- 侧边栏 -->
+            
             <aside class="sidebar">
                 <ul class="sidebar-menu">
                     <li class="menu-item active" data-section="music-management" data-level="1">
@@ -102,11 +102,11 @@
                 </ul>
             </aside>
 
-            <!-- 主内容区 -->
+            
             <main class="main-content">
-                <!-- 音乐管理 -->
+                
                 <section id="music-management" class="content-section active">
-                    <!-- 音乐播放器 -->
+                    
                     <section class="music-player-admin">
                         <div class="player-header">
                             <h2 class="player-title">音乐播放控制</h2>
@@ -134,7 +134,7 @@
                         <audio id="audio-player" preload="metadata"></audio>
                     </section>
 
-                    <!-- 歌词显示 -->
+                    
                     <section class="lyrics-admin">
                         <div class="lyrics-header">
                             <span>歌词内容</span>
@@ -174,7 +174,7 @@
                         </div>
                     </section>
 
-                    <!-- 音乐列表 -->
+                    
                     <section class="music-list-admin">
                         <div class="list-header">
                             <h2>音乐库管理</h2>
@@ -189,12 +189,12 @@
                             </div>
                         </div>
                         <div class="music-items" id="music-list">
-                            <!-- 音乐列表将通过JavaScript动态生成 -->
+                            
                         </div>
                     </section>
                 </section>
 
-                <!-- 用户管理 -->
+                
                 <section id="user-management" class="content-section">
                     <div class="section-header">
                         <h2>用户管理</h2>
@@ -291,7 +291,7 @@
                     </div>
                 </section>
 
-                <!-- API Key 管理 -->
+                
                 <section id="api-key-management" class="content-section">
                     <div class="section-header">
                         <h2>API Key 管理</h2>
@@ -339,7 +339,7 @@
                     </div>
                 </section>
 
-                <!-- MOD / DLC 管理 -->
+                
                 <section id="mod-management" class="content-section">
                     <div class="section-header">
                         <h2>MOD / DLC 管理</h2>
@@ -397,7 +397,7 @@
                     </div>
                 </section>
 
-                <!-- RC 软件密钥管理 -->
+                
                 <section id="rc-key-management" class="content-section">
                     <div class="section-header">
                         <h2>RC 软件密钥管理</h2>
@@ -465,7 +465,7 @@
                     <p>权限管理功能开发中...</p>
                 </section>
 
-                <!-- 管理员管理（仅4级） -->
+                
                 <section id="admin-management" class="content-section">
                     <div class="section-header">
                         <h2>管理员管理</h2>
@@ -494,7 +494,7 @@
                     </div>
                 </section>
 
-                <!-- 在线客服控制台（任意管理员） -->
+                
                 <section id="guide-console" class="content-section">
                     <div class="section-header">
                         <h2>在线客服</h2>
@@ -519,7 +519,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- 客服名单管理（仅超级管理员可见） -->
+                    
                     <div id="guide-agents-panel" class="guide-agents-panel"
                         style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08);">
                         <div class="section-header" style="margin-bottom:10px;">
@@ -538,7 +538,7 @@
                     </div>
                 </section>
 
-                <!-- 后室成员管理（2级查看/3级编辑） -->
+                
                 <section id="backrooms-members" class="content-section">
                     <div class="section-header">
                         <h2>后室成员管理</h2>
@@ -559,11 +559,11 @@
                     <p style="padding: 8px 2px; color: var(--ziyit-text-secondary); font-size: 13px;">🔒 Adminstrator 类型成员不可编辑（仅 Lv.3+ 可修改 Admin/Member 类型）。</p>
                 </section>
 
-                <!-- 日志查看跳转外部页面 -->
+                
             </main>
         </div>
 
-        <!-- 系统信息 -->
+        
         <footer class="system-info">
             <div class="info-grid">
                 <div class="info-item">
@@ -594,7 +594,7 @@
         </footer>
     </div>
 
-    <!-- 用户编辑模态框 -->
+    
     <div class="modal" id="user-modal">
         <div class="modal-content">
             <div class="modal-header" id="modal-title">编辑用户</div>
@@ -626,7 +626,7 @@
         </div>
     </div>
 
-    <!-- 添加用户模态框 -->
+    
     <div class="modal" id="add-user-modal">
         <div class="modal-content">
             <div class="modal-header">添加用户</div>
@@ -651,7 +651,7 @@
         </div>
     </div>
 
-    <!-- 删除用户模态框 -->
+    
     <div class="modal" id="delete-user-modal">
         <div class="modal-content">
             <div class="modal-header">删除用户</div>
@@ -668,7 +668,7 @@
         </div>
     </div>
 
-    <!-- 登录记录模态框 -->
+    
     <div class="modal" id="login-history-modal">
         <div class="modal-content">
             <div class="modal-header">登录记录</div>
@@ -682,7 +682,7 @@
         </div>
     </div>
 
-    <!-- 用户 DLC 管理模态框 -->
+    
     <div class="modal" id="dlc-modal">
         <div class="modal-content">
             <div class="modal-header">DLC 管理</div>
@@ -703,7 +703,7 @@
         </div>
     </div>
 
-    <!-- 创建 API Key 模态框 -->
+    
     <div class="modal" id="api-key-modal">
         <div class="modal-content">
             <div class="modal-header">创建 API Key</div>
@@ -718,7 +718,7 @@
         </div>
     </div>
 
-    <!-- 编辑 API Key 模态框 -->
+    
     <div class="modal" id="api-key-edit-modal">
         <div class="modal-content" style="max-height:92vh;overflow-y:auto;">
             <div class="modal-header">编辑 API Key</div>
@@ -766,7 +766,7 @@
         </div>
     </div>
 
-    <!-- MOD 添加/编辑模态框 -->
+    
     <div class="modal" id="mod-modal">
         <div class="modal-content">
             <div class="modal-header" id="mod-modal-title">添加 MOD</div>
@@ -804,7 +804,7 @@
         </div>
     </div>
 
-    <!-- 添加 RC 软件密钥模态框 -->
+    
     <div class="modal" id="key-add-modal">
         <div class="modal-content">
             <div class="modal-header" id="key-add-title">添加 RC 软件密钥</div>
@@ -835,7 +835,7 @@
         </div>
     </div>
 
-    <!-- 添加管理员模态框（仅4级） -->
+    
     <div class="modal" id="admin-add-modal">
         <div class="modal-content">
             <div class="modal-header">添加管理员</div>
@@ -858,7 +858,7 @@
         </div>
     </div>
 
-    <!-- 编辑管理员模态框（仅4级） -->
+    
     <div class="modal" id="admin-edit-modal">
         <div class="modal-content">
             <div class="modal-header">编辑管理员</div>
@@ -882,7 +882,7 @@
         </div>
     </div>
 
-    <!-- 升级用户模态框（仅4级） -->
+    
     <div class="modal" id="promote-user-modal">
         <div class="modal-content">
             <div class="modal-header">升级用户</div>
@@ -904,7 +904,7 @@
         </div>
     </div>
 
-    <!-- 管理员私聊模态框（任意管理员） -->
+    
     <div class="modal" id="admin-chat-modal">
         <div class="modal-content chat-modal-content">
             <div class="modal-header chat-modal-header">
@@ -926,7 +926,7 @@
         </div>
     </div>
 
-    <!-- 全局消息模态框（2级+） -->
+    
     <div class="modal" id="admin-broadcast-modal">
         <div class="modal-content">
             <div class="modal-header">📢 全局消息</div>

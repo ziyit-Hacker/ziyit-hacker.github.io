@@ -14,7 +14,7 @@
         var URL_DOMAIN = 'wikidot.com';
         var USE_SSL = true;
         var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-        // global request information
+         
 
         var WIKIREQUEST = {};
         WIKIREQUEST.info = {};
@@ -157,14 +157,14 @@
                             </div>
                         </div>
                         <script>
-                            // 获取Cookie值的函数
+                             
                             function getCookie(name) {
                                 const value = `; ${document.cookie}`;
                                 const parts = value.split(`; ${name}=`);
                                 if (parts.length === 2) return parts.pop().split(';').shift();
                             }
 
-                            // 从user.json获取用户权限信息的函数
+                             
                             async function getUserPermission(username) {
                                 try {
                                     const response = await fetch('/backrooms/user.json');
@@ -182,7 +182,7 @@
                                 }
                             }
 
-                            // 页面加载完成后执行登录状态检测
+                             
                             document.addEventListener('DOMContentLoaded', async function () {
                                 const authToken = getCookie('authToken') || localStorage.getItem('authToken');
                                 const usernameDisplay = document.getElementById('usernameDisplay');
@@ -540,7 +540,7 @@
 
             </div>
             <div id="dummy-ondomready-block" style="display: none;"></div>
-            <!-- Google Analytics load -->
+            
             <script type="text/javascript">
                 (function () {
                     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
@@ -551,21 +551,20 @@
 </body>
 
 <style>
-    /* 生存难度容器居中 */
+     
     .sd-container {
         display: flex !important;
         flex-direction: column !important;
     }
 
-    /* 调整内容包装器 */
+     
     #content-wrap {
         margin-left: 0 !important;
         width: 100% !important;
     }
 
-    /* 覆盖组件 CSS：非数字等级（死区/宜居/未分级/修正/终结/不适用/等待分级等）的名称
-       不再由 .bottom-text::after 伪元素显示（content:"等级：死区"），
-       改用 HTML 文本（等级名称）显示，与 1-5 级一致 */
+    
+
     .sd-container .top-box .bottom-text p {
         display: block !important;
     }

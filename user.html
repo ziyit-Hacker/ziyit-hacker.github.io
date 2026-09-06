@@ -221,7 +221,7 @@
     </div>
     <h1>用户中心</h1>
     <script>
-        // 获取cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
@@ -229,7 +229,7 @@
             return null;
         }
 
-        // 检查用户权限
+         
         function checkUserPermission() {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             if (!authToken) {
@@ -239,11 +239,11 @@
             }
         }
 
-        // 页面加载时检查权限
+         
         document.addEventListener('DOMContentLoaded', checkUserPermission);
     </script>
     <hr>
-    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -334,7 +334,7 @@
                     emailVerifyStatus.style.color = '#a4262c';
                     sendVerifyBtn.style.display = 'inline-block';
                 } else if (typeof user.email === 'undefined' && (user.userId || user.username)) {
-                    // 本地缓存缺少邮箱字段（登录时未取得），强制从后端刷新一次
+                     
                     ZIYIT_API.currentUser(true).then(function (realUser) {
                         if (realUser.emailVerified) {
                             emailVerifyStatus.textContent = '邮箱已验证';
@@ -466,26 +466,26 @@
     </script>
 
     <script>
-        // 初始化广告限制状态
+         
         const adToggle = document.getElementById('adToggle');
         const today = new Date().toDateString();
         const adPrefs = JSON.parse(localStorage.getItem('adPreferences') || '{}');
         
-        // 检查今天的设置
+         
         if (adPrefs.date === today && adPrefs.noLimit) {
             adToggle.textContent = '今天已取消广告限制';
         }
         
-        // 点击事件处理
+         
         adToggle.addEventListener('click', function() {
             const currentDate = new Date().toDateString();
             
             if (adPrefs.date === currentDate && adPrefs.noLimit) {
-                // 恢复限制
+                 
                 adPrefs.noLimit = false;
                 adToggle.textContent = '今天不限制弹出广告';
             } else {
-                // 取消限制
+                 
                 adPrefs.date = currentDate;
                 adPrefs.noLimit = true;
                 adToggle.textContent = '今天已取消广告限制';

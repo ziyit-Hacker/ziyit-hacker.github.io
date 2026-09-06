@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh">
 
 <head>
@@ -161,7 +161,7 @@
             cursor: default !important;
         }
 
-        /* 美化分隔线 */
+         
         hr {
             border: none;
             height: 2px;
@@ -169,7 +169,7 @@
             margin: 30px 0;
         }
 
-        /* 表格样式美化 */
+         
         .schedule-table {
             width: 100%;
             border-collapse: collapse;
@@ -221,7 +221,7 @@
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
         }
 
-        /* 美化版权信息 */
+         
         p:last-child {
             text-align: center;
             font-size: 1rem;
@@ -234,7 +234,7 @@
             border: 1px solid rgba(243, 167, 7, 0.2);
         }
 
-        /* 美化返回主页链接 */
+         
         a[href="./"] {
             display: inline-block;
             margin: 20px;
@@ -251,7 +251,7 @@
             box-shadow: 0 8px 20px rgba(243, 167, 7, 0.4);
         }
 
-        /* 添加脉冲动画 */
+         
         @keyframes pulse {
             0% {
                 opacity: 1;
@@ -290,7 +290,7 @@
             transform: scale(1.05) !important;
         }
 
-        /* 移除原有的placeholder样式，因为现在使用no-data类 */
+         
         .placeholder {
             color: #888;
             font-style: italic;
@@ -306,7 +306,7 @@
     <a href="./">返回backrooms wiki</a>
     <a href="times.txt">浏览具体文件</a>
     <script>
-        // 获取cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
@@ -314,7 +314,7 @@
             return null;
         }
 
-        // 检查用户权限
+         
         function checkUserPermission() {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             if (!authToken) {
@@ -324,7 +324,7 @@
             }
         }
 
-        // 页面加载时检查权限
+         
         document.addEventListener('DOMContentLoaded', checkUserPermission);
     </script>
     <hr>
@@ -337,14 +337,14 @@
         </div>
     </div>
     <script>
-        // 获取Cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        // 从user.json获取用户权限信息的函数
+         
         async function getUserPermission(username) {
             try {
                 const response = await fetch('/backrooms/user.json');
@@ -362,7 +362,7 @@
             }
         }
 
-        // 页面加载完成后执行登录状态检测
+         
         document.addEventListener('DOMContentLoaded', async function () {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             const usernameDisplay = document.getElementById('usernameDisplay');
@@ -399,11 +399,11 @@
                 return response.text();
             })
             .then(data => {
-                // 解析文本数据为表格
+                 
                 const lines = data.trim().split('\n');
                 let tableHTML = '<table class="schedule-table">';
 
-                // 处理表头
+                 
                 const headerLine = lines[0].replace(/^####\s+/, '');
                 const headers = headerLine.split(/\s+/);
                 tableHTML += '<tr>';
@@ -413,23 +413,23 @@
                 });
                 tableHTML += '</tr>';
 
-                // 处理数据行
+                 
                 for (let i = 1; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (line) {
                         const parts = line.split(/\s+/);
                         tableHTML += '<tr>';
 
-                        // 序号列
+                         
                         tableHTML += `<td>${parts[0]}</td>`;
 
-                        // 数据列
+                         
                         for (let j = 1; j < parts.length; j++) {
                             const cell = parts[j];
                             if (cell === '#####') {
                                 tableHTML += '<td class="no-data" title="本格无任何数据">[NO DATA]</td>';
                             } else if (cell.includes('~')) {
-                                // 处理包含~符号的单元格
+                                 
                                 tableHTML += `<td class="random-number" data-original="${cell}">${cell}</td>`;
                             } else {
                                 tableHTML += `<td>${cell}</td>`;
@@ -443,7 +443,7 @@
                 tableHTML += '</table>';
                 timessElement.innerHTML = tableHTML;
 
-                // 启动随机数字动画
+                 
                 startRandomNumberAnimation();
             })
             .catch(error => {
@@ -451,7 +451,7 @@
                 timessElement.innerHTML = '<p>无法加载时刻表文件。</p>';
             });
 
-        // 随机数字动画函数
+         
         function startRandomNumberAnimation() {
             const randomCells = document.querySelectorAll('.random-number');
         
@@ -459,18 +459,18 @@
                 const originalText = cell.getAttribute('data-original');
                 let animationInterval;
         
-                // 开始动画
+                 
                 function startAnimation() {
                     animationInterval = setInterval(() => {
-                        // 检查是否是时间格式（包含冒号）
+                         
                         if (originalText.includes(':')) {
-                            // 处理时间格式
+                             
                             const timeParts = originalText.split(':');
                             let newText = '';
                             
-                            // 处理小时部分（第一个~序列）
+                             
                             if (timeParts[0].includes('~')) {
-                                // 生成00-23的小时
+                                 
                                 const hour = Math.floor(Math.random() * 24);
                                 newText += hour.toString().padStart(2, '0');
                             } else {
@@ -479,9 +479,9 @@
                             
                             newText += ':';
                             
-                            // 处理分钟部分（第二个~序列）
+                             
                             if (timeParts[1].includes('~')) {
-                                // 生成00-59的分钟
+                                 
                                 const minute = Math.floor(Math.random() * 60);
                                 newText += minute.toString().padStart(2, '0');
                             } else {
@@ -490,45 +490,45 @@
                             
                             cell.textContent = newText;
                         } else {
-                            // 处理非时间格式（保持原有逻辑，但限制为合理范围）
+                             
                             let newText = originalText;
                             let hasChanged = false;
         
-                            // 替换所有~符号为随机数字，但限制为0-9
+                             
                             newText = newText.replace(/~/g, () => {
                                 hasChanged = true;
-                                return Math.floor(Math.random() * 10); // 0-9的随机数字
+                                return Math.floor(Math.random() * 10);  
                             });
         
                             if (hasChanged) {
                                 cell.textContent = newText;
                             }
                         }
-                    }, 50); // 每0.05秒更新一次
+                    }, 50);  
                 }
         
-                // 鼠标悬停时停止动画，显示原始文本
+                 
                 cell.addEventListener('mouseenter', () => {
                     if (animationInterval) {
                         clearInterval(animationInterval);
                         animationInterval = null;
                     }
                     cell.textContent = '完成后立即部署';
-                    cell.style.color = '#ff6b6b'; // 悬停时改变颜色
+                    cell.style.color = '#ff6b6b';  
                 });
         
-                // 鼠标离开时恢复动画
+                 
                 cell.addEventListener('mouseleave', () => {
-                    cell.style.color = ''; // 恢复原色
+                    cell.style.color = '';  
                     if (!animationInterval) {
                         startAnimation();
                     }
                 });
         
-                // 开始动画
+                 
                 startAnimation();
         
-                // 添加特殊样式
+                 
                 cell.style.fontFamily = 'monospace';
                 cell.style.fontWeight = 'bold';
                 cell.style.animation = 'pulse 1s infinite';

@@ -299,7 +299,7 @@
             color: var(--ziyit-danger);
         }
 
-        /* ---- 设置弹窗 ---- */
+         
         .ak-overlay {
             display: none;
             position: fixed;
@@ -376,7 +376,7 @@
             color: var(--ziyit-text-primary);
         }
 
-        /* 开关 */
+         
         .switch {
             position: relative;
             display: inline-flex;
@@ -524,7 +524,7 @@
 </head>
 
 <body>
-    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -583,7 +583,7 @@
         </div>
     </div>
 
-    <!-- ===== 密钥设置弹窗 ===== -->
+    
     <div class="ak-overlay" id="settingsOverlay">
         <div class="ak-box">
             <h2>密钥设置</h2>
@@ -679,7 +679,7 @@
                 keyArea.innerHTML = '<div class="error-box">' + esc(msg) + '</div>';
             }
 
-            // ---- 列表渲染 ----
+             
             function renderKeys() {
                 var area = keyArea;
                 area.innerHTML = '';
@@ -788,7 +788,7 @@
                 document.body.removeChild(ta);
             }
 
-            // ---- 加载列表 ----
+             
             function loadKeys(showLoading) {
                 if (showLoading) setLoading('加载中…');
                 refreshBtn.disabled = true;
@@ -803,7 +803,7 @@
                 });
             }
 
-            // ---- 设置弹窗 ----
+             
             function openSettings(idx) {
                 var k = keyList[idx];
                 if (!k) return;
@@ -907,7 +907,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 }).then(function (data) {
-                    // 保存成功后以后端返回的用量视图为准，就地刷新该 key，无需整页重查
+                     
                     keyList[editingIdx] = data || k;
                     renderKeys();
                     closeSettings();
@@ -936,7 +936,7 @@
         });
     </script>
     <script>
-        // 导航权限过滤（DESIGN.md §4.6.5，需登录页模式）：未登录全部隐藏，登录后按角色显示
+         
         function checkLoginStatus() {
             const navItems = document.querySelectorAll('.nav-item');
             if (!ZIYIT_API.getToken()) {

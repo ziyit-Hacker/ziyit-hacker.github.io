@@ -1,11 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cn" lang="cn">
     <head>
-        <!--ziyit-head-->
+        
         <script src="https://ziyit-hacker.github.io/assets/f12check.js"></script>
         <script src="https://ziyit-hacker.github.io/assets/ziyit_api.js"></script>
         <link rel="icon" href="https://ziyit-hacker.github.io/assets/logo.ico">
-        <!--/ziyit-head-->
+        
         <title>Level C-70 - The Backrooms中文维基</title>
         <script type="text/javascript" src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/init.combined.js"></script>
         <script  type="text/javascript">
@@ -13,7 +13,7 @@
         var URL_DOMAIN = 'wikidot.com';
         var USE_SSL =  true ;
         var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-        // global request information
+         
         
         var WIKIREQUEST = {};
         WIKIREQUEST.info = {};
@@ -56,10 +56,10 @@
         <script type="text/javascript" src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/WIKIDOT.combined.js"></script>
         <style type="text/css" id="internal-style">
         
-        /* modules */
+         
 @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--modules/css/pagerate/PageRateWidgetModule.css);
 
-        /* theme */
+         
 @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
 @import url(https://etinjat.wikidot.com/theme:bhl-base/code/2);
 </style>
@@ -383,7 +383,7 @@ font-family: 'ZCOOL KuaiLe', sans-serif  !important;
     display: none;
 }
 
-/*------------------- 版头标题 -------------------*/
+ 
 
 #header h1 a,
 #header h2 span {
@@ -404,7 +404,7 @@ font-family: 'ZCOOL KuaiLe', sans-serif  !important;
 #container #header h1 a::after {
   background-image: linear-gradient(90deg, #972283 0%, #6c61a9 10%,  #6c61a9 30%, #01f5fc 40%, #6c61a9 80%, #6c61a9 90%, #972283 100%);
   background-size: 100%;
- /* background-repeat: no-repeat;*/
+  
   background-repeat: repeat ;
   overflow-wrap: normal ;
   z-index: 2;
@@ -416,7 +416,7 @@ font-family: 'ZCOOL KuaiLe', sans-serif  !important;
     -webkit-animation: Gradient 1s  infinite;
     -moz-animation: Gradient 1s  infinite;
     animation: Gradient 1s ease infinite;
- /* animation-direction:alternate;*/
+  
 
 }
 
@@ -466,7 +466,7 @@ font-family: 'ZCOOL KuaiLe', sans-serif  !important;
   justify-content:  flex-start;
 }
 
-/*-----------版头-------------*/
+ 
 #extra-div-2 {
   --mountains-mask: none;
   top: 0;
@@ -492,7 +492,7 @@ font-family: 'ZCOOL KuaiLe', sans-serif  !important;
  }
 }
 
-/*-----------生存难度模块-------------*/
+ 
 
  .bottom-box span{
   color: #fff;
@@ -555,21 +555,21 @@ color: #DDDD77;
                 <div id="container-wrap">
                     <div id="container">
                         <div id="header">
-                            <!--ziyit-login-->
+                            
                             <div style="position: absolute; right: 10px; top: 10px; text-align: center;">
                                 <div id="userInfo" style="color: black; font-size: 18px;"> <strong><span id="usernameDisplay">您还未登录，<a href="https://ziyit-hacker.github.io/user/">登录</a> 或 <a href="register.html">注册</a></span></strong>
                                     <br> <strong><span id="userTypeDisplay"></span></strong>
                                 </div>
                             </div>
                             <script>
-        // 获取Cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        // 从user.json获取用户权限信息的函数
+         
         async function getUserPermission(username) {
             try {
                 const response = await fetch('https://ziyit-hacker.github.io/backrooms/user.json');
@@ -587,7 +587,7 @@ color: #DDDD77;
             }
         }
 
-        // 页面加载完成后执行登录状态检测
+         
         document.addEventListener('DOMContentLoaded', async function () {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             const usernameDisplay = document.getElementById('usernameDisplay');
@@ -612,10 +612,10 @@ color: #DDDD77;
             }
         });
     </script>
-                            <!--/ziyit-login-->
+                            
                             <h1><a href="/"><span>The Backrooms中文维基</span></a></h1>
                             <h2><span>你曾经来过这里</span></h2>
-                            <!--ziyit-topbar-->
+                            
                             <div id="top-bar">
                                 <div class="top-bar">
                                     <ul>
@@ -651,7 +651,7 @@ color: #DDDD77;
                                     </ul>
                                 </div>
                             </div>
-                            <!--/ziyit-topbar-->
+                            
                         </div>
                         <div id="content-wrap">
                             <div id="main-content">
@@ -976,28 +976,28 @@ color: #DDDD77;
         })();
     </script>
     </body>
-    <!--ziyit-body-->
+    
     <style>
-    /* 生存难度容器居中 */
+     
     .sd-container {
         display: flex !important;
         flex-direction: column !important;
     }
 
-    /* 调整内容包装器 */
+     
     #content-wrap {
         margin-left: 0 !important;
         width: 100% !important;
     }
 
-    /* 修复黑高亮主题 grid 布局把正文压窄的问题 */
+     
     #main-content {
         display: block !important;
         grid-template-columns: none !important;
         grid-template-areas: none !important;
     }
 
-    /* 保留 The Backrooms 标题，本站登录控件置于最上层不被标题遮挡 */
+     
     # header > div[style*="position: absolute"] {
         position: absolute !important;
         right: 10px !important;
@@ -1005,5 +1005,5 @@ color: #DDDD77;
         z-index: 999 !important;
     }
 </style>
-    <!--/ziyit-body-->
+    
 </html>

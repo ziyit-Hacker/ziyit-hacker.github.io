@@ -65,7 +65,7 @@
         background-size:100% 100%;
         background-attachment: fixed;">
     <script>
-        // 获取cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
@@ -73,7 +73,7 @@
             return null;
         }
 
-        // 检查用户权限
+         
         function checkUserPermission() {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             if (!authToken) {
@@ -83,18 +83,12 @@
             }
         }
 
-        // 页面加载时检查权限
+         
         document.addEventListener('DOMContentLoaded', checkUserPermission);
     </script>
     <a href="javascript:history.back()">Ret</a>
     <hr>
-    <!-- <marquee style="background-color: yellow;">
-        <strong>
-            <span
-                style="color: red;">搜索功能现处于测试阶段!!!如发现bug请将bug描述邮件发送到ziyitstudio@qq.com。如果想要提交改进，请联系邮箱ziyitstudio@qq.com。有任何想法都可以发送短信到13112345678。</span>
-        </strong>
-    </marquee>
-    <hr> -->
+    
     <h1 id="up">酷奶`酷奶`只`(zh-CN: 欢迎)`米浮ス木`ZIYIT`木浮米`耶绿只`战盘`通哈`基米`哦.</h1>
     <h2>ZIYIT`只`木浮米`耶绿只`战盘`通哈`基米`农只`木浮米`TKN`只`农基哈`&`酷奶`只`农基哈`哦.</h2>
     <h4>农只`战通`只`酷奶`酷奶`只`基米哦`耶西`(zh-CN: 有帮助)`只`哦^</h4>
@@ -173,24 +167,24 @@
     <audio src="../../assets/bm.mp3" style="display: none;"></audio>
 
     <script>
-        // 第二事件：循环播放背景音乐
-        // 控制音乐播放状态的变量
+         
+         
         let isPlay = false;
-        // 获取音频元素
+         
         const audio = document.querySelector('audio');
-        // 修改背景音乐列表，添加新的音乐文件
+         
         const bgmList = ['../../assets/bm.mp3', '../../assets/bm2.mp3', '../../assets/bm3.mp3', '../../assets/bm4.mp3'];
 
-        // 随机选择一首背景音乐
+         
         function selectRandomBgm() {
             const randomIndex = Math.floor(Math.random() * bgmList.length);
             return bgmList[randomIndex];
         }
 
-        // 设置音频循环播放
-        audio.loop = false; // 关闭原生循环，使用自定义循环
+         
+        audio.loop = false;  
 
-        // 音频播放结束事件监听器
+         
         audio.addEventListener('ended', () => {
             audio.src = selectRandomBgm();
             if (isPlay) {
@@ -200,15 +194,15 @@
             }
         });
 
-        // 定义处理首次交互播放音频的函数
+         
         const startAudioOnFirstInteraction = () => {
-            audio.src = selectRandomBgm(); // 首次播放随机选择一首
+            audio.src = selectRandomBgm();  
             audio.play()
                 .then(() => {
                     isPlay = true;
-                    // 定义交互事件数组
+                     
                     const events = ['click', 'touchstart', 'keydown', 'mousedown'];
-                    // 移除 document 上的交互事件监听器
+                     
                     events.forEach((event) => {
                         document.removeEventListener(event, startAudioOnFirstInteraction);
                     });
@@ -218,13 +212,13 @@
                 });
         };
 
-        // 监听用户交互事件
+         
         const interactionEvents = ['click', 'touchstart', 'keydown', 'mousedown'];
         interactionEvents.forEach((event) => {
             document.addEventListener(event, startAudioOnFirstInteraction);
         });
 
-        // 为音频元素添加点击事件监听器，用于切换播放和暂停状态
+         
         audio.addEventListener('click', () => {
             if (isPlay) {
                 audio.pause();
@@ -240,11 +234,11 @@
             }
         });
 
-        // 调用切换轮播图的函数
+         
         toggle();
     </script>
     <script>
-        /* Toast 通知：替代原生 alert（DESIGN.md §4.9） */
+         
         (function () {
             'use strict';
             var CSS = '.ziyit-toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483001;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;max-width:90vw}.ziyit-toast{pointer-events:auto;background:var(--ziyit-bg-card,#1f2229);color:var(--ziyit-text-primary,#fff);border:1px solid var(--ziyit-border,#3a3f48);border-left:4px solid var(--ziyit-primary,#0078d4);padding:10px 18px;border-radius:8px;font-size:14px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .25s;max-width:60vw}.ziyit-toast.show{opacity:1;transform:translateY(0)}.ziyit-toast.hide{opacity:0;transform:translateY(-8px)}.ziyit-toast.success{border-left-color:var(--ziyit-success,#28a745)}.ziyit-toast.error{border-left-color:var(--ziyit-danger,#f25767)}.ziyit-toast.warning{border-left-color:var(--ziyit-warning,#f3a707)}';

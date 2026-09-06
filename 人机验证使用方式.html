@@ -22,7 +22,7 @@
     <script src="./assets/blacklist.js"></script>
     <script src="./assets/ziyit_api.js"></script>
     <style>
-        /* 验证组件容器（DESIGN.md 设计体系） */
+         
         .demo-card-body {
             max-width: 420px;
             margin: 32px auto;
@@ -36,7 +36,7 @@
 
 <body>
 
-    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -104,11 +104,11 @@
     </script>
     <script>
         window.addEventListener('phantom:verified', function (e) {
-            // 人机验证通过的逻辑
+             
         });
     </script>
     <script>
-        // 导航权限过滤（DESIGN.md §4.6.5，公开页模式）：未登录保留 all，登录后按角色显示
+         
         function checkLoginStatus() {
             const navItems = document.querySelectorAll('.nav-item');
             const loginLink = document.getElementById('loginLink');

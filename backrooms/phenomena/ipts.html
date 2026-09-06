@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html
+<!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cn" lang="cn">
 
@@ -13,7 +13,7 @@
         var URL_DOMAIN = 'wikidot.com';
         var USE_SSL = true;
         var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-        // global request information
+         
 
         var WIKIREQUEST = {};
         WIKIREQUEST.info = {};
@@ -59,10 +59,10 @@
 
 
     <style type="text/css" id="internal-style">
-        /* modules */
+         
 
 
-        /* theme */
+         
         @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
         @import url(https://github.backroomswiki.cn/Old_BHL/css/liminal-impact.css);
     </style>
@@ -138,14 +138,14 @@
         </div>
     </div>
     <script>
-        // 获取Cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        // 从user.json获取用户权限信息的函数
+         
         async function getUserPermission(username) {
             try {
                 const response = await fetch('/backrooms/user.json');
@@ -163,7 +163,7 @@
             }
         }
 
-        // 页面加载完成后执行登录状态检测
+         
         document.addEventListener('DOMContentLoaded', async function () {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             const usernameDisplay = document.getElementById('usernameDisplay');
@@ -385,49 +385,49 @@
         </div>
     </div>
     <style>
-        /* 生存难度容器居中 */
+         
         .sd-container {
             display: flex !important;
             flex-direction: column !important;
         }
 
-        /* 调整内容包装器 */
+         
         #content-wrap {
             margin-left: 0 !important;
             width: 100% !important;
         }
     </style>
     <script>
-        // 添加JavaScript来强制设置标题和描述
+         
         document.addEventListener('DOMContentLoaded', function() {
-            // 强制设置页面标题
+             
             var headerTitle = document.querySelector('#header h1 a span');
             if (headerTitle) {
                 headerTitle.textContent = "ZIYIT & M.E.G.";
                 headerTitle.innerHTML = "ZIYIT & M.E.G.";
             }
             
-            // 强制设置页面描述
+             
             var headerDesc = document.querySelector('#header h2 span');
             if (headerDesc) {
                 headerDesc.textContent = "让后室生活更美好";
                 headerDesc.innerHTML = "让后室生活更美好";
             }
             
-            // 设置meta描述
+             
             var metaDesc = document.querySelector('meta[name="description"]');
             if (metaDesc) {
                 metaDesc.setAttribute('content', '让后室生活更美好');
             }
             
-            // 设置og:site_name
+             
             var ogSiteName = document.querySelector('meta[name="og:site_name"]');
             if (ogSiteName) {
                 ogSiteName.setAttribute('content', 'ZIYIT & M.E.G.');
             }
         });
         
-        // 监听DOM变化，防止外部脚本修改
+         
         var observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.type === 'childList') {

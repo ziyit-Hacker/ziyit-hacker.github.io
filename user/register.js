@@ -18,7 +18,7 @@
         n.style.display = 'block';
     }
 
-    // 冷却禁用注册按钮：期间不可提交，倒计时展示在 dupTip
+     
     function lockButton(seconds, msg) {
         const btn = el('registerBtn');
         btnLocked = true;
@@ -41,7 +41,7 @@
         }, 1000);
     }
 
-    // 重置滑块：清空本地凭证，回到待验证态（保留表单字段）
+     
     function resetCaptcha() {
         const st = window.__phantom;
         if (!st) return;
@@ -52,7 +52,7 @@
         hideTip('captchaHint');
     }
 
-    // 核心注册提交（submit 触发；验证通过后由 onSuccess 自动回调）
+     
     window.__phantomSubmit = async function () {
         if (btnLocked) return;
         const btn = el('registerBtn');
@@ -60,7 +60,7 @@
         const captchaTip = el('captchaTip');
         const st = window.__phantom;
 
-        // ===== 1) 本地字段校验（先校验后验证，见第 9 条）=====
+         
         const username = el('username').value.trim();
         const email = el('email').value.trim();
         const password = el('password').value;
@@ -77,7 +77,7 @@
         }
         hideTip('confirmPasswordError');
 
-        // ===== 2) 未通过人机验证 → 挂起提交并弹出滑块 =====
+         
         if (!st || !st.verified || !st.challengeId || !st.sessionId) {
             if (captchaTip) captchaTip.style.display = 'block';
             if (st) {
@@ -87,7 +87,7 @@
             return false;
         }
 
-        // ===== 3) 提交（带本轮验证凭证）=====
+         
         hideTip('captchaTip');
         hideTip('captchaHint');
         if (btn) btn.disabled = true;
@@ -98,7 +98,7 @@
 
         try {
             await ZIYIT_API.register(username, email, md5Password, st.challengeId, st.sessionId);
-            // 注册成功：显示邮箱验证提示并锁定表单
+             
             const form = document.querySelector('form');
             const verifyTip = el('verifyTip');
             if (verifyTip) verifyTip.style.display = 'block';
@@ -116,25 +116,25 @@
             const raw = String(
                 (data && data.detail) || error.detail || error.message || ''
             );
-            // 后端 429 发生在 challenge 消费之前 → 凭证仍有效，冷却后可复用直接重试
+             
             if (status === 429) {
                 if (/email/i.test(raw)) {
-                    // “Too many registration attempts for this email”：建议更换邮箱
+                     
                     lockButton(30, '操作过于频繁，请更换邮箱后重试');
                 } else {
-                    // 同 IP 注册过于频繁
+                     
                     lockButton(60, '操作过于频繁，请稍后再试');
                 }
                 return false;
             }
-            // 恢复按钮（非冷却场景）
+             
             if (btn) btn.disabled = false;
             if (dupTip) dupTip.style.display = 'none';
 
             if (status === 400) {
                 if (/Username already exists/i.test(raw)) {
                     showTip('usernameError', '该用户名已被注册');
-                    // 400 发生在 challenge 消费之后 → 必须重新验证
+                     
                     resetCaptcha();
                     if (captchaTip) captchaTip.style.display = 'block';
                     alert('该用户名已被注册，请更换用户名后重新完成滑块验证');
@@ -150,7 +150,7 @@
                 return false;
             }
             if (status === 403) {
-                // 验证未通过 / challengeId 过期或已被使用：立即自动重开验证，保留表单
+                 
                 resetCaptcha();
                 if (captchaTip) captchaTip.style.display = 'block';
                 st.pendingSubmit = true;
@@ -158,7 +158,7 @@
                 return false;
             }
             if (status === 410) {
-                // 尝试次数耗尽 / challenge 过期
+                 
                 resetCaptcha();
                 if (captchaTip) captchaTip.style.display = 'block';
                 alert('验证已失效，请重新滑动');
@@ -201,7 +201,7 @@
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
                 if (btnLocked) {
-                    return false; // dupTip 已显示冷却倒计时
+                    return false;  
                 }
                 if (typeof window.__phantomSubmit === 'function') {
                     window.__phantomSubmit();

@@ -50,12 +50,7 @@
 </head>
 
 <body>
-    <!-- <marquee style="background-color: yellow;">
-        <strong>
-            <span
-                style="color: red;">本页面现处于测试阶段!!!如发现bug请将bug描述邮件发送到ziyitstudio@qq.com。如果想投稿音乐请将音乐的文件或者的音乐在bilibili的视频的url或音乐的文件链接和歌词一起发送到邮箱3779502017@qq.com。</span>
-        </strong>
-    </marquee> -->
+    
     <script>
         function checkUserPermission() {
             if (!ZIYIT_API.getToken()) {
@@ -86,18 +81,18 @@
         }
 
         function Development() {
-            // 获取开发者工具链接
+             
             const devLink = document.getElementById('development');
             if (devLink) {
                 devLink.addEventListener('click', function (e) {
-                    e.preventDefault(); // 阻止默认链接行为
+                    e.preventDefault();  
 
-                    // 1. 先禁用f12check.js的功能
+                     
                     disableF12Check();
 
-                    // 2. 短暂延迟后触发开发者工具
+                     
                     setTimeout(() => {
-                        // 尝试触发F12快捷键
+                         
                         const event = new KeyboardEvent('keydown', {
                             key: 'F12',
                             code: 'F12',
@@ -108,38 +103,38 @@
                         });
                         document.dispatchEvent(event);
 
-                        // 3. 重新启用f12check.js
+                         
                         setTimeout(() => {
                             enableF12Check();
                         }, 1000);
 
                     }, 100);
 
-                    // 显示提示信息
+                     
                     alert('开发者工具已临时启用，请在1秒内按F12');
                 });
             }
         }
 
-        // 禁用f12check.js功能
+         
         function disableF12Check() {
-            // 移除所有事件监听器
+             
             document.removeEventListener('keydown', window.f12CheckKeydownHandler);
             document.removeEventListener('contextmenu', window.f12CheckContextmenuHandler);
 
-            // 恢复console功能
+             
             if (window.originalConsole) {
                 window.console = window.originalConsole;
             }
         }
 
-        // 启用f12check.js功能
+         
         function enableF12Check() {
-            // 重新添加事件监听器
+             
             document.addEventListener('keydown', window.f12CheckKeydownHandler);
             document.addEventListener('contextmenu', window.f12CheckContextmenuHandler);
 
-            // 重新应用console限制
+             
             Object.defineProperty(window, 'console', {
                 value: new Proxy(console, {
                     get(target, prop) {
@@ -152,9 +147,9 @@
             });
         }
 
-        // 保存原始的f12check.js事件处理器
+         
         function initF12CheckHandlers() {
-            // 保存原始的事件处理器
+             
             window.f12CheckKeydownHandler = function (e) {
                 if (e.key === 'F12' ||
                     (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key))) {
@@ -168,14 +163,14 @@
                 return false;
             };
 
-            // 保存原始console
+             
             window.originalConsole = console;
         }
 
-        // 初始化时保存原始处理器
+         
         document.addEventListener('DOMContentLoaded', initF12CheckHandlers);
 
-        // 页面加载时调用检查权限函数
+         
         document.addEventListener('DOMContentLoaded', checkUserPermission);
         document.addEventListener('DOMContentLoaded', Development);
     </script>
@@ -187,7 +182,7 @@
     <a data-role="adminstr" href="#" id="development">开发者工具</a>
     <hr>
 
-    <!-- 音乐播放器 -->
+    
     <div class="music-player">
         <div class="player-container">
             <div class="player-main">
@@ -196,7 +191,7 @@
                     <div class="player-status">暂停中</div>
                 </div>
 
-                <!-- 视频播放器容器 -->
+                
                 <div id="video-container" class="video-container hidden">
                     <video id="video-player" preload="metadata"
                         style="width: 100%; border-radius: 8px; border: 3px solid #0078d4; box-shadow: 0 0 20px rgba(0, 120, 212, 0.5);"></video>
@@ -239,7 +234,7 @@
         <div class="lyrics-content" id="lyrics-content">暂无歌词</div>
     </div>
 
-    <!-- 导出音乐链接功能 -->
+    
     <div class="export-link-container"
         style="background-color: rgba(255, 255, 255, 0.9); border-radius: 10px; padding: 15px; margin: 20px auto; max-width: 500px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
         <div class="export-header"
@@ -280,7 +275,7 @@
         </div>
     </div>
 
-    <!-- 音乐列表 -->
+    
     <div id="search" style="text-align: center; margin: 20px auto; max-width: 600px;">
         <form method="get" style="display: flex;" autocomplete="off">
             <label for="search-input" style="font-size: 24px; color: #1b222e"><strong>搜索音乐: </strong></label>
@@ -298,12 +293,12 @@
     </div>
 
     <ul class="music-list" id="music-list">
-        <!-- 音乐列表将通过JavaScript动态生成 -->
+        
     </ul>
 
     <p>&copy;2026&nbsp;&nbsp;ZIYIT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>版权所有，侵权必究</strong></p>
 
-    <!-- 下载队列显示 -->
+    
     <div class="download-queue" id="download-queue">
         <div class="queue-header">下载队列 (0/0)</div>
         <div id="queue-items"></div>

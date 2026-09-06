@@ -1,8 +1,8 @@
-// 官方 Demo 页入口：用 Phantom.mount() 驱动 frontend/index.html。
-//
-// 这里展示【浏览器侧】的最简用法：mount + onSuccess/onFail 回调拿到验证凭证。
-// P0 新协议：后端不再签发 token，验证凭证 = 本轮的 { challengeId, sessionId }，
-// 由接入方把两者随业务请求一并提交后端（后端 GETDEL 一次性消费）。
+ 
+ 
+ 
+ 
+ 
 import { mount } from "./phantom.js";
 const apiBase = "https://willian-unheady-rawly.ngrok-free.dev";
 const THEME_KEY = "theme";
@@ -12,7 +12,7 @@ function storedTheme() {
     const v = localStorage.getItem(THEME_KEY);
     return v === "light" || v === "dark" || v === "system" ? v : "system";
 }
-/** theme mode 实际渲染出来的明暗（widget 只认 dark/light）。 */
+ 
 function resolvedTheme(mode) {
     return mode === "system" ? (prefersDark() ? "dark" : "light") : mode;
 }
@@ -20,7 +20,7 @@ function applyTheme(mode) {
     const dark = resolvedTheme(mode) === "dark";
     document.documentElement.classList.toggle("dark", dark);
 }
-/* ---------- ThemeToggle 图标（内联 SVG，跟页面风格统一） ---------- */
+ 
 const ICONS = {
     light: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`,
     dark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>`,
@@ -34,11 +34,8 @@ function renderToggleIcon(mode) {
     const next = CYCLE[(CYCLE.indexOf(mode) + 1) % CYCLE.length];
     btn.title = `主题：${mode}（点击切换到 ${next}）`;
 }
-/* ---------- 403 API Key 语义失败提示 ----------
-   后端 /challenge /verify 在密钥不可用时返回 403 + 语义 detail：
-     API key origin not allowed / API key disabled /
-     API key limit exceeded or invalid(月度) / API key daily limit exceeded or invalid(今日)
-   这里识别后给出明确提示与跳转入口，不再静默无限重试（失败重试不扣额度）。 */
+
+
 const KEY_MANAGE_URL =
     (typeof window !== "undefined" && window.__phantomManageUrl) ||
     "https://ziyit-hacker.github.io/user/api-key.html";
@@ -47,7 +44,7 @@ function detectKeyDenied(e) {
     if (!e || e.status !== 403)
         return null;
     const raw = String(e.detail || e.message || "");
-    // 注意判定顺序：daily 的 detail 也含 "limit exceeded or invalid" 片段，必须先判 daily
+     
     let reason = null;
     if (/daily limit exceeded/i.test(raw)) reason = "daily";
     else if (/limit exceeded or invalid/i.test(raw)) reason = "monthly";
@@ -113,7 +110,7 @@ function showKeyDeniedPanel(tips) {
     keyDeniedNode = node;
 }
 
-/* ---------- widget 挂载（带 handle，便于主题切换时重建） ---------- */
+ 
 let handle = null;
 function mountWidget(mode) {
     handle?.destroy();
@@ -122,8 +119,8 @@ function mountWidget(mode) {
         theme: resolvedTheme(mode),
         onSuccess: (r) => {
             console.log("验证通过，score =", (r.score || 0).toFixed(2), "challengeId =", r.challengeId);
-            // P0：后端不再下发 token；接入方请保存本轮的 challengeId + sessionId，
-            // 随业务请求（如注册）一并提交后端消费。这里仅在 window 上留档供宿主页读取。
+             
+             
             window.__phantomVerified = true;
             window.__phantomChallengeId = r.challengeId;
             window.__phantomSessionId = r.sessionId;
@@ -135,8 +132,8 @@ function mountWidget(mode) {
         onError: (e) => {
             const kd = detectKeyDenied(e);
             if (kd) {
-                // 密钥被停用/超额/来源被拒：给出明确提示与跳转入口，
-                // 并复位 widget 回到待验证态，不再静默无限重试
+                 
+                 
                 showKeyDeniedPanel(kd.tips);
                 try { handle?.reset(); } catch (err) {}
                 return;
@@ -145,7 +142,7 @@ function mountWidget(mode) {
         },
     });
 }
-/* ---------- 初始化 + 绑定切换 ---------- */
+ 
 function initTheme() {
     const mode = storedTheme();
     applyTheme(mode);
@@ -157,9 +154,9 @@ function initTheme() {
         localStorage.setItem(THEME_KEY, next);
         applyTheme(next);
         renderToggleIcon(next);
-        mountWidget(next); // 让 widget 跟随新主题
+        mountWidget(next);  
     });
-    // system 模式下，跟随操作系统明暗变化
+     
     window
         .matchMedia("(prefers-color-scheme: dark)")
         .addEventListener("change", () => {
@@ -169,6 +166,6 @@ function initTheme() {
         }
     });
 }
-/* ---------- 启动 ---------- */
+ 
 initTheme();
 mountWidget(storedTheme());

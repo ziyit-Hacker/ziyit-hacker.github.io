@@ -223,7 +223,7 @@
     </script>
     <link rel="stylesheet" href="./assets/ziyit-theme.css">
     <style>
-        /* ===== 站内/全网搜索模式切换 ===== */
+         
         .search-tabs {
             display: flex;
             justify-content: center;
@@ -254,7 +254,7 @@
             border-color: var(--ziyit-primary);
         }
 
-        /* ===== 站内搜索结果 ===== */
+         
         #site-results {
             max-width: 800px;
             margin: 24px auto;
@@ -325,7 +325,7 @@
     <h1>搜索</h1>
     <hr>
     <script>
-        // 获取cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
@@ -333,7 +333,7 @@
             return null;
         }
 
-        // 检查用户权限
+         
         function checkUserPermission() {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             if (!authToken) {
@@ -343,11 +343,11 @@
             }
         }
 
-        // 页面加载时检查权限
+         
         document.addEventListener('DOMContentLoaded', checkUserPermission);
     </script>
     <hr>
-    <!-- ===== 导航栏（DESIGN.md §4.6，与主页 .site-nav 规范一致） ===== -->
+    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -365,7 +365,7 @@
         <button type="button" class="search-tab" data-mode="web">全网搜索</button>
     </div>
 
-    <!-- 站内搜索面板 -->
+    
     <div id="site-search-panel" class="search-panel" style="text-align: center; margin: 0 auto; max-width: 600px;">
         <form id="site-search-form" style="display: flex;" autocomplete="off">
             <label for="site-search-input" style="font-size: 24px; color: #0078d4"><strong>站内搜索: </strong></label>
@@ -382,7 +382,7 @@
         </form>
     </div>
 
-    <!-- 全网搜索面板（必应） -->
+    
     <div id="web-search-panel" class="search-panel hidden" style="text-align: center; margin: 0 auto; max-width: 600px;">
         <form id="web-search-form" action="https://cn.bing.com/search" method="get" style="display: flex;" autocomplete="off">
             <label for="web-search-input" style="font-size: 24px; color: #0078d4"><strong>快速搜索: </strong></label>
@@ -578,11 +578,11 @@
     </script>
     <script src="./assets/site-index.js"></script>
     <script>
-        /* ===== 站内搜索（DESIGN.md §4.x）：索引全站 HTML 页面并全文匹配 ===== */
-        // 页面清单 SITE_PAGES 由 build_site_index.py 自动扫描生成（assets/site-index.js）
+         
+         
         var SITE_INDEX = null;
         var SITE_INDEXING = null;
-        // 并发抓取数（浏览器同域并发限制约 6，取 10 兼顾速度与稳定）
+         
         var INDEX_CONCURRENCY = 10;
         var INDEX_TOTAL = (window.SITE_PAGES || []).length;
 
@@ -591,9 +591,9 @@
             if (el) el.textContent = '正在索引 ' + done + '/' + INDEX_TOTAL + ' 页…';
         }
 
-        // 抓取并解析单个页面；失败返回 null（跳过）。
-        // 过滤 <script>/<style> 等非正文元素，避免搜索到 JS/CSS 代码、图标文字等；
-        // 并对容错解析可能残留的 CSS 颜色代码做二次清洗
+         
+         
+         
         function fetchPage(url) {
             return fetch(url).then(function (r) { return r.text(); }).then(function (html) {
                 var doc = new DOMParser().parseFromString(html, 'text/html');
@@ -602,7 +602,7 @@
                     if (el.parentNode) el.parentNode.removeChild(el);
                 });
                 var text = ((doc.body || {}).textContent || '').replace(/\s+/g, ' ');
-                // 二次清洗：移除 CSS 颜色代码（#hex / rgb() 等），防止解析容错残留
+                 
                 text = text
                     .replace(/#[0-9a-fA-F]{3,8}\b/g, ' ')
                     .replace(/rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+[^)]*\)/gi, ' ');
@@ -610,7 +610,7 @@
             }).catch(function () { return null; });
         }
 
-        // 构建全站索引：并发分批抓取。构建结果缓存，force=true 才重建
+         
         function buildIndex(force) {
             if (force) { SITE_INDEX = null; SITE_INDEXING = null; }
             if (SITE_INDEX) return Promise.resolve(SITE_INDEX);
@@ -683,8 +683,8 @@
             }
             var html = '<div class="site-result-count">共找到 ' + results.length + ' 个相关页面</div>';
             results.forEach(function (r) {
-                // 正文命中时附加定位参数（?zq=），目标页会高亮并滚动到内容位置；
-                // 仅标题命中则直接跳转页面
+                 
+                 
                 var href = r.url + (r.inBody ? '?zq=' + encodeURIComponent(q) : '');
                 html += '<div class="site-result"><a class="sr-title" href="' + href + '">' + highlight(r.title, q) + '</a>' +
                     '<span class="sr-url">' + escapeHtml(r.url) + '</span>' +
@@ -694,7 +694,7 @@
             box.innerHTML = html;
         }
 
-        // 模式切换：切到全网搜索时清空站内结果，切回时自动重新加载上次站内搜索
+         
         var lastSiteQuery = '';
 
         function runSiteSearch(q) {
@@ -705,7 +705,7 @@
                 '<div class="loader-bar"><div class="loader-fill"></div></div>' +
                 '<div id="site-index-progress" style="margin-top:10px;color:var(--ziyit-text-secondary,#888);font-size:13px;"></div>' +
                 '</div></div>';
-            // 每次搜索都强制重建索引，重新抓取全部页面（不缓存，保证结果最新）
+             
             buildIndex(true).then(function () {
                 renderResults(searchSite(q), q);
             });
@@ -726,7 +726,7 @@
             });
         });
 
-        // 站内搜索提交
+         
         document.getElementById('site-search-form').addEventListener('submit', function (e) {
             e.preventDefault();
             var q = document.getElementById('site-search-input').value.trim();

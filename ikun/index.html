@@ -198,7 +198,7 @@
             }
         }
 
-        /* 添加backrooms导航栏的颜色变量 */
+         
         :root {
             --gray-monochrome: 128, 128, 128;
             --pale-gray-monochrome: 240, 240, 240;
@@ -208,7 +208,7 @@
             --mono-font: 'Courier New', monospace;
         }
 
-        /* 折叠导航栏样式 - 修改为backrooms风格 */
+         
         .top-bar {
             background-color: rgb(var(--gray-monochrome));
             padding: 0.5rem 1rem;
@@ -281,7 +281,7 @@
             background-color: rgb(var(--white-monochrome));
         }
 
-        /* 移动端导航栏样式 - 修改为backrooms风格 */
+         
         .mobile-top-bar {
             display: none;
             background-color: rgb(var(--gray-monochrome));
@@ -350,7 +350,7 @@
             align-items: center;
         }
 
-        /* 响应式设计 */
+         
         @media (max-width: 768px) {
             .top-bar {
                 display: none;
@@ -361,7 +361,7 @@
             }
         }
 
-        /* Cookie提示样式 */
+         
         .cookie-consent {
             position: fixed;
             bottom: 0;
@@ -570,7 +570,7 @@
             font-size: 14px;
         }
 
-        /* 自定义下拉箭头 */
+         
         #lang::after {
             content: "▼";
             position: absolute;
@@ -583,7 +583,7 @@
             z-index: 1001;
         }
 
-        /* 移动端适配 */
+         
         @media (max-width: 768px) {
             #lang {
                 top: 15px;
@@ -602,7 +602,7 @@
             }
         }
 
-        /* 动画效果 */
+         
         @keyframes languageSwitch {
             0% {
                 transform: scale(1);
@@ -628,18 +628,18 @@
         background-attachment: fixed;">
     <script>
         function Development() {
-            // 获取开发者工具链接
+             
             const devLink = document.getElementById('development');
             if (devLink) {
                 devLink.addEventListener('click', function (e) {
-                    e.preventDefault(); // 阻止默认链接行为
+                    e.preventDefault();  
 
-                    // 1. 先禁用f12check.js的功能
+                     
                     disableF12Check();
 
-                    // 2. 短暂延迟后触发开发者工具
+                     
                     setTimeout(() => {
-                        // 尝试触发F12快捷键
+                         
                         const event = new KeyboardEvent('keydown', {
                             key: 'F12',
                             code: 'F12',
@@ -650,38 +650,38 @@
                         });
                         document.dispatchEvent(event);
 
-                        // 3. 重新启用f12check.js
+                         
                         setTimeout(() => {
                             enableF12Check();
                         }, 1000);
 
                     }, 100);
 
-                    // 显示提示信息
+                     
                     alert('Ctl`农只`酷奶`酷奶`只`哈基战`酷耶c`哦^ 农只`战`1泥潭`米浮ス木`只`F12`哦^');
                 });
             }
         }
 
-        // 禁用f12check.js功能
+         
         function disableF12Check() {
-            // 移除所有事件监听器
+             
             document.removeEventListener('keydown', window.f12CheckKeydownHandler);
             document.removeEventListener('contextmenu', window.f12CheckContextmenuHandler);
 
-            // 恢复console功能
+             
             if (window.originalConsole) {
                 window.console = window.originalConsole;
             }
         }
 
-        // 启用f12check.js功能
+         
         function enableF12Check() {
-            // 重新添加事件监听器
+             
             document.addEventListener('keydown', window.f12CheckKeydownHandler);
             document.addEventListener('contextmenu', window.f12CheckContextmenuHandler);
 
-            // 重新应用console限制
+             
             Object.defineProperty(window, 'console', {
                 value: new Proxy(console, {
                     get(target, prop) {
@@ -694,9 +694,9 @@
             });
         }
 
-        // 保存原始的f12check.js事件处理器
+         
         function initF12CheckHandlers() {
-            // 保存原始的事件处理器
+             
             window.f12CheckKeydownHandler = function (e) {
                 if (e.key === 'F12' ||
                     (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key))) {
@@ -710,14 +710,14 @@
                 return false;
             };
 
-            // 保存原始console
+             
             window.originalConsole = console;
         }
 
-        // 初始化时保存原始处理器
+         
         document.addEventListener('DOMContentLoaded', initF12CheckHandlers);
 
-        // 页面加载时调用检查权限函数
+         
         document.addEventListener('DOMContentLoaded', Development);
     </script>
     <h1>ZIYIT`耶绿只`战盘`通哈`基米`只`哦</h1>
@@ -773,7 +773,7 @@
         </ul>
     </div>
 
-    <!-- 移动端导航栏 -->
+    
     <div class="mobile-top-bar">
         <div class="open-menu">
             <p><a href="#mobile-menu">≡</a></p>
@@ -848,7 +848,7 @@
         <p class="tit">&copy;2026 ZIYIT <strong>耶西农`只`基米哦`&`酷奶通`只`农只`基米哦`酷耶c`哦^</strong></p>
     </footer>
 
-    <!-- Cookie同意提示 -->
+    
     <div class="cookie-overlay" id="cookieOverlay"></div>
     <div class="cookie-consent" id="cookieConsent">
         <div class="cookie-content">
@@ -868,29 +868,29 @@
     </div>
 
     <script>
-        // Cookie同意提示功能
+         
         function initCookieConsent() {
             const cookieConsent = document.getElementById('cookieConsent');
             const cookieOverlay = document.getElementById('cookieOverlay');
             const cookieAccept = document.getElementById('cookieAccept');
             const cookieReject = document.getElementById('cookieReject');
 
-            // 检查元素是否存在
+             
             if (!cookieConsent || !cookieOverlay || !cookieAccept || !cookieReject) {
                 console.error('Cookie提示元素未找到');
                 return;
             }
 
-            // 检查是否已经做出Cookie选择
+             
             const cookieChoice = localStorage.getItem('Cookie');
 
             if (cookieChoice === null) {
-                // 如果还没有选择，显示Cookie提示
+                 
                 setTimeout(() => {
                     cookieConsent.classList.add('active');
                     cookieOverlay.classList.add('active');
 
-                    // 禁用页面其他内容，但确保Cookie按钮可以点击
+                     
                     document.body.style.overflow = 'hidden';
                     document.querySelectorAll('a, button, input, select, textarea').forEach(element => {
                         if (!element.classList.contains('cookie-btn')) {
@@ -899,15 +899,15 @@
                     });
                 }, 1000);
             } else {
-                // 如果已经选择，根据选择处理
+                 
                 handleCookieChoice(cookieChoice);
             }
 
-            // 接受Cookie
+             
             cookieAccept.addEventListener('click', function (e) {
                 e.stopPropagation();
                 console.log('接受按钮被点击');
-                // 使用Cookie管理器设置状态
+                 
                 if (window.cookieManager) {
                     window.cookieManager.setCookieStatus(true);
                 } else {
@@ -916,11 +916,11 @@
                 hideCookieConsent();
             });
 
-            // 拒绝Cookie
+             
             cookieReject.addEventListener('click', function (e) {
                 e.stopPropagation();
                 console.log('拒绝按钮被点击');
-                // 使用Cookie管理器设置状态
+                 
                 if (window.cookieManager) {
                     window.cookieManager.setCookieStatus(false);
                 } else {
@@ -933,7 +933,7 @@
                 cookieConsent.classList.remove('active');
                 cookieOverlay.classList.remove('active');
 
-                // 恢复页面功能
+                 
                 document.body.style.overflow = '';
                 document.querySelectorAll('a, button, input, select, textarea').forEach(element => {
                     element.style.pointerEvents = '';
@@ -941,18 +941,18 @@
             }
 
             function handleCookieChoice(choice) {
-                // 使用Cookie管理器处理选择
+                 
                 if (window.cookieManager) {
                     window.cookieManager.setCookieStatus(choice === 'True');
                 }
             }
         }
 
-        // 确保DOM完全加载后再初始化
+         
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initCookieConsent);
         } else {
-            // DOM已经加载完成
+             
             initCookieConsent();
         }
     </script>
@@ -984,7 +984,7 @@
             }
             toggle()
         })
-        // 在toggle函数中添加点击事件
+         
         function toggle() {
             img.src = data[i].url
             p.innerHTML = data[i].title
@@ -992,7 +992,7 @@
             document.querySelector('.slider-indicator .active').classList.remove('active')
             document.querySelector(`.slider-indicator li:nth-child(${i + 1})`).classList.add('active')
 
-            // 添加点击跳转功能
+             
             img.onclick = function () {
                 if (data[i].link) {
                     window.open(data[i].link, '_blank')
@@ -1025,7 +1025,7 @@
     <audio src="../assets/bm.mp3" style="display: none;"></audio>
 
     <script>
-        // 移动端导航栏折叠功能
+         
         document.addEventListener('DOMContentLoaded', function () {
             const openMenuLink = document.querySelector('.mobile-top-bar .open-menu a');
             const mobileMenu = document.getElementById('mobile-menu');
@@ -1037,21 +1037,21 @@
                 });
             }
 
-            // 移动端子菜单折叠功能
+             
             const mobileMenuItems = document.querySelectorAll('#mobile-menu > li');
             mobileMenuItems.forEach(item => {
                 const subMenu = item.querySelector('ul');
                 if (subMenu) {
-                    // 为有子菜单的项添加点击事件
+                     
                     item.addEventListener('click', function (e) {
-                        if (e.target.tagName === 'A') return; // 如果是链接点击，不阻止
+                        if (e.target.tagName === 'A') return;  
                         e.stopPropagation();
                         subMenu.style.display = subMenu.style.display === 'block' ? 'none' : 'block';
                     });
                 }
             });
 
-            // 点击页面其他地方关闭移动菜单
+             
             document.addEventListener('click', function (e) {
                 if (!mobileMenu.contains(e.target) && !openMenuLink.contains(e.target)) {
                     mobileMenu.classList.remove('active');
@@ -1059,7 +1059,7 @@
             });
         });
 
-        // 原有的音频播放功能
+         
         let isPlay = false
         const audio = document.querySelector('audio')
         const bgmList = ['../assets/bm.mp3', '../assets/bm2.mp3', '../assets/bm3.mp3', '../assets/bm4.mp3', '../assets/bm5.mp3']
@@ -1112,7 +1112,7 @@
     </script>
 
     <script>
-        // 从cookie获取用户信息的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
@@ -1120,31 +1120,31 @@
             return null;
         }
 
-        // 获取当前用户认证信息
+         
         function getCurrentUser() {
-            // 优先从cookie获取
+             
             const authToken = getCookie('authToken');
             if (authToken) {
                 return authToken;
             }
-            // 如果cookie中没有，尝试从localStorage获取（兼容旧版本）
+             
             return localStorage.getItem('authToken');
         }
 
-        // 检查用户是否登录
+         
         function isLoggedIn() {
             return !!getCurrentUser();
         }
 
-        // 检查黑名单函数
+         
         async function checkBlacklist(authToken) {
-            // 这里应该调用blacklist.js中的检查逻辑
-            // 暂时返回false，实际应该与blacklist.js集成
+             
+             
             return false;
         }
 
         async function checkLoginStatus() {
-            // 首先定义所有需要的变量
+             
             const navItems = document.querySelectorAll('.nav-item');
             const loginLink = document.getElementById('loginLink');
             const mobileLoginLink = document.getElementById('mobileLoginLink');
@@ -1153,7 +1153,7 @@
 
             const authToken = getCurrentUser();
             if (!authToken) {
-                // 如果authToken不存在，只显示"登录"菜单项
+                 
                 navItems.forEach(item => {
                     if (item.textContent.includes('登录')) {
                         item.classList.add('visible');
@@ -1179,7 +1179,7 @@
                 return;
             }
 
-            // 处理ut计时
+             
             if (username === 'cache' || username === 'temp') {
                 alert('此账号为临时账号，体验时间为3.75分钟')
                 const timer = setInterval(() => {
@@ -1228,7 +1228,7 @@
                     item.style.display = isVirusDb ? 'inline-block' : 'none';
                 });
 
-                // 移动端也处理黑名单
+                 
                 document.querySelectorAll('#mobile-menu li').forEach(item => {
                     const isVirusDb = item.querySelector('a[href=".\\move\\mod"]');
                     item.style.display = isVirusDb ? 'block' : 'none';
@@ -1247,7 +1247,7 @@
             const intervalId = setInterval(() => {
                 const authToken = getCurrentUser();
                 if (!authToken) {
-                    // 如果authToken不存在，只显示"登录"菜单项
+                     
                     navItems.forEach(item => {
                         if (item.textContent.includes('登录')) {
                             item.classList.add('visible');
@@ -1266,7 +1266,7 @@
                 navItems.forEach(item => {
                     const role = item.getAttribute('data-role');
 
-                    // 如果是最高管理员，显示所有相关元素
+                     
                     if (username === 'Minecraft_zy227') {
                         if (role === 'all' || role === 'admin' || role === 'adminstr') {
                             item.classList.add('visible');
@@ -1276,7 +1276,7 @@
                             item.classList.remove('visible');
                         }
                     } else {
-                        // 普通权限检查逻辑
+                         
                         if (role === 'all' ||
                             (type === 'ZC' && role === 'admin') ||
                             (type === 'UR' && role === 'user')) {
@@ -1288,22 +1288,22 @@
                         }
                     }
 
-                    // 处理adminstr元素的显示逻辑
+                     
                     const adminstrElements = item.querySelectorAll('[data-role="adminstr"]');
                     adminstrElements.forEach(element => {
                         if (username === 'Minecraft_zy227') {
-                            // 显示所有带有"adminstr"的元素
+                             
                             element.classList.add('visible');
                             element.classList.remove('hidden');
                         } else {
-                            // 隐藏所有带有"adminstr"的元素
+                             
                             element.classList.add('hidden');
                             element.classList.remove('visible');
                         }
                     });
                 });
 
-                // 额外处理移动端导航栏的adminstr元素
+                 
                 const mobileAdminstrElements = document.querySelectorAll('#mobile-menu [data-role="adminstr"]');
                 mobileAdminstrElements.forEach(element => {
                     if (username === 'Minecraft_zy227') {
@@ -1319,7 +1319,7 @@
 
         window.addEventListener('DOMContentLoaded', checkLoginStatus);
 
-        // 修改这部分代码，使用新的isLoggedIn函数
+         
         if (isLoggedIn()) {
             const authToken = getCurrentUser();
             checkBlacklist(authToken).then(isBlacklisted => {
@@ -1338,156 +1338,37 @@
         }
     </script>
 
-    <!-- <script>
-        // 广告数据列表 正常广告ad开头，广告位招租asfl
-        const adsData = [
-            { img: 'images/asfl.png', title: '广告位招租', link: 'mailto:ziyitstudio@qq.com' },
-            // 可以添加更多广告数据
-        ];
-
-        const MAX_AD_DISPLAY = 5; // 每日最大广告显示次数
-        let adDisplayCount = 0; // 当前广告显示计数
-        let currentAd = null; // 当前显示的广告
-        let shakeCount = 0; // 摇动计数
-        let adTimer = null; // 广告计时器
-
-        // 显示广告
-        function showAd() {
-            const isMobile = window.innerWidth <= 768; // 使用屏幕宽度判断
-            
-            if (!isMobile || adDisplayCount >= MAX_AD_DISPLAY) return;
-            
-            currentAd = getRandomAd();
-            adDisplayCount++;
-            
-            // 创建广告层
-            const adLayer = document.createElement('div');
-            adLayer.id = 'ad-layer';
-            adLayer.style.position = 'fixed';
-            adLayer.style.top = '0';
-            adLayer.style.left = '0';
-            adLayer.style.width = '100%';
-            adLayer.style.height = '100%';
-            adLayer.style.zIndex = '9999';
-            adLayer.style.backgroundColor = '#000';
-            adLayer.style.display = 'flex';
-            adLayer.style.justifyContent = 'center';
-            adLayer.style.alignItems = 'center';
-            
-            // 检查是否是视频广告
-            const isVideo = currentAd.img.endsWith('.mp4');
-            
-            if (isVideo) {
-                // 创建视频元素
-                const video = document.createElement('video');
-                video.src = currentAd.img;
-                video.style.maxWidth = '100%';
-                video.style.maxHeight = '100%';
-                video.controls = false;
-                video.autoplay = true;
-                video.loop = false;
-                video.muted = true; // 默认静音
-                
-                // 点击视频跳转
-                video.addEventListener('click', function() {
-                    window.location.href = currentAd.link;
-                    document.body.removeChild(adLayer);
-                    window.removeEventListener('devicemotion', handleShake);
-                    clearTimeout(adTimer);
-                });
-                
-                // 视频结束处理
-                video.addEventListener('ended', function() {
-                    window.location.href = currentAd.link;
-                    document.body.removeChild(adLayer);
-                    window.removeEventListener('devicemotion', handleShake);
-                    clearTimeout(adTimer);
-                });
-                
-                adLayer.appendChild(video);
-            } else {
-                // 创建图片广告
-                const adImgContainer = document.createElement('div');
-                adImgContainer.style.maxWidth = '100%';
-                adImgContainer.style.maxHeight = '100%';
-                
-                const adImg = document.createElement('img');
-                adImg.src = currentAd.img;
-                adImg.style.maxWidth = '100%';
-                adImg.style.maxHeight = '100%';
-                adImg.style.objectFit = 'contain';
-                
-                adImg.addEventListener('click', function() {
-                    window.location.href = currentAd.link;
-                    document.body.removeChild(adLayer);
-                    window.removeEventListener('devicemotion', handleShake);
-                    clearTimeout(adTimer);
-                });
-                
-                adImgContainer.appendChild(adImg);
-                adLayer.appendChild(adImgContainer);
-            }
-            
-            // 创建跳过按钮
-            const skipBtn = document.createElement('button');
-            skipBtn.id = 'skip-ad-btn';
-            skipBtn.textContent = '跳过广告';
-            skipBtn.style.position = 'absolute';
-            skipBtn.style.top = '20px';
-            skipBtn.style.right = '20px';
-            skipBtn.style.padding = '10px 20px';
-            skipBtn.style.backgroundColor = '#ff0000';
-            skipBtn.style.color = '#fff';
-            skipBtn.style.border = 'none';
-            skipBtn.style.borderRadius = '5px';
-            skipBtn.style.cursor = 'not-allowed';
-            skipBtn.disabled = true;
-            
-            skipBtn.addEventListener('click', handleSkipAd);
-            
-            adLayer.appendChild(skipBtn);
-            document.body.appendChild(adLayer);
-            
-            // 15秒后自动跳转
-            adTimer = setTimeout(() => {
-                if (shakeCount < 10) {
-                    window.location.href = currentAd.link;
-                }
-            }, 15000);
-            
-            window.addEventListener('devicemotion', handleShake);
-        }
-    </script> -->
+    
 
     <script>
-        // 语言切换功能
+         
         function changeLanguage(lang) {
             const select = document.getElementById('languageSelect');
 
-            // 添加动画效果
+             
             select.classList.add('language-switch-animation');
             setTimeout(() => {
                 select.classList.remove('language-switch-animation');
             }, 300);
 
             if (lang === '../') {
-                // 切换到中文
+                 
                 window.location.href = lang;
             } else if (lang === 'kun') {
-                // 切换到坤语（当前页面）
-                // 可以在这里添加坤语相关的功能
+                 
+                 
                 alert('酷奶通`只`农`战`只因波`该通`只`农`潭.');
-                // 或者重定向到坤语页面
-                // window.location.href = './kun';
+                 
+                 
             }
         }
 
-        // 页面加载时设置当前语言
+         
         document.addEventListener('DOMContentLoaded', function () {
             const currentPath = window.location.pathname;
             const select = document.getElementById('languageSelect');
 
-            // 根据当前路径设置选中状态
+             
             if (currentPath.includes('/ikun/')) {
                 select.value = 'kun';
             } else {
@@ -1496,7 +1377,7 @@
         });
     </script>
     <script>
-        /* Toast 通知：替代原生 alert（DESIGN.md §4.9） */
+         
         (function () {
             'use strict';
             var CSS = '.ziyit-toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483001;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;max-width:90vw}.ziyit-toast{pointer-events:auto;background:var(--ziyit-bg-card,#1f2229);color:var(--ziyit-text-primary,#fff);border:1px solid var(--ziyit-border,#3a3f48);border-left:4px solid var(--ziyit-primary,#0078d4);padding:10px 18px;border-radius:8px;font-size:14px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .25s;max-width:60vw}.ziyit-toast.show{opacity:1;transform:translateY(0)}.ziyit-toast.hide{opacity:0;transform:translateY(-8px)}.ziyit-toast.success{border-left-color:var(--ziyit-success,#28a745)}.ziyit-toast.error{border-left-color:var(--ziyit-danger,#f25767)}.ziyit-toast.warning{border-left-color:var(--ziyit-warning,#f3a707)}';

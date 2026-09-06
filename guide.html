@@ -9,7 +9,7 @@
     <link rel="icon" href="./assets/ziyit.png" type="image/x-icon">
     <link rel="stylesheet" href="./assets/ziyit-theme.css">
     <style>
-        /* ===== 客服对话页样式（沿用站点 token 设计体系） ===== */
+         
         body {
             background: var(--ziyit-bg);
             min-height: 100vh;
@@ -123,7 +123,7 @@
             background: var(--ziyit-bg);
         }
 
-        /* ---- 四类气泡 ---- */
+         
         .g-msg {
             max-width: 78%;
             padding: 10px 14px;
@@ -168,7 +168,7 @@
             text-align: center;
         }
 
-        /* ---- AI 消息的 Markdown 渲染 ---- */
+         
         .g-msg.ai .md-body {
             white-space: normal;
         }
@@ -218,7 +218,7 @@
             color: rgba(255, 255, 255, .75);
         }
 
-        /* ---- 输入区 ---- */
+         
         .guide-input-row {
             display: flex;
             gap: 10px;
@@ -308,7 +308,7 @@
             text-align: right;
         }
 
-        /* ---- 转接中动画 ---- */
+         
         .g-transfer-wait {
             align-self: center;
             display: flex;
@@ -339,7 +339,7 @@
             }
         }
 
-        /* ---- 转人工确认框 ---- */
+         
         .g-modal {
             display: none;
             position: fixed;
@@ -402,7 +402,7 @@
             color: #fff;
         }
 
-        /* ---- Toast ---- */
+         
         .g-toast {
             position: fixed;
             top: 20px;
@@ -423,7 +423,7 @@
             background: #27ae60;
         }
 
-        /* 未登录提示 */
+         
         .guide-login-hint {
             text-align: center;
             padding: 48px 20px;
@@ -450,7 +450,7 @@
 </head>
 
 <body>
-    <!-- ===== 导航栏（与主页 .site-nav 规范一致） ===== -->
+    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -493,7 +493,7 @@
         </div>
     </div>
 
-    <!-- ===== 客服对话主区 ===== -->
+    
     <div class="guide-wrap">
         <div class="guide-card">
             <div class="guide-header">
@@ -520,7 +520,7 @@
         </div>
     </div>
 
-    <!-- 转人工确认框 -->
+    
     <div class="g-modal" id="g-transfer-modal">
         <div class="g-modal-box">
             <h3>转接人工客服</h3>
@@ -539,16 +539,16 @@
 
             var G = {
                 sessionId: null,
-                sessionStatus: null,   // ai / waiting_human / human / closed / 等
-                humanAdmin: null,      // 当前服务的人工客服信息
-                rendered: {},          // 已渲染消息 messageId 集合（增量去重）
+                sessionStatus: null,    
+                humanAdmin: null,       
+                rendered: {},           
                 sending: false,
-                locked: false,         // 429 锁定
+                locked: false,          
                 lockSeconds: 0,
                 lastResetIn: 0,
                 pollingSession: false,
-                closed: false,         // 会话已结束（用户/客服/系统关闭）
-                closedByUser: false,   // 是否由用户主动结束（区分"您/AI/人工客服已结束"）
+                closed: false,          
+                closedByUser: false,    
                 welcomeShown: false
             };
 
@@ -565,7 +565,7 @@
                 count: document.getElementById('guide-count')
             };
 
-            // ---------- 工具 ----------
+             
             function esc(s) {
                 return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
                     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -590,12 +590,12 @@
                 el.messages.scrollTop = el.messages.scrollHeight;
             }
 
-            // HTML 转义（Markdown 渲染前先转义，防注入）
+             
             function escapeHtml(s) {
                 return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             }
 
-            // 行内 Markdown：加粗 / 斜体 / 删除线 / 行内代码 / 链接
+             
             function inlineMd(s) {
                 return s
                     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -607,7 +607,7 @@
                     });
             }
 
-            // 轻量 Markdown → HTML（AI 客服消息使用）
+             
             function mdToHtml(src) {
                 if (src == null) return '';
                 var s = escapeHtml(String(src));
@@ -643,7 +643,7 @@
                 return html.replace(/\u0000CODE(\d+)\u0000/g, function (m2, n) { return codeBlocks[+n]; });
             }
 
-            // 追加消息：type ∈ user / ai / human / sys
+             
             function addMsg(type, content, meta) {
                 meta = meta || {};
                 var wrap = document.createElement('div');
@@ -698,14 +698,14 @@
                 addMsg('sys', content);
             }
 
-            // 结束会话的提示文案：按结束方区分（AI / 人工客服 / 用户）
+             
             function closedText() {
                 if (G.closedByUser) return '您已结束本次对话';
                 if (humanAdminName(G.humanAdmin)) return '人工客服已结束本次对话';
                 return 'AI 已结束本次对话';
             }
 
-            // 转接中动画（持续闪烁的等待条）
+             
             function showTransferWait() {
                 hideTransferWait();
                 var w = document.createElement('div');
@@ -726,7 +726,7 @@
                 if (w) w.remove();
             }
 
-            // ---------- 状态展示 ----------
+             
             function setStatusBadge(text, cls) {
                 el.statusBadge.textContent = text;
                 el.statusBadge.className = 'guide-status' + (cls ? ' ' + cls : '');
@@ -753,7 +753,7 @@
                 G.lastResetIn = resetIn != null ? resetIn : G.lastResetIn;
 
                 if (G.locked) {
-                    // 429 倒计时优先
+                     
                     setLocked(G.lockSeconds - 1);
                     if (G.lockSeconds <= 0) {
                         setLocked(0);
@@ -771,7 +771,7 @@
                 var pct = limit ? Math.max(0, Math.min(100, Math.round(remaining / limit * 100))) : 100;
                 el.quotaFill.style.width = pct + '%';
                 if (resetIn != null) {
-                    // 每日限额跨天清零时 resetIn 可能是小时级，自适应显示 HH:MM:SS / MM:SS
+                     
                     var h = Math.floor(resetIn / 3600), m = Math.floor((resetIn % 3600) / 60), s = resetIn % 60;
                     var ss = (s < 10 ? '0' : '') + s;
                     el.quotaReset.textContent = h > 0
@@ -782,7 +782,7 @@
                 }
             }
 
-            // 每秒限流状态轮询
+             
             function startStatusPolling() {
                 setInterval(function () {
                     if (G.locked) {
@@ -795,12 +795,12 @@
                             applySessionStatus(d.sessionStatus);
                         }
                     }).catch(function () {
-                        // 静默失败，下次再试
+                         
                     });
                 }, 1000);
             }
 
-            // 从会话/响应中提取客服显示名（兼容字符串与对象两种后端格式）
+             
             function humanAdminName(ha) {
                 if (!ha) return '';
                 if (typeof ha === 'string') return ha;
@@ -810,12 +810,12 @@
                 return '';
             }
 
-            // 根据会话状态切换 UI
+             
             function applySessionStatus(status) {
                 if (!status || status === G.sessionStatus) return;
                 var prev = G.sessionStatus;
                 G.sessionStatus = status;
-                // 会话是否已接入人工客服（转人工成功后用户再发消息，后端仍可能返回 waiting 类状态，不应回退）
+                 
                 var hasHuman = G.sessionStatus === 'human' || G.sessionStatus === 'transfer_active' || !!humanAdminName(G.humanAdmin);
 
                 if (status === 'human' || status === 'transfer_active') {
@@ -825,7 +825,7 @@
                     startSessionPolling();
                 } else if (status === 'waiting_human' || status === 'transfer_waiting' || status === 'human_waiting') {
                     if (hasHuman) {
-                        // 已接入人工：保持人工徽章，不显示转接等待条（避免状态抖动）
+                         
                         hideTransferWait();
                         var nmW = humanAdminName(G.humanAdmin);
                         setStatusBadge(nmW ? ('人工客服·' + nmW) : '人工客服在线', 'online');
@@ -839,8 +839,8 @@
                     hideTransferWait();
                     addSys('转人工请求已过期，您仍在使用 AI 助手服务。');
                 } else if (status === 'closed') {
-                    // 后端返回会话已结束：同步本地结束态，并提示是谁结束的
-                    if (G.closed) return;          // 用户已主动结束（endChat 已提示），不重复提示
+                     
+                    if (G.closed) return;           
                     var closedTip = closedText();
                     setClosedUI(closedTip);
                     addSys(closedTip);
@@ -848,7 +848,7 @@
                     setStatusBadge('AI 助手');
                     hideTransferWait();
                 }
-                // 状态从人工回到 AI 时停止轮询
+                 
                 if (prev && (prev === 'human' || prev === 'waiting_human') &&
                     status !== 'human' && status !== 'waiting_human' &&
                     status !== 'transfer_waiting' && status !== 'human_waiting') {
@@ -856,7 +856,7 @@
                 }
             }
 
-            // 人工同步：每 2 秒拉取会话详情，增量渲染客服回复
+             
             function startSessionPolling() {
                 if (G.pollingSession) return;
                 G.pollingSession = true;
@@ -867,7 +867,7 @@
                         if (d.sessionId) G.sessionId = d.sessionId;
                         if (d.humanAdmin) {
                             G.humanAdmin = d.humanAdmin;
-                            // 后端若未返回 status，只要有客服信息就把徽章切到人工并显示名字
+                             
                             var nm = humanAdminName(G.humanAdmin);
                             if (nm && G.sessionStatus !== 'human' && G.sessionStatus !== 'transfer_active') {
                                 G.sessionStatus = 'human';
@@ -895,13 +895,13 @@
                 setTimeout(tick, 500);
             }
 
-            // 渲染服务端消息，按后端消息规范：
-            //   sender=0, senderName="AI"   → AI 回复（默认样式）
-            //   sender=0, senderName="系统"  → 系统提示（居中灰字）
-            //   sender=用户ID                 → 用户自己发的（右侧）
-            //   sender=客服ID                 → 人工客服回复（徽标样式）
-            // 判断以 senderName / sender 为准，role 仅作兜底，避免后端 role 混用时误判
-            // skipMine=true 用于轮询：自己发送的消息本地已实时渲染，直接跳过，避免复读
+             
+             
+             
+             
+             
+             
+             
             function renderServerMessage(m, skipMine) {
                 var content = m.content || m.reply || '';
                 var role = m.role || '';
@@ -909,15 +909,15 @@
                 var sName = m.senderName || '';
                 var ts = m.ts || m.sentAt || m.time || '';
 
-                // 1) 系统提示（senderName=系统）
+                 
                 if (sName === '系统') {
-                    // 欢迎语（AI 客服自我介绍）即使被后端标记为系统消息，也按 AI 助手样式显示
+                     
                     if (isWelcomeText(content)) {
                         addMsg('ai', content, { time: fmtTime(ts) });
                         return;
                     }
                     addSys(content);
-                    // 转人工成功/已接入的系统提示：把徽章切到人工并解析客服名
+                     
                     var rt = m.replyType;
                     if (rt === 'transfer_success' || rt === 'transfer_active' || rt === 'human') {
                         var nm = humanAdminName(G.humanAdmin) || parseHumanFromText(content);
@@ -930,20 +930,20 @@
                     }
                     return;
                 }
-                // 2) AI 回复（senderName=AI 或 sender=0）
+                 
                 if (sName === 'AI' || (sender != null && Number(sender) === 0)) {
                     addMsg('ai', content, { time: fmtTime(ts) });
                     return;
                 }
-                // 3) 用户自己发送的消息（sender 是自己的 userId）
+                 
                 if (sender != null && G.myUserId != null && Number(sender) === Number(G.myUserId)) {
                     if (!skipMine) addMsg('user', content, { time: fmtTime(ts) });
                     return;
                 }
-                // 4) 人工客服回复（sender = 客服 userId，非 0）
+                 
                 if (sender != null && Number(sender) !== 0) {
                     var fnm = sName || humanAdminName(G.humanAdmin) || '';
-                    // 徽章若仍是"AI 助手"则切到人工并显示客服名
+                     
                     if (fnm && G.sessionStatus !== 'human' && G.sessionStatus !== 'transfer_active') {
                         G.sessionStatus = 'human';
                         setStatusBadge('人工客服·' + fnm, 'online');
@@ -952,7 +952,7 @@
                     addMsg('human', content, { username: fnm, time: fmtTime(ts) });
                     return;
                 }
-                // 5) 兜底：role=system 按系统提示，其余按 AI
+                 
                 if (role === 'system') {
                     addSys(content);
                 } else {
@@ -960,14 +960,14 @@
                 }
             }
 
-            // 从系统提示文案中解析客服名，例如"已为您转接人工客服（Minecraft_zy227）"
+             
             function parseHumanFromText(t) {
                 if (!t) return '';
                 var m = t.match(/[（(]([^（）()]+)[）)]/);
                 return m ? m[1].trim() : '';
             }
 
-            // 判断是否为 AI 客服的欢迎语（含智能客服/快速指引/转人工说明且以问候语开头）
+             
             function isWelcomeText(t) {
                 if (!t) return false;
                 var s = t.trim();
@@ -982,7 +982,7 @@
                 return p(d.getHours()) + ':' + p(d.getMinutes());
             }
 
-            // ---------- 发送 ----------
+             
             function send() {
                 if (G.sending || G.locked) return;
                 if (G.closed) {
@@ -1016,12 +1016,12 @@
                 });
             }
 
-            // 处理 chat 返回：replyType 驱动 UI
+             
             function handleChatReply(d, userText) {
                 if (!d) return;
-                // 兼容后端字段：消息内容可能是 content 而非 reply
+                 
                 if (d.content != null && d.reply == null) d.reply = d.content;
-                // 注册去重 key：会话轮询拉回同一条 AI/系统消息时不再重复渲染
+                 
                 var rid = d.id || ((d.ts || '') + '|' + (d.reply || ''));
                 if (rid && rid !== '|') G.rendered[rid] = true;
                 if (d.sessionId) G.sessionId = d.sessionId;
@@ -1032,16 +1032,16 @@
                     addMsg('ai', d.welcome, {});
                 }
                 var rt = d.replyType || 'ai';
-                // 会话是否已接入人工客服：已接入时，后端返回 waiting/forwarded 仅表示"消息已转给人工"，不应回退到转接中
+                 
                 var hasHuman = G.sessionStatus === 'human' || G.sessionStatus === 'transfer_active' || !!humanAdminName(G.humanAdmin);
 
-                // 转人工确认：弹窗（确认后发送固定指令"转人工"）
+                 
                 if (d.showTransferOption === true || rt === 'transfer_confirm') {
                     showTransferModal();
                     if (rt === 'transfer_confirm' && d.reply) addMsg('ai', d.reply, {});
                     return;
                 }
-                // AI 主动转人工（[HUMAN] 或纪律强制转人工）：跳过用户确认直接转接，显示转接中并开始轮询
+                 
                 if (rt === 'ai_human_transfer') {
                     setStatusBadge('等待人工客服接入', 'waiting');
                     showTransferWait();
@@ -1049,7 +1049,7 @@
                     if (d.reply) addMsg('ai', d.reply, {});
                     return;
                 }
-                // 人工客服已接入会话
+                 
                 if (rt === 'human_joined') {
                     var nmJ = humanAdminName(d.humanAdmin) || '';
                     setStatusBadge(nmJ ? ('人工客服·' + nmJ) : '人工客服在线', 'online');
@@ -1058,10 +1058,10 @@
                     if (d.reply) addSys(d.reply);
                     return;
                 }
-                // 转人工相关状态
+                 
                 if (rt === 'transfer_waiting') {
                     if (hasHuman) {
-                        // 已接入人工：保持"人工客服"状态，只显示后端提示
+                         
                         if (d.reply) addSys(d.reply);
                         return;
                     }
@@ -1113,12 +1113,12 @@
                 }
                 if (rt === 'forwarded') {
                     if (hasHuman) {
-                        // 已接入人工：保持人工徽章，轻提示"已发送给人工客服"
+                         
                         if (d.reply) addSys(d.reply);
                         else addSys('消息已发送给人工客服');
                         return;
                     }
-                    // 尚未接入人工：徽章切到等待接入，避免仍显示"AI 助手"
+                     
                     setStatusBadge('等待人工客服接入', 'waiting');
                     showTransferWait();
                     startSessionPolling();
@@ -1140,7 +1140,7 @@
                     if (d.reply) addMsg('ai', d.reply, {});
                     return;
                 }
-                // ai / help / welcome 等默认 AI 气泡
+                 
                 if (d.reply) {
                     addMsg('ai', d.reply, {});
                 } else if (d.message && d.message !== userText) {
@@ -1148,7 +1148,7 @@
                 }
             }
 
-            // ---------- 转人工确认 ----------
+             
             function showTransferModal() {
                 document.getElementById('g-transfer-modal').classList.add('active');
             }
@@ -1161,7 +1161,7 @@
                 hideTransferModal();
                 setStatusBadge('等待人工客服接入', 'waiting');
                 showTransferWait();
-                // 二次确认后发送转人工指令（后端以此触发 waiting_human / human）
+                 
                 ZIYIT_API.guideChat('转人工').then(function (d) {
                     if (d && d.sessionStatus) applySessionStatus(d.sessionStatus);
                     if (d && d.replyType === 'transfer_confirm') {
@@ -1172,8 +1172,8 @@
                 });
             }
 
-            // ---------- 结束对话 ----------
-            // 会话结束后的 UI 状态：禁用输入/按钮、停止轮询、徽章切换
+             
+             
             function setClosedUI(label) {
                 G.closed = true;
                 G.pollingSession = false;
@@ -1184,7 +1184,7 @@
                 hideTransferWait();
             }
 
-            // 用户结束对话：POST /guide/session/close
+             
             function endChat() {
                 if (G.closed) {
                     showToast('本次对话已结束');
@@ -1211,7 +1211,7 @@
                         G.closedByUser = false;
                         showToast('当前没有进行中的会话');
                     } else if (st === 400) {
-                        // 后端认为已结束：同步本地为结束态
+                         
                         setClosedUI();
                         addSys('您已结束本次对话');
                         showToast('会话已结束');
@@ -1225,7 +1225,7 @@
                 });
             }
 
-            // ---------- 错误处理 ----------
+             
             function handleError(err, isSend) {
                 if (!err) return;
                 if (err.status === 401) {
@@ -1244,32 +1244,32 @@
                 if (err.status === 429) {
                     var secs = err.retryAfter || 0;
                     if (secs > 0) {
-                        // 每分钟短限流：保留倒计时
+                         
                         setLocked(secs);
                         el.quotaText.textContent = '已触发限流，' + secs + ' 秒后可继续发送';
                         showToast('发送过于频繁，请稍后再试');
                     } else {
-                        // 每日 AI 问答限额（跨天清零）：提示升级 VIP
+                         
                         showToast('今日 AI 问答次数已用完，请稍后再试；或联系 ziyitstudio@qq.com 升级为 VIP（价格为 RC 专业版价格）');
                     }
                     return;
                 }
-                // 网络错误：提示重试
+                 
                 showToast('网络错误，请重试');
                 if (isSend) {
-                    // 恢复输入内容由用户自行操作
+                     
                 }
             }
 
-            // ---------- 初始化 ----------
+             
             function init() {
-                // 1) 有 Token：直接同步（Token 过期时 request() 会自动读取 Cookie 凭据
-                //    调用 /auth/login 刷新 Token 并写回 Cookie，再重试，与其他页面一致）
+                 
+                 
                 if (ZIYIT_API.getToken()) {
                     startChat();
                     return;
                 }
-                // 2) 无 Token 但 Cookie 里有"记住登录"凭据：自动调用 login 刷新 Token
+                 
                 if (ZIYIT_API.getCredentials()) {
                     ZIYIT_API.loginWithCredentials().then(function () {
                         startChat();
@@ -1278,7 +1278,7 @@
                     });
                     return;
                 }
-                // 3) 实在没有登录态才跳登录页
+                 
                 goLogin();
             }
 
@@ -1292,7 +1292,7 @@
                     loadHistory();
                 }).catch(function (err) {
                     if (err && err.status === 401) {
-                        // request() 已尝试过 Cookie 凭据自动重登，仍 401：确认无有效登录态才去登录
+                         
                         goLogin();
                         return;
                     }
@@ -1318,7 +1318,7 @@
                     if (d.sessionId) G.sessionId = d.sessionId;
                     if (d.humanAdmin) {
                         G.humanAdmin = d.humanAdmin;
-                        // 历史会话若已有客服信息，直接显示客服名（不依赖 status 字段）
+                         
                         var nmH = humanAdminName(G.humanAdmin);
                         if (nmH && G.sessionStatus !== 'human' && G.sessionStatus !== 'transfer_active') {
                             G.sessionStatus = 'human';
@@ -1342,7 +1342,7 @@
                 });
             }
 
-            // ---------- 事件 ----------
+             
             el.send.addEventListener('click', function () { send(); });
             el.end.addEventListener('click', function () { endChat(); });
             el.input.addEventListener('input', function () {
@@ -1361,7 +1361,7 @@
                 confirmTransfer();
             });
 
-            // 导航栏汉堡菜单（ziyit-theme.js 未接管时兜底）
+             
             var toggle = document.querySelector('.site-nav-toggle');
             var menu = document.getElementById('navMenu');
             if (toggle && menu) {

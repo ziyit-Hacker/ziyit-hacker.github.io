@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <!-- 引入扩展脚本（保留原内容） -->
+    
     <script src="chrome-extension://cpiamehmlamjjaccpfpepfmfcbdeafcd/inject.js"></script>
     <script src="chrome-extension://kjbmkgldehlkpnaeeeegfolcjjlaildg/inject.js"></script>
     
-    <!-- 基础元信息 -->
+    
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>导航页面</title>
     
-    <!-- 可选：添加基础样式，让导航更美观 -->
+    
     <style>
         .nav-container {
             margin: 20px 0;
@@ -37,10 +37,10 @@
     </style>
 </head>
 <body>
-    <!-- 导航容器 -->
+    
     <div class="nav-container">
         <ul class="nav-list">
-            <!-- 还原可识别的导航项 -->
+            
             <li class="nav-item" role="all">
                 <a href="https://hacker.github.io/tas/" target="_blank">主页</a>
             </li>
@@ -50,13 +50,13 @@
             <li class="nav-item" role="all">
                 <a href="#" id="login">登录</a>
             </li>
-            <!-- 可根据需要补充其他导航项 -->
+            
         </ul>
     </div>
 
-    <!-- live-server 自动刷新脚本（保留原核心逻辑，修复语法） -->
+    
     <script>
-        // <![CDATA[  <-- For SVG support
+         
         if ('WebSocket' in window) {
             (function () {
                 function refreshCSS() {
@@ -89,7 +89,7 @@
         } else {
             console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
         }
-        // ]]>
+         
     </script>
 </body>
 </html>

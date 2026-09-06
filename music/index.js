@@ -1,9 +1,9 @@
-// 全局下载管理变量
+ 
 let downloadQueue = [];
 let currentDownload = null;
-let downloadHistory = new Map(); // 用于断点续传
+let downloadHistory = new Map();  
 
-// 用户数据缓存（后端为准）
+ 
 let cachedUser = null;
 let cachedUserLoaded = false;
 ZIYIT_API.currentUser().then(function (u) {
@@ -15,7 +15,7 @@ ZIYIT_API.currentUser().then(function (u) {
     window.dispatchEvent(new Event('ziyit-user-ready'));
 });
 
-// 等待用户数据就绪后再进行 VIP 判定（避免 me() 慢于列表渲染/播放点击导致误判）
+ 
 function waitForUserReady() {
     if (cachedUserLoaded) return Promise.resolve(cachedUser);
     return new Promise(function (resolve) {
@@ -32,17 +32,17 @@ window.addEventListener('ziyit-user-ready', function () {
     }
 });
 
-// 页面加载时检查权限
+ 
 document.addEventListener('DOMContentLoaded', checkUserPermission);
 
-// 音乐播放器功能
+ 
 let currentMusicIndex = -1;
 let musicList = [];
 let isPlaying = false;
 let lyricsData = [];
 let currentLyricIndex = -1;
-let isVideoMode = false; // 添加视频模式标识
-let currentVideoPath = ''; // 当前视频路径
+let isVideoMode = false;  
+let currentVideoPath = '';  
 
 const audioPlayer = document.getElementById('audio-player');
 const videoPlayer = document.getElementById('video-player');
@@ -59,7 +59,7 @@ const currentTimeElement = document.getElementById('current-time');
 const totalTimeElement = document.getElementById('total-time');
 const lyricsContent = document.getElementById('lyrics-content');
 
-// 格式化时间为 MM:SS 格式
+ 
 function formatTime(seconds) {
     if (isNaN(seconds) || seconds === Infinity) {
         return '**:**';
@@ -69,14 +69,14 @@ function formatTime(seconds) {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-// 更新当前时间和总时长显示
+ 
 function updateTimeDisplay() {
     const currentTime = isVideoMode ? videoPlayer.currentTime : audioPlayer.currentTime;
     
-    // 修改：在试听模式下，总时长显示为15秒
+     
     let duration;
     if (isVipTrialMode && !isVideoMode) {
-        duration = 15; // 试听模式显示15秒总时长
+        duration = 15;  
     } else {
         duration = isVideoMode ? videoPlayer.duration : audioPlayer.duration;
     }
@@ -85,14 +85,14 @@ function updateTimeDisplay() {
     totalTimeElement.textContent = formatTime(duration);
 }
 
-// 更新进度条
+ 
 function updateProgressBar() {
     const currentTime = isVideoMode ? videoPlayer.currentTime : audioPlayer.currentTime;
     
-    // 修改：在试听模式下，总时长使用15秒计算进度
+     
     let duration;
     if (isVipTrialMode && !isVideoMode) {
-        duration = 15; // 试听模式使用15秒计算进度
+        duration = 15;  
     } else {
         duration = isVideoMode ? videoPlayer.duration : audioPlayer.duration;
     }
@@ -103,7 +103,7 @@ function updateProgressBar() {
     }
 }
 
-// 解析歌词时间格式 [mm:ss.xx]
+ 
 function parseLyricTime(timeStr) {
     const match = timeStr.match(/\[(\d+):(\d+)\.(\d+)\]/);
     if (match) {
@@ -115,16 +115,16 @@ function parseLyricTime(timeStr) {
     return 0;
 }
 
-// 解析歌词文件
+ 
 function parseLyrics(lyricsText) {
     const lines = lyricsText.split('\n');
     const lyrics = [];
 
     lines.forEach(line => {
         line = line.trim();
-        if (!line) return; // 跳过空行
+        if (!line) return;  
 
-        // 修复正则表达式：支持 [mm:ss.xx] 格式
+         
         const match = line.match(/^\[(\d+):(\d+)\.(\d+)\](.*)$/);
         if (match) {
             const minutes = parseInt(match[1]);
@@ -132,7 +132,7 @@ function parseLyrics(lyricsText) {
             const milliseconds = parseInt(match[3]);
             const text = match[4].trim();
 
-            if (text) { // 只添加有歌词内容的行
+            if (text) {  
                 const timeInSeconds = minutes * 60 + seconds + milliseconds / 100;
                 lyrics.push({
                     time: timeInSeconds,
@@ -141,23 +141,23 @@ function parseLyrics(lyricsText) {
                 });
             }
         } else {
-            // 调试：输出无法解析的行
+             
             console.log('无法解析的歌词行:', line);
         }
     });
 
-    // 按时间排序
+     
     lyrics.sort((a, b) => a.time - b.time);
     console.log('解析后的歌词数据:', lyrics);
     return lyrics;
 }
 
-// 更新歌词显示
+ 
 function updateLyrics(currentTime) {
-    // 移除视频模式判断，让视频模式下也能同步歌词
-    // if (isVideoMode) return;
+     
+     
 
-    // 找到当前时间对应的歌词
+     
     let newIndex = -1;
     for (let i = lyricsData.length - 1; i >= 0; i--) {
         if (currentTime >= lyricsData[i].time) {
@@ -166,12 +166,12 @@ function updateLyrics(currentTime) {
         }
     }
 
-    // 如果歌词索引没有变化，不需要更新
+     
     if (newIndex === currentLyricIndex) return;
 
     currentLyricIndex = newIndex;
 
-    // 生成歌词HTML
+     
     const lyricsHTML = lyricsData.map((lyric, index) => {
         const isCurrent = index === currentLyricIndex;
         const className = isCurrent ? 'lyric-current' : 'lyric-normal';
@@ -180,29 +180,29 @@ function updateLyrics(currentTime) {
 
     lyricsContent.innerHTML = lyricsHTML;
 
-    // 歌词追踪功能：使用最简单可靠的方法
+     
     if (currentLyricIndex >= 0) {
-        // 使用setTimeout确保DOM更新完成
+         
         setTimeout(() => {
             const currentLyricElement = lyricsContent.children[currentLyricIndex];
             if (currentLyricElement) {
-                // 播放视频时，不需要歌词滚动到屏幕中央
+                 
                 if (!isVideoMode) {
-                    // 音乐模式下保持原有滚动行为
+                     
                     currentLyricElement.scrollIntoView({
                         behavior: 'smooth',
                         block: 'center',
                         inline: 'nearest'
                     });
                 }
-                // 视频模式下不进行自动滚动，让用户手动控制歌词查看
+                 
             }
         }, 50);
     }
 }
 
-// 删除复杂的scrollLyricToCenter函数
-// 点击歌词跳转到对应时间
+ 
+ 
 function seekToLyricTime(time) {
     if (isVideoMode) {
         if (videoPlayer.duration) {
@@ -217,7 +217,7 @@ function seekToLyricTime(time) {
     } else {
         if (audioPlayer.duration) {
             audioPlayer.currentTime = time;
-            // 如果音频暂停，自动播放
+             
             if (audioPlayer.paused) {
                 audioPlayer.play();
                 isPlaying = true;
@@ -228,7 +228,7 @@ function seekToLyricTime(time) {
     }
 }
 
-// 加载歌词
+ 
 async function loadLyrics(lyricsPath) {
     if (lyricsPath === '[NO DATA]') {
         lyricsContent.innerHTML = '<div class="lyric-normal">暂无歌词</div>';
@@ -238,7 +238,7 @@ async function loadLyrics(lyricsPath) {
     }
 
     try {
-        // 修复路径分隔符问题：将Windows风格的反斜杠转换为URL风格的斜杠
+         
         const normalizedPath = lyricsPath.replace(/\\/g, '/');
         console.log('加载歌词文件:', normalizedPath);
         const response = await fetch(normalizedPath);
@@ -253,7 +253,7 @@ async function loadLyrics(lyricsPath) {
         if (lyricsData.length === 0) {
             lyricsContent.innerHTML = '<div class="lyric-normal">暂无歌词</div>';
         } else {
-            // 显示所有歌词（不按时间高亮）
+             
             const lyricsHTML = lyricsData.map(lyric =>
                 `<div class="lyric-normal" data-time="${lyric.time}" onclick="seekToLyricTime(${lyric.time})">${lyric.text}</div>`
             ).join('');
@@ -267,7 +267,7 @@ async function loadLyrics(lyricsPath) {
     }
 }
 
-// 渲染音乐列表
+ 
 function renderMusicList() {
     musicListElement.innerHTML = '';
     const isVIP = isVIPUser();
@@ -277,23 +277,23 @@ function renderMusicList() {
         const name = parts[0];
         const location = parts[1];
         const lyricsPath = parts[2];
-        const vipStatus = parts[3] || 'UR'; // 默认为免费音乐
-        const videoPath = parts[4] || '[NO DATA]'; // 视频路径
-        const imgPath = parts[5] || '[NO DATA]'; // 图片路径
+        const vipStatus = parts[3] || 'UR';  
+        const videoPath = parts[4] || '[NO DATA]';  
+        const imgPath = parts[5] || '[NO DATA]';  
 
-        // 处理图片路径：如果为[NO DATA]则使用默认图片，如果为非法路径则显示文本
+         
         let imageContent;
         if (imgPath === '[NO DATA]') {
             imageContent = `<img src="../assets/ziyit.png" alt="${name}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 4px;">`;
         } else {
-            // 检查是否为合法图片路径（常见的图片扩展名）
+             
             const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg'];
             const isImagePath = imageExtensions.some(ext => imgPath.toLowerCase().endsWith(ext));
             
             if (isImagePath) {
                 imageContent = `<img src="${imgPath}" alt="${name}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 4px;">`;
             } else {
-                // 不是合法图片路径，显示文本内容
+                 
                 imageContent = generateTextDisplay(imgPath, name);
             }
         }
@@ -301,11 +301,11 @@ function renderMusicList() {
         const li = document.createElement('li');
         li.className = 'music-item';
 
-        // 添加VIP标识
+         
         if (vipStatus === 'VIP') {
-            li.style.backgroundColor = '#fff3cd'; // VIP黄色背景
-            li.style.borderLeft = '4px solid #ffc107'; // VIP标识边框
-            // VIP用户/管理员显示下载按钮；普通用户仅显示VIP专属标识
+            li.style.backgroundColor = '#fff3cd';  
+            li.style.borderLeft = '4px solid #ffc107';  
+             
             const vipActionHtml = isVIP
                 ? downloadButtonHtml(index, 'vip')
                 : '<span style="background-color: #ffc107; color: #856404; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">VIP专属</span>';
@@ -319,7 +319,7 @@ function renderMusicList() {
                         </div>
                     ` + (isVIP ? downloadProgressHtml(index) : '');
         } else {
-            // 非VIP音乐：为VIP用户添加下载按钮
+             
             if (isVIP) {
                 li.innerHTML = `
                             <div style="display: flex; align-items: center; width: 100%; gap: 12px;">
@@ -331,7 +331,7 @@ function renderMusicList() {
                             </div>
                         ` + downloadProgressHtml(index);
             } else if (vipStatus === 'DL') {
-                // DL标记的歌曲：为普通用户添加下载按钮（极慢速下载）
+                 
                 li.innerHTML = `
                             <div style="display: flex; align-items: center; width: 100%; gap: 12px;">
                                 ${imageContent}
@@ -356,7 +356,7 @@ function renderMusicList() {
     });
 }
 
-// 下载按钮模板（vip：VIP用户下载；dl：普通用户极慢速下载）
+ 
 function downloadButtonHtml(index, kind) {
     var btnStyle = kind === 'dl'
         ? 'background-color: #17a2b8; color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;'
@@ -368,7 +368,7 @@ function downloadButtonHtml(index, kind) {
     return `<button class="download-btn" onclick="${onclick}" style="${btnStyle}">${btnLabel}</button>`;
 }
 
-// 下载进度/节点/信息/状态容器模板
+ 
 function downloadProgressHtml(index) {
     return `
                         <div class="download-progress-container" id="download-progress-${index}" style="display: none;">
@@ -402,11 +402,11 @@ function downloadProgressHtml(index) {
                     `;
 }
 
-// 生成文本显示内容
+ 
 function generateTextDisplay(text, altText) {
-    // 尝试解析JSON格式
+     
     try {
-        // 检查是否为数组格式的JSON
+         
         if (text.trim().startsWith('[') && text.trim().endsWith(']')) {
             const jsonArray = JSON.parse(text);
             if (Array.isArray(jsonArray)) {
@@ -423,7 +423,7 @@ function generateTextDisplay(text, altText) {
             }
         }
         
-        // 检查是否为单个对象格式的JSON
+         
         if (text.trim().startsWith('{') && text.trim().endsWith('}')) {
             const jsonObj = JSON.parse(text);
             if (jsonObj && typeof jsonObj === 'object' && jsonObj.text) {
@@ -433,14 +433,14 @@ function generateTextDisplay(text, altText) {
             }
         }
     } catch (e) {
-        // JSON解析失败，直接显示文本
+         
     }
     
-    // 直接显示文本内容，自动调整字体大小
-    const maxLength = 6; // 最大显示字符数
+     
+    const maxLength = 6;  
     let displayText = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
     
-    // 根据文本长度调整字体大小
+     
     let fontSize = 12;
     if (text.length <= 2) fontSize = 14;
     else if (text.length <= 4) fontSize = 12;
@@ -450,7 +450,7 @@ function generateTextDisplay(text, altText) {
     return `<div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #f0f0f0; border-radius: 4px; font-size: ${fontSize}px; font-weight: bold; color: #333; font-family: Arial, sans-serif; line-height: 1; text-align: center; overflow: hidden; padding: 2px;" title="${text}">${displayText}</div>`;
 }
 
-// 加载音乐列表数据
+ 
 async function loadMusicList() {
     try {
         console.log('开始加载音乐列表数据...');
@@ -461,14 +461,14 @@ async function loadMusicList() {
         const musicText = await response.text();
         console.log('音乐列表文件内容:', musicText);
 
-        // 按行分割，过滤空行
+         
         musicList = musicText.split('\n')
             .filter(line => line.trim() !== '')
             .map(line => line.trim());
 
         console.log('解析后的音乐列表:', musicList);
 
-        // 渲染音乐列表
+         
         renderMusicList();
         console.log('音乐列表渲染完成，共加载', musicList.length, '首歌曲');
     } catch (error) {
@@ -477,7 +477,7 @@ async function loadMusicList() {
     }
 }
 
-// 检查用户是否为VIP或超级管理员（后端数据）
+ 
 function isVIPUser() {
     if (cachedUser) {
         return ZIYIT_API.isVip(cachedUser) || cachedUser.username === 'Minecraft_zy227';
@@ -485,7 +485,7 @@ function isVIPUser() {
     return false;
 }
 
-// 检查用户是否为超级管理员（后端数据）
+ 
 function isSuperAdmin() {
     if (cachedUser) {
         return cachedUser.username === 'Minecraft_zy227';
@@ -493,20 +493,20 @@ function isSuperAdmin() {
     return false;
 }
 
-// VIP试听功能
+ 
 let vipTrialTimer = null;
-let isVipTrialMode = false; // 添加试听模式标识
-let vipTrialMusicIndex = -1; // 试听的音乐索引
+let isVipTrialMode = false;  
+let vipTrialMusicIndex = -1;  
 
-// 音频加载
+ 
 async function loadAudioSecurely(location, isVIPMusic, isVIPUser) {
     try {
-        // 显示加载提示和进度条
+         
         showLoadingProgress('音频缓冲中...', 0);
 
-        // 对于非VIP用户的VIP音乐，使用简单的15秒限制
+         
         if (isVIPMusic && !isVIPUser) {
-            // 使用简单的Range请求限制为前15秒
+             
             const response = await fetch(location);
 
             if (!response.ok) {
@@ -517,18 +517,18 @@ async function loadAudioSecurely(location, isVIPMusic, isVIPUser) {
             const contentLength = parseInt(response.headers.get('content-length') || '285000');
             const audioData = await response.arrayBuffer();
 
-            // 更新进度到100%
+             
             updateLoadingProgress(100, '音频数据处理中...');
 
             const blob = new Blob([audioData], { type: 'audio/mpeg' });
             hideLoadingProgress();
             return URL.createObjectURL(blob);
         } else if (isVIPUser) {
-            // VIP用户：直接使用音乐文件，不进行Blob转换
+             
             hideLoadingProgress();
-            return location; // 直接返回音乐文件路径
+            return location;  
         } else {
-            // 普通用户的免费音乐：使用带进度条的Blob方式
+             
             const response = await fetch(location);
 
             if (!response.ok) {
@@ -538,9 +538,9 @@ async function loadAudioSecurely(location, isVIPMusic, isVIPUser) {
 
             const contentLength = parseInt(response.headers.get('content-length') || '1000000');
             let loaded = 0;
-            // 记录开始时间
+             
             const startTime = Date.now();
-            // 创建读取器来跟踪进度
+             
             const reader = response.body.getReader();
             const chunks = [];
             while (true) {
@@ -551,18 +551,18 @@ async function loadAudioSecurely(location, isVIPMusic, isVIPUser) {
                 chunks.push(value);
                 loaded += value.length;
 
-                // 计算进度百分比
+                 
                 const progress = Math.min(Math.round((loaded / contentLength) * 100), 100);
 
-                // 计算预估剩余时间（基于当前加载速度）
+                 
                 const elapsedTime = Date.now() - startTime;
-                const speed = loaded / (elapsedTime / 1000); // bytes per second
+                const speed = loaded / (elapsedTime / 1000);  
                 const remainingBytes = contentLength - loaded;
                 const remainingTime = speed > 0 ? Math.round(remainingBytes / speed) : 0;
-                // 更新进度条
+                 
                 updateLoadingProgress(progress, `缓冲中... 预估剩余时间: ${formatTime(remainingTime)}`);
             }
-            // 合并所有chunks
+             
             const audioData = new Uint8Array(loaded);
             let position = 0;
             for (const chunk of chunks) {
@@ -570,7 +570,7 @@ async function loadAudioSecurely(location, isVIPMusic, isVIPUser) {
                 position += chunk.length;
             }
 
-            // 更新进度到100%
+             
             updateLoadingProgress(100, '音频数据处理中...');
 
             const blob = new Blob([audioData], { type: 'audio/mpeg' });
@@ -584,7 +584,7 @@ async function loadAudioSecurely(location, isVIPMusic, isVIPUser) {
     }
 }
 
-// 显示加载进度条
+ 
 function showLoadingProgress(message, progress) {
     let progressContainer = document.getElementById('loading-progress-container');
     if (!progressContainer) {
@@ -660,11 +660,11 @@ function showLoadingProgress(message, progress) {
     document.getElementById('loading-progress-text').textContent = `${progress}%`;
     progressContainer.style.display = 'block';
 
-    // 记录开始时间
+     
     window.loadingStartTime = Date.now();
 }
 
-// 更新加载进度
+ 
 function updateLoadingProgress(progress, message) {
     const progressContainer = document.getElementById('loading-progress-container');
     if (!progressContainer) return;
@@ -676,7 +676,7 @@ function updateLoadingProgress(progress, message) {
     document.getElementById('loading-progress-bar').style.width = `${progress}%`;
     document.getElementById('loading-progress-text').textContent = `${progress}%`;
 
-    // 更新预估时间
+     
     if (progress > 0) {
         const elapsedTime = Date.now() - window.loadingStartTime;
         const totalEstimatedTime = (elapsedTime / progress) * 100;
@@ -689,7 +689,7 @@ function updateLoadingProgress(progress, message) {
     }
 }
 
-// 隐藏加载进度条
+ 
 function hideLoadingProgress() {
     const progressContainer = document.getElementById('loading-progress-container');
     if (progressContainer) {
@@ -697,7 +697,7 @@ function hideLoadingProgress() {
     }
 }
 
-// 格式化时间（秒转换为时分秒）
+ 
 function formatTime(seconds) {
     if (seconds < 60) {
         return `${seconds}秒`;
@@ -712,17 +712,17 @@ function formatTime(seconds) {
     }
 }
 
-// 显示加载提示（兼容旧代码）
+ 
 function showLoadingMessage(message) {
     showLoadingProgress(message, 0);
 }
 
-// 隐藏加载提示（兼容旧代码）
+ 
 function hideLoadingMessage() {
     hideLoadingProgress();
 }
 
-// 播放音乐
+ 
 async function playMusic(index) {
     if (index < 0 || index >= musicList.length) return;
 
@@ -731,93 +731,93 @@ async function playMusic(index) {
     const location = parts[1];
     const lyricsPath = parts[2];
     const vipStatus = parts[3] || 'UR';
-    const videoPath = parts[4] || '[NO DATA]'; // 获取视频路径
+    const videoPath = parts[4] || '[NO DATA]';  
 
-    // 处理视频按钮显示逻辑
+     
     if (videoPath !== '[NO DATA]' && videoPath.trim() !== '') {
-        // 有视频文件，显示视频按钮
+         
         videoBtn.classList.remove('hidden');
         currentVideoPath = videoPath;
     } else {
-        // 没有视频文件，隐藏视频按钮
+         
         videoBtn.classList.add('hidden');
         currentVideoPath = '';
     }
 
-    // 等待用户数据就绪，确保 VIP 判定准确
+     
     await waitForUserReady();
 
-    // 检查是否为VIP音乐且用户不是VIP
+     
     if (vipStatus === 'VIP' && !isVIPUser()) {
-        // 清除之前的试听定时器
+         
         if (vipTrialTimer) {
             clearTimeout(vipTrialTimer);
             vipTrialTimer = null;
         }
 
-        // 设置试听模式
+         
         isVipTrialMode = true;
         vipTrialMusicIndex = index;
 
         try {
-            // 修改：加载完整音频文件，但显示15秒总时长
+             
             const secureUrl = await loadAudioSecurely(location, true, false);
             audioPlayer.src = secureUrl;
 
             currentMusicIndex = index;
             currentSong.textContent = name + ' (试听中...)';
 
-            // 更新列表样式
+             
             document.querySelectorAll('.music-item').forEach((item, i) => {
                 item.classList.toggle('playing', i === index);
             });
 
-            // 修改：重置时间显示为15秒
+             
             currentTimeElement.textContent = '00:00';
             totalTimeElement.textContent = '00:15';
 
-            // 加载歌词
+             
             loadLyrics(lyricsPath);
 
-            // 播放音乐 - 添加用户交互来绕过自动播放限制
+             
             const playPromise = audioPlayer.play();
             if (playPromise !== undefined) {
                 playPromise.then(() => {
-                    // 播放成功
+                     
                     isPlaying = true;
                     playBtn.textContent = '||';
                     playerStatus.textContent = '试听中';
                 }).catch(error => {
-                    // 自动播放被阻止，需要用户交互
+                     
                     console.log('自动播放被阻止，需要用户点击播放按钮');
-                    // 重置播放状态
+                     
                     isPlaying = false;
                     playBtn.textContent = '▶';
                     playerStatus.textContent = '点击播放开始试听';
                 });
             } else {
-                // 播放成功（旧版浏览器）
+                 
                 isPlaying = true;
                 playBtn.textContent = '||';
                 playerStatus.textContent = '试听中';
             }
 
-            // 设置15秒试听定时器
+             
             vipTrialTimer = setTimeout(() => {
-                // 暂停音乐
+                 
                 audioPlayer.pause();
                 isPlaying = false;
                 playBtn.textContent = '▶';
                 playerStatus.textContent = '试听结束';
                 isVipTrialMode = false;
 
-                // 显示VIP提示
+                 
                 const confirmVIP = confirm('试听结束！这是VIP专属音乐，需要VIP才能完整收听。\n\n点击"确定"将自动播放下一首免费音乐。');
 
                 if (confirmVIP) {
-                    // 自动播放下一首免费音乐
+                     
                     playNextFreeMusic(index);
-                    // 重置播放器状态
+                     
                     currentSong.textContent = '请选择一首歌曲';
                     playerStatus.textContent = '暂停中';
                     audioPlayer.src = '';
@@ -836,19 +836,19 @@ async function playMusic(index) {
         }
     }
 
-    // 正常播放逻辑（免费音乐或VIP用户）
+     
     isVipTrialMode = false;
     vipTrialMusicIndex = -1;
 
     try {
-        // 加载完整音频
+         
         const secureUrl = await loadAudioSecurely(location, false, isVIPUser());
         audioPlayer.src = secureUrl;
 
         currentMusicIndex = index;
         currentSong.textContent = name;
 
-        // 更新列表样式
+         
         document.querySelectorAll('.music-item').forEach((item, i) => {
             item.classList.toggle('playing', i === index);
         });
@@ -856,27 +856,27 @@ async function playMusic(index) {
         currentTimeElement.textContent = '00:00';
         totalTimeElement.textContent = '**:**';
 
-        // 加载歌词
+         
         loadLyrics(lyricsPath);
 
-        // 播放音乐 - 添加用户交互来绕过自动播放限制
+         
         const playPromise = audioPlayer.play();
         if (playPromise !== undefined) {
             playPromise.then(() => {
-                // 播放成功
+                 
                 isPlaying = true;
                 playBtn.textContent = '||';
                 playerStatus.textContent = '播放中';
             }).catch(error => {
-                // 自动播放被阻止，需要用户交互
+                 
                 console.log('自动播放被阻止，需要用户点击播放按钮');
-                // 重置播放状态
+                 
                 isPlaying = false;
                 playBtn.textContent = '▶';
                 playerStatus.textContent = '点击播放开始收听';
             });
         } else {
-            // 播放成功（旧版浏览器）
+             
             isPlaying = true;
             playBtn.textContent = '||';
             playerStatus.textContent = '播放中';
@@ -886,12 +886,12 @@ async function playMusic(index) {
     }
 }
 
-// 播放下一首免费音乐
+ 
 function playNextFreeMusic(currentIndex) {
     let nextIndex = currentIndex + 1;
     let foundFreeMusic = false;
 
-    // 从当前位置向后查找免费音乐
+     
     for (let i = nextIndex; i < musicList.length; i++) {
         const parts = musicList[i].split(' \\ ');
         const vipStatus = parts[3] || 'UR';
@@ -902,7 +902,7 @@ function playNextFreeMusic(currentIndex) {
         }
     }
 
-    // 如果后面没有免费音乐，从开头查找
+     
     if (!foundFreeMusic) {
         for (let i = 0; i < currentIndex; i++) {
             const parts = musicList[i].split(' \\ ');
@@ -915,7 +915,7 @@ function playNextFreeMusic(currentIndex) {
         }
     }
 
-    // 如果整个列表都没有免费音乐
+     
     if (!foundFreeMusic) {
         alert('很抱歉，当前没有可播放的免费音乐。');
         audioPlayer.pause();
@@ -929,7 +929,7 @@ function playNextFreeMusic(currentIndex) {
     }
 }
 
-// 获取可播放的音乐索引（跳过VIP音乐，非VIP用户）
+ 
 function getNextPlayableIndex(currentIndex, direction) {
     let newIndex = currentIndex;
     const totalSongs = musicList.length;
@@ -942,31 +942,31 @@ function getNextPlayableIndex(currentIndex, direction) {
             newIndex = (newIndex - 1 + totalSongs) % totalSongs;
         }
 
-        // 检查是否回到起点（避免无限循环）
+         
         if (newIndex === currentIndex) {
-            return -1; // 没有可播放的音乐
+            return -1;  
         }
 
         const parts = musicList[newIndex].split(' \\ ');
         const vipStatus = parts[3] || 'UR';
-        // 如果是VIP用户或者不是VIP音乐，可以播放
+         
         if (isVIPUser() || vipStatus !== 'VIP') {
             return newIndex;
         }
 
         attempts++;
-        // 防止无限循环
+         
         if (attempts > totalSongs) {
             return -1;
         }
     } while (true);
 }
 
-// 播放控制变量
-let isProcessingPlay = false // 防止重复播放
-let isProcessingPause = false // 防止重复暂停
+ 
+let isProcessingPlay = false  
+let isProcessingPause = false  
 
-// 播放音乐函数
+ 
 function playAudio() {
     if (isProcessingPlay) {
         console.log('正在处理播放操作，跳过重复请求')
@@ -990,7 +990,7 @@ function playAudio() {
     })
 }
 
-// 暂停音乐函数
+ 
 function pauseAudio() {
     if (isProcessingPause) {
         console.log('正在处理暂停操作，跳过重复请求')
@@ -1005,7 +1005,7 @@ function pauseAudio() {
     isProcessingPause = false
     updatePlayButtonUI()
     
-    // 确保暂停状态
+     
     setTimeout(() => {
         if (!audioPlayer.paused) {
             console.warn('音频播放器仍在播放，强制暂停')
@@ -1016,7 +1016,7 @@ function pauseAudio() {
     }, 50)
 }
 
-// 更新播放按钮UI
+ 
 function updatePlayButtonUI() {
     if (isPlaying) {
         playBtn.textContent = '||'
@@ -1027,7 +1027,7 @@ function updatePlayButtonUI() {
     }
 }
 
-// 简化音频事件处理函数，只处理必要的状态同步
+ 
 function handleAudioPlay() {
     console.log('音频播放事件触发')
     isPlaying = true
@@ -1040,19 +1040,19 @@ function handleAudioPause() {
     updatePlayButtonUI()
 }
 
-// 页面加载完成后初始化音乐列表
+ 
 document.addEventListener('DOMContentLoaded', () => {
     loadMusicList()
 
-    // 初始化时绑定一次音频播放器事件监听器
+     
     audioPlayer.addEventListener('play', handleAudioPlay)
     audioPlayer.addEventListener('pause', handleAudioPause)
 })
 
-// 上一首
+ 
 prevBtn.addEventListener('click', async () => {
     if (musicList.length === 0) return;
-    // 如果在视频模式，先切换回音乐模式
+     
     if (isVideoMode) {
         toggleVideoMode();
     }
@@ -1065,11 +1065,11 @@ prevBtn.addEventListener('click', async () => {
     }
 });
 
-// 下一首
+ 
 nextBtn.addEventListener('click', async () => {
     if (musicList.length === 0) return;
 
-    // 如果在视频模式，先切换回音乐模式
+     
     if (isVideoMode) {
         toggleVideoMode();
     }
@@ -1084,20 +1084,20 @@ nextBtn.addEventListener('click', async () => {
 
 audioPlayer.addEventListener('timeupdate', () => {
     if (isVipTrialMode && vipTrialMusicIndex !== -1) {
-        // 试听模式：限制在15秒内
-        const maxTrialTime = 15; // 15秒试听
+         
+        const maxTrialTime = 15;  
         const currentTime = Math.min(audioPlayer.currentTime, maxTrialTime);
 
-        // 如果达到或超过15秒，自动暂停（判断试听是否结束）
+         
         if (audioPlayer.currentTime >= maxTrialTime) {
             audioPlayer.pause();
-            // 保持播放位置在15秒，让用户看到试听已结束
+             
             audioPlayer.currentTime = maxTrialTime;
             isPlaying = false;
             playBtn.textContent = '▶';
             playerStatus.textContent = '试听结束';
 
-            // 显示VIP提示
+             
             const confirmVIP = confirm('试听结束！这是VIP专属音乐，需要VIP才能完整收听。\n\n点击"确定"将自动播放下一首免费音乐。');
 
             if (confirmVIP) {
@@ -1116,45 +1116,45 @@ audioPlayer.addEventListener('timeupdate', () => {
             return;
         }
 
-        // 使用统一的进度条更新函数（基于15秒范围）
+         
         updateProgressBar();
         updateTimeDisplay();
     } else {
-        // 正常模式：使用统一的进度条更新函数
+         
         updateProgressBar();
         updateTimeDisplay();
     }
 
-    // 更新歌词显示
+     
     updateLyrics(audioPlayer.currentTime);
 });
 
-// 点击进度条跳转
+ 
 document.querySelector('.progress-bar').addEventListener('click', (e) => {
     if (isVipTrialMode && vipTrialMusicIndex !== -1) {
-        // 试听模式：只能在15秒范围内跳转
+         
         const rect = e.target.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const width = rect.width;
-        const maxTrialTime = 15; // 15秒试听
+        const maxTrialTime = 15;  
 
-        // 计算跳转时间（限制在15秒内）
+         
         const newTime = Math.min((clickX / width) * maxTrialTime, maxTrialTime);
         audioPlayer.currentTime = newTime;
     } else {
-        // 正常模式：根据当前模式选择播放器
+         
         const rect = e.target.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const width = rect.width;
 
         if (isVideoMode) {
-            // 视频模式：控制视频播放器
+             
             const duration = videoPlayer.duration;
             if (duration) {
                 videoPlayer.currentTime = (clickX / width) * duration;
             }
         } else {
-            // 音乐模式：控制音频播放器
+             
             const duration = audioPlayer.duration;
             if (duration) {
                 audioPlayer.currentTime = (clickX / width) * duration;
@@ -1163,11 +1163,11 @@ document.querySelector('.progress-bar').addEventListener('click', (e) => {
     }
 });
 
-// 歌曲结束自动下一首
+ 
 audioPlayer.addEventListener('ended', () => {
     if (musicList.length === 0) return;
 
-    // 如果在视频模式，先切换回音乐模式
+     
     if (isVideoMode) {
         toggleVideoMode();
     }
@@ -1178,11 +1178,11 @@ audioPlayer.addEventListener('ended', () => {
     }
 });
 
-// 视频结束自动下一首
+ 
 videoPlayer.addEventListener('ended', () => {
     if (musicList.length === 0) return;
 
-    // 视频播放结束，切换回音乐模式并播放下一首
+     
     if (isVideoMode) {
         toggleVideoMode();
     }
@@ -1195,41 +1195,41 @@ videoPlayer.addEventListener('ended', () => {
     }
 });
 
-// 当音频元数据加载完成时更新总时长
+ 
 audioPlayer.addEventListener('loadedmetadata', () => {
     updateTimeDisplay();
 });
 
-// 页面加载完成后初始化音乐列表
+ 
 document.addEventListener('DOMContentLoaded', () => {
     loadMusicList();
 
-    // 初始化时绑定一次音频播放器事件监听器
+     
     audioPlayer.addEventListener('play', handleAudioPlay);
     audioPlayer.addEventListener('pause', handleAudioPause);
 
-    // 初始化处理标志位
+     
     window.isProcessingPlayPause = false;
 });
 
-// 搜索功能
+ 
 document.getElementById('search').addEventListener('submit', function (e) {
     e.preventDefault();
     const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
 
     if (!searchTerm) {
-        // 如果搜索框为空，显示所有音乐
+         
         renderMusicList();
         return;
     }
 
-    // 过滤音乐列表
+     
     const filteredList = musicList.filter(music => {
         const name = music.split(' \\ ')[0].toLowerCase();
         return name.includes(searchTerm);
     });
 
-    // 渲染过滤后的列表
+     
     musicListElement.innerHTML = '';
     const isVIP = isVIPUser();
     const isSuperAdminUser = isSuperAdmin();
@@ -1244,9 +1244,9 @@ document.getElementById('search').addEventListener('submit', function (e) {
         const li = document.createElement('li');
         li.className = 'music-item';
 
-        // 添加点击事件，点击音乐项时播放音乐
+         
         li.addEventListener('click', (e) => {
-            // 防止点击下载按钮时触发播放
+             
             if (e.target.tagName === 'BUTTON' || e.target.classList.contains('download-btn')) {
                 return;
             }
@@ -1254,11 +1254,11 @@ document.getElementById('search').addEventListener('submit', function (e) {
             playMusic(index);
         });
 
-        // 添加VIP标识
+         
         if (vipStatus === 'VIP') {
             li.style.backgroundColor = '#fff3cd';
             li.style.borderLeft = '4px solid #ffc107';
-            // 超级管理员可以下载VIP歌曲
+             
             if (isSuperAdminUser) {
                 li.innerHTML = `
                             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -1309,9 +1309,9 @@ document.getElementById('search').addEventListener('submit', function (e) {
                         `;
             }
         } else if (vipStatus === 'DL') {
-            // DL标记的歌曲：为普通用户添加下载按钮（极慢速下载），但超级管理员使用专业下载
+             
             if (isSuperAdminUser) {
-                // 超级管理员使用专业下载
+                 
                 li.innerHTML = `
                             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                                 <span>${name}</span>
@@ -1350,7 +1350,7 @@ document.getElementById('search').addEventListener('submit', function (e) {
                             <div class="download-status" id="download-status-${index}" style="display: none;"></div>
                         `;
             } else {
-                // 普通用户使用极慢速下载
+                 
                 li.innerHTML = `
                             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                                 <span>${name}</span>
@@ -1390,7 +1390,7 @@ document.getElementById('search').addEventListener('submit', function (e) {
                         `;
             }
         } else if (isVIP || isSuperAdminUser) {
-            // 非VIP音乐：为VIP用户或超级管理员添加下载按钮
+             
             li.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                             <span>${name}</span>
@@ -1429,7 +1429,7 @@ document.getElementById('search').addEventListener('submit', function (e) {
                         <div class="download-status" id="download-status-${index}" style="display: none;"></div>
                     `;
         } else {
-            // 普通用户只能播放，不能下载
+             
             li.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                             <span>${name}</span>
@@ -1441,7 +1441,7 @@ document.getElementById('search').addEventListener('submit', function (e) {
     });
 });
 
-// 生成数学验证码
+ 
 function generateMathCaptcha() {
     const num1 = Math.floor(Math.random() * 10) + 1;
     const num2 = Math.floor(Math.random() * 10) + 1;
@@ -1458,11 +1458,11 @@ function generateMathCaptcha() {
     return { question: `请输入验证码：${num1} ${operator} ${num2} = ?`, answer: answer };
 };
 
-// 专业下载功能（包含速度显示、剩余时间、断点续传、多文件队列）
+ 
 async function downloadMusic(index, event) {
     event.stopPropagation();
 
-    // 人机验证
+     
     const captcha = generateMathCaptcha();
     const userInput = prompt(captcha.question);
 
@@ -1471,7 +1471,7 @@ async function downloadMusic(index, event) {
         return;
     }
 
-    // 原有下载逻辑...
+     
     const parts = musicList[index].split(' \\ ');
     const name = parts[0];
     const location = parts[1];
@@ -1487,27 +1487,27 @@ async function downloadMusic(index, event) {
     const downloadEta = document.getElementById(`download-eta-${index}`);
     const downloadReceived = document.getElementById(`download-received-${index}`);
 
-    // 检查用户权限
+     
     if (!isVIPUser() && !isSuperAdmin()) {
         alert('只有VIP用户或超级管理员才能下载音乐！');
         return;
     }
 
-    // 如果是VIP歌曲且用户既不是VIP也不是超级管理员，拒绝下载
+     
     if (vipStatus === 'VIP' && !isVIPUser() && !isSuperAdmin()) {
         alert('这是VIP专属音乐，只有VIP用户或超级管理员才能下载！');
         return;
     }
 
-    // 添加到下载队列
+     
     addToDownloadQueue(index, name, location);
 }
 
-// 普通用户极慢速下载功能（仅限DL标记的歌曲）
+ 
 async function downloadMusicForNormalUser(index, event) {
     event.stopPropagation();
 
-    // 人机验证
+     
     const captcha = generateMathCaptcha();
     const userInput = prompt(captcha.question);
 
@@ -1516,7 +1516,7 @@ async function downloadMusicForNormalUser(index, event) {
         return;
     }
 
-    // 原有下载逻辑...
+     
     const parts = musicList[index].split(' \\ ');
     const name = parts[0];
     const location = parts[1];
@@ -1532,19 +1532,19 @@ async function downloadMusicForNormalUser(index, event) {
     const downloadEta = document.getElementById(`download-eta-${index}`);
     const downloadReceived = document.getElementById(`download-received-${index}`);
 
-    // 检查是否为DL标记的歌曲
+     
     if (vipStatus !== 'DL') {
         alert('只有标记为DL的歌曲才允许普通用户下载！');
         return;
     }
 
-    // 检查用户权限（普通用户不能下载VIP歌曲）
+     
     if (isVIPUser()) {
         alert('VIP用户请使用VIP下载功能！');
         return;
     }
 
-    // 显示所有元素
+     
     button.disabled = true;
     button.textContent = '准备下载...';
     progressContainer.style.display = 'flex';
@@ -1554,15 +1554,15 @@ async function downloadMusicForNormalUser(index, event) {
     statusText.textContent = '正在连接服务器...';
 
     try {
-        // 百度网盘级别初始延迟：10-20秒
+         
         await new Promise(resolve => setTimeout(resolve, Math.random() * 10000 + 10000));
 
-        // 初始连接失败概率：15%概率连接失败
+         
         if (Math.random() < 0.15) {
             throw new Error('服务器连接失败，请重试');
         }
 
-        // 获取文件信息
+         
         const response = await fetch(location, { method: 'HEAD' });
         if (!response.ok) throw new Error('无法获取文件信息');
 
@@ -1571,7 +1571,7 @@ async function downloadMusicForNormalUser(index, event) {
 
         statusText.textContent = `文件大小: ${formatFileSize(totalSize)}`;
 
-        // 开始百度网盘级别慢速下载
+         
         const downloadResponse = await fetch(location);
         if (!downloadResponse.ok) throw new Error(`下载失败: ${downloadResponse.status}`);
 
@@ -1581,14 +1581,14 @@ async function downloadMusicForNormalUser(index, event) {
         let lastUpdateTime = Date.now();
         let lastReceivedLength = 0;
 
-        // 更新连接节点状态（百度网盘级别慢动画）
+         
         let nodeIndex = 0;
         const nodeInterval = setInterval(() => {
             const nodes = connectionNodes.querySelectorAll('.connection-node');
             nodes[nodeIndex].classList.add('inactive');
             nodeIndex = (nodeIndex + 1) % nodes.length;
             nodes[nodeIndex].classList.remove('inactive');
-        }, 3000); // 百度网盘级别的慢动画
+        }, 3000);  
 
         while (true) {
             const { done, value } = await reader.read();
@@ -1596,60 +1596,60 @@ async function downloadMusicForNormalUser(index, event) {
             chunks.push(value);
             receivedLength += value.length;
 
-            // 百度网盘级别慢速：每次读取后延迟3000-8000ms
+             
             await new Promise(resolve => setTimeout(resolve, Math.random() * 5000 + 3000));
 
-            // 随机卡顿：40%概率暂停5-10秒（百度网盘级别）
+             
             if (Math.random() < 0.4) {
                 statusText.textContent = '网络连接不稳定，重新连接中...';
                 await new Promise(resolve => setTimeout(resolve, Math.random() * 5000 + 5000));
                 statusText.textContent = '连接恢复，继续下载...';
             }
 
-            // 额外随机延迟：30%概率额外延迟3-6秒
+             
             if (Math.random() < 0.3) {
                 statusText.textContent = '服务器繁忙，请稍候...';
                 await new Promise(resolve => setTimeout(resolve, Math.random() * 3000 + 3000));
                 statusText.textContent = '继续下载...';
             }
-            // 百度网盘特色：10%概率完全停止下载10-20秒
+             
             if (Math.random() < 0.1) {
                 statusText.textContent = '下载服务受限，请等待...';
                 await new Promise(resolve => setTimeout(resolve, Math.random() * 10000 + 10000));
                 statusText.textContent = '服务恢复，继续下载...';
             }
 
-            // 下载过程中失败概率：20%概率下载中断
+             
             if (Math.random() < 0.2) {
                 throw new Error('网络连接中断，下载失败');
             }
 
-            // 服务器错误概率：10%概率服务器错误
+             
             if (Math.random() < 0.1) {
                 throw new Error('服务器内部错误，请稍后重试');
             }
 
-            // 文件损坏概率：5%概率文件损坏
+             
             if (Math.random() < 0.05) {
                 throw new Error('文件下载损坏，请重新下载');
             }
 
-            // 计算下载速度（百度网盘级别极慢速）
+             
             const currentTime = Date.now();
-            const timeDiff = (currentTime - lastUpdateTime) / 1000; // 秒
+            const timeDiff = (currentTime - lastUpdateTime) / 1000;  
 
-            if (timeDiff >= 5) { // 每5秒更新一次速度（更慢）
+            if (timeDiff >= 5) {  
                 const bytesDiff = receivedLength - lastReceivedLength;
                 const speed = bytesDiff / timeDiff; // 字节/秒
 
-                // 强制限制速度在0-108B/s之间（百度网盘级别）
+                 
                 const limitedSpeed = Math.max(0, Math.min(108, speed));
 
-                // 更新速度显示
+                 
                 downloadSpeed.textContent = `${formatSpeed(limitedSpeed)}`;
                 downloadReceived.textContent = formatFileSize(receivedLength);
 
-                // 计算剩余时间（基于极慢速）
+                 
                 if (limitedSpeed > 0 && totalSize > 0) {
                     const remainingBytes = totalSize - receivedLength;
                     const remainingSeconds = remainingBytes / limitedSpeed;
@@ -1660,28 +1660,28 @@ async function downloadMusicForNormalUser(index, event) {
                 lastReceivedLength = receivedLength;
             }
 
-            // 更新进度
+             
             if (totalSize > 0) {
                 const progress = Math.round((receivedLength / totalSize) * 100);
                 progressBar.style.width = `${progress}%`;
                 progressText.textContent = `${progress}%`;
 
-                // 更新状态信息（显示百度网盘级别慢速）
+                 
                 statusText.textContent = `下载中... 速度极慢，请耐心等待 (${formatSpeed(Math.random() * 108)})`;
             }
         }
 
         clearInterval(nodeInterval);
 
-        // 完成下载前的延迟（更长）
+         
         statusText.textContent = '下载完成，正在处理文件...';
         await new Promise(resolve => setTimeout(resolve, 10000));
 
-        // 完成下载
+         
         const blob = new Blob(chunks);
         const url = URL.createObjectURL(blob);
 
-        // 创建下载链接
+         
         const a = document.createElement('a');
         a.href = url;
         a.download = `${name}.mp3`;
@@ -1690,7 +1690,7 @@ async function downloadMusicForNormalUser(index, event) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        // 更新状态
+         
         progressBar.style.width = '100%';
         progressText.textContent = '100%';
         statusText.textContent = '下载完成！';
@@ -1699,7 +1699,7 @@ async function downloadMusicForNormalUser(index, event) {
         const nodes = connectionNodes.querySelectorAll('.connection-node');
         nodes.forEach(node => node.classList.add('inactive'));
 
-        // 15秒后隐藏（更长）
+         
         setTimeout(() => {
             progressContainer.style.display = 'none';
             connectionNodes.style.display = 'none';
@@ -1727,7 +1727,7 @@ async function downloadMusicForNormalUser(index, event) {
     }
 }
 
-// 添加到下载队列
+ 
 function addToDownloadQueue(index, name, location) {
     const downloadItem = {
         index: index,
@@ -1745,20 +1745,20 @@ function addToDownloadQueue(index, name, location) {
     downloadQueue.push(downloadItem);
     updateDownloadQueueDisplay();
 
-    // 如果没有正在进行的下载，开始下载
+     
     if (!currentDownload) {
         processDownloadQueue();
     }
 }
 
-// 处理下载队列
+ 
 async function processDownloadQueue() {
     if (downloadQueue.length === 0) {
         currentDownload = null;
         return;
     }
 
-    // 找到第一个等待中的下载
+     
     const waitingItem = downloadQueue.find(item => item.status === 'waiting');
     if (!waitingItem) {
         currentDownload = null;
@@ -1772,15 +1772,15 @@ async function processDownloadQueue() {
 
     await startDownload(waitingItem);
 
-    // 完成后处理下一个
+     
     processDownloadQueue();
 }
 
-// 开始下载（包含所有专业功能）
+ 
 async function startDownload(downloadItem) {
     const { index, name, location } = downloadItem;
 
-    // 获取DOM元素
+     
     const button = document.querySelector(`#download-progress-${index}`).previousElementSibling.querySelector('.download-btn');
     const progressContainer = document.getElementById(`download-progress-${index}`);
     const progressBar = document.getElementById(`download-progress-bar-${index}`);
@@ -1792,7 +1792,7 @@ async function startDownload(downloadItem) {
     const downloadEta = document.getElementById(`download-eta-${index}`);
     const downloadReceived = document.getElementById(`download-received-${index}`);
 
-    // 显示所有元素
+     
     button.disabled = true;
     button.textContent = '队列中...';
     progressContainer.style.display = 'flex';
@@ -1801,12 +1801,12 @@ async function startDownload(downloadItem) {
     statusText.style.display = 'block';
     statusText.textContent = '准备下载...';
 
-    // 激活连接节点
+     
     const nodes = connectionNodes.querySelectorAll('.connection-node');
     nodes.forEach(node => node.classList.remove('inactive'));
 
     try {
-        // 检查断点续传
+         
         const resumeInfo = downloadHistory.get(location);
         let startByte = 0;
         let receivedLength = resumeInfo ? resumeInfo.receivedLength : 0;
@@ -1817,7 +1817,7 @@ async function startDownload(downloadItem) {
             receivedLength = resumeInfo.receivedLength;
         }
 
-        // 获取文件信息
+         
         const response = await fetch(location, { method: 'HEAD' });
         if (!response.ok) throw new Error('无法获取文件信息');
 
@@ -1827,7 +1827,7 @@ async function startDownload(downloadItem) {
 
         statusText.textContent = `文件大小: ${formatFileSize(totalSize)}`;
 
-        // 开始下载（支持断点续传）
+         
         const downloadResponse = await fetch(location, {
             headers: startByte > 0 ? { 'Range': `bytes=${startByte}-` } : {}
         });
@@ -1838,7 +1838,7 @@ async function startDownload(downloadItem) {
         let lastUpdateTime = Date.now();
         let lastReceivedLength = receivedLength;
 
-        // 更新连接节点状态
+         
         let nodeIndex = 0;
         const nodeInterval = setInterval(() => {
             nodes[nodeIndex].classList.add('inactive');
@@ -1854,20 +1854,20 @@ async function startDownload(downloadItem) {
             receivedLength += value.length;
             downloadItem.receivedLength = receivedLength;
 
-            // 计算下载速度
+             
             const currentTime = Date.now();
-            const timeDiff = (currentTime - lastUpdateTime) / 1000; // 秒
+            const timeDiff = (currentTime - lastUpdateTime) / 1000;  
 
-            if (timeDiff >= 1) { // 每秒更新一次速度
+            if (timeDiff >= 1) {  
                 const bytesDiff = receivedLength - lastReceivedLength;
                 const speed = bytesDiff / timeDiff; // 字节/秒
                 downloadItem.speed = speed;
 
-                // 更新速度显示
+                 
                 downloadSpeed.textContent = `${formatSpeed(speed)}`;
                 downloadReceived.textContent = formatFileSize(receivedLength);
 
-                // 计算剩余时间
+                 
                 if (speed > 0 && totalSize > 0) {
                     const remainingBytes = totalSize - receivedLength;
                     const remainingSeconds = remainingBytes / speed;
@@ -1879,35 +1879,35 @@ async function startDownload(downloadItem) {
                 lastReceivedLength = receivedLength;
             }
 
-            // 更新进度
+             
             if (totalSize > 0) {
                 const progress = Math.round((receivedLength / totalSize) * 100);
                 downloadItem.progress = progress;
                 progressBar.style.width = `${progress}%`;
                 progressText.textContent = `${progress}%`;
 
-                // 更新状态信息
+                 
                 statusText.textContent = `下载中... ${formatSpeed(downloadItem.speed)} - 剩余 ${downloadItem.eta}`;
             }
 
-            // 保存断点信息
+             
             downloadHistory.set(location, {
                 receivedLength: receivedLength,
                 totalSize: totalSize,
                 timestamp: Date.now()
             });
 
-            // 随机延迟（保持慢速效果）
+             
             await new Promise(resolve => setTimeout(resolve, Math.random() * 300 + 100));
         }
 
         clearInterval(nodeInterval);
 
-        // 完成下载
+         
         const blob = new Blob(chunks);
         const url = URL.createObjectURL(blob);
 
-        // 创建下载链接
+         
         const a = document.createElement('a');
         a.href = url;
         a.download = `${name}.mp3`;
@@ -1916,10 +1916,10 @@ async function startDownload(downloadItem) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        // 清理断点记录
+         
         downloadHistory.delete(location);
 
-        // 更新状态
+         
         downloadItem.status = 'completed';
         progressBar.style.width = '100%';
         progressText.textContent = '100%';
@@ -1927,7 +1927,7 @@ async function startDownload(downloadItem) {
         statusText.style.color = '#28a745';
         nodes.forEach(node => node.classList.add('inactive'));
 
-        // 3秒后隐藏
+         
         setTimeout(() => {
             progressContainer.style.display = 'none';
             connectionNodes.style.display = 'none';
@@ -1958,7 +1958,7 @@ async function startDownload(downloadItem) {
     updateDownloadQueueDisplay();
 }
 
-// 更新下载队列显示
+ 
 function updateDownloadQueueDisplay() {
     const queueElement = document.getElementById('download-queue');
     const queueHeader = document.querySelector('.queue-header');
@@ -1985,7 +1985,7 @@ function updateDownloadQueueDisplay() {
     }
 }
 
-// 格式化速度
+ 
 function formatSpeed(bytesPerSecond) {
     if (bytesPerSecond === 0) return '0 B/s';
     const k = 1024;
@@ -1994,7 +1994,7 @@ function formatSpeed(bytesPerSecond) {
     return parseFloat((bytesPerSecond / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// 格式化时间（秒转换为 MM:SS）
+ 
 function formatTime(seconds) {
     if (isNaN(seconds) || seconds === Infinity) return '--:--';
     const minutes = Math.floor(seconds / 60);
@@ -2002,7 +2002,7 @@ function formatTime(seconds) {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-// 格式化文件大小
+ 
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -2012,55 +2012,21 @@ function formatFileSize(bytes) {
 }
 
 
-/*
-
-
-歌词部分:
-1. 歌词显示区域：
-   - 歌词内容居中显示，字体大小为14px，行高为1.8，颜色为#666。
-   - 歌词内容区域高度为315px，超出部分自动显示滚动条。
-   - 滚动条样式为完全隐藏，不显示浏览器自带滚动条。
-2. 歌词滚动功能：
-   - 歌词内容超出区域时，显示垂直滚动条。
-   - 滚动条样式为完全隐藏，不显示浏览器自带滚动条。
-   - 歌词滚动时，同步更新当前播放时间。
-3. 歌词滚动同步：
-   - 当用户滚动歌词内容区域时，同步更新当前播放时间，保持歌词与音乐同步。
-4. 歌词滚动条样式：
-   - 歌词滚动条宽度为8px，背景颜色为#e0e0e0。
-   - 歌词滚动条滑块颜色为#999，滑块圆角为4px。
-   - 歌词滚动条轨道颜色为#f5f5f5。
-5. 歌词滚动条交互：
-   - 当用户点击滚动条轨道时，直接将滚动条滑块移动到点击位置。
-   - 当用户拖动滚动条滑块时，直接将滚动条滑块移动到拖动位置。
-6. 歌词滚动条交互优化：
-   - 当用户点击滚动条轨道时，直接将滚动条滑块移动到点击位置。
-   - 当用户拖动滚动条滑块时，直接将滚动条滑块移动到拖动位置。
-   - 滚动条交互时，平滑过渡，避免卡顿。
-7. 歌词滚动条交互优化：
-   - 当用户点击滚动条轨道时，直接将滚动条滑块移动到点击位置。
-   - 当用户拖动滚动条滑块时，直接将滚动条滑块移动到拖动位置。
-   - 滚动条交互时，平滑过渡，避免卡顿。
-8. 歌词滚动条交互优化：
-   - 当用户点击滚动条轨道时，直接将滚动条滑块移动到点击位置。
-   - 当用户拖动滚动条滑块时，直接将滚动条滑块移动到拖动位置。
-   - 滚动条交互时，平滑过渡，避免卡顿。
-
-
-*/
 
 
 
-// 导出音乐链接功能
+
+
+ 
 const exportMusicSelect = document.getElementById('export-music-select');
 const exportLinkBtn = document.getElementById('export-link-btn');
 const exportResult = document.getElementById('export-result');
 const exportedLink = document.getElementById('exported-link');
 const copyLinkBtn = document.getElementById('copy-link-btn');
 
-// 生成安全的音乐链接
+ 
 function generateMusicLink(musicIndex, isVIPMusic) {
-    // 人机验证
+     
     const captcha = generateMathCaptcha();
     const userInput = prompt(captcha.question);
 
@@ -2069,17 +2035,17 @@ function generateMusicLink(musicIndex, isVIPMusic) {
         return;
     }
 
-    const baseUrl = window.location.href.split('?')[0]; // 获取当前页面URL（不含参数）
+    const baseUrl = window.location.href.split('?')[0];  
     const musicData = musicList[musicIndex];
     const parts = musicData.split(' \\ ');
     const name = parts[0];
     const vipStatus = parts[3] || 'UR';
 
-    // 检查是否为超级管理员
+     
     const isSuperAdminUser = isSuperAdmin();
     const timeParam = isSuperAdminUser ? 'YJKW' : Math.floor(Date.now() / 1000).toString();
 
-    // 生成加密参数
+     
     const params = {
         music: musicIndex,
         name: name,
@@ -2087,17 +2053,17 @@ function generateMusicLink(musicIndex, isVIPMusic) {
         timestamp: timeParam
     };
 
-    // 正确的加密逻辑：先MD5加密，然后Base64编码
+     
     const jsonString = JSON.stringify(params);
     const md5Hash = CryptoJS.MD5(jsonString).toString();
 
-    // 修复：正确的链接格式 - 包含music和time两个参数
+     
     const encodedMusic = btoa(encodeURIComponent(md5Hash));
 
     return `【${name}】${baseUrl}?music=${encodedMusic}&time=${timeParam}`;
 }
 
-// 解析音乐链接参数
+ 
 function parseMusicLink() {
     const urlParams = new URLSearchParams(window.location.search);
     const musicParam = urlParams.get('music');
@@ -2105,10 +2071,10 @@ function parseMusicLink() {
 
     if (musicParam && timeParam) {
         try {
-            // Base64解码
+             
             const decodedHash = decodeURIComponent(atob(musicParam));
 
-            // 验证链接有效期（超级管理员除外）
+             
             if (timeParam !== 'YJKW') {
                 const linkTimestamp = parseInt(timeParam);
                 const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -2120,14 +2086,14 @@ function parseMusicLink() {
                 }
             }
 
-            // 查找匹配的音乐
+             
             for (let i = 0; i < musicList.length; i++) {
                 const musicData = musicList[i];
                 const parts = musicData.split(' \\ ');
                 const name = parts[0];
                 const vipStatus = parts[3] || 'UR';
 
-                // 重新生成参数并计算MD5
+                 
                 const params = {
                     music: i,
                     name: name,
@@ -2152,47 +2118,47 @@ function parseMusicLink() {
     return null;
 }
 
-// 根据链接自动播放音乐
+ 
 function playMusicFromLink(linkParams) {
     const musicIndex = linkParams.music;
     const vipStatus = linkParams.vip;
     const isVIPUserFlag = isVIPUser();
 
-    // 检查权限
+     
     if (vipStatus === 'VIP' && !isVIPUserFlag) {
-        // 非VIP用户访问VIP音乐，显示提示信息
+         
         alert('这是VIP专属音乐，您需要VIP权限才能完整收听。将为您提供15秒试听。');
-        // 自动播放试听版本
+         
         setTimeout(() => {
             playMusic(musicIndex);
         }, 1000);
     } else {
-        // VIP用户或免费音乐，直接播放
+         
         playMusic(musicIndex);
     }
 }
 
-// 页面加载时检查是否有音乐链接参数
+ 
 document.addEventListener('DOMContentLoaded', () => {
-    // 延迟执行，等待音乐列表加载完成
+     
     setTimeout(() => {
         const linkParams = parseMusicLink();
         if (linkParams) {
-            // 检查音乐索引是否有效
+             
             if (linkParams.music >= 0 && linkParams.music < musicList.length) {
-                // 添加一个小的延迟，确保音频元素已准备好
+                 
                 setTimeout(() => {
-                    // 创建一个虚拟的用户交互事件来绕过自动播放限制
+                     
                     const playButton = document.getElementById('play-btn');
                     if (playButton) {
-                        // 模拟用户点击播放按钮来解锁自动播放
+                         
                         playButton.click();
-                        // 然后播放指定音乐
+                         
                         setTimeout(() => {
                             playMusicFromLink(linkParams);
                         }, 100);
                     } else {
-                        // 如果没有播放按钮，直接尝试播放
+                         
                         playMusicFromLink(linkParams);
                     }
                 }, 500);
@@ -2201,12 +2167,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 填充导出选择框
+         
         populateExportSelect();
     }, 1000);
 });
 
-// 填充导出音乐选择框
+ 
 function populateExportSelect() {
     exportMusicSelect.innerHTML = '<option value="">请选择要导出的音乐</option>';
 
@@ -2222,7 +2188,7 @@ function populateExportSelect() {
     });
 }
 
-// 生成链接按钮点击事件
+ 
 exportLinkBtn.addEventListener('click', () => {
     const selectedIndex = parseInt(exportMusicSelect.value);
 
@@ -2236,13 +2202,13 @@ exportLinkBtn.addEventListener('click', () => {
     const vipStatus = parts[3] || 'UR';
     const isVIPUserFlag = isVIPUser();
 
-    // 检查权限：非VIP用户不能导出VIP音乐
+     
     if (vipStatus === 'VIP' && !isVIPUserFlag) {
         alert('您没有权限导出VIP专属音乐');
         return;
     }
 
-    // 生成链接
+     
     const musicLink = generateMusicLink(selectedIndex, vipStatus === 'VIP');
     if (musicLink) {
         exportedLink.value = musicLink;
@@ -2250,15 +2216,15 @@ exportLinkBtn.addEventListener('click', () => {
     }
 });
 
-// 复制链接按钮点击事件
+ 
 copyLinkBtn.addEventListener('click', () => {
     exportedLink.select();
-    exportedLink.setSelectionRange(0, 99999); // 移动设备支持
+    exportedLink.setSelectionRange(0, 99999);  
 
     try {
         const successful = document.execCommand('copy');
         if (successful) {
-            // 显示复制成功提示
+             
             const originalText = copyLinkBtn.textContent;
             copyLinkBtn.textContent = '已复制';
             copyLinkBtn.style.backgroundColor = '#218838';
@@ -2269,7 +2235,7 @@ copyLinkBtn.addEventListener('click', () => {
             }, 2000);
         }
     } catch (err) {
-        // 使用现代 Clipboard API
+         
         navigator.clipboard.writeText(exportedLink.value).then(() => {
             const originalText = copyLinkBtn.textContent;
             copyLinkBtn.textContent = '已复制';
@@ -2285,8 +2251,8 @@ copyLinkBtn.addEventListener('click', () => {
     }
 });
 
-// 在音乐列表加载完成后重新填充导出选择框
-// 修改现有的 loadMusicList 函数，在最后添加
+ 
+ 
 async function loadMusicList() {
     try {
         console.log('开始加载音乐列表数据...');
@@ -2297,18 +2263,18 @@ async function loadMusicList() {
         const musicText = await response.text();
         console.log('音乐列表文件内容:', musicText);
 
-        // 按行分割，过滤空行
+         
         musicList = musicText.split('\n')
             .filter(line => line.trim() !== '')
             .map(line => line.trim());
 
         console.log('解析后的音乐列表:', musicList);
 
-        // 渲染音乐列表
+         
         renderMusicList();
         console.log('音乐列表渲染完成，共加载', musicList.length, '首歌曲');
 
-        // 填充导出选择框
+         
         populateExportSelect();
 
     } catch (error) {
@@ -2318,23 +2284,14 @@ async function loadMusicList() {
 }
 
 
-/*
-
-
-分享功能:
-1. 点击分享按钮后，会生成当前播放的歌曲的分享链接。
-2. 分享链接包含当前播放的歌曲索引、用户ID、时间戳和加密参数。
-3. 分享链接可以在微信、QQ等社交媒体平台分享。
 
 
 
-*/
 
 
-
-// 分享功能实现
+ 
 document.addEventListener('DOMContentLoaded', function () {
-    // 获取分享按钮元素 - 修复为新的ID
+     
     const shareBtn = document.getElementById('share-link-btn');
     const wechatBtn = document.getElementById('share-wechat-btn');
     const qqBtn = document.getElementById('share-qq-btn');
@@ -2344,7 +2301,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    // 获取当前播放的歌曲信息
+     
     function getCurrentMusicInfo() {
         const currentSongElement = document.querySelector('.current-song');
         if (!currentSongElement) return null;
@@ -2355,7 +2312,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return null;
         }
 
-        // 在音乐列表中查找当前播放的歌曲
+         
         for (let i = 0; i < musicList.length; i++) {
             const musicData = musicList[i];
             const parts = musicData.split(' \\ ');
@@ -2373,15 +2330,15 @@ document.addEventListener('DOMContentLoaded', function () {
         return null;
     }
 
-    // 生成音乐分享链接
+     
     function generateShareLink(musicInfo) {
         if (!musicInfo) return null;
 
-        // 检查是否为超级管理员
+         
         const isSuperAdminUser = isSuperAdmin();
         const timeParam = isSuperAdminUser ? 'YJKW' : Math.floor(Date.now() / 1000).toString();
 
-        // 生成加密参数
+         
         const params = {
             music: musicInfo.index,
             name: musicInfo.name,
@@ -2389,7 +2346,7 @@ document.addEventListener('DOMContentLoaded', function () {
             timestamp: timeParam
         };
 
-        // 正确的加密逻辑：先MD5加密，然后Base64编码
+         
         const jsonString = JSON.stringify(params);
         const md5Hash = CryptoJS.MD5(jsonString).toString();
         const encodedMusic = btoa(encodeURIComponent(md5Hash));
@@ -2398,13 +2355,13 @@ document.addEventListener('DOMContentLoaded', function () {
         return `【${musicInfo.name}】${baseUrl}?music=${encodedMusic}&time=${timeParam}`;
     }
 
-    // 复制到剪贴板
+     
     function copyToClipboard(text) {
         return new Promise((resolve, reject) => {
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).then(resolve).catch(reject);
             } else {
-                // 回退方案
+                 
                 const textArea = document.createElement('textarea');
                 textArea.value = text;
                 textArea.style.position = 'fixed';
@@ -2430,7 +2387,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 分享链接按钮点击事件
+     
     shareBtn.addEventListener('click', function () {
         const musicInfo = getCurrentMusicInfo();
         if (!musicInfo) return;
@@ -2442,7 +2399,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         copyToClipboard(shareLink).then(() => {
-            // 显示成功提示
+             
             const originalText = shareBtn.textContent;
             shareBtn.textContent = '已复制到剪贴板';
             shareBtn.style.backgroundColor = '#28a745';
@@ -2459,7 +2416,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // 分享到微信按钮点击事件
+     
     wechatBtn.addEventListener('click', function () {
         const musicInfo = getCurrentMusicInfo();
         if (!musicInfo) return;
@@ -2470,17 +2427,17 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // 检测是否为移动设备
+         
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         if (isMobile) {
-            // 移动端：使用微信JS-SDK分享（需要后端支持）或使用通用分享方式
+             
             copyToClipboard(shareLink).then(() => {
                 const originalText = wechatBtn.textContent;
                 wechatBtn.textContent = '链接已复制';
                 wechatBtn.style.backgroundColor = '#07c160';
 
-                // 尝试使用微信内置浏览器分享
+                 
                 if (window.WeixinJSBridge) {
                     window.WeixinJSBridge.invoke('shareTimeline', {
                         title: '音乐分享',
@@ -2495,7 +2452,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     });
                 } else {
-                    // 非微信内置浏览器，提示用户手动分享
+                     
                     alert('链接已复制到剪贴板！\n\n请在微信中：\n1. 打开要分享的聊天窗口\n2. 长按输入框选择粘贴\n3. 发送消息');
                 }
 
@@ -2508,13 +2465,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert('复制失败，请手动复制链接: ' + shareLink);
             });
         } else {
-            // 电脑端：只复制链接，提示用户手动粘贴
+             
             copyToClipboard(shareLink).then(() => {
                 const originalText = wechatBtn.textContent;
                 wechatBtn.textContent = '链接已复制';
                 wechatBtn.style.backgroundColor = '#07c160';
 
-                // 电脑端提示用户手动操作
+                 
                 setTimeout(() => {
                     alert('链接已复制到剪贴板！\n\n请在微信中：\n1. 打开要分享的聊天窗口\n2. 按 Ctrl+V 粘贴链接\n3. 发送消息');
                 }, 300);
@@ -2530,7 +2487,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // 分享到QQ按钮点击事件
+     
     qqBtn.addEventListener('click', function () {
         const musicInfo = getCurrentMusicInfo();
         if (!musicInfo) return;
@@ -2538,17 +2495,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const shareLink = generateShareLink(musicInfo);
         if (!shareLink) return;
 
-        // 检测是否为移动设备
+         
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         if (isMobile) {
-            // 移动端：使用QQ内置分享或通用分享方式
+             
             copyToClipboard(shareLink).then(() => {
                 const originalText = qqBtn.textContent;
                 qqBtn.textContent = '链接已复制';
                 qqBtn.style.backgroundColor = '#12b7f5';
 
-                // 尝试使用QQ内置分享
+                 
                 if (window.mqq && window.mqq.ui && window.mqq.ui.shareMessage) {
                     window.mqq.ui.shareMessage({
                         title: '音乐分享',
@@ -2563,7 +2520,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     });
                 } else {
-                    // 非QQ内置浏览器，提示用户手动分享
+                     
                     alert('链接已复制到剪贴板！\n\n请在QQ中：\n1. 打开要分享的聊天窗口\n2. 长按输入框选择粘贴\n3. 发送消息');
                 }
 
@@ -2576,13 +2533,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert('复制失败，请手动复制链接: ' + shareLink);
             });
         } else {
-            // 电脑端：只复制链接，提示用户手动粘贴
+             
             copyToClipboard(shareLink).then(() => {
                 const originalText = qqBtn.textContent;
                 qqBtn.textContent = '链接已复制';
                 qqBtn.style.backgroundColor = '#12b7f5';
 
-                // 电脑端提示用户手动操作
+                 
                 setTimeout(() => {
                     alert('链接已复制到剪贴板！\n\n请在QQ中：\n1. 打开要分享的聊天窗口\n2. 按 Ctrl+V 粘贴链接\n3. 发送消息');
                 }, 300);
@@ -2598,7 +2555,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // 添加分享按钮样式（使用新的ID选择器）
+     
     const style = document.createElement('style');
     style.textContent = `
         #share-link-btn {
@@ -2646,7 +2603,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.head.appendChild(style);
 });
 
-// 切换视频/音乐模式
+ 
 function toggleVideoMode() {
     if (!currentVideoPath || currentVideoPath === '[NO DATA]') {
         alert('此音乐没有视频文件');
@@ -2656,25 +2613,25 @@ function toggleVideoMode() {
     isVideoMode = !isVideoMode;
 
     if (isVideoMode) {
-        // 切换到视频模式
+         
         videoContainer.classList.remove('hidden');
         videoBtn.textContent = '切换音乐';
         playerStatus.textContent = '视频模式';
 
-        // 判断是本地视频还是Bilibili视频
+         
         if (currentVideoPath.startsWith('http')) {
-            // Bilibili视频：使用iframe嵌入
+             
             const bilibiliPlayer = document.getElementById('bilibili-player');
             const videoPlayer = document.getElementById('video-player');
 
-            // 隐藏video元素，显示iframe
+             
             videoPlayer.style.display = 'none';
             bilibiliPlayer.style.display = 'block';
 
-            // 设置Bilibili播放器URL，从头开始播放
+             
             bilibiliPlayer.src = currentVideoPath;
 
-            // 暂停音乐，只播放视频
+             
             if (isPlaying) {
                 audioPlayer.pause();
                 isPlaying = false;
@@ -2682,20 +2639,20 @@ function toggleVideoMode() {
                 playerStatus.textContent = '视频播放中';
             }
         } else {
-            // 本地视频：使用video元素
+             
             const bilibiliPlayer = document.getElementById('bilibili-player');
             const videoPlayer = document.getElementById('video-player');
 
-            // 隐藏iframe，显示video元素
+             
             bilibiliPlayer.style.display = 'none';
             videoPlayer.style.display = 'block';
 
-            // 设置本地视频源，从头开始播放
+             
             videoPlayer.src = currentVideoPath;
             videoPlayer.currentTime = 0;
             videoPlayer.muted = false;
 
-            // 播放视频，暂停音乐
+             
             videoPlayer.play();
             if (isPlaying) {
                 audioPlayer.pause();
@@ -2705,22 +2662,22 @@ function toggleVideoMode() {
             }
         }
     } else {
-        // 切换回音乐模式
+         
         videoContainer.classList.add('hidden');
         videoBtn.textContent = '观看视频';
         playerStatus.textContent = '音乐模式';
 
-        // 暂停视频播放器，恢复音乐播放
+         
         const videoPlayer = document.getElementById('video-player');
         const bilibiliPlayer = document.getElementById('bilibili-player');
 
         videoPlayer.pause();
-        // 对于Bilibili播放器，清空iframe内容
+         
         if (bilibiliPlayer.style.display !== 'none') {
             bilibiliPlayer.src = '';
         }
 
-        // 如果之前是播放状态，恢复音乐播放
+         
         if (!isPlaying) {
             audioPlayer.play();
             isPlaying = true;
@@ -2730,10 +2687,10 @@ function toggleVideoMode() {
     }
 }
 
-// 为视频按钮添加事件监听器
+ 
 videoBtn.addEventListener('click', toggleVideoMode);
 
-// 视频播放器事件监听
+ 
 videoPlayer.addEventListener('timeupdate', updateTimeDisplay);
 videoPlayer.addEventListener('timeupdate', updateProgressBar);
 videoPlayer.addEventListener('loadedmetadata', function () {
@@ -2741,10 +2698,10 @@ videoPlayer.addEventListener('loadedmetadata', function () {
     updateProgressBar();
 });
 
-// 播放/暂停按钮功能
+ 
 function togglePlay() {
     if (isVideoMode) {
-        // 视频模式下，播放控制器只控制音乐
+         
         if (audioPlayer.paused) {
             audioPlayer.play();
             isPlaying = true;
@@ -2757,7 +2714,7 @@ function togglePlay() {
             playerStatus.textContent = '视频播放中';
         }
     } else {
-        // 音乐模式下，正常控制音乐
+         
         if (audioPlayer.paused) {
             audioPlayer.play();
             isPlaying = true;
@@ -2772,10 +2729,10 @@ function togglePlay() {
     }
 }
 
-// 为播放按钮添加事件监听器
+ 
 playBtn.addEventListener('click', togglePlay);
 
-// 音频播放器事件监听（控制音频播放器）
+ 
 audioPlayer.addEventListener('timeupdate', updateTimeDisplay);
 audioPlayer.addEventListener('timeupdate', updateProgressBar);
 audioPlayer.addEventListener('timeupdate', function () {
@@ -2787,8 +2744,8 @@ audioPlayer.addEventListener('loadedmetadata', function () {
     updateProgressBar();
 });
 
-// 移除视频播放器的时间更新和进度条更新事件监听
-// 进度条和时间显示只使用音频的时间刻度
+ 
+ 
 videoPlayer.removeEventListener('timeupdate', updateTimeDisplay);
 videoPlayer.removeEventListener('timeupdate', updateProgressBar);
 videoPlayer.removeEventListener('loadedmetadata', function () {
@@ -2796,50 +2753,50 @@ videoPlayer.removeEventListener('loadedmetadata', function () {
     updateProgressBar();
 });
 
-// 移除视频播放器的同步功能，让视频独立播放
+ 
 videoPlayer.removeEventListener('timeupdate', function () {
-    // 同步视频播放器到音频播放器的进度
+     
     if (audioPlayer.duration > 0 && videoPlayer.duration > 0) {
         const audioProgress = audioPlayer.currentTime / audioPlayer.duration;
         const targetVideoTime = audioProgress * videoPlayer.duration;
 
-        // 如果视频和音频进度差异较大，进行同步
+         
         if (Math.abs(videoPlayer.currentTime - targetVideoTime) > 1) {
             videoPlayer.currentTime = targetVideoTime;
         }
     }
 });
 
-// 音频播放事件处理函数
+ 
 function handleAudioPlay() {
     console.log('音频播放事件触发');
     isPlaying = true;
     playBtn.textContent = '||';
     playerStatus.textContent = '播放中';
     
-    // 确保标志位被重置
+     
     window.isProcessingPlayPause = false;
 }
 
-// 音频暂停事件处理函数
+ 
 function handleAudioPause() {
     console.log('音频暂停事件触发');
     isPlaying = false;
     playBtn.textContent = '▶';
     playerStatus.textContent = '暂停中';
     
-    // 确保标志位被重置
+     
     window.isProcessingPlayPause = false;
 }
 
-// 页面加载完成后初始化音乐列表
+ 
 document.addEventListener('DOMContentLoaded', () => {
     loadMusicList();
 
-    // 初始化时绑定一次音频播放器事件监听器
+     
     audioPlayer.addEventListener('play', handleAudioPlay);
     audioPlayer.addEventListener('pause', handleAudioPause);
 
-    // 初始化处理标志位
+     
     window.isProcessingPlayPause = false;
 });

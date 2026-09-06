@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html
+<!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cn" lang="cn">
 
@@ -14,7 +14,7 @@
         var URL_DOMAIN = 'wikidot.com';
         var USE_SSL = true;
         var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-        // global request information
+         
 
         var WIKIREQUEST = {};
         WIKIREQUEST.info = {};
@@ -70,10 +70,10 @@
 
 
     <style type="text/css" id="internal-style">
-        /* modules */
+         
 
 
-        /* theme */
+         
         @import url(https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css);
         @import url(https://github.backroomswiki.cn/Old_BHL/css/liminal-impact.css);
     </style>
@@ -127,13 +127,8 @@
     </script>
 
     <style>
-        /*=================
-仓耳字体系列
-------------------------------
-by 仓耳字库
-授权：免费商用
-来源：http://tsanger.cn
-=================*/
+        
+
 
         @font-face {
             font-family: '仓耳与墨W02';
@@ -144,10 +139,10 @@ by 仓耳字库
         }
     </style>
     <style>
-        /* 字体调整 */
+         
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300&amp;display=swap');
 
-        /* Myrand */
+         
 
         @media screen and (prefers-reduced-motion: no-preference) {
 
@@ -201,20 +196,20 @@ by 仓耳字库
             --dark-accent: 140, 136, 126;
             --pale-accent: 140, 136, 126;
 
-            /* Primary Theme Colors */
+             
             --swatch-background: var(--black-monochrome);
             --swatch-primary: var(--bright-accent);
             --swatch-primary-darker: var(--medium-accent);
             --swatch-primary-darkest: var(--black-monochrome);
 
-            /* Primary Text Colors */
+             
             --swatch-text-dark: var(--custom-text);
             --swatch-text-light: var(--bright-accent);
             --swatch-important-text: var(--bright-accent);
             --barColour: var(--very-light-gray-monochrome);
             --linkColour: var(--pale-accent);
 
-            /* Primary Menu Colors */
+             
             --swatch-menubg-color: var(--black-monochrome);
             --swatch-menubg-light-color: var(--dark-gray-monochrome);
             --swatch-menubg-medium-color: var(--medium-accent);
@@ -226,25 +221,25 @@ by 仓耳字库
             --swatch-menutxt-light-color: var(--white-monochrome);
             --swatch-border-color: var(--bright-accent);
 
-            /* Primary Header Colors */
+             
             --swatch-headerh1-color: var(--white-monochrome);
             --swatch-headerh2-color: var(--white-monochrome);
             --swatch-topmenu-border-color: var(--bright-accent);
             --swatch-topmenu-bg-color: var(--black-monochrome);
 
-            /* Link Colors */
+             
             --link-color: var(--bright-accent);
             --visited-link-color: var(--medium-accent);
             --hover-link-color: var(--bright-accent);
             --sidebar-links-text: var(--swatch-menutxt-dark-color);
             --link-color-bright: var(--medium-accent);
 
-            /* Rating Module Colors */
+             
             --rating-module-button-color: var(--bright-accent);
             --rating-module-text-color: var(--white-monochrome);
             --rating-module-text-hover-color: var(--swatch-menutxt-light-color);
 
-            /* Header Gradients */
+             
             --gradient-header: none;
             --diagonal-stripes: none;
         }
@@ -641,14 +636,14 @@ by 仓耳字库
         </div>
     </div>
     <script>
-        // 获取Cookie值的函数
+         
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        // 从user.json获取用户权限信息的函数
+         
         async function getUserPermission(username) {
             try {
                 const response = await fetch('/backrooms/user.json');
@@ -666,7 +661,7 @@ by 仓耳字库
             }
         }
 
-        // 页面加载完成后执行登录状态检测
+         
         document.addEventListener('DOMContentLoaded', async function () {
             const authToken = getCookie('authToken') || localStorage.getItem('authToken');
             const usernameDisplay = document.getElementById('usernameDisplay');
@@ -682,11 +677,11 @@ by 仓耳字库
                 const type = (user && ZIYIT_API.isVip(user)) ? 'ZC' : 'UR';
                 if (usernameDisplay) usernameDisplay.textContent = user ? user.username : '';
                 if (userTypeDisplay) {
-                    // 首先尝试从user.json获取权限信息
+                     
                     const userPermission = await getUserPermission(username);
 
                     if (userPermission) {
-                        // 根据权限类型显示相应的用户类型
+                         
                         switch (userPermission.permission) {
                             case 'Adminstrator':
                                 userTypeDisplay.textContent = 'ZIYIT最高管理员';
@@ -698,11 +693,11 @@ by 仓耳字库
                                 userTypeDisplay.textContent = '管理员';
                                 break;
                             default:
-                                // 其他权限类型，根据用户类型显示VIP或普通用户
+                                 
                                 userTypeDisplay.textContent = type === 'ZC' ? 'VIP用户' : '普通用户';
                         }
                     } else {
-                        // 如果user.json中没有找到用户信息，使用原来的逻辑
+                         
                         userTypeDisplay.textContent = type === 'ZC' ? 'VIP用户' : '普通用户';
                     }
                 }
@@ -1406,13 +1401,13 @@ by 仓耳字库
         </div>
     </div>
     <style>
-        /* 生存难度容器居中 */
+         
         .sd-container {
             display: flex !important;
             flex-direction: column !important;
         }
 
-        /* 调整内容包装器 */
+         
         #content-wrap {
             margin-left: 0 !important;
             width: 100% !important;

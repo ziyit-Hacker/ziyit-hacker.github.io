@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MODWIKI · ZIYIT STUDIO</title>
     <style>
-        /* ============================================================
-           CSS Variables
-           ============================================================ */
+        
+
         :root {
             --bg-primary: #080c14;
             --bg-secondary: #0f1620;
@@ -72,9 +71,8 @@
             border-radius: 10px;
         }
 
-        /* ============================================================
-           Background Orbs
-           ============================================================ */
+        
+
         .bg-orb {
             position: fixed;
             border-radius: 50%;
@@ -100,9 +98,8 @@
             opacity: 0.05;
         }
 
-        /* ============================================================
-           Header
-           ============================================================ */
+        
+
         .header {
             position: fixed;
             top: 0;
@@ -210,9 +207,8 @@
             box-shadow: 0 4px 20px var(--glow-cyan);
         }
 
-        /* ============================================================
-           Hero
-           ============================================================ */
+        
+
         .hero {
             position: relative;
             z-index: 1;
@@ -272,9 +268,8 @@
             color: var(--text-primary);
         }
 
-        /* ============================================================
-           Stats
-           ============================================================ */
+        
+
         .stats {
             position: relative;
             z-index: 1;
@@ -300,9 +295,8 @@
             margin-top: 1px;
         }
 
-        /* ============================================================
-           Section
-           ============================================================ */
+        
+
         .section {
             position: relative;
             z-index: 1;
@@ -327,9 +321,8 @@
             color: var(--accent-cyan);
         }
 
-        /* ============================================================
-           Loading
-           ============================================================ */
+        
+
         .loading {
             text-align: center;
             padding: 60px 20px;
@@ -351,9 +344,8 @@
             }
         }
 
-        /* ============================================================
-           Tabs
-           ============================================================ */
+        
+
         .tabs {
             display: flex;
             gap: 4px;
@@ -404,9 +396,8 @@
             }
         }
 
-        /* ============================================================
-           Search
-           ============================================================ */
+        
+
         .search-box {
             display: flex;
             align-items: center;
@@ -451,9 +442,8 @@
             margin-bottom: 20px;
         }
 
-        /* ============================================================
-           Items Grid
-           ============================================================ */
+        
+
         .items-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -508,9 +498,8 @@
             display: block;
         }
 
-        /* ============================================================
-           Recipe View
-           ============================================================ */
+        
+
         .recipe-view {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
@@ -609,9 +598,8 @@
             font-size: 13px;
         }
 
-        /* ============================================================
-           Nuclear Calculator
-           ============================================================ */
+        
+
         .calc-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -663,9 +651,8 @@
             font-size: 18px;
         }
 
-        /* ============================================================
-           Advancements
-           ============================================================ */
+        
+
         .adv-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -716,9 +703,8 @@
             margin-top: 2px;
         }
 
-        /* ============================================================
-           Footer
-           ============================================================ */
+        
+
         .footer {
             position: relative;
             z-index: 1;
@@ -753,9 +739,8 @@
             color: var(--text-primary);
         }
 
-        /* ============================================================
-           Responsive
-           ============================================================ */
+        
+
         @media (max-width: 768px) {
             .header {
                 padding: 0 16px;
@@ -855,9 +840,7 @@
     <div class="bg-orb bg-orb--cyan"></div>
     <div class="bg-orb bg-orb--purple"></div>
 
-    <!-- ============================================================
-    Header
-    ============================================================ -->
+    
     <header class="header">
         <div class="header__brand">
             <div class="brand-icon">⌘</div>
@@ -877,9 +860,7 @@
         </div>
     </header>
 
-    <!-- ============================================================
-    Hero
-    ============================================================ -->
+    
     <section class="hero">
         <div class="hero__badge">✦ 模组百科 · 交互工具</div>
         <h1 class="hero__title">
@@ -893,9 +874,7 @@
         </div>
     </section>
 
-    <!-- ============================================================
-    Stats
-    ============================================================ -->
+    
     <div class="stats" id="stats">
         <div class="stats__item">
             <div class="number" id="stat-items">0</div>
@@ -911,9 +890,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    Main Content with Tabs
-    ============================================================ -->
+    
     <section class="section">
         <div class="tabs" id="mainTabs">
             <button class="tab active" data-tab="items-tab">📦 物品</button>
@@ -922,9 +899,7 @@
             <button class="tab" data-tab="adv-tab">🏆 进度</button>
         </div>
 
-        <!-- ============================================================
-        TAB 1: Items
-        ============================================================ -->
+        
         <div class="tab-content active" id="items-tab">
             <div class="search-wrapper">
                 <div class="search-box">
@@ -947,9 +922,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-        TAB 2: Recipes
-        ============================================================ -->
+        
         <div class="tab-content" id="recipes-tab">
             <div class="search-wrapper">
                 <div class="search-box">
@@ -969,9 +942,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-        TAB 3: Nuclear Calculator
-        ============================================================ -->
+        
         <div class="tab-content" id="nuclear-tab">
             <div class="calc-grid">
                 <div class="calc-box">
@@ -1006,9 +977,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-        TAB 4: Advancements
-        ============================================================ -->
+        
         <div class="tab-content" id="adv-tab">
             <div class="search-wrapper">
                 <div class="search-box">
@@ -1021,9 +990,7 @@
         </div>
     </section>
 
-    <!-- ============================================================
-    Footer
-    ============================================================ -->
+    
     <footer class="footer">
         <div class="footer__copy">
             &copy; 2026 <strong>ZIYIT STUDIO</strong> · MODWIKI 模组百科
@@ -1036,28 +1003,26 @@
         </div>
     </footer>
 
-    <!-- ============================================================
-    JavaScript - 动态加载配方JSON
-    ============================================================ -->
+    
     <script>
-        // ============================================================
-        // 配置
-        // ============================================================
+         
+         
+         
         const RECIPE_BASE = 'Flight-Management/recipe/';
         const RECIPE_LIST_FILE = RECIPE_BASE + 'recipes.txt';
         const ASSETS_BASE = '../assets/flyconfig/';
 
-        // ============================================================
-        // 数据存储
-        // ============================================================
+         
+         
+         
         let allItems = [];
-        let allRecipes = {}; // key: 物品ID, value: 配方数据
-        let recipeFileMap = {}; // key: 物品ID, value: JSON文件路径
+        let allRecipes = {};  
+        let recipeFileMap = {};  
         let isLoading = true;
 
-        // ============================================================
-        // 物品列表 (从 assets/flyconfig/ 推断)
-        // ============================================================
+         
+         
+         
         const ITEM_NAMES = {
             'flight_manager': '航班管理器',
             'nuclear_spawn_egg': '核弹',
@@ -1079,7 +1044,7 @@
             'flowing_lava': '流动岩浆',
         };
 
-        // 已知的配方文件 -> 对应的物品ID映射
+         
         const RECIPE_TO_ITEM = {
             'activated_observer': 'activated_observer',
             'beetroot_crop_0': 'beetroot_crop_0',
@@ -1178,16 +1143,16 @@
             'wither_spawn_egg': 'wither_spawn_egg',
         };
 
-        // ============================================================
-        // 工具函数
-        // ============================================================
+         
+         
+         
         function getItemName(id) {
             return ITEM_NAMES[id] || id.replace(/_/g, ' ');
         }
 
-        // 修复：使用相对路径 ../assets/flyconfig/
+         
         function getItemIcon(id) {
-            // 如果已经是完整URL，直接返回
+             
             if (id.startsWith('http://') || id.startsWith('https://')) {
                 return id;
             }
@@ -1275,9 +1240,9 @@
             return map[id] || id.split(':').pop().replace(/_/g, ' ');
         }
 
-        // ============================================================
-        // 加载 recipes.txt 获取配方文件列表
-        // ============================================================
+         
+         
+         
         async function loadRecipeList() {
             try {
                 const response = await fetch(RECIPE_LIST_FILE);
@@ -1297,9 +1262,9 @@
             }
         }
 
-        // ============================================================
-        // 加载单个配方 JSON
-        // ============================================================
+         
+         
+         
         async function loadRecipeJSON(filePath) {
             try {
                 const fullPath = RECIPE_BASE + filePath;
@@ -1311,9 +1276,9 @@
             }
         }
 
-        // ============================================================
-        // 加载所有配方
-        // ============================================================
+         
+         
+         
         async function loadAllRecipes() {
             const files = await loadRecipeList();
             if (files.length === 0) {
@@ -1364,9 +1329,9 @@
             updateStats();
         }
 
-        // ============================================================
-        // 渲染物品
-        // ============================================================
+         
+         
+         
         let selectedItem = null;
 
         function renderItems(filter = '') {
@@ -1416,9 +1381,9 @@
             }
         }
 
-        // ============================================================
-        // 显示配方
-        // ============================================================
+         
+         
+         
         function selectItem(itemId) {
             selectedItem = itemId;
             document.querySelectorAll('.item-card').forEach(card => {
@@ -1532,9 +1497,9 @@
             view.innerHTML = html;
         }
 
-        // ============================================================
-        // 渲染配方列表 (Tab 2)
-        // ============================================================
+         
+         
+         
         function renderRecipes(filter = '') {
             const container = document.getElementById('recipesList');
             const count = document.getElementById('recipeCount');
@@ -1605,9 +1570,9 @@
             }).join('');
         }
 
-        // ============================================================
-        // 更新统计
-        // ============================================================
+         
+         
+         
         function updateStats() {
             document.getElementById('stat-items').textContent = allItems.length;
             const totalRecipes = Object.values(allRecipes).reduce((sum, arr) => sum + arr.length, 0);
@@ -1615,9 +1580,9 @@
             document.getElementById('stat-adv').textContent = ADVANCEMENTS.length;
         }
 
-        // ============================================================
-        // 核弹计算器
-        // ============================================================
+         
+         
+         
         function calcNuclearDamage(distance, underwater = false) {
             let damage;
             if (distance <= 10) {
@@ -1650,9 +1615,9 @@
             return 10;
         }
 
-        // ============================================================
-        // 进度数据 (硬编码，来自模组)
-        // ============================================================
+         
+         
+         
         const ADVANCEMENTS = [
             { name: '工业革命', desc: '找到小屋和废弃小屋', type: 'task' },
             { name: '垃圾', desc: '获得金属废料', type: 'task' },
@@ -1673,9 +1638,9 @@
             { name: '辐射（隐藏）', desc: '玩家5格内有辐射铀矿石', type: 'hidden' },
         ];
 
-        // ============================================================
-        // 渲染进度
-        // ============================================================
+         
+         
+         
         function renderAdvancements(filter = '') {
             const grid = document.getElementById('advGrid');
             const count = document.getElementById('advCount');
@@ -1698,9 +1663,9 @@
             }
         }
 
-        // ============================================================
-        // Tab 切换
-        // ============================================================
+         
+         
+         
         document.querySelectorAll('.tab, .header__nav a[data-tab]').forEach(tab => {
             tab.addEventListener('click', function() {
                 const target = this.dataset.tab;
@@ -1723,9 +1688,9 @@
             });
         });
 
-        // ============================================================
-        // 事件绑定
-        // ============================================================
+         
+         
+         
 
         document.getElementById('itemSearch').addEventListener('input', function() {
             renderItems(this.value);
@@ -1748,7 +1713,7 @@
             renderAdvancements(document.getElementById('advSearch').value);
         });
 
-        // 核弹计算
+         
         document.getElementById('calcDamageBtn').addEventListener('click', function() {
             const dist = parseFloat(document.getElementById('distInput').value);
             const result = document.getElementById('damageResult');
@@ -1794,9 +1759,9 @@
             if (e.key === 'Enter') document.getElementById('calcDistBtn').click();
         });
 
-        // ============================================================
-        // 初始化
-        // ============================================================
+         
+         
+         
         async function init() {
             await loadAllRecipes();
             renderAdvancements('');
