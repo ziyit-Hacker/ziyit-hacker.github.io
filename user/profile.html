@@ -528,9 +528,9 @@
                 return def;
             }
 
-            function getLocText(ip) {
+            function getLocText(userId, ip) {
                 if (ipLocCache[ip] !== undefined) return Promise.resolve(ipLocCache[ip]);
-                return ZIYIT_API.getIpLocation(ip).then(function (d) {
+                return ZIYIT_API.getIpLocation(userId, ip).then(function (d) {
                     let loc = ZIYIT_API.formatIpLocation(d);
                     ipLocCache[ip] = loc;
                     return loc;
@@ -584,7 +584,7 @@
 
                     const locSpan = info.querySelector('.ip-loc');
                     if (it.ip && it.ip !== '-') {
-                        getLocText(it.ip).then(function (loc) { locSpan.textContent = '(' + loc + ')'; });
+                        getLocText(user.userId, it.ip).then(function (loc) { locSpan.textContent = '(' + loc + ')'; });
                     } else {
                         locSpan.textContent = '';
                     }

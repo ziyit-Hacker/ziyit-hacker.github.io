@@ -307,8 +307,8 @@
         return Promise.resolve();
     }
 
-    function getIpLocation(ip) {
-        return request('/ip/' + encodeURIComponent(ip) + '/location');
+    function getIpLocation(userId, ip) {
+        return request('/auth/ip-info?userId=' + encodeURIComponent(userId) + '&ip=' + encodeURIComponent(ip));
     }
 
      

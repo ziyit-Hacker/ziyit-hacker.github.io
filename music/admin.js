@@ -1317,7 +1317,7 @@ function showLoginHistory(user) {
             span.textContent = '';
             return;
         }
-        ZIYIT_API.getIpLocation(ip).then(function (d) {
+        ZIYIT_API.getIpLocation(user.userId, ip).then(function (d) {
             const loc = ZIYIT_API.formatIpLocation(d);
             span.textContent = '(' + loc + ')';
         }).catch(function () {
