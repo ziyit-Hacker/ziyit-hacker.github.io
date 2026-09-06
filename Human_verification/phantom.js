@@ -30,6 +30,8 @@ import { installAntidebug } from "./antidebug.js";
 import { PhantomRenderer } from "./renderer.js";
 import { TrajectoryTracker } from "./tracker.js";
 import { injectStyles } from "./styles.js";
+
+import { collectEnvEvidence } from "./env.js";
  
 import { deriveBezierPath } from "./prng.min.js";
 const VERSION = "0.1.0";
