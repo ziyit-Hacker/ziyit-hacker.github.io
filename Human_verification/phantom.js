@@ -32,8 +32,6 @@ import { TrajectoryTracker } from "./tracker.js";
 import { injectStyles } from "./styles.js";
 
 import { collectEnvEvidence } from "./env.js";
- 
-import { deriveBezierPath } from "./prng.min.js";
 const VERSION = "0.1.0";
 
 
@@ -200,6 +198,18 @@ class WidgetSession {
             writable: true,
             value: () => { }
         });
+        Object.defineProperty(this, "videoEl", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
+        });
+        Object.defineProperty(this, "videoUrl", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: ""
+        });
     }
      
     setHint(stage, text) {
@@ -233,9 +243,9 @@ class WidgetSession {
             const raw = JSON.parse(new TextDecoder().decode(paramsJson));
              
              
-            const controlPoints = deriveBezierPath(raw.pathSeed, raw.canvas.w, raw.canvas.h);
+            const videoEl = await this._prepareVideo(challenge);
             const params = {
-                controlPoints,
+                video: videoEl,
                 duration: raw.duration,
                 fps: raw.fps,
                 targetHalf: raw.targetHalf,
@@ -343,6 +353,41 @@ class WidgetSession {
             document.removeEventListener("selectstart", onSelectStart, { capture: true });
             document.removeEventListener("dragstart", onSelectStart, { capture: true });
         };
+    }
+    // v0.3.0：正确轨迹不再下发。后端把「光点沿控制点行进时的粒子簇」渲染成 MP4
+    // （黑底 + 簇）内嵌在 /challenge 响应里，前端把它当簇层与实时噪声叠加。
+    async _prepareVideo(challenge) {
+        if (!challenge || !challenge.video) {
+            throw new Error("挑战缺少验证视频");
+        }
+        const mime = challenge.videoMime || "video/mp4";
+        const bin = atob(challenge.video);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) {
+            bytes[i] = bin.charCodeAt(i);
+        }
+        const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+        const v = document.createElement("video");
+        v.src = url;
+        v.muted = true;
+        v.playsInline = true;
+        v.setAttribute("playsinline", "");
+        v.preload = "auto";
+        // 挂进 DOM（透明且不接收事件）：部分移动端浏览器要求视频在文档内才允许
+        // canvas.drawImage 取帧；关闭弹窗时随节点一并销毁。
+        v.style.cssText = "position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
+        this.canvas.parentElement?.appendChild(v);
+        await new Promise((resolve) => {
+            if (v.readyState >= 2)
+                return resolve();
+            const done = () => resolve();
+            v.addEventListener("loadeddata", done, { once: true });
+            v.addEventListener("error", done, { once: true });
+            window.setTimeout(done, 3000);
+        });
+        this.videoEl = v;
+        this.videoUrl = url;
+        return v;
     }
     async verifyAndFinish(samples) {
         if (!this.sessionKey)
@@ -465,6 +510,20 @@ class WidgetSession {
         this.renderer?.stopPreview();
         this.renderer?.stop();
         this.tracker?.stop();
+        // 释放前端侧视频资源：暂停 + 脱离 DOM + 撤销 Blob URL，避免内存泄漏。
+        if (this.videoEl) {
+            try {
+                this.videoEl.pause();
+            }
+            catch (e) { /* ignore */ }
+            this.videoEl.removeAttribute("src");
+            this.videoEl.remove();
+            this.videoEl = null;
+        }
+        if (this.videoUrl) {
+            URL.revokeObjectURL(this.videoUrl);
+            this.videoUrl = "";
+        }
     }
 }
 

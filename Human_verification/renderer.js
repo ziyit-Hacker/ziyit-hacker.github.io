@@ -18,20 +18,9 @@
  
  
 import { CONFIG } from "./config.js";
-import { makeCluster, paintFullNoise as paintFullNoisePure, stampCluster as stampClusterPure, } from "./particles.js";
+import { paintFullNoise as paintFullNoisePure } from "./particles.js";
  
-function bezierAt(cp, t) {
-    const u = 1 - t;
-    const x = u * u * u * cp[0][0] +
-        3 * u * u * t * cp[1][0] +
-        3 * u * t * t * cp[2][0] +
-        t * t * t * cp[3][0];
-    const y = u * u * u * cp[0][1] +
-        3 * u * u * t * cp[1][1] +
-        3 * u * t * t * cp[2][1] +
-        t * t * t * cp[3][1];
-    return [x, y];
-}
+
 export class PhantomRenderer {
     constructor(canvas, params) {
         Object.defineProperty(this, "params", {
@@ -99,11 +88,17 @@ export class PhantomRenderer {
         });
         
 
-        Object.defineProperty(this, "particles", {
+        Object.defineProperty(this, "video", {
             enumerable: true,
             configurable: true,
             writable: true,
-            value: void 0
+            value: params.video || null
+        });
+        Object.defineProperty(this, "startCenter", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
         });
         this.canvas = canvas;
         const ctx = canvas.getContext("2d", { alpha: false });
@@ -113,29 +108,67 @@ export class PhantomRenderer {
         const boxArea = (2 * params.targetHalf) ** 2;
         this.targetParticleCount = Math.max(64, Math.floor(boxArea * CONFIG.particleDensity));
          
-        this.particles = makeCluster(this.targetParticleCount, params.targetHalf);
     }
     
 
     paintFullNoise(data) {
         paintFullNoisePure({ w: this.canvas.width, h: this.canvas.height, data });
     }
-     
+    
+    // 从簇层视频首帧求「光点起始位置」（非黑像素质心）：预览闪烁方块据此定位。
+    _captureStartCenter() {
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const v = this.video;
+        if (!v || v.readyState < 2 || !v.videoWidth)
+            return [w / 2, h / 2];
+        const off = document.createElement("canvas");
+        off.width = w;
+        off.height = h;
+        const octx = off.getContext("2d", { alpha: false });
+        octx.drawImage(v, 0, 0, w, h);
+        const d = octx.getImageData(0, 0, w, h).data;
+        let sx = 0;
+        let sy = 0;
+        let n = 0;
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                if (d[(y * w + x) * 4] >= 8) {
+                    sx += x;
+                    sy += y;
+                    n++;
+                }
+            }
+        }
+        return n ? [sx / n, sy / n] : [w / 2, h / 2];
+    }
+    
     start(onTick) {
         if (this.running)
             return;
         this.running = true;
         this.startTime = performance.now();
-        const loop = (now) => {
+        const v = this.video;
+        if (v) {
+            try {
+                v.currentTime = 0;
+            }
+            catch (e) { /* 分片 MP4 无索引时忽略 */ }
+            const p = v.play();
+            if (p && p.catch)
+                p.catch(() => { });
+        }
+        const loop = () => {
             if (!this.running)
                 return;
-            const elapsed = (now - this.startTime) / 1000;
-            const t = Math.min(elapsed / this.params.duration, 1);
+            const fallback = (performance.now() - this.startTime) / 1000 / this.params.duration;
+            const t = Math.max(0, Math.min(v && v.duration ? v.currentTime / this.params.duration : fallback, 1));
             this.renderFrame(t);
-            const center = bezierAt(this.params.controlPoints, t);
-            onTick?.(center, t);
+            onTick?.(null, t);
             if (t >= 1) {
                 this.running = false;
+                if (v)
+                    v.pause();
                 return;
             }
             this.rafId = requestAnimationFrame(loop);
@@ -143,13 +176,14 @@ export class PhantomRenderer {
         this.rafId = requestAnimationFrame(loop);
     }
     
-
     startPreview() {
         if (this.previewing)
             return;
         this.previewing = true;
         this.previewStartTime = performance.now();
-        const center = bezierAt(this.params.controlPoints, 0);
+        if (!this.startCenter)
+            this.startCenter = this._captureStartCenter();
+        const center = this.startCenter;
         const half = this.params.targetHalf;
         const w = this.canvas.width;
         const h = this.canvas.height;
@@ -208,9 +242,14 @@ export class PhantomRenderer {
          
          
          
-        const center = bezierAt(this.params.controlPoints, t);
-        stampClusterPure({ w, h, data }, this.particles, center, CONFIG.particleTargetGain, CONFIG.particleDropRate);
         ctx.putImageData(img, 0, 0);
+        // 簇层视频为黑底 + 簇：黑处保留实时噪声，簇像素取较亮者（lighten）。
+        const v = this.video;
+        if (v && v.readyState >= 2 && v.videoWidth) {
+            ctx.globalCompositeOperation = "lighten";
+            ctx.drawImage(v, 0, 0, w, h);
+            ctx.globalCompositeOperation = "source-over";
+        }
     }
      
     drawStaticNoise() {
@@ -225,10 +264,12 @@ export class PhantomRenderer {
     pause() {
         this.running = false;
         cancelAnimationFrame(this.rafId);
+        this.video?.pause();
         this.drawStaticNoise();
     }
     stop() {
         this.running = false;
         cancelAnimationFrame(this.rafId);
+        this.video?.pause();
     }
 }
