@@ -1031,6 +1031,7 @@ var SITE_PAGES = [
     'translate.html',
     'user.html',
     'user/VIP.html',
+    'user/file-keys.html',
     'user/gg.html',
     'user/index.html',
     'user/password.html',
