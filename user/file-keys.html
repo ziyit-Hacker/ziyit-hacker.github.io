@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的文件密钥 - ZIYIT</title>
+    <meta name="description" content="RC 文件加密的联网密钥与云加密用量、文件恢复密钥管理。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/file-keys.html">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: default !important;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--ziyit-primary);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: var(--ziyit-bg);
+        }
+
+        .page {
+            max-width: 860px;
+            margin: 20px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .page h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            margin: 6px 0 16px;
+            line-height: 1.7;
+        }
+
+        .back-link {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .quota-box {
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 18px;
+            background: var(--ziyit-bg);
+            font-size: 14px;
+            line-height: 1.9;
+        }
+
+        .quota-box b {
+            color: var(--ziyit-primary);
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar input {
+            padding: 9px 12px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 6px;
+            background: var(--ziyit-bg);
+            color: var(--ziyit-text-primary);
+            font-size: 14px;
+            width: 260px;
+            max-width: 100%;
+        }
+
+        .toolbar button,
+        .key-actions button {
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .toolbar button:hover,
+        .key-actions button:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        .toolbar button:disabled,
+        .key-actions button:disabled {
+            background-color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        .key-actions button.danger {
+            background-color: var(--ziyit-danger);
+        }
+
+        .key-actions button.ghost {
+            background: transparent;
+            color: var(--ziyit-primary);
+            border: 1px solid var(--ziyit-border);
+        }
+
+        .file-card {
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 14px;
+            background: var(--ziyit-bg);
+        }
+
+        .file-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            word-break: break-all;
+            margin-bottom: 8px;
+        }
+
+        .file-tag {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--ziyit-text-secondary);
+            margin-left: 6px;
+        }
+
+        .file-meta {
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            line-height: 1.9;
+            word-break: break-all;
+        }
+
+        .key-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .key-panel {
+            border: 1px solid var(--ziyit-primary);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: var(--ziyit-bg);
+            font-size: 14px;
+            line-height: 1.9;
+        }
+
+        .key-panel code {
+            font-family: Consolas, 'Courier New', monospace;
+            user-select: all;
+            word-break: break-all;
+        }
+
+        .key-panel .copy-btn {
+            margin-left: 8px;
+            padding: 2px 10px;
+            font-size: 12px;
+            font-weight: 400;
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .loading,
+        .error-box,
+        .empty-box {
+            padding: 18px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--ziyit-text-secondary);
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 10px;
+        }
+
+        .error-box {
+            color: var(--ziyit-danger);
+            border-color: var(--ziyit-danger);
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) {}
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+</head>
+
+<body>
+
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page">
+        <h1>我的文件密钥</h1>
+        <a href="javascript:history.back()" class="back-link">返回</a>
+        <p class="page-sub">
+            RC 文件加密的「联网密钥」与「云加密」用量，以及每个文件的恢复密钥。
+            云加密时文件本身不会保存在服务端；恢复密钥由服务端加密托管，查看需再次输入登录密码。
+        </p>
+
+        <div class="quota-box" id="quotaArea">加载中…</div>
+
+        <div class="toolbar">
+            <input type="password" id="verifyPassword" autocomplete="off" placeholder="查看恢复密钥需输入登录密码">
+            <button type="button" id="refreshBtn">刷新</button>
+        </div>
+
+        <div class="key-panel" id="keyPanel" style="display:none;"></div>
+
+        <div id="fileArea"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!ZIYIT_API.getToken()) {
+                alert('请先登录');
+                window.location.href = './';
+                return;
+            }
+
+            var quotaArea = document.getElementById('quotaArea');
+            var fileArea = document.getElementById('fileArea');
+            var keyPanel = document.getElementById('keyPanel');
+            var pwdInput = document.getElementById('verifyPassword');
+            var refreshBtn = document.getElementById('refreshBtn');
+
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            function fmtNum(n) {
+                if (n === 'inf' || n === -1 || n === '-1' || n == null) return '不限';
+                return String(n);
+            }
+
+            function fmtSize(n) {
+                if (n == null) return '未知';
+                if (n < 1024) return n + ' B';
+                if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+                return (n / (1024 * 1024)).toFixed(2) + ' MB';
+            }
+
+            function fmtTime(t) {
+                if (!t) return '-';
+                var d = new Date(t);
+                if (isNaN(d.getTime())) return esc(t);
+                var p = function (x) { return (x < 10 ? '0' : '') + x; };
+                return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+            }
+
+            function errMsg(err, fallback) {
+                if (err && err.data) {
+                    if (typeof err.data === 'string' && err.data) return err.data;
+                    if (err.data.detail) return typeof err.data.detail === 'string' ? err.data.detail : JSON.stringify(err.data.detail);
+                    if (err.data.message) return err.data.message;
+                }
+                if (err && err.status === 401) return '登录状态已失效，请重新登录';
+                return fallback || '请求失败，请稍后再试';
+            }
+
+            function md5Base64(text) {
+                if (typeof CryptoJS === 'undefined' || !CryptoJS.MD5) return null;
+                return CryptoJS.MD5(text).toString(CryptoJS.enc.Base64);
+            }
+
+            function copyText(text, btn) {
+                var done = function () {
+                    var old = btn.textContent;
+                    btn.textContent = '已复制';
+                    setTimeout(function () { btn.textContent = old; }, 1500);
+                };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(done, function () { alert('复制失败，请手动选择复制'); });
+                } else {
+                    alert('当前浏览器不支持自动复制，请手动选择复制');
+                }
+            }
+
+            function downloadKeyFile(rkid, rkey, fileName) {
+                var blob = new Blob([rkid + '\n' + rkey + '\n'], { type: 'text/plain;charset=utf-8' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = (String(fileName || 'recovery').replace(/\.[^.]+$/, '') || 'recovery') + '.key';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+            }
+
+            function showKeyPanel(data) {
+                var html = '';
+                html += '<div><b>' + esc(data.fileName || 'unnamed') + '</b></div>';
+                html += '<div>文件标识：<code>' + esc(data.fileId) + '</code><button type="button" class="copy-btn" data-copy="' + esc(data.fileId) + '">复制</button></div>';
+                html += '<div>恢复密钥 ID：<code>' + esc(data.recoveryKeyId) + '</code><button type="button" class="copy-btn" data-copy="' + esc(data.recoveryKeyId) + '">复制</button></div>';
+                html += '<div>恢复密钥：<code>' + esc(data.recoveryKey) + '</code><button type="button" class="copy-btn" data-copy="' + esc(data.recoveryKey) + '">复制</button></div>';
+                html += '<div style="color:var(--ziyit-text-secondary);margin-top:6px;">在 RC 中选择「恢复密钥解密」并载入下方 .key 文件即可解密（第 1 行是密钥 ID，第 2 行是恢复密钥）。</div>';
+                html += '<div style="margin-top:10px;"><button type="button" id="downloadKeyBtn">下载 .key 恢复密钥文件</button>' +
+                    '<button type="button" class="copy-btn" id="closeKeyBtn" style="margin-left:8px;">关闭</button></div>';
+                keyPanel.innerHTML = html;
+                keyPanel.style.display = 'block';
+
+                Array.prototype.forEach.call(keyPanel.querySelectorAll('[data-copy]'), function (btn) {
+                    btn.addEventListener('click', function () { copyText(btn.getAttribute('data-copy'), btn); });
+                });
+                document.getElementById('downloadKeyBtn').addEventListener('click', function () {
+                    downloadKeyFile(data.recoveryKeyId, data.recoveryKey, data.fileName);
+                });
+                document.getElementById('closeKeyBtn').addEventListener('click', function () {
+                    keyPanel.style.display = 'none';
+                    keyPanel.innerHTML = '';
+                });
+                keyPanel.scrollIntoView({ block: 'nearest' });
+            }
+
+            function renderQuota(res) {
+                var q = (res && res.quota) || {};
+                var cloud = q.cloud || {};
+                var online = q.onlineKey || {};
+                quotaArea.innerHTML =
+                    '云加密（本月 ' + esc(q.month || '-') + '）：<b>' + (cloud.used || 0) + ' / ' + fmtNum(cloud.limit) +
+                    '</b>，剩余 ' + fmtNum(cloud.remaining) + '<br>' +
+                    '联网密钥（当前托管）：<b>' + (online.used || 0) + ' / ' + fmtNum(online.limit) +
+                    '</b>，剩余 ' + fmtNum(online.remaining) + '<br>' +
+                    '<span style="color:var(--ziyit-text-secondary);font-size:13px;">用户类型：' + esc(res && res.userType || '-') +
+                    '。云加密每月重置次数，删除托管密钥会立即返还一个联网密钥额度。</span>';
+            }
+
+            function renderList(files) {
+                if (!files || !files.length) {
+                    fileArea.innerHTML = '<div class="empty-box">暂无文件加密记录。在 RC 中使用联网密钥或云加密后，这里会显示对应文件的恢复密钥。</div>';
+                    return;
+                }
+                var html = '';
+                files.forEach(function (f) {
+                    html += '<div class="file-card">' +
+                        '<div class="file-title">' + esc(f.fileName || 'unnamed') + '<span class="file-tag">（' + esc(f.serviceName || '-') + '）</span></div>' +
+                        '<div class="file-meta">' +
+                        '文件标识：' + esc(f.fileId) + '<br>' +
+                        '大小：' + esc(fmtSize(f.fileSize)) + '　算法：' + esc(f.algorithm || '-') + '<br>' +
+                        '加密时间：' + esc(fmtTime(f.createdAt)) +
+                        '</div>' +
+                        '<div class="key-actions">' +
+                        '<button type="button" data-act="view" data-id="' + esc(f.fileId) + '">查看恢复密钥</button>' +
+                        '<button type="button" class="danger" data-act="del" data-id="' + esc(f.fileId) + '" data-name="' + esc(f.fileName || '') + '" data-service="' + esc(f.service || '') + '">删除密钥</button>' +
+                        '</div></div>';
+                });
+                fileArea.innerHTML = html;
+
+                Array.prototype.forEach.call(fileArea.querySelectorAll('button[data-act]'), function (btn) {
+                    btn.addEventListener('click', function () {
+                        var id = btn.getAttribute('data-id');
+                        if (btn.getAttribute('data-act') === 'view') {
+                            revealKey(id, btn);
+                        } else {
+                            deleteKey(id, btn.getAttribute('data-name'), btn.getAttribute('data-service') === 'online_key', btn);
+                        }
+                    });
+                });
+            }
+
+            function loadFiles() {
+                quotaArea.textContent = '加载中…';
+                fileArea.innerHTML = '<div class="loading">加载中…</div>';
+                refreshBtn.disabled = true;
+                ZIYIT_API.rcFiles().then(function (res) {
+                    renderQuota(res);
+                    renderList((res && res.files) || []);
+                }).catch(function (err) {
+                    quotaArea.textContent = '用量加载失败';
+                    fileArea.innerHTML = '<div class="error-box">' + esc(errMsg(err, '加载失败，请稍后再试')) + '</div>';
+                }).finally(function () {
+                    refreshBtn.disabled = false;
+                });
+            }
+
+            function revealKey(fileId, btn) {
+                var password = pwdInput.value;
+                if (!password) {
+                    alert('请先在上方输入登录密码');
+                    pwdInput.focus();
+                    return;
+                }
+                var md5 = md5Base64(password);
+                if (!md5) {
+                    alert('密码加密组件加载失败，请检查网络后刷新页面重试');
+                    return;
+                }
+                btn.disabled = true;
+                btn.textContent = '验证中…';
+                ZIYIT_API.rcRevealRecoveryKey(fileId, md5).then(function (data) {
+                    pwdInput.value = '';
+                    showKeyPanel(data);
+                }).catch(function (err) {
+                    alert(errMsg(err, '查看失败，请稍后再试'));
+                }).finally(function () {
+                    btn.disabled = false;
+                    btn.textContent = '查看恢复密钥';
+                });
+            }
+
+            function deleteKey(fileId, fileName, isOnlineKey, btn) {
+                var tip = isOnlineKey
+                    ? '确定删除「' + fileName + '」的恢复密钥吗？删除后服务端不再保存该密钥，并立即返还一个联网密钥额度；但已加密的文件将无法再用该恢复密钥解密。'
+                    : '确定删除「' + fileName + '」的恢复密钥吗？删除后服务端不再保存该密钥；云加密已消耗的次数不会返还，已加密的文件将无法再用该恢复密钥解密。';
+                if (!confirm(tip)) return;
+                btn.disabled = true;
+                ZIYIT_API.rcDeleteFile(fileId).then(function () {
+                    keyPanel.style.display = 'none';
+                    keyPanel.innerHTML = '';
+                    loadFiles();
+                }).catch(function (err) {
+                    alert(errMsg(err, '删除失败，请稍后再试'));
+                    btn.disabled = false;
+                });
+            }
+
+            refreshBtn.addEventListener('click', loadFiles);
+            loadFiles();
+        });
+    </script>
+    <script>
+
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(item => {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                const loginLink = document.getElementById('loginLink');
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(item => {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

@@ -702,6 +702,21 @@
         return role === 'zc' || role === 'admin' || role === 'vip' || role === 'vip用户' || role === 'isztg' || role === 'ztg';
     }
 
+    // ---- RC 文件加密：恢复密钥托管 / 云加密用量 ----
+    function rcFiles() {
+        return request('/rc/files');
+    }
+
+    // 查看某个文件的恢复密钥（需二次验证登录密码，md5Password 为 MD5 的 Base64）
+    function rcRevealRecoveryKey(fileId, md5Password) {
+        return post('/rc/files/' + encodeURIComponent(fileId) + '/recovery-key', { password: md5Password });
+    }
+
+    // 删除某条托管记录（同时销毁服务端保存的恢复密钥）
+    function rcDeleteFile(fileId) {
+        return request('/rc/files/' + encodeURIComponent(fileId), { method: 'DELETE' });
+    }
+
      
     function backroomsList() {
         return request('/backrooms/levels');
@@ -881,6 +896,9 @@
         appealReply: appealReply,
         userType: userType,
         isVip: isVip,
+        rcFiles: rcFiles,
+        rcRevealRecoveryKey: rcRevealRecoveryKey,
+        rcDeleteFile: rcDeleteFile,
         backroomsList: backroomsList,
         backroomsView: backroomsView,
         backroomsSubmit: backroomsSubmit,

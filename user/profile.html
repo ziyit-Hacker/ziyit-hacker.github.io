@@ -274,6 +274,11 @@
         </div>
 
         <div class="section">
+            <h2>文件恢复密钥 / 云加密用量</h2>
+            <div id="rcCryptoArea" style="font-size: 13px;">加载中...</div>
+        </div>
+
+        <div class="section">
             <h2>登录记录</h2>
             <div id="loginHistoryArea" style="font-size: 13px;">
                 <div class="ziyit-loading">
@@ -720,6 +725,39 @@
                     });
                 }
             }
+
+            // ---- 文件恢复密钥 / 云加密用量（明细在 file-keys.html 中管理） ----
+            (function () {
+                const rcArea = document.getElementById('rcCryptoArea');
+                const rcQuotaText = function (item) {
+                    item = item || {};
+                    const limit = item.limit === 'inf' ? '不限' : (item.limit == null ? '-' : item.limit);
+                    return (item.used || 0) + ' / ' + limit;
+                };
+                ZIYIT_API.rcFiles().then(function (res) {
+                    const q = (res && res.quota) || {};
+                    rcArea.innerHTML = '';
+                    const line = document.createElement('p');
+                    line.style.margin = '0 0 8px 0';
+                    line.textContent = '云加密（本月 ' + (q.month || '-') + '）：' + rcQuotaText(q.cloud) +
+                        '　联网密钥（当前托管）：' + rcQuotaText(q.onlineKey);
+                    rcArea.appendChild(line);
+                    const link = document.createElement('p');
+                    link.style.margin = '0';
+                    const a = document.createElement('a');
+                    a.href = 'file-keys.html';
+                    a.textContent = '我的文件密钥 ›';
+                    link.appendChild(a);
+                    link.appendChild(document.createTextNode('（查看恢复密钥 / 下载 .key 文件 / 删除）'));
+                    rcArea.appendChild(link);
+                }).catch(function (err) {
+                    rcArea.innerHTML = '';
+                    const tip = document.createElement('span');
+                    tip.textContent = getErrMsg(err, '加载失败，请稍后再试');
+                    tip.style.color = 'var(--ziyit-danger)';
+                    rcArea.appendChild(tip);
+                });
+            })();
 
             loadUser();
 
