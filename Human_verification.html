@@ -662,7 +662,8 @@
     }
   </script>
   <script>
-    window.PHANTOM_API_KEY = (function () { var a = '6751407f711a5c5c500f541a6e6f', b = '0174711a7d006240061a5f41027359', h = a + b, r = ''; for (var i = 0; i < h.length; i += 2) { r += String.fromCharCode(parseInt(h.substr(i, 2), 16) ^ 0x37); } return r; })();
+    // v0.3.7：本页不再硬编码 API 密钥——控件自己会向 /session 领短期票据（密钥永不下发）。
+    // 下方"免费获取 API Key"拿到的是用户自己的密钥，则改走 api-key 头。
     window.__phantom = { verified: false, challengeId: '', sessionId: '', pendingSubmit: false };
   </script>
   <script type="module" src="https://ziyit-hacker.github.io/Human_verification/main.js"></script>
@@ -751,13 +752,8 @@
         getFreeApiKey();
       }
 
-      if (!window.PHANTOM_API_KEY && !localStorage.getItem('phantom_api_key')) {
-        setTimeout(function () {
-          if (confirm('未检测到 API Key，是否立即免费获取？（每月30次）')) {
-            showApiKeyDialog();
-          }
-        }, 800);
-      }
+      // v0.3.7：控件默认走 /session 短期票据，无需 API Key，故不再自动弹窗索要密钥；
+      // 想用自己的密钥（独立配额/统计）时点页面上的"免费获取 API Key"按钮即可。
 
       var style = document.createElement('style');
       style.textContent = '.api-key-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:var(--radius-full);background:var(--card);color:var(--fg);font-size:0.85rem;cursor:pointer;transition:all 150ms ease;font-family:var(--font-body);}.api-key-btn:hover{border-color:var(--accent);background:var(--muted);}.api-key-btn svg{width:16px;height:16px;}';

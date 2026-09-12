@@ -483,6 +483,9 @@ class WidgetSession {
             points: samples,
             lastPointT_ms: Date.now(),
             env: (envEvidence && envEvidence.env) || undefined,
+            // v0.3.8 多维行为特征：指针进出画布 / 失焦 / 按压起止 / 多点触控 /
+            // 合并事件数。后端只做"硬矛盾否决 + 轻权重"，未上报（老浏览器）按中性处理。
+            beh: this.tracker?.getBehavior() || undefined,
         };
         const plaintext = new TextEncoder().encode(JSON.stringify(payload));
         const { iv, ciphertext } = await encrypt(this.sessionKey, plaintext);
