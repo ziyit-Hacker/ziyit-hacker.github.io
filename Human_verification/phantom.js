@@ -145,6 +145,14 @@ class WidgetSession {
             writable: true,
             value: 0
         });
+        // 起手提示段时长（毫秒）：由 /challenge 的加密 params 下发（视频开头就是这段，
+        // 前端按住即从 0 秒整段播、按同一时长切"提示 → 跟随"）。默认取本地 CONFIG 兜底。
+        Object.defineProperty(this, "previewMs", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: PREVIEW_MS
+        });
          
         Object.defineProperty(this, "duration", {
             enumerable: true,
@@ -253,9 +261,16 @@ class WidgetSession {
             this.streamEnabled = !!streamCfg.enabled;
             this.streamIntervalMs = Number(streamCfg.intervalMs) > 0 ? Number(streamCfg.intervalMs) : 400;
             const videoEl = await this._prepareVideo(challenge);
+            // previewSeconds 由后端下发且与"视频里真实存在的提示段长度"同源，
+            // 不用本地 CONFIG 硬编码，避免前后端漂移导致切割点落在提示段中间。
+            const previewSeconds = Number(raw.previewSeconds) > 0
+                ? Number(raw.previewSeconds)
+                : CONFIG.previewSeconds;
+            this.previewMs = previewSeconds * 1000;
             const params = {
                 video: videoEl,
                 duration: raw.duration,
+                previewSeconds,
                 fps: raw.fps,
                 targetHalf: raw.targetHalf,
             };
@@ -301,12 +316,18 @@ class WidgetSession {
             this.previewing = true;
             this.overlay.classList.add("phantom-hidden");
             this.setHint("preview", "手指/鼠标拖动到闪烁的方块等待");
-            this.renderer?.startPreview();
-            this.previewTimer = window.setTimeout(beginCollect, PREVIEW_MS);
+            // v0.3.5：视频【自带头 previewMs 的起手提示段】，按住即从 0 秒整段播 ——
+            // 闪烁方块、随后移动的簇、整段的静止诱饵块全在视频里，前端只负责垫噪声。
+            this.renderer?.start((_center, t) => {
+                if (t >= 1)
+                    this.setHint("stopped", "请松手");
+            });
+            this.previewTimer = window.setTimeout(beginCollect, this.previewMs);
         };
          
          
          
+        // 提示段结束：从这一刻起才真正开始记轨迹（视频仍在继续播跟随段）。
         const beginCollect = () => {
             if (!this.previewing || this.finished)
                 return;
@@ -314,14 +335,8 @@ class WidgetSession {
             this.collecting = true;
             this.status.textContent = "";
             this.setHint("collect", "按住跟随任意一个方块移动");
-            this.renderer?.stopPreview();
-             
-            this.renderer?.start((_center, t) => {
-                if (t >= 1)
-                    this.setHint("stopped", "请松手");
-            });
             this.tracker?.start();
-            // v0.3.3：从开始采集（≈视频开始播放）起，按后端下发的节奏持续上报采样点。
+            // v0.3.3：从开始采集（≈视频进入跟随段）起，按后端下发的节奏持续上报采样点。
             this._startStream();
              
             this.activateBtn.classList.add("phantom-holding");
@@ -333,8 +348,9 @@ class WidgetSession {
             if (this.previewing) {
                 window.clearTimeout(this.previewTimer);
                 this.previewing = false;
-                this.renderer?.stopPreview();
-                this.renderer?.drawStaticNoise();
+                // 提示段就松手：暂停视频（停在当前帧）并画回静态噪声，等用户重新按住——
+                // 下次按下会从 0 秒重新播，起点提示重来一遍。
+                this.renderer?.pause();
                 this.status.textContent = "";
                 this.setHint("ready", "按住下方按钮并马上拖动到方块");
                 return;
@@ -559,8 +575,6 @@ class WidgetSession {
         window.clearTimeout(this.previewTimer);
         window.clearInterval(this.streamTimer);
         this.streamTimer = 0;
-        this.previewing = false;
-        this.renderer?.stopPreview();
         this.renderer?.stop();
         this.tracker?.stop();
         // 释放前端侧视频资源：暂停 + 脱离 DOM + 撤销 Blob URL，避免内存泄漏。
