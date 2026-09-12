@@ -20,6 +20,18 @@
 import { CONFIG } from "./config.js";
 import { paintFullNoise as paintFullNoisePure } from "./particles.js";
  
+// 起始方块（预览阶段"闪烁的方块"）的两态参数：0.75Hz 方波，一半时间亮、一半时间灭。
+// 灭态一个像素都不画 → 该区域就是全屏噪声本身（0~255 均匀，均值 127.5），单帧截图
+// 完全看不出这里有个方块；亮态把整块推到 245~255 的高亮带（逐像素随机、非整块同灰度），
+// 平均亮度 ≈250 对背景 127.5 —— 浮起近一倍，闪烁一眼可见。
+const FLASH_HZ = 0.75;
+const FLASH_DUTY = 0.5;
+const FLASH_VALUE_MIN = 245;
+// 视频簇层为「黑底 + 簇」：只有亮度 > 此阈值的像素才算簇、才覆盖到噪声上。
+// 取 8 与 _captureStartCenter 同一判据；H.264 会让黑底残留 1~3 级振铃，不能算簇。
+const CLUSTER_THRESHOLD = 8;
+// 静止诱饵块数量：在噪声层额外撒几块「与真方块单帧完全同构」的静止块（见 _buildDecoys）。
+const DECOY_COUNT = 3;
 
 export class PhantomRenderer {
     constructor(canvas, params) {
@@ -85,6 +97,24 @@ export class PhantomRenderer {
             configurable: true,
             writable: true,
             value: void 0
+        });
+        Object.defineProperty(this, "videoFrameCanvas", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
+        });
+        Object.defineProperty(this, "videoFrameCtx", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
+        });
+        Object.defineProperty(this, "decoys", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
         });
         
 
@@ -187,40 +217,40 @@ export class PhantomRenderer {
         const half = this.params.targetHalf;
         const w = this.canvas.width;
         const h = this.canvas.height;
+        const left = center[0] - half;
+        const top = center[1] - half;
+        const size = 2 * half;
         const loop = () => {
             if (!this.previewing)
                 return;
             const elapsed = (performance.now() - this.previewStartTime) / 1000;
-             
-            // 起始方块的"闪烁"只走【密度】，不再走【整块亮度】：
-            //   - 每个像素取与全屏噪声同分布的随机灰度（0~255），再用 lighten（取较亮者）
-            //     叠到噪声上 —— 合成方式与簇层 video 完全一致；
-            //   - 旧实现给整块刷同一个灰度值（实心纯色方块），一眼就能和随机噪点区分开，
-            //     等于白送一个"亮度阈值即可锁定方块"的指纹，故废弃。
-            const pulse = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(2 * Math.PI * 0.75 * elapsed));
+            // 方波：亮半周期 / 灭半周期，两态泾渭分明（旧的 [0.35,1] 连续 pulse 会让
+            // 方块"一直隐约可见、闪烁却很微弱"——既没隐蔽性也没可见性，两头不占）。
+            const on = (elapsed * FLASH_HZ) % 1 < FLASH_DUTY;
             const img = this.ctx.createImageData(w, h);
             const data = img.data;
              
             this.paintFullNoise(data);
              
-             
-            const left = center[0] - half;
-            const top = center[1] - half;
-            const size = 2 * half;
-            for (let i = 0; i < this.targetParticleCount; i++) {
-                if (Math.random() > pulse)
-                    continue;
-                const px = (left + Math.random() * size) | 0;
-                const py = (top + Math.random() * size) | 0;
-                if (px < 0 || px >= w || py < 0 || py >= h)
-                    continue;
-                const rv = (Math.random() * 256) | 0;
-                const idx = (py * w + px) * 4;
-                const v = rv > data[idx] ? rv : data[idx];
-                data[idx] = v;
-                data[idx + 1] = v;
-                data[idx + 2] = v;
-                data[idx + 3] = 255;
+            // 亮态：把整块铺满 245~255 的高亮带（逐像素随机，不做整块同灰度）。
+            // 用稀疏粒子（旧写法：targetParticleCount 个点、覆盖约 45%）时亮态均值只有
+            // 172 左右，浮起撑不起来；铺满后亮态均值 ≈250，是背景的两倍，闪起来非常扎眼。
+            if (on) {
+                const x0 = Math.max(0, left);
+                const y0 = Math.max(0, top);
+                const x1 = Math.min(w, left + size);
+                const y1 = Math.min(h, top + size);
+                for (let py = y0; py < y1; py++) {
+                    let idx = (py * w + x0) * 4;
+                    for (let px = x0; px < x1; px++) {
+                        const v = FLASH_VALUE_MIN + ((Math.random() * (256 - FLASH_VALUE_MIN)) | 0);
+                        data[idx] = v;
+                        data[idx + 1] = v;
+                        data[idx + 2] = v;
+                        data[idx + 3] = 255;
+                        idx += 4;
+                    }
+                }
             }
             this.ctx.putImageData(img, 0, 0);
             this.previewRafId = requestAnimationFrame(loop);
@@ -233,6 +263,88 @@ export class PhantomRenderer {
         cancelAnimationFrame(this.previewRafId);
     }
      
+    // 取簇层视频「当前帧」的像素（离屏 canvas 复用，避免每帧新建）。
+    // 视频与画布同为 480×480，drawImage 是 1:1 blit；willReadFrequently 让这块
+    // 走软件光栅，省掉每帧 GPU→CPU 回读的同步开销。
+    _videoFramePixels(w, h) {
+        if (!this.videoFrameCanvas) {
+            this.videoFrameCanvas = document.createElement("canvas");
+            this.videoFrameCanvas.width = w;
+            this.videoFrameCanvas.height = h;
+            this.videoFrameCtx = this.videoFrameCanvas.getContext("2d", {
+                alpha: false,
+                willReadFrequently: true
+            });
+        }
+        const octx = this.videoFrameCtx;
+        if (!octx)
+            return null;
+        octx.drawImage(this.video, 0, 0, w, h);
+        return octx.getImageData(0, 0, w, h).data;
+    }
+    
+    // 生成静止诱饵块（每个 challenge 一次，此后位置与像素值固定不变）。
+    // 与真方块（视频簇）在【单帧】内完全同构：同样大小的方框（±targetHalf）、同样
+    // 数量的孤立随机像素（targetParticleCount 个）、灰度同为 1~255 均匀、位置同样
+    // 在框内随机 —— 于是任何单帧、任何单帧阈值/形态学检测看到的都是 N+1 个一模一样
+    // 的块，分不出哪个是真的。唯一差别在时域：真方块逐帧刚性平移，诱饵块一动不动。
+    // 诱饵的像素值必须逐帧固定：若每帧重掷，机器只要判「逐帧取值稳定」就能把诱饵
+    // 筛掉，等于白加。
+    _buildDecoys() {
+        if (this.decoys)
+            return;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const half = this.params.targetHalf;
+        const size = 2 * half;
+        const n = this.targetParticleCount;
+        const list = [];
+        for (let k = 0; k < DECOY_COUNT; k++) {
+            // 随机落框，尽量彼此不重叠（真方块会移动，无法预先避让，靠绘制顺序兜底）
+            let bx = 0;
+            let by = 0;
+            for (let tries = 0; tries < 24; tries++) {
+                bx = Math.random() * Math.max(1, w - size);
+                by = Math.random() * Math.max(1, h - size);
+                if (list.every(d => Math.abs(d.bx - bx) >= size || Math.abs(d.by - by) >= size))
+                    break;
+            }
+            const px = new Int32Array(n);
+            const py = new Int32Array(n);
+            const pv = new Uint8Array(n);
+            for (let i = 0; i < n; i++) {
+                px[i] = (bx + Math.random() * size) | 0;
+                py[i] = (by + Math.random() * size) | 0;
+                pv[i] = 1 + ((Math.random() * 255) | 0);
+            }
+            list.push({ bx, by, px, py, pv });
+        }
+        this.decoys = list;
+    }
+
+    // 把诱饵块【原值覆盖】到噪声上 —— 与真簇同一套合成方式（不能用 lighten：那会把
+    // 诱饵区亮度整体抬高，单帧阈值一卡就把它和真方块区分开了）。
+    // 必须在簇层覆盖【之前】调用：否则真簇经过此处时，像素会被诱饵的固定值抹掉。
+    _drawDecoys(data) {
+        this._buildDecoys();
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        for (const d of this.decoys) {
+            for (let i = 0; i < d.px.length; i++) {
+                const x = d.px[i];
+                const y = d.py[i];
+                if (x < 0 || x >= w || y < 0 || y >= h)
+                    continue;
+                const idx = (y * w + x) * 4;
+                const v = d.pv[i];
+                data[idx] = v;
+                data[idx + 1] = v;
+                data[idx + 2] = v;
+                data[idx + 3] = 255;
+            }
+        }
+    }
+
     renderFrame(t) {
         const { ctx } = this;
          
@@ -246,16 +358,32 @@ export class PhantomRenderer {
          
         this.paintFullNoise(data);
          
+        // 静止诱饵块（单帧与真方块同构、时域上不动）：先画，随后簇层覆盖压在上面，
+        // 保证真簇像素永远不被诱饵抹掉。
+        this._drawDecoys(data);
          
-         
-        ctx.putImageData(img, 0, 0);
-        // 簇层视频为黑底 + 簇：黑处保留实时噪声，簇像素取较亮者（lighten）。
+        // 簇层视频为黑底 + 簇：把「非黑像素」（= 簇）的**原值**覆盖到噪声上，黑底保留
+        // 实时噪声。为什么不用 lighten（取较亮者）：max(噪声, 簇值) 会把簇区的亮度分布
+        // 整体抬高（均值 170 对背景 127.5），单帧截图用亮度阈值就能把方块框出来。
+        // 改成原值覆盖后，簇区的像素分布与噪声**同分布**（都是 0~255 均匀），
+        // 单帧截图零信号 —— 人眼能看见它，靠的是「簇像素逐帧保持不变、周围噪声逐帧重掷」
+        // 这个时域差异加上方块在移动（视觉残留/运动感知那一类），而不是靠亮度。
         const v = this.video;
         if (v && v.readyState >= 2 && v.videoWidth) {
-            ctx.globalCompositeOperation = "lighten";
-            ctx.drawImage(v, 0, 0, w, h);
-            ctx.globalCompositeOperation = "source-over";
+            const vd = this._videoFramePixels(w, h);
+            if (vd) {
+                const len = data.length;
+                for (let i = 0; i < len; i += 4) {
+                    const vv = vd[i];
+                    if (vv > CLUSTER_THRESHOLD) {
+                        data[i] = vv;
+                        data[i + 1] = vd[i + 1];
+                        data[i + 2] = vd[i + 2];
+                    }
+                }
+            }
         }
+        ctx.putImageData(img, 0, 0);
     }
      
     drawStaticNoise() {
