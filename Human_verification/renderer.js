@@ -192,7 +192,12 @@ export class PhantomRenderer {
                 return;
             const elapsed = (performance.now() - this.previewStartTime) / 1000;
              
-            const brightnessScale = 0.55 + 0.45 * Math.sin(2 * Math.PI * 0.75 * elapsed);
+            // 起始方块的"闪烁"只走【密度】，不再走【整块亮度】：
+            //   - 每个像素取与全屏噪声同分布的随机灰度（0~255），再用 lighten（取较亮者）
+            //     叠到噪声上 —— 合成方式与簇层 video 完全一致；
+            //   - 旧实现给整块刷同一个灰度值（实心纯色方块），一眼就能和随机噪点区分开，
+            //     等于白送一个"亮度阈值即可锁定方块"的指纹，故废弃。
+            const pulse = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(2 * Math.PI * 0.75 * elapsed));
             const img = this.ctx.createImageData(w, h);
             const data = img.data;
              
@@ -203,14 +208,15 @@ export class PhantomRenderer {
             const top = center[1] - half;
             const size = 2 * half;
             for (let i = 0; i < this.targetParticleCount; i++) {
-                if (Math.random() < CONFIG.particleDropRate)
+                if (Math.random() > pulse)
                     continue;
                 const px = (left + Math.random() * size) | 0;
                 const py = (top + Math.random() * size) | 0;
                 if (px < 0 || px >= w || py < 0 || py >= h)
                     continue;
-                const v = Math.min(255, (Math.max(0.1, brightnessScale) * 255) | 0);
+                const rv = (Math.random() * 256) | 0;
                 const idx = (py * w + px) * 4;
+                const v = rv > data[idx] ? rv : data[idx];
                 data[idx] = v;
                 data[idx + 1] = v;
                 data[idx + 2] = v;
