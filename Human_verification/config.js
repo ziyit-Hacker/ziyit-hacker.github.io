@@ -1,11 +1,3 @@
- 
- 
- 
- 
- 
-
-
-
 export function isMobileViewport() {
     if (typeof window === "undefined") return false;
     const coarse = typeof window.matchMedia === "function" &&
@@ -34,7 +26,7 @@ export const CONFIG = {
 
      
     particleDensity: 0.6,
-    particleDropRate: 0.05,
+    particleDropRate: 0.0,
     particleTargetGain: 0,
     particleBrightness: 0.55,
     particleBrightnessVar: 0.45,
