@@ -403,10 +403,10 @@
                 quotaArea.innerHTML =
                     '云加密（本月 ' + esc(q.month || '-') + '）：<b>' + (cloud.used || 0) + ' / ' + fmtNum(cloud.limit) +
                     '</b>，剩余 ' + fmtNum(cloud.remaining) + '<br>' +
-                    '联网密钥（当前托管）：<b>' + (online.used || 0) + ' / ' + fmtNum(online.limit) +
+                    '托管密钥（联网密钥 + 云加密）：<b>' + (online.used || 0) + ' / ' + fmtNum(online.limit) +
                     '</b>，剩余 ' + fmtNum(online.remaining) + '<br>' +
                     '<span style="color:var(--ziyit-text-secondary);font-size:13px;">用户类型：' + esc(res && res.userType || '-') +
-                    '。云加密每月重置次数，删除托管密钥会立即返还一个联网密钥额度。</span>';
+                    '。云加密每月重置次数；两种方式都会占 1 个托管额度（共用同一栏），删除密钥记录立即返还 1 个托管额度，云加密本月已消耗的次数不返还。</span>';
             }
 
             function renderList(files) {
@@ -484,8 +484,8 @@
 
             function deleteKey(fileId, fileName, isOnlineKey, btn) {
                 var tip = isOnlineKey
-                    ? '确定删除「' + fileName + '」的恢复密钥吗？删除后服务端不再保存该密钥，并立即返还一个联网密钥额度；但已加密的文件将无法再用该恢复密钥解密。'
-                    : '确定删除「' + fileName + '」的恢复密钥吗？删除后服务端不再保存该密钥；云加密已消耗的次数不会返还，已加密的文件将无法再用该恢复密钥解密。';
+                    ? '确定删除「' + fileName + '」的恢复密钥吗？删除后服务端不再保存该密钥，并立即返还 1 个托管额度；但已加密的文件将无法再用该恢复密钥解密。'
+                    : '确定删除「' + fileName + '」的恢复密钥吗？删除后服务端不再保存该密钥，并立即返还 1 个托管额度（云加密本月已消耗的次数不返还）；但已加密的文件将无法再用该恢复密钥解密。';
                 if (!confirm(tip)) return;
                 btn.disabled = true;
                 ZIYIT_API.rcDeleteFile(fileId).then(function () {
