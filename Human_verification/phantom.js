@@ -311,7 +311,9 @@ class WidgetSession {
             e.preventDefault();
             if (this.collecting || this.previewing || this.finished)
                 return;
-             
+            // v0.3.8 行为留证：按下必须在这里记——起手提示段结束才调 tracker.start()，
+            // 等那时再挂监听已经错过了这次按下（真人会被误判"没按压"）。
+            this.tracker?.notePress(e);
              
             this.previewing = true;
             this.overlay.classList.add("phantom-hidden");
@@ -344,6 +346,9 @@ class WidgetSession {
         const onUp = async () => {
             if (this.finished)
                 return;
+            // v0.3.8 行为留证：抬起也要先记——下面 collect 分支里会先调 tracker.stop()
+            // （它解绑监听并把 active 置 false），挂在 window 上的 pointerup 就轮不到了。
+            this.tracker?.noteRelease();
              
             if (this.previewing) {
                 window.clearTimeout(this.previewTimer);

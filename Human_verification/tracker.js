@@ -33,9 +33,14 @@ export class TrajectoryTracker {
         });
         // v0.3.8 多维行为特征：这些计数只为"留证"，不参与画线。
         // 判定要点：真人必定先进画布、必有按压、move 事件数与采样点同源；纯脚本
-        // 灌进来的坐标没有对应的事件。为避免误伤，enter/leave 按【几何位置】统计
-        // 而不是监听 canvas 的 pointerenter——拖拽是从按钮上按下再拖进画布的，
-        // 且触摸时浏览器会把指针隐式捕获在按钮上，canvas 级监听根本收不到事件。
+        // 灌进来的坐标没有对应的事件。
+        // ⚠ 两个坑（v0.3.8 首版踩过，真人一直被误判"没按下"）：
+        //   1) 拖拽是【先按住按钮】再拖进画布，而起手提示段结束才开始采集
+        //      （tracker.start() 在提示段之后），此时 pointerdown 早已发生过——
+        //      所以按压必须由 phantom 在 onDown/onUp 里【显式通知】本类，
+        //      不能在 start() 里才去挂 pointerdown 监听。
+        //   2) 进/出画布按【几何位置】统计，不监听 canvas 的 pointerenter：触摸时
+        //      浏览器把指针隐式捕获在按钮上，canvas 级监听根本收不到。
         Object.defineProperty(this, "beh", {
             enumerable: true,
             configurable: true,
@@ -48,47 +53,19 @@ export class TrajectoryTracker {
             writable: true,
             value: false
         });
-        Object.defineProperty(this, "activePointers", {
+        Object.defineProperty(this, "pressed", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: false
+        });
+        // 提交时冻结的 beh 快照：/verify 是异步的，若用户在等结果时又点了别处，
+        // 计数会被新一轮按压重置，这里保证上报的是"本次拖拽结束时"的那一份。
+        Object.defineProperty(this, "behSnapshot", {
             enumerable: true,
             configurable: true,
             writable: true,
             value: null
-        });
-        Object.defineProperty(this, "onPointerDownWin", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: (e) => {
-                if (!this.active || !this.beh)
-                    return;
-                this.beh.downCount++;
-                if (e.pointerType)
-                    this.beh.pointerType = e.pointerType;
-                this.activePointers.add(e.pointerId);
-                this.beh.maxPointers = Math.max(this.beh.maxPointers, this.activePointers.size);
-            }
-        });
-        Object.defineProperty(this, "onPointerUpWin", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: (e) => {
-                if (!this.active || !this.beh)
-                    return;
-                this.beh.upCount++;
-                this.activePointers.delete(e.pointerId);
-            }
-        });
-        Object.defineProperty(this, "onPointerCancelWin", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: (e) => {
-                if (!this.active || !this.beh)
-                    return;
-                this.beh.cancelCount++;
-                this.activePointers.delete(e.pointerId);
-            }
         });
         Object.defineProperty(this, "onBlurWin", {
             enumerable: true,
@@ -191,7 +168,7 @@ export class TrajectoryTracker {
                 this.touchActive = false;
                 if (this.beh) {
                     this.beh.upCount++;
-                    this.activePointers.clear();
+                    this.pressed = false;
                 }
             }
         });
@@ -207,10 +184,57 @@ export class TrajectoryTracker {
                 this.touchActive = false;
                 if (this.beh) {
                     this.beh.cancelCount++;
-                    this.activePointers.clear();
+                    this.pressed = false;
                 }
             }
         });
+    }
+    // ---- v0.3.8 按压留证：由 phantom 在 onDown/onUp 里显式调用 ----
+    // 不在本类里挂 window 的 pointerdown：那次按下发生在 start() 之前，监听不上；
+    // 挂 pointerup 又会被 stop() 先解绑（onUp 里先调了 stop()），同样漏计。
+    notePress(ev) {
+        // 注意：按下发生在 start() 之前，beh 可能还没创建，这里要能自建
+        // （老浏览器没有 PointerEvent 就直接不采集，后端按"未上报"中性处理）。
+        if (!this.beh) {
+            if (typeof window === "undefined" || !window.PointerEvent)
+                return;
+            this.beh = {
+                enterCount: 0, leaveCount: 0, downCount: 0, upCount: 0,
+                cancelCount: 0, moveCount: 0, maxPointers: 0, blurCount: 0,
+                coalesced: 0, pointerType: "",
+            };
+            this.insideCanvas = false;
+        }
+        // 新的一轮按压：从这一刻起重新计数，使 beh 覆盖"按下→抬起"完整周期。
+        // 若用户是按着不放（提示段被中止后重新按住），pressed 已为 true 就不再归零。
+        if (!this.pressed) {
+            this.beh.enterCount = 0;
+            this.beh.leaveCount = 0;
+            this.beh.downCount = 0;
+            this.beh.upCount = 0;
+            this.beh.cancelCount = 0;
+            this.beh.moveCount = 0;
+            this.beh.coalesced = 0;
+            this.beh.blurCount = 0;
+            this.insideCanvas = false;
+        }
+        this.pressed = true;
+        this.beh.downCount++;
+        this.beh.maxPointers = Math.max(this.beh.maxPointers, 1);
+        if (ev && ev.pointerType)
+            this.beh.pointerType = ev.pointerType;
+    }
+    noteRelease() {
+        if (!this.beh || !this.pressed)
+            return;
+        this.beh.upCount++;
+        this.pressed = false;
+    }
+    noteCancel() {
+        if (!this.beh || !this.pressed)
+            return;
+        this.beh.cancelCount++;
+        this.pressed = false;
     }
     // v0.3.8：按【几何位置】统计指针进出画布的切换次数（不依赖 DOM 的
     // pointerenter/leave，见构造函数里的说明）。
@@ -233,21 +257,27 @@ export class TrajectoryTracker {
         this.samples = [];
         this.touchActive = false;
         this.rect = this.canvas.getBoundingClientRect();
-        this.insideCanvas = false;
-        this.activePointers = new Set();
-        // 只在支持 PointerEvent 的环境下留证：老浏览器收不到 pointerdown/up，
-        // 上报出去会变成"无按压"的假证据，反而误伤真人。此时整块 beh 不发
-        // （后端按"未上报"中性处理，与旧版行为一致）。
-        this.beh = (typeof window !== "undefined" && window.PointerEvent) ? {
-            enterCount: 0, leaveCount: 0, downCount: 0, upCount: 0,
-            cancelCount: 0, moveCount: 0, maxPointers: 0, blurCount: 0,
-            coalesced: 0, pointerType: "",
-        } : null;
+        // ⚠ 不要在这里重置 beh：按下发生在 start() 之前（起手提示段播完才开始
+        // 采集），notePress() 已经把计数归零并记下了那次按压，此处无条件重置
+        // 会把它抹掉（v0.3.8 首版真人被误判"没按下"的根因）。只在还没创建时兜底。
+        // 只在支持 PointerEvent 的环境下留证：老浏览器收不到 pointerdown，
+        // 上报出去会变成"无按压"的假证据，反而误伤真人。
+        if (!this.beh && typeof window !== "undefined" && window.PointerEvent) {
+            this.beh = {
+                enterCount: 0, leaveCount: 0, downCount: 0, upCount: 0,
+                cancelCount: 0, moveCount: 0, maxPointers: 0, blurCount: 0,
+                coalesced: 0, pointerType: "",
+            };
+            this.insideCanvas = false;
+        }
         this.bind();
     }
     // 供提交负载使用：未采集（老浏览器 / 未 start）返回 null，后端按中性处理。
+    // 优先返回 stop() 时冻结的快照——/verify 是异步的，等结果期间的新点击
+    // 会重置计数，不能把那一轮算进来。
     getBehavior() {
-        return this.beh ? { ...this.beh } : null;
+        const snap = this.behSnapshot || this.beh;
+        return snap ? { ...snap } : null;
     }
     
 
@@ -265,11 +295,8 @@ export class TrajectoryTracker {
     bind() {
          
         window.addEventListener("pointermove", this.onMove, { passive: true });
-        // v0.3.8 行为留证：按压/取消/失焦一律记在 window 上——拖拽起始于按钮
-        // （不是画布），且触摸时指针被隐式捕获在按钮上，画布级监听收不到。
-        window.addEventListener("pointerdown", this.onPointerDownWin, { passive: true });
-        window.addEventListener("pointerup", this.onPointerUpWin, { passive: true });
-        window.addEventListener("pointercancel", this.onPointerCancelWin, { passive: true });
+        // 按压/抬起不在这里挂：按下发生在 start() 之前，且 onUp 里先调了 stop()
+        // 会把监听解掉——一律改由 phantom 显式调用 notePress/noteRelease。
         window.addEventListener("blur", this.onBlurWin);
          
         window.addEventListener("touchstart", this.onTouchStart, { passive: false });
@@ -279,10 +306,15 @@ export class TrajectoryTracker {
     }
     stop() {
         this.active = false;
+        // stop() 是在 onUp（松手）里被调用的：若那会儿还没记到抬起，这里补记一次
+        // ——松手就是本次停止采集的原因。
+        if (this.beh && this.pressed && !this.beh.upCount && !this.beh.cancelCount) {
+            this.beh.upCount++;
+            this.pressed = false;
+        }
+        // 冻结快照：此后就算用户乱点导致计数重置，上报的仍是本次拖拽的那一份。
+        this.behSnapshot = this.beh ? { ...this.beh } : null;
         window.removeEventListener("pointermove", this.onMove);
-        window.removeEventListener("pointerdown", this.onPointerDownWin);
-        window.removeEventListener("pointerup", this.onPointerUpWin);
-        window.removeEventListener("pointercancel", this.onPointerCancelWin);
         window.removeEventListener("blur", this.onBlurWin);
         window.removeEventListener("touchstart", this.onTouchStart);
         window.removeEventListener("touchmove", this.onTouchMove);
