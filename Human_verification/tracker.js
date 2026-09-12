@@ -161,6 +161,17 @@ export class TrajectoryTracker {
          
         return cleaned;
     }
+    // v0.3.3 实时流：取回【自 index 起】新增的采样点（只含 x/y，报给后端做同源比对）。
+    // 只读不删——完整轨迹仍由 stop() 一次性交出，这里仅是"增量切片"。
+    takeSince(index) {
+        const from = Math.max(0, index | 0);
+        const out = [];
+        for (let i = from; i < this.samples.length; i++) {
+            const s = this.samples[i];
+            out.push([s[0], s[1]]);
+        }
+        return out;
+    }
     get lastPointT() {
         return this.samples.length
             ? this.samples[this.samples.length - 1][2]
