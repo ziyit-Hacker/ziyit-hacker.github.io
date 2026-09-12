@@ -20,13 +20,17 @@
 import { CONFIG } from "./config.js";
 import { paintFullNoise as paintFullNoisePure } from "./particles.js";
  
-// 起始方块（预览阶段"闪烁的方块"）的两态参数：0.75Hz 方波，一半时间亮、一半时间灭。
-// 灭态一个像素都不画 → 该区域就是全屏噪声本身（0~255 均匀，均值 127.5），单帧截图
-// 完全看不出这里有个方块；亮态把整块推到 245~255 的高亮带（逐像素随机、非整块同灰度），
-// 平均亮度 ≈250 对背景 127.5 —— 浮起近一倍，闪烁一眼可见。
-const FLASH_HZ = 0.75;
-const FLASH_DUTY = 0.5;
-const FLASH_VALUE_MIN = 245;
+// 起始方块（预览阶段"闪烁的方块"）的两态参数：1.5Hz 方波，两态都铺满整块。
+// 暗态纯黑 0 / 亮态纯白 255 —— 与噪声均值 127.5 上下各差一半，跨度过得比旧版
+// （正弦扑动的 25~255）还大，方块像在原地"黑白翻转"，一眼就能看到。频率也从
+// 0.75Hz 提到 1.5Hz：预览窗口只有 2 秒，旧设置整个窗口只闪一次半，容易整场漏掉。
+// 这里【有意放弃了单帧零信号】：提示块是明示引导，用户按住后必须立刻看见它；
+// 隐蔽性只对挑战阶段那个"移动方块"有意义（那边仍是原值覆盖，单帧与噪声同分布）。
+// 起点本身也不是秘密 —— 视频首帧 K 条候选完全重合于该点，拿到视频就能算出它。
+const FLASH_HZ = 1.5;
+const FLASH_DUTY = 0.55;
+const FLASH_DARK = 0;
+const FLASH_BRIGHT = 255;
 // 视频簇层为「黑底 + 簇」：只有亮度 > 此阈值的像素才算簇、才覆盖到噪声上。
 // 取 8 与 _captureStartCenter 同一判据；H.264 会让黑底残留 1~3 级振铃，不能算簇。
 const CLUSTER_THRESHOLD = 8;
@@ -146,12 +150,15 @@ export class PhantomRenderer {
     }
     
     // 从簇层视频首帧求「光点起始位置」（非黑像素质心）：预览闪烁方块据此定位。
+    // 视频还没解出首帧（readyState 不到 2）或首帧全黑时返回 null，【不谎报画布中心】
+    // —— 位置错了用户会盯着一个永远不会出现方块的地方等，比"这一帧先不闪"更糟。
+    // 预览循环会逐帧重试，视频一就绪就闪在真正的起点（K 条候选首帧完全重合处）。
     _captureStartCenter() {
         const w = this.canvas.width;
         const h = this.canvas.height;
         const v = this.video;
         if (!v || v.readyState < 2 || !v.videoWidth)
-            return [w / 2, h / 2];
+            return null;
         const off = document.createElement("canvas");
         off.width = w;
         off.height = h;
@@ -170,7 +177,7 @@ export class PhantomRenderer {
                 }
             }
         }
-        return n ? [sx / n, sy / n] : [w / 2, h / 2];
+        return n ? [sx / n, sy / n] : null;
     }
     
     start(onTick) {
@@ -211,31 +218,40 @@ export class PhantomRenderer {
             return;
         this.previewing = true;
         this.previewStartTime = performance.now();
-        if (!this.startCenter)
-            this.startCenter = this._captureStartCenter();
-        const center = this.startCenter;
         const half = this.params.targetHalf;
         const w = this.canvas.width;
         const h = this.canvas.height;
-        const left = center[0] - half;
-        const top = center[1] - half;
         const size = 2 * half;
+        let tries = 0;
+        let fallback = null;
         const loop = () => {
             if (!this.previewing)
                 return;
+            // 起点逐帧解析：视频首帧还没解出来时这一帧不画方块（宁可晚闪几帧，也不能
+            // 闪错地方）。取到的真起点才写缓存；连续 45 帧（约 0.75s）仍取不到时才用
+            // 画布中心临时兜底 —— 且兜底值【不写缓存】，视频一就绪就自动纠正回真起点，
+            // 不会被"错误的位置"永久记住。
+            if (!this.startCenter) {
+                this.startCenter = this._captureStartCenter();
+                if (!this.startCenter && ++tries > 45)
+                    fallback = fallback || [w / 2, h / 2];
+            }
+            const center = this.startCenter || fallback;
+            const left = center ? center[0] - half : 0;
+            const top = center ? center[1] - half : 0;
             const elapsed = (performance.now() - this.previewStartTime) / 1000;
-            // 方波：亮半周期 / 灭半周期，两态泾渭分明（旧的 [0.35,1] 连续 pulse 会让
-            // 方块"一直隐约可见、闪烁却很微弱"——既没隐蔽性也没可见性，两头不占）。
+            // 方波：亮半周期 / 暗半周期，两态泾渭分明（旧的 [0.35,1] 连续 pulse 只是
+            // 缓慢呼吸，不够"闪"；现在是整块黑白翻转）。
             const on = (elapsed * FLASH_HZ) % 1 < FLASH_DUTY;
             const img = this.ctx.createImageData(w, h);
             const data = img.data;
              
             this.paintFullNoise(data);
              
-            // 亮态：把整块铺满 245~255 的高亮带（逐像素随机，不做整块同灰度）。
-            // 用稀疏粒子（旧写法：targetParticleCount 个点、覆盖约 45%）时亮态均值只有
-            // 172 左右，浮起撑不起来；铺满后亮态均值 ≈250，是背景的两倍，闪起来非常扎眼。
-            if (on) {
+            // 两态都铺满整块（不用稀疏粒子：旧写法只有约 45% 覆盖，亮态均值才 172、
+            // 暗态还漏了一半噪声，明暗对比撑不起来）。整块纯黑 ↔ 整块纯白。
+            if (center) {
+                const value = on ? FLASH_BRIGHT : FLASH_DARK;
                 const x0 = Math.max(0, left);
                 const y0 = Math.max(0, top);
                 const x1 = Math.min(w, left + size);
@@ -243,10 +259,9 @@ export class PhantomRenderer {
                 for (let py = y0; py < y1; py++) {
                     let idx = (py * w + x0) * 4;
                     for (let px = x0; px < x1; px++) {
-                        const v = FLASH_VALUE_MIN + ((Math.random() * (256 - FLASH_VALUE_MIN)) | 0);
-                        data[idx] = v;
-                        data[idx + 1] = v;
-                        data[idx + 2] = v;
+                        data[idx] = value;
+                        data[idx + 1] = value;
+                        data[idx + 2] = value;
                         data[idx + 3] = 255;
                         idx += 4;
                     }
