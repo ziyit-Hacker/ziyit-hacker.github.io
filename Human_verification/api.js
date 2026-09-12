@@ -51,16 +51,5 @@ export function submitVerify(apiBase, challengeId, sessionId, iv, ciphertext) {
     });
 }
 
-// v0.3.3 实时流：从视频开始播放起，把新采样点按周期上报（明文 { seq, points:[[x,y]] }）。
-// 响应不含任何评分/进度；失败由调用方忽略（丢一批不影响验证继续）。
-export function submitStreamChunk(apiBase, challengeId, sessionId, iv, ciphertext) {
-    return postJson(apiBase, "/verify/chunk", {
-        challengeId,
-        sessionId,
-        iv,
-        ciphertext,
-    });
-}
-
  
  

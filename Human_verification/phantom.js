@@ -1,5 +1,30 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 import { CONFIG, isMobileViewport } from "./config.js";
-import { requestChallenge, submitVerify, submitStreamChunk, } from "./api.js";
+import { requestChallenge, submitVerify, } from "./api.js";
 import { decrypt, deriveSessionKey, encrypt, generateClientKeyPair, importServerPublic, } from "./crypto.js";
 import { installAntidebug } from "./antidebug.js";
 import { PhantomRenderer } from "./renderer.js";
@@ -145,14 +170,6 @@ class WidgetSession {
             writable: true,
             value: 0
         });
-        // 起手提示段时长（毫秒）：由 /challenge 的加密 params 下发（视频开头就是这段，
-        // 前端按住即从 0 秒整段播、按同一时长切"提示 → 跟随"）。默认取本地 CONFIG 兜底。
-        Object.defineProperty(this, "previewMs", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: PREVIEW_MS
-        });
          
         Object.defineProperty(this, "duration", {
             enumerable: true,
@@ -193,37 +210,6 @@ class WidgetSession {
             writable: true,
             value: ""
         });
-        // v0.3.3 实时流：开关与节奏由 /challenge 的加密 params 下发（阈值在后端）。
-        Object.defineProperty(this, "streamEnabled", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        Object.defineProperty(this, "streamIntervalMs", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 400
-        });
-        Object.defineProperty(this, "streamTimer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        Object.defineProperty(this, "streamSeq", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        Object.defineProperty(this, "streamCursor", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
     }
      
     setHint(stage, text) {
@@ -257,20 +243,10 @@ class WidgetSession {
             const raw = JSON.parse(new TextDecoder().decode(paramsJson));
              
              
-            const streamCfg = raw.stream || {};
-            this.streamEnabled = !!streamCfg.enabled;
-            this.streamIntervalMs = Number(streamCfg.intervalMs) > 0 ? Number(streamCfg.intervalMs) : 400;
             const videoEl = await this._prepareVideo(challenge);
-            // previewSeconds 由后端下发且与"视频里真实存在的提示段长度"同源，
-            // 不用本地 CONFIG 硬编码，避免前后端漂移导致切割点落在提示段中间。
-            const previewSeconds = Number(raw.previewSeconds) > 0
-                ? Number(raw.previewSeconds)
-                : CONFIG.previewSeconds;
-            this.previewMs = previewSeconds * 1000;
             const params = {
                 video: videoEl,
                 duration: raw.duration,
-                previewSeconds,
                 fps: raw.fps,
                 targetHalf: raw.targetHalf,
             };
@@ -316,41 +292,38 @@ class WidgetSession {
             this.previewing = true;
             this.overlay.classList.add("phantom-hidden");
             this.setHint("preview", "手指/鼠标拖动到闪烁的方块等待");
-            // v0.3.5：视频【自带头 previewMs 的起手提示段】，按住即从 0 秒整段播 ——
-            // 闪烁方块、随后移动的簇、整段的静止诱饵块全在视频里，前端只负责垫噪声。
-            this.renderer?.start((_center, t) => {
-                if (t >= 1)
-                    this.setHint("stopped", "请松手");
-            });
-            this.previewTimer = window.setTimeout(beginCollect, this.previewMs);
+            this.renderer?.startPreview();
+            this.previewTimer = window.setTimeout(beginCollect, PREVIEW_MS);
         };
          
          
          
-        // 提示段结束：从这一刻起才真正开始记轨迹（视频仍在继续播跟随段）。
         const beginCollect = () => {
             if (!this.previewing || this.finished)
                 return;
             this.previewing = false;
             this.collecting = true;
             this.status.textContent = "";
-            this.setHint("collect", "按住跟随任意一个方块移动");
+            this.setHint("collect", "按住跟随方块移动");
+            this.renderer?.stopPreview();
+             
+            this.renderer?.start((_center, t) => {
+                if (t >= 1)
+                    this.setHint("stopped", "请松手");
+            });
             this.tracker?.start();
-            // v0.3.3：从开始采集（≈视频进入跟随段）起，按后端下发的节奏持续上报采样点。
-            this._startStream();
              
             this.activateBtn.classList.add("phantom-holding");
         };
-        const onUp = async () => {
+        const onUp = () => {
             if (this.finished)
                 return;
              
             if (this.previewing) {
                 window.clearTimeout(this.previewTimer);
                 this.previewing = false;
-                // 提示段就松手：暂停视频（停在当前帧）并画回静态噪声，等用户重新按住——
-                // 下次按下会从 0 秒重新播，起点提示重来一遍。
-                this.renderer?.pause();
+                this.renderer?.stopPreview();
+                this.renderer?.drawStaticNoise();
                 this.status.textContent = "";
                 this.setHint("ready", "按住下方按钮并马上拖动到方块");
                 return;
@@ -362,10 +335,7 @@ class WidgetSession {
             this.activateBtn.classList.remove("phantom-holding");
             this.renderer?.pause();
             this.setHint("done", "");
-            // 先停采集（此后不再有新点），再补发最后一批流，最后才提交完整轨迹——
-            // 保证流覆盖到轨迹末尾，且流批次一定先于 /verify 到达服务端。
             const samples = this.tracker?.stop() ?? [];
-            await this._stopStream();
             void this.verifyAndFinish(samples);
         };
         this.activateBtn.addEventListener("pointerdown", onDown);
@@ -418,43 +388,6 @@ class WidgetSession {
         this.videoEl = v;
         this.videoUrl = url;
         return v;
-    }
-    // ---- v0.3.3 实时流上报 ----
-    // 目的：把"松手后一次性提交整段轨迹"改成"边画边报"。服务端只信每批次的【到达
-    // 墙钟时刻】与"流内容确是最终轨迹的保序子序列"，因此离线抠帧→拟合→一次性回放
-    // 的路径被堵死，对手必须真做实时 CV。批次内不含任何自报时间戳（不采信）。
-    _startStream() {
-        if (!this.streamEnabled || !this.sessionKey || !this.challengeId)
-            return;
-        this.streamSeq = 0;
-        this.streamCursor = 0;
-        window.clearInterval(this.streamTimer);
-        this.streamTimer = window.setInterval(() => {
-            void this._flushStream();
-        }, this.streamIntervalMs);
-    }
-    async _flushStream() {
-        if (!this.streamEnabled || !this.sessionKey || !this.challengeId)
-            return;
-        const points = this.tracker?.takeSince(this.streamCursor) ?? [];
-        // 游标推进必须在 await 之前（同步完成），否则并发批次会重复取点。
-        this.streamCursor += points.length;
-        if (!points.length)
-            return;
-        const seq = ++this.streamSeq;
-        try {
-            const plaintext = new TextEncoder().encode(JSON.stringify({ seq, points }));
-            const { iv, ciphertext } = await encrypt(this.sessionKey, plaintext);
-            await submitStreamChunk(this.apiBase, this.challengeId, this.sessionId, iv, ciphertext);
-        }
-        catch (e) {
-            // 实时流只作"留证"：丢一批不影响用户继续验证，静默忽略。
-        }
-    }
-    async _stopStream() {
-        window.clearInterval(this.streamTimer);
-        this.streamTimer = 0;
-        await this._flushStream();
     }
     async verifyAndFinish(samples) {
         if (!this.sessionKey)
@@ -573,8 +506,8 @@ class WidgetSession {
         this._unbind();
         window.clearTimeout(this.retryTimer);
         window.clearTimeout(this.previewTimer);
-        window.clearInterval(this.streamTimer);
-        this.streamTimer = 0;
+        this.previewing = false;
+        this.renderer?.stopPreview();
         this.renderer?.stop();
         this.tracker?.stop();
         // 释放前端侧视频资源：暂停 + 脱离 DOM + 撤销 Blob URL，避免内存泄漏。
@@ -700,7 +633,7 @@ export function mount(el, opts) {
         overlay.className = "phantom-overlay phantom-hidden";
         const overlayText = document.createElement("div");
         overlayText.className = "phantom-overlay-text";
-        overlayText.innerHTML = "按住下方按钮<br>马上拖动到闪烁方块处<br>方块出发后跟随任意一个移动<br>方块停止则松手";
+        overlayText.innerHTML = "按住下方按钮<br>马上拖动到闪烁方块处<br>方块出发后跟随移动<br>方块停止则松手";
         overlay.appendChild(overlayText);
         stageWrap.appendChild(canvas);
         stageWrap.appendChild(overlay);
@@ -708,7 +641,7 @@ export function mount(el, opts) {
         const activateBtn = document.createElement("button");
         activateBtn.className = "phantom-activate";
         activateBtn.type = "button";
-        activateBtn.textContent = "按住并跟随任一方块";
+        activateBtn.textContent = "按住并跟随方块";
         activateBtn.disabled = true;
         const progress = document.createElement("span");
         progress.className = "phantom-progress";
@@ -755,7 +688,7 @@ export function mount(el, opts) {
          
         const resetSession = () => {
             activateBtn.classList.remove("phantom-holding", "phantom-success", "phantom-fail", "phantom-retry");
-            activateBtn.textContent = "按住并跟随任一方块";
+            activateBtn.textContent = "按住并跟随方块";
             activateBtn.appendChild(progress);
             activateBtn.disabled = true;
             status.textContent = "正在准备验证题…";

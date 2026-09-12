@@ -34,7 +34,7 @@ export const CONFIG = {
 
      
     particleDensity: 0.6,
-    particleDropRate: 0.0,
+    particleDropRate: 0.05,
     particleTargetGain: 0,
     particleBrightness: 0.55,
     particleBrightnessVar: 0.45,
