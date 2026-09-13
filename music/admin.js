@@ -1868,7 +1868,6 @@ function rcUserKeys(u) {
 function rcKeyFields(k) {
     if (!k) return {};
     return {
-        hash: k.keyHash || k.key_hash || k.hash || k.key || '-',
         plain: k.productKey || k.product_key || k.plainKey || '',
         permission: k.permission || '-',
         permissionName: k.permissionName || k.permission || '-',
@@ -1912,7 +1911,7 @@ function renderRcKeys() {
         const username = u.username || u.userName || '';
         const keyText = rcUserKeys(u).map(function (k) {
             const kf = rcKeyFields(k);
-            return kf.plain + ' ' + kf.hash;
+            return kf.plain;
         }).join(' ');
         return String(username).toLowerCase().indexOf(search) !== -1
             || String(userId).toLowerCase().indexOf(search) !== -1
@@ -1942,7 +1941,7 @@ function renderRcKeys() {
                     + ' ｜ 到期: ' + escAdmin(kf.permanent ? '永久' : (kf.expire || '-'))
                     + ' ｜ 来源: ' + escAdmin(rcKeySourceText(kf.source))
                     + (kf.plain ? ' <button class="action-btn" data-rcopy="' + escAdmin(kf.plain) + '" style="font-size:11px;padding:2px 8px;margin-left:4px;">复制</button>' : '')
-                    + ' <button class="action-btn danger" data-ruid="' + escAdmin(userId) + '" data-rhash="' + escAdmin(kf.hash) + '" style="font-size:11px;padding:2px 8px;margin-left:4px;">移除</button>'
+                    + ' <button class="action-btn danger" data-ruid="' + escAdmin(userId) + '" data-rperm="' + escAdmin(kf.permission) + '" data-rlabel="' + escAdmin(kf.plain || kf.permissionName) + '" style="font-size:11px;padding:2px 8px;margin-left:4px;">移除</button>'
                     + '</div>';
             });
         }
@@ -1957,9 +1956,9 @@ function renderRcKeys() {
         if (!u) return;
         btn.addEventListener('click', function () { openAddKey(u); });
     });
-    area.querySelectorAll('[data-rhash]').forEach(function (btn) {
+    area.querySelectorAll('[data-rperm]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            removeKey(btn.getAttribute('data-ruid'), btn.getAttribute('data-rhash'));
+            removeKey(btn.getAttribute('data-ruid'), btn.getAttribute('data-rperm'), btn.getAttribute('data-rlabel'));
         });
     });
     area.querySelectorAll('[data-rcopy]').forEach(function (btn) {
@@ -2046,12 +2045,13 @@ function saveKeyAdd() {
     });
 }
 
-function removeKey(userId, keyHash) {
-    if (!confirm('确定移除密钥 ' + keyHash + ' 吗？')) return;
+function removeKey(userId, permission, label) {
+    // 后端按权限（Pr/Or/Tr）定位记录，全流程不再出现密钥哈希。
+    if (!confirm('确定移除密钥「' + (label || permission || '本条记录') + '」吗？')) return;
     ZIYIT_API.request('/admin/users/' + userId + '/keys/remove', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyHash: keyHash })
+        body: JSON.stringify({ permission: permission })
     }).then(function () {
         alert('密钥已移除');
         loadRcKeys();
