@@ -1001,8 +1001,22 @@ function renderUserList(list) {
         const details = document.createElement('div');
         details.className = 'user-details';
         const typeCls = banned ? 'banned' : (pendingDel ? 'pending' : 'normal');
-        details.innerHTML = `<div class="user-name">${username}</div><div class="user-type ${typeCls}">${roleLabel(user)}</div>` +
-            (pendingDel ? `<div class="user-del-date">删除于 ${formatDateTime(pendingDel)}</div>` : '');
+        // 用户名一律按纯文本渲染（不用 innerHTML 拼字符串）：即便后端存进了脏数据，
+        // 浏览器也不会把它当标签/事件解析，堵掉存储型 XSS 的渲染端出口。
+        const nameEl = document.createElement('div');
+        nameEl.className = 'user-name';
+        nameEl.textContent = username;
+        const typeEl = document.createElement('div');
+        typeEl.className = 'user-type ' + typeCls;
+        typeEl.textContent = roleLabel(user);
+        details.appendChild(nameEl);
+        details.appendChild(typeEl);
+        if (pendingDel) {
+            const delEl = document.createElement('div');
+            delEl.className = 'user-del-date';
+            delEl.textContent = '删除于 ' + formatDateTime(pendingDel);
+            details.appendChild(delEl);
+        }
 
         const statusId = document.createElement('div');
         statusId.className = 'user-status';
