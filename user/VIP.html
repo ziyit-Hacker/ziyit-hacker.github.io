@@ -151,6 +151,24 @@
             background-color: var(--ziyit-primary-dark);
         }
 
+        #buyBtn {
+            flex: 1;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--ziyit-primary);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        #buyBtn:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
         #errorMsg {
             color: var(--ziyit-danger);
             margin-top: 16px;
@@ -233,14 +251,31 @@
         <a href="javascript:history.back()" id="upback">返回</a>
 
         <div class="vip-tip">
-            本站暂未接入在线支付。请将下方信息<b>通过邮件发送给站长</b>，审核通过后由管理员为您开通 VIP。发送后请耐心等待。
+            1. 点下方按钮前往<b>爱发电</b>，选择「ZIYIT账号VIP独立方案（￥56.00/月）」或 RC 密钥方案购买；<br>
+            2. 下单时务必在订单备注里填 <b id="vipRemarkHint">用户ID/用户名</b>；<br>
+            3. 付款完成后回到本页点「我已购买，立即查询」，系统自动开通 30 天 VIP（无需等人工审核）。<br>
+            若你走的是<b>邮件人工审核</b>通道，仍可把下方信息发给站长。
+        </div>
+
+        <div class="vip-actions" style="margin-bottom: 16px;">
+            <a id="buyBtn" href="https://afdian.com/a/ziyit_studio" target="_blank" rel="noopener noreferrer">前往爱发电购买 VIP（￥56.00/月）</a>
+        </div>
+
+        <div style="margin-bottom: 16px; font-size: 13px; color: var(--ziyit-text-secondary);">
+            买的是 <b>RC 普通版 / 专业版密钥</b>？发货后到 <a href="./rc-key.html">我的RC密钥</a> 查看（不是 VIP，本页查不到）。
         </div>
 
         <div class="vip-info">
             <div class="vip-info-row"><span class="lbl">用户ID</span><b id="vipUserId"><span class="spinner-inline"></span></b></div>
             <div class="vip-info-row"><span class="lbl">用户名</span><b id="vipUsername"><span class="spinner-inline"></span></b></div>
             <div class="vip-info-row"><span class="lbl">当前类型</span><b id="vipType"><span class="spinner-inline"></span></b></div>
+            <div class="vip-info-row"><span class="lbl">到期时间</span><b id="vipExpire">—</b></div>
         </div>
+
+        <div class="vip-actions" style="margin-bottom: 16px;">
+            <button type="button" id="checkPurchaseBtn" style="flex: 1;">我已购买，立即查询</button>
+        </div>
+        <div id="checkResult" style="display: none; margin-bottom: 16px; line-height: 1.6;"></div>
 
         <div style="margin-bottom: 16px;">
             <label for="vipMailBody" class="bt">邮件内容（已自动生成，可补充后复制或一键发送）</label>
@@ -326,26 +361,75 @@
                 return;
             }
             ZIYIT_API.currentUser().then(function (user) {
-                currentVipUser = user;
-                document.getElementById('vipUserId').textContent = user.userId != null ? user.userId : '-';
-                document.getElementById('vipUsername').textContent = user.username || '-';
-                var isVip = ZIYIT_API.isVip(user);
-                document.getElementById('vipType').textContent = isVip ? 'VIP用户' : '普通用户';
-                if (isVip) {
-                    document.getElementById('errorMsg').textContent = '您已是 VIP 用户，无需重复申请。';
-                    document.getElementById('errorMsg').style.color = 'var(--ziyit-success)';
-                    document.getElementById('errorMsg').style.display = 'block';
-                    document.getElementById('copyBtn').disabled = true;
-                    document.getElementById('mailBtn').style.pointerEvents = 'none';
-                    document.getElementById('mailBtn').style.opacity = '0.5';
-                }
-                updateMailUI();
+                applyUser(user);
             }).catch(function (err) {
                 alert('获取用户信息失败：' + ((err && err.message) || '请重新登录'));
                 ZIYIT_API.clearToken();
                 window.location.href = './';
             });
+
+            document.getElementById('checkPurchaseBtn').addEventListener('click', function () {
+                var btn = this;
+                var box = document.getElementById('checkResult');
+                btn.disabled = true;
+                btn.textContent = '查询中…';
+                box.style.display = 'block';
+                box.style.color = '';
+                box.textContent = '正在向爱发电查询您的订单，请稍候…';
+                ZIYIT_API.afdianSelfCheck().then(function (res) {
+                    box.textContent = (res && res.message) || '查询完成';
+                    if (res && res.vipActive) box.style.color = 'var(--ziyit-success)';
+                    // 查询可能刚把 VIP 开通/续期，重新拉一次用户信息刷新页面状态
+                    return ZIYIT_API.currentUser().then(applyUser).catch(function () { });
+                }).catch(function (err) {
+                    var detail = (err && err.data && err.data.detail) || (err && err.message) || err;
+                    box.style.color = 'var(--ziyit-danger)';
+                    box.textContent = '查询失败：' + detail;
+                }).finally(function () {
+                    btn.disabled = false;
+                    btn.textContent = '我已购买，立即查询';
+                });
+            });
         });
+
+        // 统一渲染用户状态（页面初始化与查单后共用）
+        function applyUser(user) {
+            currentVipUser = user;
+            var uid = user.userId != null ? user.userId : '-';
+            document.getElementById('vipUserId').textContent = uid;
+            document.getElementById('vipUsername').textContent = user.username || '-';
+            document.getElementById('vipRemarkHint').textContent = uid + '/' + (user.username || '用户名');
+
+            var isVip = ZIYIT_API.isVip(user);
+            document.getElementById('vipType').textContent = isVip ? 'VIP用户' : '普通用户';
+            var expEl = document.getElementById('vipExpire');
+            if (!user.vipExpireAt) {
+                expEl.textContent = isVip ? '永久' : '—';
+            } else {
+                var t = new Date(user.vipExpireAt);
+                var s = isNaN(t.getTime()) ? user.vipExpireAt : t.toLocaleString('zh-CN', { hour12: false });
+                expEl.textContent = isVip ? s : s + '（已过期）';
+            }
+
+            var errorMsg = document.getElementById('errorMsg');
+            var copyBtn = document.getElementById('copyBtn');
+            var mailBtn = document.getElementById('mailBtn');
+            if (isVip) {
+                errorMsg.textContent = '您已是 VIP 用户，无需重复申请。';
+                errorMsg.style.color = 'var(--ziyit-success)';
+                errorMsg.style.display = 'block';
+                copyBtn.disabled = true;
+                mailBtn.style.pointerEvents = 'none';
+                mailBtn.style.opacity = '0.5';
+            } else {
+                // 到期后要把界面恢复成"可申请"状态，否则过期用户会一直卡在禁用态
+                errorMsg.style.display = 'none';
+                copyBtn.disabled = false;
+                mailBtn.style.pointerEvents = '';
+                mailBtn.style.opacity = '';
+            }
+            updateMailUI();
+        }
     </script>
 
     <script>

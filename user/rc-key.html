@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的RC密钥 - ZIYIT</title>
+    <meta name="description" content="查看购买 RC 方案后自动发放的 RC 软件许可证密钥与到期时间。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/rc-key.html">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: default !important;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--ziyit-primary);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: var(--ziyit-bg);
+        }
+
+        .page {
+            max-width: 860px;
+            margin: 20px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .page h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            margin: 6px 0 16px;
+            line-height: 1.7;
+        }
+
+        .back-link {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar button,
+        .toolbar .btn-link {
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .toolbar .btn-link {
+            background-color: var(--ziyit-success);
+        }
+
+        .toolbar button:hover,
+        .toolbar .btn-link:hover {
+            background-color: var(--ziyit-primary-dark);
+            text-decoration: none;
+        }
+
+        .toolbar button:disabled {
+            background-color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        .key-card {
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 14px;
+            background: var(--ziyit-bg);
+        }
+
+        .key-card .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .key-card .perm {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        .badge.ok {
+            background: rgba(39, 174, 96, .16);
+            color: var(--ziyit-success);
+            border: 1px solid var(--ziyit-success);
+        }
+
+        .badge.warn {
+            background: rgba(243, 156, 18, .16);
+            color: var(--ziyit-warning);
+            border: 1px solid var(--ziyit-warning);
+        }
+
+        .badge.bad {
+            background: rgba(231, 76, 60, .16);
+            color: var(--ziyit-danger);
+            border: 1px solid var(--ziyit-danger);
+        }
+
+        .key-line {
+            font-size: 14px;
+            line-height: 2.1;
+            color: var(--ziyit-text-primary);
+            word-break: break-all;
+        }
+
+        .key-line .lbl {
+            color: var(--ziyit-text-secondary);
+        }
+
+        .key-line code {
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            user-select: all;
+            word-break: break-all;
+            color: var(--ziyit-primary);
+        }
+
+        .key-line .copy-btn {
+            margin-left: 8px;
+            padding: 2px 10px;
+            font-size: 12px;
+            font-weight: 400;
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nokey {
+            color: var(--ziyit-danger);
+            font-size: 13px;
+        }
+
+        .loading,
+        .error-box,
+        .empty-box {
+            padding: 18px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--ziyit-text-secondary);
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 10px;
+        }
+
+        .error-box {
+            color: var(--ziyit-danger);
+            border-color: var(--ziyit-danger);
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <script src="../assets/blacklist.js"></script>
+</head>
+
+<body>
+
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/rc-key.html">我的RC密钥</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/file-keys.html">我的文件密钥</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page">
+        <h1>我的RC密钥</h1>
+        <a href="javascript:history.back()" class="back-link">返回</a>
+        <p class="page-sub">
+            这里是你在爱发电购买 RC 方案（RC普通版 ￥27/月、RC专业版 ￥56/月）后自动发放的
+            <b>RC 软件许可证密钥</b>。下单时订单备注需按「用户ID/用户名」填写；付款后如未立即出现，
+            可到「升级VIP会员」页点「我已购买，立即查询」。
+        </p>
+
+        <div class="toolbar">
+            <button type="button" id="refreshBtn">刷新</button>
+            <a class="btn-link" href="https://afdian.com/a/ziyit_studio" target="_blank" rel="noopener noreferrer">前往爱发电购买</a>
+            <a class="btn-link" href="./VIP.html">升级VIP会员</a>
+        </div>
+
+        <div id="keyArea"><div class="loading">加载中…</div></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!ZIYIT_API.getToken()) {
+                alert('请先登录后再查看 RC 密钥');
+                window.location.href = './';
+                return;
+            }
+
+            var keyArea = document.getElementById('keyArea');
+            var refreshBtn = document.getElementById('refreshBtn');
+
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            function fmtTime(t) {
+                if (!t) return '-';
+                var d = new Date(t);
+                if (isNaN(d.getTime())) return esc(t);
+                var p = function (x) { return (x < 10 ? '0' : '') + x; };
+                return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+            }
+
+            function errMsg(err, fallback) {
+                if (err && err.data) {
+                    if (typeof err.data === 'string' && err.data) return err.data;
+                    if (err.data.detail) return typeof err.data.detail === 'string' ? err.data.detail : JSON.stringify(err.data.detail);
+                    if (err.data.message) return err.data.message;
+                }
+                if (err && err.status === 401) return '登录状态已失效，请重新登录';
+                return fallback || '请求失败，请稍后再试';
+            }
+
+            function statusBadge(k) {
+                if (!k.productKey) return '<span class="badge warn">待补录</span>';
+                if (k.permanent) return '<span class="badge ok">永久有效</span>';
+                if (k.expired) return '<span class="badge bad">已过期</span>';
+                return '<span class="badge ok">有效</span>';
+            }
+
+            function renderKey(k) {
+                var html = '<div class="key-card"><div class="top">'
+                    + '<span class="perm">' + esc(k.permissionName || 'RC 密钥') + '</span>'
+                    + statusBadge(k)
+                    + '</div>';
+                if (k.productKey) {
+                    html += '<div class="key-line"><span class="lbl">密钥：</span>'
+                        + '<code>' + esc(k.productKey) + '</code>'
+                        + '<button type="button" class="copy-btn" data-copy="' + esc(k.productKey) + '">复制</button>'
+                        + '</div>';
+                } else {
+                    html += '<div class="key-line nokey">该密钥是历史发放的，明文未在服务端留存，'
+                        + '无法回显。请用 RC 客户端原有的密钥打开，或联系客服处理。</div>';
+                }
+                html += '<div class="key-line"><span class="lbl">激活时间：</span>' + fmtTime(k.activatedAt) + '</div>'
+                    + '<div class="key-line"><span class="lbl">到期时间：</span>'
+                    + (k.permanent ? '永久有效' : fmtTime(k.expireAt)) + '</div>';
+                if (k.source) {
+                    var src = k.source === 'afdian' ? '爱发电自动发放'
+                        : (k.source === 'legacy' ? '历史密钥补录' : (k.source === 'manual' ? '管理员发放' : k.source));
+                    html += '<div class="key-line"><span class="lbl">来源：</span>' + esc(src) + '</div>';
+                }
+                return html + '</div>';
+            }
+
+            function render(data) {
+                var keys = (data && data.keys) || [];
+                if (!keys.length) {
+                    keyArea.innerHTML = '<div class="empty-box">你还没有 RC 密钥。<br>'
+                        + '在爱发电购买「RC普通版密钥独立方案」或「RC专业版密钥」后，'
+                        + '订单备注填「用户ID/用户名」，系统会自动把密钥发到这里。</div>';
+                    return;
+                }
+                keyArea.innerHTML = keys.map(renderKey).join('');
+                keyArea.querySelectorAll('.copy-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var text = btn.getAttribute('data-copy') || '';
+                        var done = function () {
+                            btn.textContent = '已复制';
+                            setTimeout(function () { btn.textContent = '复制'; }, 1500);
+                        };
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(text).then(done, function () {
+                                alert('复制失败，请手动选择密钥后复制');
+                            });
+                        } else {
+                            alert('当前浏览器不支持自动复制，请手动选择密钥后复制');
+                        }
+                    });
+                });
+            }
+
+            function load() {
+                keyArea.innerHTML = '<div class="loading">加载中…</div>';
+                return ZIYIT_API.rcMyKeys().then(render).catch(function (err) {
+                    keyArea.innerHTML = '<div class="error-box">加载失败：' + esc(errMsg(err)) + '</div>';
+                });
+            }
+
+            refreshBtn.addEventListener('click', load);
+            load();
+        });
+    </script>
+
+    <script>
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(function (item) {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(function (item) {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                const loginLink = document.getElementById('loginLink');
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(function (item) {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

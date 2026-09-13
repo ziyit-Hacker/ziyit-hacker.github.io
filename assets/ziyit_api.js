@@ -426,8 +426,45 @@
     }
 
      
-    function adminPromoteUser(userId, type) {
-        return post('/admin/users/' + userId + '/promote', { type: type });
+    function adminPromoteUser(userId, type, days) {
+        var body = { type: type };
+        // v0.3.9：VIP 有效期天数。不传 = 永久（保持老行为）；传数字 = 从当前到期时间叠加
+        if (typeof days === 'number' && !isNaN(days)) body.days = days;
+        return post('/admin/users/' + userId + '/promote', body);
+    }
+
+    // ---- 爱发电（afdian）VIP 自动发货 ----
+    // 用户自助查单：服务端主动去爱发电拉订单，查到属于自己且已付款的就补发 VIP
+    function afdianSelfCheck() {
+        return post('/afdian/self-check', {});
+    }
+
+    // 以下三个仅 3 级及以上管理员可用
+    function adminAfdianPurchases() {
+        return request('/admin/afdian/purchases');
+    }
+
+    function adminAfdianReconcile(outTradeNo, pages) {
+        var body = {};
+        if (outTradeNo) body.outTradeNo = outTradeNo;
+        if (typeof pages === 'number' && !isNaN(pages)) body.pages = pages;
+        return post('/admin/afdian/reconcile', body);
+    }
+
+    // ---- RC 许可证密钥（购买 RC 方案后自动发放） ----
+    // 用户自助：查询自己名下的密钥（后台会解密回显明文，只返回本人）
+    function rcMyKeys() {
+        return request('/rc/keys/mine');
+    }
+
+    // 以下两个仅 3 级及以上管理员可用
+    function adminRcKeys() {
+        return request('/admin/rc/keys');
+    }
+
+    // dryRun 默认 true（只预演不改数据）；传 false 才真正回填
+    function adminRcLegacyImport(dryRun) {
+        return post('/admin/rc/keys/legacy-import', { dryRun: dryRun !== false });
     }
 
      
@@ -873,6 +910,12 @@
         adminPromoteUser: adminPromoteUser,
         adminListBackroomsMembers: adminListBackroomsMembers,
         adminUpdateBackroomsMember: adminUpdateBackroomsMember,
+        afdianSelfCheck: afdianSelfCheck,
+        adminAfdianPurchases: adminAfdianPurchases,
+        adminAfdianReconcile: adminAfdianReconcile,
+        rcMyKeys: rcMyKeys,
+        adminRcKeys: adminRcKeys,
+        adminRcLegacyImport: adminRcLegacyImport,
         adminListOnline: adminListOnline,
         adminChatSend: adminChatSend,
         adminChatInbox: adminChatInbox,
