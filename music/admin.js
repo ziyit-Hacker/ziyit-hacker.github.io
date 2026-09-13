@@ -2017,7 +2017,7 @@ function openAddKey(u) {
     keyTargetUser = u;
     const userId = u.userId != null ? u.userId : (u.user_id != null ? u.user_id : '-');
     document.getElementById('key-userinfo').value = (u.username || u.userName || '') + '（ID: ' + userId + '）';
-    document.getElementById('key-hash').value = '';
+    document.getElementById('key-product-key').value = '';
     document.getElementById('key-permission').value = 'Pr';
     document.getElementById('key-valid-days').value = '365';
     document.getElementById('key-add-modal').classList.add('active');
@@ -2026,17 +2026,17 @@ function openAddKey(u) {
 function saveKeyAdd() {
     if (!keyTargetUser) return;
     const userId = keyTargetUser.userId != null ? keyTargetUser.userId : keyTargetUser.user_id;
-    const hash = document.getElementById('key-hash').value.trim();
-    if (!hash) {
-        alert('请输入密钥哈希');
+    const productKey = document.getElementById('key-product-key').value.trim();
+    if (!productKey) {
+        alert('请输入明文密钥');
         return;
     }
     const permission = document.getElementById('key-permission').value;
-    const validDays = parseInt(document.getElementById('key-valid-days').value, 10) || 365;
+    const validDays = parseInt(document.getElementById('key-valid-days').value, 10) || 0;
     ZIYIT_API.request('/admin/users/' + userId + '/keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyHash: hash, permission: permission, validDays: validDays })
+        body: JSON.stringify({ productKey: productKey, permission: permission, validDays: validDays })
     }).then(function () {
         alert('密钥已添加');
         document.getElementById('key-add-modal').classList.remove('active');
