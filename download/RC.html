@@ -3102,8 +3102,17 @@
 
                 const mods = (modsData && modsData.mods) || [];
                 const dlcs = (dlcData && dlcData.dlc) || [];
-                const all = dlcs.map(function (m) { return { type: 'DLC', mod: m }; })
-                    .concat(mods.map(function (m) { return { type: 'MOD', mod: m }; }));
+                // /mods 返回全部条目（含 DLC），/dlc 只是 DLC 子集；按 modId 去重，并以 isDLC 判定类型，
+                // 避免同一个 DLC 同时以 DLC 和 MOD 两个版本出现
+                const seen = new Set();
+                const all = [];
+                dlcs.concat(mods).forEach(function (m) {
+                    const id = String(m.modId);
+                    if (seen.has(id)) return;
+                    seen.add(id);
+                    const isDlc = (m.isDLC === undefined) ? (dlcs.indexOf(m) !== -1) : !!m.isDLC;
+                    all.push({ type: isDlc ? 'DLC' : 'MOD', mod: m });
+                });
 
                 if (all.length === 0) {
                     list.innerHTML = '<div style="color:var(--ziyit-text-secondary); font-size:0.9rem;">暂无 MOD/DLC</div>';
@@ -3136,7 +3145,8 @@
                     const meta = document.createElement('div');
                     meta.style.cssText = 'color:#94a3b8;font-size:0.75rem;margin-bottom:0.6rem;';
                     const version = Array.isArray(mod.modVersion) ? mod.modVersion.join(',') : (mod.modVersion || '-');
-                    meta.textContent = '作者: ' + (mod.modAuthor || '-') + ' | 版本: ' + version;
+                    const modId = (mod.modId === undefined || mod.modId === null) ? '-' : mod.modId;
+                    meta.textContent = 'MODID: ' + modId + ' | 作者: ' + (mod.modAuthor || '-') + ' | 版本: ' + version;
 
                     const dl = document.createElement('button');
                     dl.textContent = '下载';
