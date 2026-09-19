@@ -1,3 +1,11 @@
+ 
+
+
+
+
+
+
+ 
 function switchSection(sectionId) {
      
     document.querySelectorAll('.content-section').forEach(section => {
@@ -99,25 +107,6 @@ document.addEventListener('DOMContentLoaded', function () {
         updateSystemInfo('密钥列表已刷新');
     });
     document.getElementById('rc-key-search').addEventListener('input', renderRcKeys);
-    document.getElementById('rc-legacy-import').addEventListener('click', rcLegacyImport);
-
-     
-    document.querySelector('[data-section="afdian-purchases"]').addEventListener('click', function () {
-        switchSection('afdian-purchases');
-        updateSystemInfo('切换到爱发电订单');
-        loadAfdianPurchases();
-    });
-    document.getElementById('refresh-afdian-purchases').addEventListener('click', function () {
-        loadAfdianPurchases();
-        updateSystemInfo('爱发电订单已刷新');
-    });
-    document.getElementById('afdian-search').addEventListener('input', renderAfdianPurchases);
-    document.getElementById('afdian-reconcile-one').addEventListener('click', function () {
-        afdianReconcile(document.getElementById('afdian-order-no').value.trim());
-    });
-    document.getElementById('afdian-reconcile-scan').addEventListener('click', function () {
-        afdianReconcile('');
-    });
 
      
     document.querySelector('[data-section="admin-management"]').addEventListener('click', function () {
@@ -162,8 +151,6 @@ document.addEventListener('DOMContentLoaded', function () {
      
     document.getElementById('cancel-promote-user').addEventListener('click', closePromoteModal);
     document.getElementById('confirm-promote-user').addEventListener('click', confirmPromoteUser);
-    // 升级类型切到"管理员"时隐藏有效天数（那个字段只对 VIP 有意义）
-    document.getElementById('promote-type').addEventListener('change', syncPromoteDaysVisibility);
 });
 
  
@@ -1001,22 +988,8 @@ function renderUserList(list) {
         const details = document.createElement('div');
         details.className = 'user-details';
         const typeCls = banned ? 'banned' : (pendingDel ? 'pending' : 'normal');
-        // 用户名一律按纯文本渲染（不用 innerHTML 拼字符串）：即便后端存进了脏数据，
-        // 浏览器也不会把它当标签/事件解析，堵掉存储型 XSS 的渲染端出口。
-        const nameEl = document.createElement('div');
-        nameEl.className = 'user-name';
-        nameEl.textContent = username;
-        const typeEl = document.createElement('div');
-        typeEl.className = 'user-type ' + typeCls;
-        typeEl.textContent = roleLabel(user);
-        details.appendChild(nameEl);
-        details.appendChild(typeEl);
-        if (pendingDel) {
-            const delEl = document.createElement('div');
-            delEl.className = 'user-del-date';
-            delEl.textContent = '删除于 ' + formatDateTime(pendingDel);
-            details.appendChild(delEl);
-        }
+        details.innerHTML = `<div class="user-name">${username}</div><div class="user-type ${typeCls}">${roleLabel(user)}</div>` +
+            (pendingDel ? `<div class="user-del-date">删除于 ${formatDateTime(pendingDel)}</div>` : '');
 
         const statusId = document.createElement('div');
         statusId.className = 'user-status';
@@ -1882,34 +1855,18 @@ function rcUserKeys(u) {
 function rcKeyFields(k) {
     if (!k) return {};
     return {
-        plain: k.productKey || k.product_key || k.plainKey || '',
+        hash: k.keyHash || k.key_hash || k.hash || k.key || '-',
         permission: k.permission || '-',
-        permissionName: k.permissionName || k.permission || '-',
-        expire: k.expireAt || k.expire_at || k.expiresAt || k.expireTime || k.expiry || '',
-        permanent: !!k.permanent,
-        expired: !!k.expired,
-        source: k.source || ''
+        validDays: k.validDays != null ? k.validDays : (k.valid_days != null ? k.valid_days : '-'),
+        expire: k.expireAt || k.expire_at || k.expiresAt || k.expireTime || k.expiry || ''
     };
-}
-
-function rcKeySourceText(src) {
-    if (src === 'afdian') return '爱发电自动发放';
-    if (src === 'legacy') return '历史密钥补录';
-    if (src === 'manual') return '管理员发放';
-    return src || '—';
-}
-
-function rcKeyStatusText(kf) {
-    if (!kf.plain) return '待补录明文';
-    if (kf.permanent) return '永久有效';
-    return kf.expired ? '已过期' : '有效';
 }
 
 function loadRcKeys() {
     if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可访问 RC 软件密钥'); return; }
-    document.getElementById('rc-key-list').innerHTML = loadingHTML();
-    return ZIYIT_API.adminRcKeys().then(function (data) {
-        rcKeyList = Array.isArray(data) ? data : (data.users || data.keys || data.data || []);
+    document.getElementById('rc-key-list').innerHTML = loadingHTML();;
+    return ZIYIT_API.request('/admin/keys').then(function (data) {
+        rcKeyList = Array.isArray(data) ? data : (data.keys || data.users || data.data || []);
         renderRcKeys();
     }).catch(function (err) {
         document.getElementById('rc-key-list').innerHTML = '<p style="padding: 20px; color: var(--ziyit-danger);">加载失败: ' + escAdmin(err.message || err) + '</p>';
@@ -1924,8 +1881,7 @@ function renderRcKeys() {
         const userId = u.userId != null ? u.userId : (u.user_id != null ? u.user_id : '');
         const username = u.username || u.userName || '';
         const keyText = rcUserKeys(u).map(function (k) {
-            const kf = rcKeyFields(k);
-            return kf.plain;
+            return String(rcKeyFields(k).hash || '');
         }).join(' ');
         return String(username).toLowerCase().indexOf(search) !== -1
             || String(userId).toLowerCase().indexOf(search) !== -1
@@ -1948,14 +1904,11 @@ function renderRcKeys() {
         } else {
             keys.forEach(function (k) {
                 const kf = rcKeyFields(k);
-                const plainText = kf.plain ? escAdmin(kf.plain) : '（明文未留存）';
-                html += '<div class="user-email" style="font-family: monospace;">🔑 <b>' + plainText + '</b>'
-                    + ' ｜ ' + escAdmin(kf.permissionName)
-                    + ' ｜ ' + escAdmin(rcKeyStatusText(kf))
-                    + ' ｜ 到期: ' + escAdmin(kf.permanent ? '永久' : (kf.expire || '-'))
-                    + ' ｜ 来源: ' + escAdmin(rcKeySourceText(kf.source))
-                    + (kf.plain ? ' <button class="action-btn" data-rcopy="' + escAdmin(kf.plain) + '" style="font-size:11px;padding:2px 8px;margin-left:4px;">复制</button>' : '')
-                    + ' <button class="action-btn danger" data-ruid="' + escAdmin(userId) + '" data-rperm="' + escAdmin(kf.permission) + '" data-rlabel="' + escAdmin(kf.plain || kf.permissionName) + '" style="font-size:11px;padding:2px 8px;margin-left:4px;">移除</button>'
+                html += '<div class="user-email" style="font-family: monospace;">🔑 ' + escAdmin(kf.hash)
+                    + ' ｜ 权限: ' + escAdmin(kf.permission)
+                    + ' ｜ 有效: ' + escAdmin(kf.validDays) + ' 天'
+                    + (kf.expire ? ' ｜ 到期: ' + escAdmin(kf.expire) : '')
+                    + ' <button class="action-btn danger" data-ruid="' + escAdmin(userId) + '" data-rhash="' + escAdmin(kf.hash) + '" style="font-size:11px;padding:2px 8px;margin-left:4px;">移除</button>'
                     + '</div>';
             });
         }
@@ -1970,59 +1923,10 @@ function renderRcKeys() {
         if (!u) return;
         btn.addEventListener('click', function () { openAddKey(u); });
     });
-    area.querySelectorAll('[data-rperm]').forEach(function (btn) {
+    area.querySelectorAll('[data-rhash]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            removeKey(btn.getAttribute('data-ruid'), btn.getAttribute('data-rperm'), btn.getAttribute('data-rlabel'));
+            removeKey(btn.getAttribute('data-ruid'), btn.getAttribute('data-rhash'));
         });
-    });
-    area.querySelectorAll('[data-rcopy]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            const text = btn.getAttribute('data-rcopy');
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(function () {
-                    updateSystemInfo('密钥已复制');
-                }, function () { alert(text); });
-            } else {
-                alert(text);
-            }
-        });
-    });
-}
-
-function rcLegacyImport() {
-    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可执行回填'); return; }
-    const btn = document.getElementById('rc-legacy-import');
-    btn.disabled = true;
-    btn.textContent = '预演中...';
-    ZIYIT_API.adminRcLegacyImport(true).then(function (data) {
-        const pending = (data.matched || []).filter(function (m) { return !m.already; });
-        let msg = (data.message || '') + '\n\n';
-        msg += '待回填 ' + pending.length + ' 条：\n';
-        pending.forEach(function (m) {
-            msg += '· ' + m.username + '（ID: ' + m.userId + '）' + (m.permission || '');
-            if (m.filePermission && m.filePermission !== m.permission) msg += ' [清单: ' + m.filePermission + ']';
-            msg += '\n';
-        });
-        if ((data.skipped || []).length) {
-            msg += '\n跳过 ' + data.skipped.length + ' 条：\n';
-            data.skipped.forEach(function (s) {
-                msg += '· ' + s.username + ' —— ' + s.reason + '\n';
-            });
-        }
-        if (!pending.length) {
-            alert(msg + '\n没有需要回填的条目。');
-            return;
-        }
-        if (!confirm(msg + '\n确定写入吗？（只补加密明文，不动权限与有效期）')) return;
-        return ZIYIT_API.adminRcLegacyImport(false).then(function (res) {
-            alert(res.message || '回填完成');
-            loadRcKeys();
-        });
-    }).catch(function (err) {
-        alert('回填失败: ' + (err.message || err));
-    }).then(function () {
-        btn.disabled = false;
-        btn.textContent = '回填历史明文密钥';
     });
 }
 
@@ -2030,7 +1934,7 @@ function openAddKey(u) {
     keyTargetUser = u;
     const userId = u.userId != null ? u.userId : (u.user_id != null ? u.user_id : '-');
     document.getElementById('key-userinfo').value = (u.username || u.userName || '') + '（ID: ' + userId + '）';
-    document.getElementById('key-product-key').value = '';
+    document.getElementById('key-hash').value = '';
     document.getElementById('key-permission').value = 'Pr';
     document.getElementById('key-valid-days').value = '365';
     document.getElementById('key-add-modal').classList.add('active');
@@ -2039,17 +1943,17 @@ function openAddKey(u) {
 function saveKeyAdd() {
     if (!keyTargetUser) return;
     const userId = keyTargetUser.userId != null ? keyTargetUser.userId : keyTargetUser.user_id;
-    const productKey = document.getElementById('key-product-key').value.trim();
-    if (!productKey) {
-        alert('请输入明文密钥');
+    const hash = document.getElementById('key-hash').value.trim();
+    if (!hash) {
+        alert('请输入密钥哈希');
         return;
     }
     const permission = document.getElementById('key-permission').value;
-    const validDays = parseInt(document.getElementById('key-valid-days').value, 10) || 0;
+    const validDays = parseInt(document.getElementById('key-valid-days').value, 10) || 365;
     ZIYIT_API.request('/admin/users/' + userId + '/keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productKey: productKey, permission: permission, validDays: validDays })
+        body: JSON.stringify({ keyHash: hash, permission: permission, validDays: validDays })
     }).then(function () {
         alert('密钥已添加');
         document.getElementById('key-add-modal').classList.remove('active');
@@ -2059,13 +1963,12 @@ function saveKeyAdd() {
     });
 }
 
-function removeKey(userId, permission, label) {
-    // 后端按权限（Pr/Or/Tr）定位记录，全流程不再出现密钥哈希。
-    if (!confirm('确定移除密钥「' + (label || permission || '本条记录') + '」吗？')) return;
+function removeKey(userId, keyHash) {
+    if (!confirm('确定移除密钥 ' + keyHash + ' 吗？')) return;
     ZIYIT_API.request('/admin/users/' + userId + '/keys/remove', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ permission: permission })
+        body: JSON.stringify({ keyHash: keyHash })
     }).then(function () {
         alert('密钥已移除');
         loadRcKeys();
@@ -2647,112 +2550,13 @@ function renderBackroomsMembers() {
 }
 
  
-// ============ 爱发电订单 / VIP 购买情况（3 级及以上） ============
-let afdianPurchases = null;
-
-function loadAfdianPurchases() {
-    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可查看爱发电订单'); return; }
-    const area = document.getElementById('afdian-list');
-    area.innerHTML = loadingHTML();
-    return ZIYIT_API.adminAfdianPurchases().then(function (data) {
-        afdianPurchases = data || {};
-        renderAfdianPurchases();
-    }).catch(function (err) {
-        area.innerHTML = '<p style="padding: 20px; color: var(--ziyit-danger);">加载失败: ' + escAdmin(err.message || err) + '</p>';
-    });
-}
-
-function afdianTimeText(t) {
-    if (!t) return '';
-    var d = new Date(t);
-    return isNaN(d.getTime()) ? String(t) : d.toLocaleString('zh-CN', { hour12: false });
-}
-
-function renderAfdianPurchases() {
-    if (!afdianPurchases) return;
-    const s = afdianPurchases.summary || {};
-    const total = s.totalOrders || 0;
-    document.getElementById('afdian-summary').textContent =
-        '订单 ' + total + ' 笔（已发货 ' + (s.grantedOrders || 0) + '，未发货 ' + (total - (s.grantedOrders || 0)) + '）'
-        + ' ｜ 有效 VIP ' + (s.activeVip || 0) + ' 人 ｜ 已过期 ' + (s.expiredVip || 0) + ' 人';
-
-    const search = (document.getElementById('afdian-search').value || '').trim().toLowerCase();
-    const orders = (afdianPurchases.orders || []).filter(function (o) {
-        if (!search) return true;
-        return [o.outTradeNo, o.userId, o.username, o.remark, o.planId, o.afdianUserId].some(function (v) {
-            return String(v == null ? '' : v).toLowerCase().indexOf(search) !== -1;
-        });
-    });
-    const area = document.getElementById('afdian-list');
-    if (!orders.length) {
-        area.innerHTML = '<p style="padding: 20px; color: var(--ziyit-text-secondary);">暂无订单记录</p>';
-        return;
-    }
-    let html = '';
-    orders.forEach(function (o) {
-        const ok = !!o.granted;
-        const who = o.username ? o.username + '（ID: ' + o.userId + '）' : (o.userId ? '用户ID: ' + o.userId : '未识别用户');
-        html += '<div class="user-item wide-item"><div class="user-details">'
-            + '<div class="user-name">' + escAdmin(who) + '</div>'
-            + '<div class="user-email" style="font-family: monospace;">' + escAdmin(o.outTradeNo) + '</div>'
-            + '<div class="user-status ' + (ok ? 'normal' : 'banned') + '">' + (ok ? '已发货' : '未发货') + '</div>'
-            + '<div class="user-del-date">'
-            + '来源: ' + escAdmin(o.source) + ' ｜ 备注: ' + escAdmin(o.remark || '（空）')
-            + ' ｜ 方案: ' + escAdmin(o.planId || '-') + ' ｜ 金额: ' + escAdmin(o.amount || '-')
-            + (ok ? ' ｜ 天数: ' + escAdmin(o.days) : ' ｜ 原因: ' + escAdmin(o.reason))
-            + '<br>时间: ' + escAdmin(afdianTimeText(o.grantedAt || o.seenAt))
-            + (ok && (o.expireAt || o.vipExpireAt) ? ' ｜ 到期: ' + escAdmin(afdianTimeText(o.expireAt || o.vipExpireAt)) : '')
-            + (o.remarkUsernameMismatch ? ' ｜ ⚠ 备注用户名与账号用户名不符' : '')
-            + '</div></div></div>';
-    });
-    area.innerHTML = html;
-}
-
-// 主动查单对账：空订单号 = 扫最近几页（webhook 没送到时的兜底）
-function afdianReconcile(outTradeNo) {
-    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可对账补发'); return; }
-    const area = document.getElementById('afdian-list');
-    area.innerHTML = loadingHTML();
-    return ZIYIT_API.adminAfdianReconcile(outTradeNo || '', 3).then(function (res) {
-        const granted = (res && res.granted) || [];
-        alert((res && res.message ? res.message : '对账完成')
-            + (granted.length ? '\n' + granted.map(function (g) { return (g.username || g.userId) + ' +' + g.days + ' 天'; }).join('\n') : ''));
-        updateSystemInfo('爱发电对账完成');
-        loadAfdianPurchases();
-    }).catch(function (err) {
-        area.innerHTML = '<p style="padding: 20px; color: var(--ziyit-danger);">对账失败: ' + escAdmin(err.message || err) + '</p>';
-    });
-}
-
 let promoteTarget = null;
-
-// VIP 到期文案：永久 / 到期时间 / 非 VIP
-function vipExpireText(user) {
-    if (!user) return '当前：—';
-    if (user.vipActive && !user.vipExpireAt) return '当前：永久 VIP';
-    if (user.vipExpireAt) {
-        var d = new Date(user.vipExpireAt);
-        var s = isNaN(d.getTime()) ? user.vipExpireAt : d.toLocaleString('zh-CN', { hour12: false });
-        return '当前：' + (user.vipActive ? 'VIP，' + s + ' 到期' : 'VIP 已于 ' + s + ' 过期');
-    }
-    return '当前：非 VIP';
-}
-
-function syncPromoteDaysVisibility() {
-    var isVip = document.getElementById('promote-type').value === 'vip';
-    document.getElementById('promote-days-group').style.display = isVip ? '' : 'none';
-}
 
 function openPromoteModal(user) {
     if (!canAccess(4)) { alert('仅 4 级超级管理员可升级用户'); return; }
     promoteTarget = user;
     document.getElementById('promote-username').value = user.username || '-';
     document.getElementById('promote-type').value = 'vip';
-    document.getElementById('promote-days-hint').textContent = vipExpireText(user);
-    // 默认天数：永久 VIP 留空（=永久，点确认不会把他缩成 30 天）；其余预填 30。
-    document.getElementById('promote-days').value =
-        (user.vipActive && !user.vipExpireAt) ? '' : '30';
-    syncPromoteDaysVisibility();
     document.getElementById('promote-user-modal').classList.add('active');
 }
 
@@ -2765,23 +2569,11 @@ function confirmPromoteUser() {
     if (!promoteTarget) return;
     const type = document.getElementById('promote-type').value;
     const userId = promoteTarget.userId;
-    let days = null;
-    if (type === 'vip') {
-        const raw = document.getElementById('promote-days').value.trim();
-        days = raw === '' ? 0 : Number(raw);
-        if (!isFinite(days) || days < 0 || days > 36500 || Math.floor(days) !== days) {
-            alert('有效期天数不合法：0（或留空）表示永久，否则填 1-36500 的整数');
-            return;
-        }
-    }
     const btn = document.getElementById('confirm-promote-user');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-inline"></span>提交中...';
-    ZIYIT_API.adminPromoteUser(userId, type, type === 'vip' ? days : undefined).then(function (res) {
-        var msg = (res && res.message) || (promoteTarget.username + ' 已升级');
-        if (res && res.vipExpireAt) msg += '，到期时间 ' + new Date(res.vipExpireAt).toLocaleString('zh-CN', { hour12: false });
-        else if (res && res.vipPermanent) msg += '（永久）';
-        alert(msg);
+    ZIYIT_API.adminPromoteUser(userId, type).then(function () {
+        alert(promoteTarget.username + ' 已升级为' + (type === 'admin' ? '管理员' : 'VIP用户'));
         closePromoteModal();
         loadUsers();
     }).catch(function (err) {

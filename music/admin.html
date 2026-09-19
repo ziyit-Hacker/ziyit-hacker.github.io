@@ -87,9 +87,6 @@
                     <li class="menu-item" data-section="rc-key-management" data-level="3">
                         <span>🔐</span> RC 软件密钥
                     </li>
-                    <li class="menu-item" data-section="afdian-purchases" data-level="3">
-                        <span>💎</span> 爱发电订单
-                    </li>
                     <li class="menu-item" data-section="backrooms-members" data-level="2">
                         <span>🌌</span> 后室成员管理
                     </li>
@@ -404,13 +401,9 @@
                 <section id="rc-key-management" class="content-section">
                     <div class="section-header">
                         <h2>RC 软件密钥管理</h2>
-                        <button class="user-btn" id="rc-legacy-import">回填历史明文密钥</button>
                     </div>
-                    <p style="margin-bottom: 12px; font-size: 13px; color: var(--ziyit-text-secondary); line-height: 1.7;">
-                        这里显示各用户 RC 许可证的<b>明文密钥</b>（爱发电自动发放 / 历史补录 / 管理员发放），可直接发给用户核对。
-                    </p>
                     <div class="user-controls">
-                        <input type="text" class="user-search" id="rc-key-search" placeholder="搜索用户名 / 明文密钥 / ID...">
+                        <input type="text" class="user-search" id="rc-key-search" placeholder="搜索用户名 / 密钥 / ID...">
                         <button class="user-btn" id="refresh-rc-keys">刷新列表</button>
                     </div>
                     <div class="user-list" id="rc-key-list">
@@ -449,21 +442,6 @@
                             </div>
                         </div>
                     </div>
-                </section>
-
-                <section id="afdian-purchases" class="content-section">
-                    <div class="section-header">
-                        <h2>爱发电订单 / VIP 购买情况</h2>
-                        <button class="user-btn success" id="afdian-reconcile-scan">扫订单补发</button>
-                    </div>
-                    <div class="user-controls">
-                        <input type="text" class="user-search" id="afdian-search" placeholder="搜索订单号 / 用户ID / 用户名 / 备注...">
-                        <input type="text" class="user-search" id="afdian-order-no" placeholder="精确查某笔订单号（可留空）">
-                        <button class="user-btn" id="afdian-reconcile-one">查单并补发</button>
-                        <button class="user-btn" id="refresh-afdian-purchases">刷新列表</button>
-                    </div>
-                    <div id="afdian-summary" style="padding-bottom: 12px; font-size: 13px; color: var(--ziyit-text-secondary);"></div>
-                    <div class="user-list" id="afdian-list"></div>
                 </section>
 
                 <section id="system-settings" class="content-section">
@@ -835,8 +813,8 @@
                 <input type="text" class="form-input" id="key-userinfo" readonly>
             </div>
             <div class="form-group">
-                <label class="form-label">明文密钥（服务端自行算哈希并加密存储）</label>
-                <input type="text" class="form-input" id="key-product-key" placeholder="如 A1B2C-3D4E5-F6071-8293A-B4C5D" required>
+                <label class="form-label">密钥哈希 (keyHash)</label>
+                <input type="text" class="form-input" id="key-hash" placeholder="密钥哈希" required>
             </div>
             <div class="form-group">
                 <label class="form-label">权限</label>
@@ -847,7 +825,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">有效期（天，0 = 永久）</label>
+                <label class="form-label">有效期（天）</label>
                 <input type="number" class="form-input" id="key-valid-days" value="365">
             </div>
             <div class="modal-actions">
@@ -918,13 +896,6 @@
                     <option value="vip">升级为 VIP 用户</option>
                     <option value="admin">升级为管理员（type=admin）</option>
                 </select>
-            </div>
-            <!-- 有效期天数：留空或填 0 = 永久 VIP（与升级前的行为一致）；
-                 填正整数 = 从当前到期时间往后叠加（续费不吃亏）。仅"VIP"类型有意义。 -->
-            <div class="form-group" id="promote-days-group">
-                <label class="form-label">VIP 有效期（天）</label>
-                <input type="number" class="form-input" id="promote-days" min="0" max="36500" step="1" placeholder="留空或 0 = 永久">
-                <div class="form-hint" id="promote-days-hint">当前：—</div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="user-btn danger" id="cancel-promote-user">取消</button>

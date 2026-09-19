@@ -5,11 +5,11 @@
     <meta charset="utf-8">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的RC密钥 - ZIYIT</title>
-    <meta name="description" content="查看购买 RC 方案后自动发放的 RC 软件许可证密钥与到期时间。">
+    <title>我的扩展包 - ZIYIT</title>
+    <meta name="description" content="查看自己在爱发电购买后自动发放的 RC 软件 DLC 扩展包（永久有效，含附赠基础包）。">
     <meta name="author" content="ZIYIT STUDIO">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="canonical" href="https://ziyit-hacker.github.io/user/rc-key.html">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/dlc.html">
     <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
     <script src="../assets/f12check.js"></script>
     <script src="../assets/ziyit_api.js"></script>
@@ -101,7 +101,7 @@
             cursor: not-allowed;
         }
 
-        .key-card {
+        .dlc-card {
             border: 1px solid var(--ziyit-border);
             border-radius: 10px;
             padding: 16px;
@@ -109,7 +109,7 @@
             background: var(--ziyit-bg);
         }
 
-        .key-card .top {
+        .dlc-card .top {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -118,10 +118,17 @@
             margin-bottom: 10px;
         }
 
-        .key-card .perm {
+        .dlc-card .name {
             font-size: 15px;
             font-weight: 600;
             color: var(--ziyit-text-primary);
+        }
+
+        .dlc-card .name .mid {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--ziyit-text-secondary);
+            margin-left: 6px;
         }
 
         .badge {
@@ -149,41 +156,37 @@
             border: 1px solid var(--ziyit-danger);
         }
 
-        .key-line {
+        .badge.bonus {
+            background: rgba(0, 120, 212, .14);
+            color: var(--ziyit-primary);
+            border: 1px solid var(--ziyit-primary);
+        }
+
+        .line {
             font-size: 14px;
-            line-height: 2.1;
+            line-height: 2;
             color: var(--ziyit-text-primary);
             word-break: break-all;
         }
 
-        .key-line .lbl {
+        .line .lbl {
             color: var(--ziyit-text-secondary);
         }
 
-        .key-line code {
-            font-family: Consolas, 'Courier New', monospace;
-            font-size: 15px;
+        .dl-btn {
+            margin-top: 10px;
+            padding: 7px 16px;
+            font-size: 13px;
             font-weight: 600;
-            user-select: all;
-            word-break: break-all;
-            color: var(--ziyit-primary);
-        }
-
-        .key-line .copy-btn {
-            margin-left: 8px;
-            padding: 2px 10px;
-            font-size: 12px;
-            font-weight: 400;
             background-color: var(--ziyit-primary);
             color: #fff;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
         }
 
-        .nokey {
-            color: var(--ziyit-danger);
-            font-size: 13px;
+        .dl-btn:hover {
+            background-color: var(--ziyit-primary-dark);
         }
 
         .loading,
@@ -266,32 +269,33 @@
     </div>
 
     <div class="page">
-        <h1>我的RC密钥</h1>
+        <h1>我的扩展包</h1>
         <a href="javascript:history.back()" class="back-link">返回</a>
         <p class="page-sub">
-            这里是你在爱发电购买 RC 方案（RC普通版 ￥27/月、RC专业版 ￥56/月）后自动发放的
-            <b>RC 软件许可证密钥</b>。下单时订单备注需按「用户ID/用户名」填写；付款后如未立即出现，
-            可到「升级VIP会员」页点「我已购买，立即查询」。
+            这里是你在爱发电购买 <b>RC 软件 DLC（扩展包）</b>后自动发放的记录，<b>永久有效</b>。
+            下单时订单备注需按「用户ID/扩展包ID」填写（扩展包ID 可填编号，如 <code>3</code>；也可填包名，如 <code>ProcessOptimizer</code>），
+            每单还会附赠基础包 <b>CoreToolkit</b>（编号 1）。付款后如未立即出现，可点「刷新」，
+            或到「升级VIP会员」页点「我已购买，立即查询」自助补发。
         </p>
 
         <div class="toolbar">
             <button type="button" id="refreshBtn">刷新</button>
             <a class="btn-link" href="https://afdian.com/a/ziyit_studio" target="_blank" rel="noopener noreferrer">前往爱发电购买</a>
-            <a class="btn-link" href="./VIP.html">升级VIP会员</a>
+            <a class="btn-link" href="./rc-key.html">我的RC密钥</a>
         </div>
 
-        <div id="keyArea"><div class="loading">加载中…</div></div>
+        <div id="dlcArea"><div class="loading">加载中…</div></div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (!ZIYIT_API.getToken()) {
-                alert('请先登录后再查看 RC 密钥');
+                alert('请先登录后再查看扩展包');
                 window.location.href = './';
                 return;
             }
 
-            var keyArea = document.getElementById('keyArea');
+            var dlcArea = document.getElementById('dlcArea');
             var refreshBtn = document.getElementById('refreshBtn');
 
             function esc(s) {
@@ -316,69 +320,90 @@
                 return fallback || '请求失败，请稍后再试';
             }
 
-            function statusBadge(k) {
-                if (!k.productKey) return '<span class="badge warn">待补录</span>';
-                if (k.permanent) return '<span class="badge ok">永久有效</span>';
-                if (k.expired) return '<span class="badge bad">已过期</span>';
-                return '<span class="badge ok">有效</span>';
+            function sourceText(src) {
+                if (src === 'afdian') return '爱发电自动发放';
+                if (src === 'manual') return '管理员发放';
+                if (src === 'legacy') return '历史补录';
+                return src || '-';
             }
 
-            function renderKey(k) {
-                var html = '<div class="key-card"><div class="top">'
-                    + '<span class="perm">' + esc(k.permissionName || 'RC 密钥') + '</span>'
-                    + statusBadge(k)
+            function renderItem(m) {
+                var version = Array.isArray(m.modVersion) ? m.modVersion.join(',') : (m.modVersion || '-');
+                var html = '<div class="dlc-card"><div class="top">'
+                    + '<span class="name">' + esc(m.modName || ('扩展包 #' + m.modId))
+                    + '<span class="mid">编号 ' + esc(m.modId) + ' · 版本 ' + esc(version) + '</span></span>'
+                    + (m.permanent ? '<span class="badge ok">永久有效</span>'
+                        : '<span class="badge warn">有效期至 ' + fmtTime(m.expireAt) + '</span>')
                     + '</div>';
-                if (k.productKey) {
-                    html += '<div class="key-line"><span class="lbl">密钥：</span>'
-                        + '<code>' + esc(k.productKey) + '</code>'
-                        + '<button type="button" class="copy-btn" data-copy="' + esc(k.productKey) + '">复制</button>'
-                        + '</div>';
-                } else {
-                    html += '<div class="key-line nokey">该密钥是历史发放的，明文未在服务端留存，'
-                        + '无法回显。请用 RC 客户端原有的密钥打开，或联系客服处理。</div>';
+                if (m.modDescription) {
+                    html += '<div class="line"><span class="lbl">说明：</span>' + esc(m.modDescription) + '</div>';
                 }
-                html += '<div class="key-line"><span class="lbl">激活时间：</span>' + fmtTime(k.activatedAt) + '</div>'
-                    + '<div class="key-line"><span class="lbl">到期时间：</span>'
-                    + (k.permanent ? '永久有效' : fmtTime(k.expireAt)) + '</div>';
-                if (k.source) {
-                    var src = k.source === 'afdian' ? '爱发电自动发放'
-                        : (k.source === 'legacy' ? '历史密钥补录' : (k.source === 'manual' ? '管理员发放' : k.source));
-                    html += '<div class="key-line"><span class="lbl">来源：</span>' + esc(src) + '</div>';
+                html += '<div class="line"><span class="lbl">获取时间：</span>' + fmtTime(m.purchasedAt) + '</div>'
+                    + '<div class="line"><span class="lbl">来源：</span>' + esc(sourceText(m.source)) + '</div>'
+                    + '<div class="line"><span class="lbl">有效期：</span>' + (m.permanent ? '永久有效' : fmtTime(m.expireAt)) + '</div>';
+                if (m.downloadUrl) {
+                    html += '<button type="button" class="dl-btn" data-mod-id="' + esc(m.modId)
+                        + '" data-mod-name="' + esc(m.modName || ('DLC_' + m.modId)) + '">下载扩展包</button>';
                 }
                 return html + '</div>';
             }
 
-            function render(data) {
-                var keys = (data && data.keys) || [];
-                if (!keys.length) {
-                    keyArea.innerHTML = '<div class="empty-box">你还没有 RC 密钥。<br>'
-                        + '在爱发电购买「RC普通版密钥独立方案」或「RC专业版密钥」后，'
-                        + '订单备注填「用户ID/用户名」，系统会自动把密钥发到这里。</div>';
+            function downloadDlc(modId, modName) {
+                if (!ZIYIT_API.getToken()) {
+                    alert('请先登录');
+                    window.location.href = './';
                     return;
                 }
-                keyArea.innerHTML = keys.map(renderKey).join('');
-                keyArea.querySelectorAll('.copy-btn').forEach(function (btn) {
+                ZIYIT_API.downloadMod(modId).then(function (res) {
+                    if (res.status === 401) {
+                        alert('登录已过期，请重新登录');
+                        window.location.href = './';
+                        return;
+                    }
+                    if (res.status === 403) {
+                        return res.json().then(function (d) {
+                            alert((d && d.detail) || '您未拥有该扩展包');
+                        });
+                    }
+                    if (!res.ok) {
+                        alert('下载失败，请稍后再试');
+                        return;
+                    }
+                    return res.blob().then(function (blob) {
+                        var url = URL.createObjectURL(blob);
+                        var a = document.createElement('a');
+                        a.href = url;
+                        a.download = modName + '.rcm';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    });
+                }).catch(function () {
+                    alert('服务器连接失败，请稍后再试');
+                });
+            }
+
+            function render(data) {
+                var list = (data && data.dlc) || [];
+                if (!list.length) {
+                    dlcArea.innerHTML = '<div class="empty-box">你还没有 DLC 扩展包。<br>'
+                        + '在爱发电购买扩展包商品后，订单备注填「用户ID/扩展包ID」，'
+                        + '系统会自动把扩展包（含附赠的基础包 CoreToolkit）发到这里，永久有效。</div>';
+                    return;
+                }
+                dlcArea.innerHTML = list.map(renderItem).join('');
+                dlcArea.querySelectorAll('.dl-btn').forEach(function (btn) {
                     btn.addEventListener('click', function () {
-                        var text = btn.getAttribute('data-copy') || '';
-                        var done = function () {
-                            btn.textContent = '已复制';
-                            setTimeout(function () { btn.textContent = '复制'; }, 1500);
-                        };
-                        if (navigator.clipboard && navigator.clipboard.writeText) {
-                            navigator.clipboard.writeText(text).then(done, function () {
-                                alert('复制失败，请手动选择密钥后复制');
-                            });
-                        } else {
-                            alert('当前浏览器不支持自动复制，请手动选择密钥后复制');
-                        }
+                        downloadDlc(btn.getAttribute('data-mod-id'), btn.getAttribute('data-mod-name'));
                     });
                 });
             }
 
             function load() {
-                keyArea.innerHTML = '<div class="loading">加载中…</div>';
-                return ZIYIT_API.rcMyKeys().then(render).catch(function (err) {
-                    keyArea.innerHTML = '<div class="error-box">加载失败：' + esc(errMsg(err)) + '</div>';
+                dlcArea.innerHTML = '<div class="loading">加载中…</div>';
+                return ZIYIT_API.myDlc().then(render).catch(function (err) {
+                    dlcArea.innerHTML = '<div class="error-box">加载失败：' + esc(errMsg(err)) + '</div>';
                 });
             }
 
