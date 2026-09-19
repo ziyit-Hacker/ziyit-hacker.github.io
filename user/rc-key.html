@@ -271,14 +271,17 @@
         <p class="page-sub">
             这里是你在爱发电购买 RC 方案（RC普通版 ￥27/月、RC专业版 ￥56/月）后自动发放的
             <b>RC 软件许可证密钥</b>。下单时订单备注需按「用户ID/用户名」填写；付款后如未立即出现，
-            可到「升级VIP会员」页点「我已购买，立即查询」。
+            可点上方「我已购买，立即查询」自助补发。
         </p>
 
         <div class="toolbar">
             <button type="button" id="refreshBtn">刷新</button>
+            <button type="button" id="checkPurchaseBtn">我已购买，立即查询</button>
             <a class="btn-link" href="https://afdian.com/a/ziyit_studio" target="_blank" rel="noopener noreferrer">前往爱发电购买</a>
             <a class="btn-link" href="./VIP.html">升级VIP会员</a>
         </div>
+
+        <div id="checkResult" style="display: none; margin-bottom: 16px; line-height: 1.6; font-size: 13px;"></div>
 
         <div id="keyArea"><div class="loading">加载中…</div></div>
     </div>
@@ -383,6 +386,29 @@
             }
 
             refreshBtn.addEventListener('click', load);
+
+            var checkBtn = document.getElementById('checkPurchaseBtn');
+            var checkResult = document.getElementById('checkResult');
+            checkBtn.addEventListener('click', function () {
+                checkBtn.disabled = true;
+                checkBtn.textContent = '查询中…';
+                checkResult.style.display = 'block';
+                checkResult.style.color = '';
+                checkResult.textContent = '正在向爱发电查询您的订单，请稍候…';
+                ZIYIT_API.afdianSelfCheck().then(function (res) {
+                    checkResult.textContent = (res && res.message) || '查询完成';
+                    checkResult.style.color = 'var(--ziyit-success)';
+                    // 查询可能刚把密钥补发进来，重新拉一次列表
+                    return load();
+                }).catch(function (err) {
+                    checkResult.style.color = 'var(--ziyit-danger)';
+                    checkResult.textContent = '查询失败：' + errMsg(err);
+                }).finally(function () {
+                    checkBtn.disabled = false;
+                    checkBtn.textContent = '我已购买，立即查询';
+                });
+            });
+
             load();
         });
     </script>

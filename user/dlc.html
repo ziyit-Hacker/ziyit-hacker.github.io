@@ -274,15 +274,17 @@
         <p class="page-sub">
             这里是你在爱发电购买 <b>RC 软件 DLC（扩展包）</b>后自动发放的记录，<b>永久有效</b>。
             下单时订单备注需按「用户ID/扩展包ID」填写（扩展包ID 可填编号，如 <code>3</code>；也可填包名，如 <code>ProcessOptimizer</code>），
-            每单还会附赠基础包 <b>CoreToolkit</b>（编号 1）。付款后如未立即出现，可点「刷新」，
-            或到「升级VIP会员」页点「我已购买，立即查询」自助补发。
+            每单还会附赠基础包 <b>CoreToolkit</b>（编号 1）。付款后如未立即出现，可点上方「我已购买，立即查询」自助补发。
         </p>
 
         <div class="toolbar">
             <button type="button" id="refreshBtn">刷新</button>
+            <button type="button" id="checkPurchaseBtn">我已购买，立即查询</button>
             <a class="btn-link" href="https://afdian.com/a/ziyit_studio" target="_blank" rel="noopener noreferrer">前往爱发电购买</a>
             <a class="btn-link" href="./rc-key.html">我的RC密钥</a>
         </div>
+
+        <div id="checkResult" style="display: none; margin-bottom: 16px; line-height: 1.6; font-size: 13px;"></div>
 
         <div id="dlcArea"><div class="loading">加载中…</div></div>
     </div>
@@ -408,6 +410,29 @@
             }
 
             refreshBtn.addEventListener('click', load);
+
+            var checkBtn = document.getElementById('checkPurchaseBtn');
+            var checkResult = document.getElementById('checkResult');
+            checkBtn.addEventListener('click', function () {
+                checkBtn.disabled = true;
+                checkBtn.textContent = '查询中…';
+                checkResult.style.display = 'block';
+                checkResult.style.color = '';
+                checkResult.textContent = '正在向爱发电查询您的订单，请稍候…';
+                ZIYIT_API.afdianSelfCheck().then(function (res) {
+                    checkResult.textContent = (res && res.message) || '查询完成';
+                    checkResult.style.color = 'var(--ziyit-success)';
+                    // 查询可能刚把扩展包补发进来，重新拉一次列表
+                    return load();
+                }).catch(function (err) {
+                    checkResult.style.color = 'var(--ziyit-danger)';
+                    checkResult.textContent = '查询失败：' + errMsg(err);
+                }).finally(function () {
+                    checkBtn.disabled = false;
+                    checkBtn.textContent = '我已购买，立即查询';
+                });
+            });
+
             load();
         });
     </script>

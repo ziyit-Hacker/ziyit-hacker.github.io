@@ -722,6 +722,16 @@
         return request('/rc/files/' + encodeURIComponent(fileId), { method: 'DELETE' });
     }
 
+    // RC 许可证密钥：查询当前登录用户名下密钥（含明文）
+    function rcMyKeys() {
+        return request('/rc/keys/mine');
+    }
+
+    // 爱发电自助查单：服务端主动拉最近订单，补发 VIP / RC 密钥 / DLC 扩展包
+    function afdianSelfCheck() {
+        return post('/afdian/self-check', {});
+    }
+
      
     function backroomsList() {
         return request('/backrooms/levels');
@@ -905,6 +915,8 @@
         rcFiles: rcFiles,
         rcRevealRecoveryKey: rcRevealRecoveryKey,
         rcDeleteFile: rcDeleteFile,
+        rcMyKeys: rcMyKeys,
+        afdianSelfCheck: afdianSelfCheck,
         backroomsList: backroomsList,
         backroomsView: backroomsView,
         backroomsSubmit: backroomsSubmit,
