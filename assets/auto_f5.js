@@ -129,7 +129,7 @@ class AutoRefresh {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         `;
         notification.innerHTML = `
-            <div style="margin-bottom: 10px;">🔄 即将自动刷新页面</div>
+            <div style="margin-bottom: 10px;">即将自动刷新页面</div>
             <div style="font-size: 14px; opacity: 0.8;">1.5分钟无操作，页面将在1秒后刷新</div>
         `;
         

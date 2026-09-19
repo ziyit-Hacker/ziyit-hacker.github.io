@@ -236,7 +236,7 @@
     fab.id = 'ziyit-guide-fab';
     fab.href = href;
     fab.title = '在线客服';
-    fab.innerHTML = '<span class="ziyit-fab-ic">🎧</span><span>在线客服</span>';
+    fab.innerHTML = '<span>在线客服</span>';
     if (document.body) {
         document.body.appendChild(fab);
     } else {

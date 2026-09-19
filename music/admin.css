@@ -59,7 +59,7 @@ body {
 }
 
 .admin-title::before {
-    content: "🎵";
+    content: "";
     font-size: 32px;
 }
 

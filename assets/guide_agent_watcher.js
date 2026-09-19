@@ -136,7 +136,7 @@
         var preview = (m && m.content) || '';
         if (preview.length > 80) preview = preview.slice(0, 80) + '…';
         showNotify({
-            icon: '🛎️',
+            icon: '',
             title: '新人工客服会话',
             user: '用户：' + user,
             preview: preview + (total > 1 ? '（还有 ' + (total - 1) + ' 个新会话）' : ''),
@@ -173,7 +173,7 @@
         var preview = String(m.content);
         if (preview.length > 80) preview = preview.slice(0, 80) + '…';
         showNotify({
-            icon: isBcast ? '📢' : '💬',
+            icon: '',
             title: isBcast ? '全局消息' : '管理员私聊',
             user: isBcast ? '系统广播' : ('来自：' + from),
             preview: preview,

@@ -1904,7 +1904,7 @@ function renderRcKeys() {
         } else {
             keys.forEach(function (k) {
                 const kf = rcKeyFields(k);
-                html += '<div class="user-email" style="font-family: monospace;">🔑 ' + escAdmin(kf.hash)
+                html += '<div class="user-email" style="font-family: monospace;">' + escAdmin(kf.hash)
                     + ' ｜ 权限: ' + escAdmin(kf.permission)
                     + ' ｜ 有效: ' + escAdmin(kf.validDays) + ' 天'
                     + (kf.expire ? ' ｜ 到期: ' + escAdmin(kf.expire) : '')
@@ -2378,7 +2378,7 @@ function renderAdmins() {
         const isSuper = f.userId === 1 || String(f.type).toLowerCase() === 'adminstrator';
         const levelCls = f.level === 4 ? 'normal' : (f.level === 3 ? 'edit' : 'banned');
         html += '<div class="user-item wide-item"><div class="user-details">'
-            + '<div class="user-name">' + escAdmin(f.username) + (isSuper ? ' <span style="color: var(--ziyit-danger);">🔒</span>' : '') + '</div>'
+            + '<div class="user-name">' + escAdmin(f.username) + '</div>'
             + '<div class="user-type ' + levelCls + '">' + adminLevelName(f.level) + '（Lv.' + f.level + '）</div>'
             + '<div class="user-del-date">ID: ' + escAdmin(f.userId)
             + (f.quota !== '' ? ' ｜ 人机验证额度: ' + (f.quota === -1 ? '无限' : escAdmin(f.quota)) : '')
@@ -2517,7 +2517,7 @@ function renderBackroomsMembers() {
         const isLocked = String(m.permission).toLowerCase() === 'adminstrator';
         const permCls = isLocked ? 'banned' : 'normal';
         html += '<div class="user-item wide-item"><div class="user-details">'
-            + '<div class="user-name">ID ' + escAdmin(m.id) + (isLocked ? ' <span style="color: var(--ziyit-danger);">🔒</span>' : '') + '</div>'
+            + '<div class="user-name">ID ' + escAdmin(m.id) + '</div>'
             + '<div class="user-type ' + permCls + '">' + escAdmin(m.permission || '未知') + '</div>'
             + (m.email ? '<div class="user-email">' + escAdmin(m.email) + '</div>' : '')
             + '</div><div class="user-actions">'
@@ -2737,7 +2737,7 @@ function renderChatSessions() {
         const unread = s.unread > 0 ? '<span class="chat-unread">' + s.unread + '</span>' : '';
         const act = k === 'peer:' + chatActivePeer ? ' active' : '';
         html += '<div class="chat-session' + act + '" data-key="' + k + '">'
-            + '<div class="chat-session-name">' + (s.peerId === 'broadcast' ? '📢 ' : '') + escAdmin(s.peerName) + unread + '</div>'
+            + '<div class="chat-session-name">' + escAdmin(s.peerName) + unread + '</div>'
             + '<div class="chat-session-preview">' + (last ? escAdmin(last.content) : '暂无消息') + '</div>'
             + '</div>';
     });
@@ -2763,7 +2763,7 @@ function renderChatMessages() {
         box.innerHTML = '<div class="chat-empty">在左侧选择一个管理员，或点击列表中的"私聊"按钮</div>';
         return;
     }
-    if (title) title.textContent = (s.peerId === 'broadcast' ? '📢 系统广播' : escAdmin(s.peerName));
+    if (title) title.textContent = (s.peerId === 'broadcast' ? '系统广播' : escAdmin(s.peerName));
      
     chatSortMsgs(s.msgs);
     if (!s.msgs.length) {
@@ -2776,7 +2776,7 @@ function renderChatMessages() {
         const bcast = !!m.broadcast;
         const who = mine ? '我' : (m.fromUsername || s.peerName);
         html += '<div class="chat-msg' + (bcast ? ' chat-broadcast' : (mine ? ' chat-mine' : ' chat-theirs')) + '">'
-            + '<div class="chat-msg-meta">' + (bcast ? '📢 ' : '') + escAdmin(who)
+            + '<div class="chat-msg-meta">' + escAdmin(who)
             + '<span class="chat-msg-time">' + escAdmin(chatTime(m.sentAt)) + '</span></div>'
             + '<div class="chat-msg-bubble">' + escAdmin(m.content) + '</div>'
             + '</div>';
@@ -3046,7 +3046,7 @@ function guideRenderInbox() {
             ? '<span style="font-size:11px;color:#27ae60;margin-left:auto;">接待中</span>'
             : (s.unread > 0 ? '<span class="chat-unread">' + s.unread + '</span>' : '');
         const type = last && (last.type === 'handoff' || last.type === 'transfer')
-            ? '🔄 转人工：' : '💬 用户：';
+            ? '转人工：' : '用户：';
         html += '<div class="chat-session' + (sid === guideConsole.activeSession ? ' active' : '') + '" data-guid-sid="' + escAdmin(sid) + '">'
             + '<div class="chat-session-name">' + escAdmin(s.user) + badge + '</div>'
             + '<div class="chat-session-preview">' + type + escAdmin((last && last.content) || '') + '</div>'
@@ -3132,7 +3132,7 @@ function guideRenderSessionMessages(sid) {
             : '剩余 ' + (b.remainingDays != null ? escAdmin(b.remainingDays) : '?') + ' 天'
                 + (b.unbanAt || b.unbanTime || b.bannedUntil ? ' / 解封时间 ' + escAdmin(b.unbanAt || b.unbanTime || b.bannedUntil) : '');
         html += '<div class="chat-broadcast chat-msg"><div class="chat-msg-bubble" style="border:1px solid rgba(231,76,60,.45); text-align:left;">'
-            + '<div style="font-weight:600; color:#e74c3c;">🔒 封禁信息（申诉中）</div>'
+            + '<div style="font-weight:600; color:#e74c3c;">封禁信息（申诉中）</div>'
             + '用户 ID：' + escAdmin(b.userId) + '<br>'
             + '封禁理由：' + escAdmin(b.banReason || '无') + '<br>'
             + '封禁状态：' + remain
@@ -3143,7 +3143,7 @@ function guideRenderSessionMessages(sid) {
         const time = m.ts || m.sentAt || '';
         const isSystem = m.type === 'sys' || m.type === 'system' || m.type === 'handoff' || m.type === 'transfer' || m.senderName === '系统';
         if (isSystem && m.fromUserId == null) {
-            html += '<div class="chat-broadcast chat-msg"><div class="chat-msg-bubble">🔄 ' + escAdmin(content || '请求转接人工客服') + '</div></div>';
+            html += '<div class="chat-broadcast chat-msg"><div class="chat-msg-bubble">' + escAdmin(content || '请求转接人工客服') + '</div></div>';
             return;
         }
          
@@ -3301,7 +3301,7 @@ function guideRenderAgents(list) {
         nm.textContent = a.username || ('用户#' + a.userId);
         const st = document.createElement('span');
         st.style.cssText = 'font-size:12px; color:var(--ziyit-text-secondary);';
-        st.textContent = a.online ? '🟢 在线' : '⚪ 离线';
+        st.textContent = a.online ? '在线' : '离线';
         left.appendChild(nm);
         left.appendChild(st);
         const del = document.createElement('button');

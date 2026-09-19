@@ -505,7 +505,7 @@
         </div>
 
         <div class="tips">
-            📌 小贴士：1. 翻译次数建议≤100，避免浏览器卡顿；2. 若翻译失败，刷新页面重试；3. 输出框双击可快速复制结果。
+            小贴士：1. 翻译次数建议≤100，避免浏览器卡顿；2. 若翻译失败，刷新页面重试；3. 输出框双击可快速复制结果。
         </div>
     </div>
 
@@ -768,7 +768,7 @@
                 } catch (error) {
                     console.warn(`微软翻译第${retry + 1}次尝试失败:`, error);
                     if (retry === 2) {
-                        statusText.textContent = `⚠️ 微软翻译3次尝试均失败，尝试谷歌翻译...`;
+                        statusText.textContent = `微软翻译3次尝试均失败，尝试谷歌翻译...`;
                     }
                      
                     if (retry < 2) {
@@ -779,7 +779,7 @@
 
              
             try {
-                statusText.textContent = '🔄 尝试使用谷歌翻译...';
+                statusText.textContent = '尝试使用谷歌翻译...';
                  
                 const googleResponse = await fetch('https://cors-anywhere.herokuapp.com/https://translate.googleapis.com/translate_a/single?client=gtx&sl=' + from + '&tl=' + to + '&dt=t&q=' + encodeURIComponent(text));
                 
@@ -793,7 +793,7 @@
                 }
             } catch (googleError) {
                 console.error('谷歌翻译失败:', googleError);
-                statusText.textContent = '🔄 谷歌翻译失败，尝试百度翻译...';
+                statusText.textContent = '谷歌翻译失败，尝试百度翻译...';
                 
                  
                 try {
@@ -814,7 +814,7 @@
                     }
                 } catch (baiduError) {
                     console.error('百度翻译失败:', baiduError);
-                    statusText.textContent = '❌ 所有翻译平台均失败，返回原文本';
+                    statusText.textContent = '所有翻译平台均失败，返回原文本';
                     return text;  
                 }
             }
@@ -842,7 +842,7 @@
 
              
             translateBtn.disabled = true;
-            statusText.textContent = `🚀 开始循环翻译（共${times}次）...`;
+            statusText.textContent = `开始循环翻译（共${times}次）...`;
             outputText.value = '';
 
             try {
@@ -875,10 +875,10 @@
                  
                 const finalText = await bingTranslate(currentText, cycleLanguages[(times - 1) % cycleLanguages.length], to);
                 outputText.value = finalText;
-                statusText.textContent = `✅ 翻译完成！共循环${times}次，可双击输出框复制结果`;
+                statusText.textContent = `翻译完成！共循环${times}次，可双击输出框复制结果`;
 
             } catch (error) {
-                statusText.textContent = `❌ 翻译过程出错: ${error.message}`;
+                statusText.textContent = `翻译过程出错: ${error.message}`;
             } finally {
                  
                 translateBtn.disabled = false;
@@ -892,7 +892,7 @@
         outputText.addEventListener('dblclick', () => {
             outputText.select();
             document.execCommand('copy');
-            statusText.textContent = '📋 结果已复制到剪贴板！';
+            statusText.textContent = '结果已复制到剪贴板！';
         });
     </script>
     <script>

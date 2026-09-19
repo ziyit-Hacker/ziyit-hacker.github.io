@@ -34,7 +34,7 @@ export class TrajectoryTracker {
         // v0.3.8 多维行为特征：这些计数只为"留证"，不参与画线。
         // 判定要点：真人必定先进画布、必有按压、move 事件数与采样点同源；纯脚本
         // 灌进来的坐标没有对应的事件。
-        // ⚠ 两个坑（v0.3.8 首版踩过，真人一直被误判"没按下"）：
+        // 两个坑（v0.3.8 首版踩过，真人一直被误判"没按下"）：
         //   1) 拖拽是【先按住按钮】再拖进画布，而起手提示段结束才开始采集
         //      （tracker.start() 在提示段之后），此时 pointerdown 早已发生过——
         //      所以按压必须由 phantom 在 onDown/onUp 里【显式通知】本类，
@@ -257,7 +257,7 @@ export class TrajectoryTracker {
         this.samples = [];
         this.touchActive = false;
         this.rect = this.canvas.getBoundingClientRect();
-        // ⚠ 不要在这里重置 beh：按下发生在 start() 之前（起手提示段播完才开始
+        // 不要在这里重置 beh：按下发生在 start() 之前（起手提示段播完才开始
         // 采集），notePress() 已经把计数归零并记下了那次按压，此处无条件重置
         // 会把它抹掉（v0.3.8 首版真人被误判"没按下"的根因）。只在还没创建时兜底。
         // 只在支持 PointerEvent 的环境下留证：老浏览器收不到 pointerdown，
