@@ -111,3 +111,15 @@ export function submitStreamChunk(apiBase, challengeId, sessionId, iv, ciphertex
         ciphertext,
     });
 }
+
+// v0.3.19 分包视频：拉包前必须先握手（服务端把分包游标归零，握手前任何 /video/chunk 都会被拒）。
+// 握手与拉包都带会话绑定校验：必须与领题时同一个 sessionId + 同 IP + 同 User-Agent。
+export function videoReady(apiBase, challengeId, sessionId) {
+    return postJson(apiBase, "/video/ready", { challengeId, sessionId });
+}
+
+// 取第 index 包（base64 分片）。服务端只接受 index == 当前游标 的那一包：
+// 跳号 / 抢跑 / 并发预取一律 409；同一包的重复请求是幂等的（重发同一份内容、不推进游标）。
+export function videoChunk(apiBase, challengeId, index, sessionId) {
+    return postJson(apiBase, "/video/chunk", { challengeId, index, sessionId });
+}

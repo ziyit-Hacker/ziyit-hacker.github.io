@@ -120,14 +120,15 @@
         var ME = null, LEVEL = 0;
         var BASE = (function () { try { return (localStorage.getItem('ziyit_api_base') || 'https://willian-unheady-rawly.ngrok-free.dev').replace(/\/$/, ''); } catch (e) { return 'https://willian-unheady-rawly.ngrok-free.dev'; } })();
 
-        var STATUS_CN = {
-            pending: ['待审核', 'b-pending'],
-            ai_passed: ['已过基础审核', 'b-ai-passed'],
-            ai_failed: ['未过基础审核', 'b-ai-failed'],
-            advanced_pending: ['高级审核中', 'b-advanced'],
-            approved: ['已收录', 'b-approved'],
-            rejected: ['未收录', 'b-rejected'],
-            rewritten: ['已重写', 'b-rewritten']
+         
+        var STATUS_CLASS = {
+            pending: 'b-pending',
+            ai_passed: 'b-ai-passed',
+            ai_failed: 'b-ai-failed',
+            advanced_pending: 'b-advanced',
+            approved: 'b-approved',
+            rejected: 'b-rejected',
+            rewritten: 'b-rewritten'
         };
 
         var $ = function (id) { return document.getElementById(id); };
@@ -136,13 +137,15 @@
         function pick(obj, keys) { for (var i = 0; i < keys.length; i++) { var v = obj[keys[i]]; if (v !== undefined && v !== null && v !== '') return v; } return null; }
         function errText(err) { var d = err && err.data; if (d) { if (typeof d.detail === 'string') return d.detail; if (d.detail && typeof d.detail.message === 'string') return d.detail.message; if (typeof d.message === 'string') return d.message; if (typeof d.msg === 'string') return d.msg; try { return JSON.stringify(d.detail || d); } catch (e) {} } return (err && err.message) || '请求失败'; }
         function fmtSize(n) { n = Number(n); if (!n && n !== 0) return '—'; if (n < 1024) return n + ' B'; if (n < 1048576) return (n / 1024).toFixed(1) + ' KB'; return (n / 1048576).toFixed(2) + ' MB'; }
-        function idOf(it) { return it.levelId || it.id; }
+        function idOf(it) { return it.levelId || it.docId || it.id; }
         function nameOf(it) { return it.name || ''; }
         function fmtLevel(id) { return id ? esc(id) : '—'; }
+         
+        function authorOf(it) { return (it.author && it.author.username) || it.ownerName || '未知用户'; }
 
-        function badge(status) {
-            var s = STATUS_CN[status] || [status || '未知', 'b-rejected'];
-            return '<span class="badge ' + s[1] + '">' + esc(s[0]) + '</span>';
+        function badge(it) {
+            var cls = STATUS_CLASS[it.status] || 'b-rejected';
+            return '<span class="badge ' + cls + '">' + esc(it.statusText || it.status || '未知') + '</span>';
         }
 
         function openModal(html) { $('modal-box').innerHTML = html; $('modal-mask').classList.add('show'); }
@@ -206,9 +209,9 @@
                     var id = idOf(it);
                     return '<tr>'
                         + '<td><strong>' + fmtLevel(id) + '</strong>' + (nameOf(it) ? ' <span style="color:#666">- ' + esc(nameOf(it)) + '</span>' : '') + '</td>'
-                        + '<td>' + esc(it.ownerName || it.owner || '—') + '</td>'
+                        + '<td>' + esc(authorOf(it)) + '</td>'
                         + '<td>' + fmtSize(it.size) + '</td>'
-                        + '<td>' + badge(it.status) + '</td>'
+                        + '<td>' + badge(it) + '</td>'
                         + '<td>' + esc(it.version != null ? it.version : '—') + '</td>'
                         + '<td>'
                         + '<button data-act="view" data-id="' + esc(id) + '">查看</button> '
@@ -229,7 +232,7 @@
                     var id = idOf(it);
                     return '<tr>'
                         + '<td><strong>' + fmtLevel(id) + '</strong>' + (nameOf(it) ? ' <span style="color:#666">- ' + esc(nameOf(it)) + '</span>' : '') + '</td>'
-                        + '<td>' + esc(it.ownerName || it.owner || '—') + '</td>'
+                        + '<td>' + esc(authorOf(it)) + '</td>'
                         + '<td>' + fmtSize(it.size) + '</td>'
                         + '<td>' + esc(it.version != null ? it.version : '—') + '</td>'
                         + '<td>'
@@ -250,7 +253,7 @@
                     var id = idOf(it);
                     return '<tr>'
                         + '<td><strong>' + fmtLevel(id) + '</strong>' + (nameOf(it) ? ' <span style="color:#666">- ' + esc(nameOf(it)) + '</span>' : '') + (it.rewritten ? ' <span class="badge b-rewritten">已重写</span>' : '') + '</td>'
-                        + '<td>' + esc(it.ownerName || it.owner || '—') + '</td>'
+                        + '<td>' + esc(authorOf(it)) + '</td>'
                         + '<td>' + esc(it.version != null ? it.version : '—') + '</td>'
                         + '<td>'
                         + '<button data-act="view" data-id="' + esc(id) + '">查看</button> '
@@ -263,10 +266,8 @@
 
         function loadList(kind) {
             ZIYIT_API.backroomsList().then(function (d) {
-                var levels = (d && (d.levels || d.data || d)) || [];
-                if (!Array.isArray(levels)) {
-                    if (levels && typeof levels === 'object' && !levels.length) { levels = []; } else { levels = []; }
-                }
+                var levels = (d && (d.items || d.levels || d.data)) || [];
+                if (!Array.isArray(levels)) levels = [];
                 if (kind === 'basic') renderBasic(levels.filter(function (it) { return it.status === 'pending' || it.status === 'ai_failed'; }));
                 if (kind === 'advanced') renderAdvanced(levels.filter(function (it) { return it.status === 'advanced_pending'; }));
                 if (kind === 'approved') renderApproved(levels.filter(function (it) { return it.status === 'approved'; }));
@@ -303,7 +304,7 @@
                 if (idOf(BASIC_ITEMS[i]) === id) { item = BASIC_ITEMS[i]; break; }
             }
             var name = item && item.name ? item.name : '';
-            var owner = item && (item.ownerName || item.owner) ? (item.ownerName || item.owner) : '—';
+            var owner = item ? authorOf(item) : '—';
             var prompt = '请作为 The Backrooms 中文维基的层级审核员，依据《层级审核标准》对下面的层级稿件进行审核。\n\n'
                 + '【层级 ID】' + id + '\n'
                 + (name ? '【层级名称】' + name + '\n' : '')

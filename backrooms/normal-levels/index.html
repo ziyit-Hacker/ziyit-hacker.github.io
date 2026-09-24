@@ -2958,7 +2958,7 @@
             function merge() {
                 if (!window.ZIYIT_API || !window.ZIYIT_API.backroomsList) return;
                 ZIYIT_API.backroomsList().then(function (d) {
-                    var levels = (d && (d.levels || d.data || d)) || [];
+                    var levels = (d && (d.items || d.levels || d.data)) || [];
                     if (!Array.isArray(levels)) return;
                     levels.forEach(function (it) {
                         var id = String(it.levelId || it.id || '').trim();

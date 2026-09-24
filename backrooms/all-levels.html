@@ -38,6 +38,7 @@
          
         .rew { display: inline-block; vertical-align: middle; margin-left: 6px; }
         .rew span { display: block; width: 14px; height: 9px; background: #4caf50; border-radius: 2px; }
+        .avatar { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 4px; }
         .toast { position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%); background: #22262c; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; z-index: 9999; display: none; }
     </style>
 </head>
@@ -59,13 +60,6 @@
                 <input type="text" id="search" placeholder="搜索 ID / 名称 / 作者…">
                 <select id="filter-status">
                     <option value="">全部状态</option>
-                    <option value="pending">待审核</option>
-                    <option value="ai_passed">已过基础审核</option>
-                    <option value="ai_failed">未过基础审核</option>
-                    <option value="advanced_pending">高级审核中</option>
-                    <option value="approved">已收录</option>
-                    <option value="rejected">未收录</option>
-                    <option value="rewritten">已重写</option>
                 </select>
             </div>
             <div class="count" id="count"></div>
@@ -77,26 +71,52 @@
 
     <script>
         var ALL = [];
+        var META = { total: 0, typeLabel: '层级' };
         var BASE = (function () { try { return (localStorage.getItem('ziyit_api_base') || 'https://willian-unheady-rawly.ngrok-free.dev').replace(/\/$/, ''); } catch (e) { return 'https://willian-unheady-rawly.ngrok-free.dev'; } })();
 
-        var STATUS_CN = {
-            pending: ['待审核', 'b-pending'],
-            ai_passed: ['已过基础审核', 'b-ai-passed'],
-            ai_failed: ['未过基础审核', 'b-ai-failed'],
-            advanced_pending: ['高级审核中', 'b-advanced'],
-            approved: ['已收录', 'b-approved'],
-            rejected: ['未收录', 'b-rejected'],
-            rewritten: ['已重写', 'b-rewritten']
+         
+        var STATUS_CLASS = {
+            pending: 'b-pending',
+            ai_passed: 'b-ai-passed',
+            ai_failed: 'b-ai-failed',
+            advanced_pending: 'b-advanced',
+            approved: 'b-approved',
+            rejected: 'b-rejected',
+            rewritten: 'b-rewritten'
         };
+        var DEFAULT_AVATAR = '/assets/logo.ico';
 
         var $ = function (id) { return document.getElementById(id); };
         function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
         function toast(msg) { var t = $('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(t._t); t._t = setTimeout(function () { t.style.display = 'none'; }, 2500); }
-        function idOf(it) { return it.levelId || it.id; }
+        function idOf(it) { return it.levelId || it.docId || it.id; }
         function nameOf(it) { return it.name || ''; }
-        function badge(status) { var s = STATUS_CN[status] || [status || '未知', 'b-rejected']; return '<span class="badge ' + s[1] + '">' + esc(s[0]) + '</span>'; }
          
-        function rewMark() { return '<span class="rew"><span style="white-space: pre-wrap;"> </span></span>'; }
+         
+        function authorOf(it) { return (it.author && it.author.username) || it.ownerName || '未知用户'; }
+        function avatarOf(it) { return (it.author && it.author.avatarUrl) || DEFAULT_AVATAR; }
+         
+        function badge(it) {
+            var cls = STATUS_CLASS[it.status] || 'b-rejected';
+            return '<span class="badge ' + cls + '">' + esc(it.statusText || it.status || '未知') + '</span>';
+        }
+        function rewMark() { return '<span class="badge b-rewritten">已重写</span>'; }
+
+         
+        function fillStatusFilter(items) {
+            var sel = $('filter-status');
+            var cur = sel.value;
+            var seen = {};
+            var html = '<option value="">全部状态</option>';
+            items.forEach(function (it) {
+                if (!it.status || seen[it.status]) return;
+                seen[it.status] = true;
+                 
+                html += '<option value="' + esc(it.status) + '">' + esc(it.statusText || it.status) + '</option>';
+            });
+            sel.innerHTML = html;
+            if (cur && seen[cur]) sel.value = cur;
+        }
 
         function render() {
             var kw = ($('search').value || '').trim().toLowerCase();
@@ -104,21 +124,22 @@
             var list = ALL.filter(function (it) {
                 var id = String(idOf(it) || '').toLowerCase();
                 var name = String(nameOf(it) || '').toLowerCase();
-                var owner = String(it.ownerName || it.owner || '').toLowerCase();
+                var owner = String(authorOf(it) || '').toLowerCase();
                 if (kw && id.indexOf(kw) === -1 && name.indexOf(kw) === -1 && owner.indexOf(kw) === -1) return false;
                 if (st && it.status !== st) return false;
                 return true;
             });
-            $('count').textContent = '共 ' + list.length + ' 条（' + (st ? '筛选' : '全部') + '）';
-            if (!list.length) { $('list').innerHTML = '<div class="empty">暂无层级数据。</div>'; return; }
-            $('list').innerHTML = '<table><thead><tr><th>层级</th><th>名称</th><th>作者</th><th>状态</th><th>版本</th><th>重写</th></tr></thead><tbody>'
+            $('count').textContent = '共 ' + list.length + ' / ' + (META.total || ALL.length) + ' 条'
+                + (META.typeLabel ? '（' + META.typeLabel + '）' : '') + (st ? '，已筛选' : '');
+            if (!list.length) { $('list').innerHTML = '<div class="empty">暂无数据。</div>'; return; }
+            $('list').innerHTML = '<table><thead><tr><th>ID</th><th>名称</th><th>作者</th><th>状态</th><th>版本</th><th>重写</th></tr></thead><tbody>'
                 + list.map(function (it) {
                     var id = idOf(it);
                     return '<tr data-id="' + esc(id) + '">'
                         + '<td><strong>' + esc(id) + '</strong></td>'
                         + '<td>' + esc(nameOf(it) || '—') + '</td>'
-                        + '<td>' + esc(it.ownerName || it.owner || '—') + '</td>'
-                        + '<td>' + badge(it.status) + '</td>'
+                        + '<td><img class="avatar" src="' + esc(avatarOf(it)) + '" alt="" onerror="this.style.display=\'none\'">' + esc(authorOf(it)) + '</td>'
+                        + '<td>' + badge(it) + '</td>'
                         + '<td>' + esc(it.version != null ? it.version : '—') + '</td>'
                         + '<td>' + (it.rewritten ? rewMark() : '—') + '</td>'
                         + '</tr>';
@@ -140,9 +161,13 @@
 
         function load() {
             ZIYIT_API.backroomsList().then(function (d) {
-                var levels = (d && (d.levels || d.data || d)) || [];
-                if (!Array.isArray(levels)) levels = [];
-                ALL = levels;
+                 
+                var items = (d && (d.items || d.levels || d.data)) || [];
+                if (!Array.isArray(items)) items = [];
+                ALL = items;
+                META.total = Number(d && d.total) || items.length;
+                META.typeLabel = (d && d.typeLabel) || '层级';
+                fillStatusFilter(items);
                 render();
             }).catch(function (err) {
                 var d = err && err.data;

@@ -1,5 +1,5 @@
 import { CONFIG, isMobileViewport } from "./config.js";
-import { requestChallenge, submitVerify, submitStreamChunk, } from "./api.js";
+import { requestChallenge, submitVerify, submitStreamChunk, videoChunk, videoReady, } from "./api.js";
 import { decrypt, deriveSessionKey, encrypt, generateClientKeyPair, importServerPublic, } from "./crypto.js";
 import { installAntidebug } from "./antidebug.js";
 import { PhantomRenderer } from "./renderer.js";
@@ -193,6 +193,25 @@ class WidgetSession {
             writable: true,
             value: ""
         });
+        // v0.3.19 分包视频：/challenge 不再下发整段 video，改用 videoStream 描述 + 逐包拉取。
+        Object.defineProperty(this, "videoStream", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
+        });
+        Object.defineProperty(this, "mediaSource", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
+        });
+        Object.defineProperty(this, "sourceBuffer", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
+        });
         // v0.3.3 实时流：开关与节奏由 /challenge 的加密 params 下发（阈值在后端）。
         Object.defineProperty(this, "streamEnabled", {
             enumerable: true,
@@ -204,7 +223,7 @@ class WidgetSession {
             enumerable: true,
             configurable: true,
             writable: true,
-            value: 400
+            value: 50
         });
         Object.defineProperty(this, "streamTimer", {
             enumerable: true,
@@ -259,7 +278,9 @@ class WidgetSession {
              
             const streamCfg = raw.stream || {};
             this.streamEnabled = !!streamCfg.enabled;
-            this.streamIntervalMs = Number(streamCfg.intervalMs) > 0 ? Number(streamCfg.intervalMs) : 400;
+            // v0.3.19：上报间隔按后端下发值（当前 50ms）。不要为"抗抖动"自行放大间隔——
+            // 间隔变大→批次数不足，反而会被否决。
+            this.streamIntervalMs = Number(streamCfg.intervalMs) > 0 ? Number(streamCfg.intervalMs) : 50;
             const videoEl = await this._prepareVideo(challenge);
             // previewSeconds 由后端下发且与"视频里真实存在的提示段长度"同源，
             // 不用本地 CONFIG 硬编码，避免前后端漂移导致切割点落在提示段中间。
@@ -295,6 +316,14 @@ class WidgetSession {
                  
                 this.status.textContent = "尝试次数过多，请稍后再试";
                 this.scheduleRetry(60000);
+            }
+            else if (code === 403 || code === 410) {
+                // 403 = 会话绑定不符（换了 IP/UA 或 sessionId 对不上）；410 = 题目或分包已过期。
+                // 两者都无法在当前这道题上继续，只能重新取题 —— 与验证失败共用同一条自动重来链路。
+                this.status.textContent = code === 403
+                    ? "会话校验失败，正在重新取题…"
+                    : "验证已过期，正在重新取题…";
+                this.scheduleRetry(800, "auto-restart");
             }
             else {
                 this.status.textContent = `初始化失败: ${e.message}`;
@@ -389,19 +418,28 @@ class WidgetSession {
             document.removeEventListener("dragstart", onSelectStart, { capture: true });
         };
     }
-    // v0.3.0：正确轨迹不再下发。后端把「光点沿控制点行进时的粒子簇」渲染成 MP4
-    // （黑底 + 簇）内嵌在 /challenge 响应里，前端把它当簇层与实时噪声叠加。
+    // v0.3.19：视频改为「分包下发 + MediaSource 播放」。
+    // /challenge 的 video 已恒为 null，改读 videoStream；拉包前必须先 POST /video/ready
+    // 握手（服务端把分包游标归零），且只能严格串行逐包拉 —— 并发预取 / 跳号都会被 409 拒。
     async _prepareVideo(challenge) {
-        if (!challenge || !challenge.video) {
-            throw new Error("挑战缺少验证视频");
+        const vs = challenge && challenge.videoStream;
+        if (!vs || !vs.chunkCount) {
+            throw new Error("挑战缺少分包视频信息");
         }
-        const mime = challenge.videoMime || "video/mp4";
-        const bin = atob(challenge.video);
-        const bytes = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) {
-            bytes[i] = bin.charCodeAt(i);
+        this.videoStream = vs;
+        const mime = vs.mime || challenge.videoMime || "video/mp4";
+        // codec 由后端从码流的 avcC box 读出，必须原样用；自己拼错会导致 isTypeSupported 失败、黑屏。
+        const type = vs.codec ? `${mime}; codecs="${vs.codec}"` : mime;
+        if (typeof MediaSource === "undefined" || !MediaSource.isTypeSupported(type)) {
+            throw new Error("当前浏览器不支持该视频编码");
         }
-        const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+        // 握手：确认后端就绪并把游标归零（握手之前任何 /video/chunk 都会被拒）
+        const ready = await videoReady(this.apiBase, this.challengeId, this.sessionId);
+        if (!ready || ready.ready !== true) {
+            throw new Error("视频尚未就绪，请重试");
+        }
+        const ms = new MediaSource();
+        const url = URL.createObjectURL(ms);
         const v = document.createElement("video");
         v.src = url;
         v.muted = true;
@@ -412,17 +450,110 @@ class WidgetSession {
         // canvas.drawImage 取帧；关闭弹窗时随节点一并销毁。
         v.style.cssText = "position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
         this.canvas.parentElement?.appendChild(v);
-        await new Promise((resolve) => {
-            if (v.readyState >= 2)
-                return resolve();
-            const done = () => resolve();
-            v.addEventListener("loadeddata", done, { once: true });
-            v.addEventListener("error", done, { once: true });
-            window.setTimeout(done, 3000);
-        });
         this.videoEl = v;
         this.videoUrl = url;
+        this.mediaSource = ms;
+        try {
+            await new Promise((resolve, reject) => {
+                if (ms.readyState === "open")
+                    return resolve();
+                ms.addEventListener("sourceopen", () => resolve(), { once: true });
+                window.setTimeout(() => reject(new Error("MediaSource 打开超时")), 5000);
+            });
+            // SourceBuffer.mode 保持默认的 "segments"：每包都以 IDR 关键帧开头，依序 append 即可无缝播放
+            this.sourceBuffer = ms.addSourceBuffer(type);
+            await this._pullChunks(ready);
+            if (ms.readyState === "open") {
+                ms.endOfStream();
+            }
+        }
+        catch (e) {
+            v.remove();
+            URL.revokeObjectURL(url);
+            this.videoEl = null;
+            this.videoUrl = "";
+            this.mediaSource = null;
+            this.sourceBuffer = null;
+            throw e;
+        }
+        // 等元数据：endOfStream 之后 duration 才确定，渲染器要用 currentTime / duration 取帧
+        await new Promise((resolve) => {
+            if (v.readyState >= 1)
+                return resolve();
+            const done = () => resolve();
+            v.addEventListener("loadedmetadata", done, { once: true });
+            v.addEventListener("durationchange", done, { once: true });
+            v.addEventListener("error", done, { once: true });
+            window.setTimeout(done, 5000);
+        });
         return v;
+    }
+    // 严格串行拉包：拿到第 n 包并 appendBuffer 之后，才发起第 n+1 包。
+    async _pullChunks(ready) {
+        const total = Number(ready.chunkCount || this.videoStream?.chunkCount || 0);
+        let index = 0;
+        let retried = 0;
+        for (;;) {
+            let chunk;
+            try {
+                chunk = await videoChunk(this.apiBase, this.challengeId, index, this.sessionId);
+            }
+            catch (e) {
+                // 409 = 本地序号与服务端游标不同步：重取当前游标指向的那一包
+                // （同一包的重复请求幂等、不推进游标），不要往后跳。
+                if (e && e.status === 409 && retried < 5) {
+                    retried++;
+                    continue;
+                }
+                throw e;
+            }
+            await this._appendChunk(chunk.data);
+            if (chunk.final)
+                return;
+            const next = Number(chunk.nextIndex);
+            if (!Number.isFinite(next) || next <= index)
+                return;
+            index = next;
+            if (total && index >= total)
+                return;
+        }
+    }
+    // 把一包 base64 分片 append 进 SourceBuffer；await updateend 保证同时只有一次 append 在飞。
+    _appendChunk(base64) {
+        const sb = this.sourceBuffer;
+        if (!sb)
+            return Promise.reject(new Error("SourceBuffer 未就绪"));
+        const bin = atob(base64 || "");
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) {
+            bytes[i] = bin.charCodeAt(i);
+        }
+        return new Promise((resolve, reject) => {
+            const doAppend = () => {
+                try {
+                    sb.appendBuffer(bytes);
+                }
+                catch (e) {
+                    reject(e);
+                    return;
+                }
+                const onEnd = () => {
+                    sb.removeEventListener("updateend", onEnd);
+                    resolve();
+                };
+                sb.addEventListener("updateend", onEnd);
+            };
+            if (sb.updating) {
+                const onIdle = () => {
+                    sb.removeEventListener("updateend", onIdle);
+                    doAppend();
+                };
+                sb.addEventListener("updateend", onIdle);
+            }
+            else {
+                doAppend();
+            }
+        });
     }
     // ---- v0.3.3 实时流上报 ----
     // 目的：把"松手后一次性提交整段轨迹"改成"边画边报"。服务端只信每批次的【到达
@@ -585,6 +716,24 @@ class WidgetSession {
         this.streamTimer = 0;
         this.renderer?.stop();
         this.tracker?.stop();
+        // 释放 MSE：先摘掉 SourceBuffer（会中止仍在飞的 append），再结束并丢弃 MediaSource。
+        if (this.mediaSource && this.sourceBuffer) {
+            try {
+                if (this.mediaSource.readyState === "open") {
+                    this.mediaSource.removeSourceBuffer(this.sourceBuffer);
+                }
+            }
+            catch (e) { /* ignore */ }
+        }
+        this.sourceBuffer = null;
+        if (this.mediaSource && this.mediaSource.readyState === "open") {
+            try {
+                this.mediaSource.endOfStream();
+            }
+            catch (e) { /* ignore */ }
+        }
+        this.mediaSource = null;
+        this.videoStream = null;
         // 释放前端侧视频资源：暂停 + 脱离 DOM + 撤销 Blob URL，避免内存泄漏。
         if (this.videoEl) {
             try {

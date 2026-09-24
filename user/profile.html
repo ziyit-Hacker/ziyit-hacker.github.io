@@ -307,6 +307,20 @@
         </div>
 
         <div class="section">
+            <h2>头像设置</h2>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <img id="avatarPreview" alt="当前头像" src="../assets/logo.ico"
+                    style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1px solid var(--ziyit-border);">
+                <span style="font-size:13px;color:var(--ziyit-text-secondary);">当前头像（未设置时显示默认占位图）；设置后所有文档上的头像会立刻同步。</span>
+            </div>
+            <input type="text" id="newAvatar" autocomplete="off" placeholder="图片ID（64 位十六进制，须为你自己上传过的图片）">
+            <button id="avatarBtn" type="button">设置头像</button>
+            <button id="avatarClearBtn" type="button"
+                style="background: var(--ziyit-text-secondary); margin-left: 8px;">清除头像</button>
+            <div class="result" id="avatarResult"></div>
+        </div>
+
+        <div class="section">
             <h2>修改用户名</h2>
             <input type="text" id="newUsername" maxlength="15" autocomplete="off" placeholder="输入新用户名">
             <button id="usernameBtn" type="button">修改用户名</button>
@@ -387,6 +401,10 @@
                     infoRegisterTime.textContent = formatTime(user.registerTime || user.register_time || user.createdAt);
                     infoLastLogin.textContent = formatTime(user.lastLoginTime || user.last_login);
                     infoPasswordChanged.textContent = formatTime(user.passwordChangedAt);
+
+                    // 头像地址由后端下发（/img/{id} 或完整地址）；未设置时回退默认占位图
+                    const avatarPreview = document.getElementById('avatarPreview');
+                    if (avatarPreview) avatarPreview.src = user.avatarUrl || '../assets/logo.ico';
 
                     if (user.emailVerified) {
                         infoEmail.textContent = isBoundEmail(user.email) ? user.email : '未绑定';
@@ -893,6 +911,67 @@
                     btn.disabled = false;
                 });
             });
+
+            // ---- 头像设置 / 清除（PUT /users/avatar） ----
+            // 请求体 { avatar: "<图片ID>" }，空串表示清除；图片 ID 必须是本账号自己上传过的图片。
+            (function () {
+                const btn = document.getElementById('avatarBtn');
+                const clearBtn = document.getElementById('avatarClearBtn');
+                const input = document.getElementById('newAvatar');
+                const result = document.getElementById('avatarResult');
+
+                function showAvatarResult(msg, ok) {
+                    result.textContent = msg;
+                    result.className = 'result ' + (ok ? 'success' : 'error');
+                    result.style.display = 'block';
+                }
+
+                function applyAvatar(id, done) {
+                    ZIYIT_API.updateAvatar(id).then(function (data) {
+                        const url = (data && data.avatarUrl) || '';
+                        if (url) document.getElementById('avatarPreview').src = url;
+                        done(null, data);
+                    }).catch(function (err) {
+                        done(err);
+                    });
+                }
+
+                btn.addEventListener('click', function () {
+                    const id = input.value.trim();
+                    if (!/^[0-9a-f]{64}$/i.test(id)) {
+                        showAvatarResult('图片 ID 需为 64 位十六进制字符', false);
+                        return;
+                    }
+                    btn.disabled = true;
+                    result.style.display = 'none';
+                    applyAvatar(id, function (err) {
+                        btn.disabled = false;
+                        if (err) {
+                            if (err.status === 403) showAvatarResult('该图片不存在或不属于当前账号，请先上传后再设置', false);
+                            else if (err.status === 401) showAvatarResult('登录已过期，请重新登录', false);
+                            else showAvatarResult('设置失败：' + ((err.data && err.data.detail) || '请稍后再试'), false);
+                            return;
+                        }
+                        input.value = '';
+                        showAvatarResult('头像设置成功，所有文档上的头像已同步', true);
+                    });
+                });
+
+                clearBtn.addEventListener('click', function () {
+                    clearBtn.disabled = true;
+                    result.style.display = 'none';
+                    applyAvatar('', function (err) {
+                        clearBtn.disabled = false;
+                        if (err) {
+                            if (err.status === 401) showAvatarResult('登录已过期，请重新登录', false);
+                            else showAvatarResult('清除失败：' + ((err.data && err.data.detail) || '请稍后再试'), false);
+                            return;
+                        }
+                        document.getElementById('avatarPreview').src = '../assets/logo.ico';
+                        showAvatarResult('已清除头像，恢复默认占位图', true);
+                    });
+                });
+            })();
         });
     </script>
 <script>

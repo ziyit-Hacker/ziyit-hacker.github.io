@@ -251,6 +251,13 @@
         return put('/users/email', { email: newEmail });
     }
 
+    // 头像：请求体 { avatar: "<图片ID>" }，传空串表示清除。
+    // 图片 ID 必须是【当前用户自己上传过】的图片（64 位 hex），否则 403。
+    // 回包带 avatar 与 avatarUrl；设置后所有文档上的头像会立刻同步。
+    function updateAvatar(avatarId) {
+        return put('/users/avatar', { avatar: avatarId || '' });
+    }
+
     function getMods() {
         return request('/mods');
     }
@@ -835,13 +842,101 @@
         });
     }
 
-     
+    // ---- Backrooms 文档系统：四类同构，接口前缀即类型 ----
+    // 层级 levels / 实体 entities / 物品 objects / 现象 phenomena，全部走同一套路径规则，
+    // 因此这里按 type 拼前缀，避免每类各写一份。既有层级专用函数保留以兼容旧页面。
+    var BACKROOMS_PREFIX = {
+        level: '/backrooms/levels',
+        entity: '/backrooms/entities',
+        object: '/backrooms/objects',
+        phenomenon: '/backrooms/phenomena'
+    };
+
+    function backroomsPrefix(type) {
+        return BACKROOMS_PREFIX[type] || BACKROOMS_PREFIX.level;
+    }
+
     function backroomsList() {
         return request('/backrooms/levels');
     }
 
     function backroomsView(id) {
         return request('/backrooms/levels/' + encodeURIComponent(id));
+    }
+
+    // 列表：层级回包同时带 levels 与 items（内容相同），其余三类只有 items；
+    // 另带 total / type / typeLabel，分类名一律取回包值，前端不写死。
+    function backroomsTypeList(type) {
+        return request(backroomsPrefix(type));
+    }
+
+    // 元数据：多带 fileName / aiReview / advancedReview；不可见返回 404
+    function backroomsTypeMeta(type, id) {
+        return request(backroomsPrefix(type) + '/' + encodeURIComponent(id) + '/meta');
+    }
+
+    // 正文（HTML）：非 approved 的稿件仅作者本人与管理员可见，且页面会被注入状态提示条
+    function backroomsTypeView(type, id) {
+        return request(backroomsPrefix(type) + '/' + encodeURIComponent(id));
+    }
+
+    // 提交 / 修改：接口前缀即类型，表单不传 type。
+    // ID 字段名：层级仍为 levelId（兼容既有前端），其余三类为 docId。
+    function backroomsTypeSubmit(type, docId, name, file) {
+        var fd = new FormData();
+        fd.append(type === 'level' ? 'levelId' : 'docId', docId);
+        fd.append('name', name);
+        fd.append('file', file);
+        return request(backroomsPrefix(type), { method: 'POST', body: fd });
+    }
+
+    function backroomsTypeUpdate(type, docId, name, file) {
+        var fd = new FormData();
+        if (name) fd.append('name', name);
+        fd.append('file', file);
+        return request(backroomsPrefix(type) + '/' + encodeURIComponent(docId), { method: 'PUT', body: fd });
+    }
+
+    function backroomsTypeDelete(type, docId) {
+        return request(backroomsPrefix(type) + '/' + encodeURIComponent(docId), { method: 'DELETE' });
+    }
+
+    // 管理员重写：下架 + 保留原文件 + 列表带 rew 标记（Lv.2+）
+    function backroomsTypeRewrite(type, docId) {
+        return request(backroomsPrefix(type) + '/' + encodeURIComponent(docId) + '/rewrite', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'
+        });
+    }
+
+    // 管理员删除：连同 versions/ 下的历史备份一并删除（Lv.2+）
+    function backroomsTypeAdminDelete(type, docId) {
+        return request(backroomsPrefix(type) + '/' + encodeURIComponent(docId) + '/admin', { method: 'DELETE' });
+    }
+
+    // 取正文并新窗口打开（内容为后端返回的完整 HTML，按原文渲染）
+    function backroomsTypeOpen(type, id) {
+        var base = (localStorage.getItem('ziyit_api_base') || DEFAULT_BASE).replace(/\/$/, '');
+        var token = getToken();
+        return fetchWithTimeout(base + backroomsPrefix(type) + '/' + encodeURIComponent(id), {
+            headers: {
+                'ngrok-skip-browser-warning': '1',
+                'Authorization': token ? 'Bearer ' + token : ''
+            }
+        }).then(function (res) {
+            if (!res.ok) {
+                var err = new Error('请求失败 ' + res.status);
+                err.status = res.status;
+                throw err;
+            }
+            return res.text();
+        }).then(function (html) {
+            var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+        });
     }
 
      
@@ -962,6 +1057,7 @@
         updateProfile: updateProfile,
         updatePassword: updatePassword,
         updateEmail: updateEmail,
+        updateAvatar: updateAvatar,
         getMods: getMods,
         getDlc: getDlc,
         myDlc: myDlc,
@@ -1036,6 +1132,16 @@
         backroomsAdvancedReview: backroomsAdvancedReview,
         backroomsDownloadStandard: backroomsDownloadStandard,
         backroomsBase: backroomsBase,
-        backroomsOpenLevel: backroomsOpenLevel
+        backroomsOpenLevel: backroomsOpenLevel,
+        backroomsPrefix: backroomsPrefix,
+        backroomsTypeList: backroomsTypeList,
+        backroomsTypeMeta: backroomsTypeMeta,
+        backroomsTypeView: backroomsTypeView,
+        backroomsTypeOpen: backroomsTypeOpen,
+        backroomsTypeSubmit: backroomsTypeSubmit,
+        backroomsTypeUpdate: backroomsTypeUpdate,
+        backroomsTypeDelete: backroomsTypeDelete,
+        backroomsTypeRewrite: backroomsTypeRewrite,
+        backroomsTypeAdminDelete: backroomsTypeAdminDelete
     };
 })();

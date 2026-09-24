@@ -117,23 +117,30 @@
         var BASE = (function () { try { return (localStorage.getItem('ziyit_api_base') || 'https://willian-unheady-rawly.ngrok-free.dev').replace(/\/$/, ''); } catch (e) { return 'https://willian-unheady-rawly.ngrok-free.dev'; } })();
         var MAX_SIZE = 1024 * 1024;  
 
-        var STATUS_CN = {
-            pending: ['待审核', 'b-pending'],
-            ai_passed: ['已过基础审核', 'b-ai-passed'],
-            ai_failed: ['未过基础审核', 'b-ai-failed'],
-            advanced_pending: ['高级审核中', 'b-advanced'],
-            approved: ['已收录', 'b-approved'],
-            rejected: ['未收录', 'b-rejected'],
-            rewritten: ['已重写', 'b-rewritten']
+         
+        var STATUS_CLASS = {
+            pending: 'b-pending',
+            ai_passed: 'b-ai-passed',
+            ai_failed: 'b-ai-failed',
+            advanced_pending: 'b-advanced',
+            approved: 'b-approved',
+            rejected: 'b-rejected',
+            rewritten: 'b-rewritten'
         };
 
         var $ = function (id) { return document.getElementById(id); };
         function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
         function toast(msg) { var t = $('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(t._t); t._t = setTimeout(function () { t.style.display = 'none'; }, 3000); }
         function errText(err) { var d = err && err.data; if (d) { if (typeof d.detail === 'string') return d.detail; if (d.detail && typeof d.detail.message === 'string') return d.detail.message; if (typeof d.message === 'string') return d.message; if (typeof d.msg === 'string') return d.msg; try { return JSON.stringify(d.detail || d); } catch (e) {} } return (err && err.message) || '请求失败'; }
-        function badge(status) { var s = STATUS_CN[status] || [status || '未知', 'b-rejected']; return '<span class="badge ' + s[1] + '">' + esc(s[0]) + '</span>'; }
-        function idOf(it) { return it.levelId || it.id; }
+         
+        function badge(it) {
+            var cls = STATUS_CLASS[it.status] || 'b-rejected';
+            return '<span class="badge ' + cls + '">' + esc(it.statusText || it.status || '未知') + '</span>';
+        }
+        function idOf(it) { return it.levelId || it.docId || it.id; }
         function nameOf(it) { return it.name || ''; }
+         
+        function ownerOf(it) { return (it.author && it.author.username) || it.ownerName || ''; }
 
         $('f-file').addEventListener('change', function () {
             $('f-file-name').textContent = this.files && this.files[0] ? this.files[0].name + '（' + fmtSize(this.files[0].size) + '）' : '';
@@ -202,10 +209,12 @@
          
         function loadMine() {
             ZIYIT_API.backroomsList().then(function (d) {
-                var levels = (d && (d.levels || d.data || d)) || [];
+                 
+                var levels = (d && (d.items || d.levels || d.data)) || [];
                 if (!Array.isArray(levels)) levels = [];
                 var mine = levels.filter(function (it) {
-                    var owner = it.ownerName || it.owner || '';
+                     
+                    var owner = ownerOf(it);
                     return owner && String(owner).toLowerCase() === String(USERNAME).toLowerCase();
                 });
                 renderMine(mine);
@@ -224,7 +233,7 @@
                     return '<tr>'
                         + '<td><strong>' + esc(id) + '</strong></td>'
                         + '<td>' + esc(nameOf(it) || '—') + '</td>'
-                        + '<td>' + badge(it.status) + '</td>'
+                        + '<td>' + badge(it) + '</td>'
                         + '<td>' + esc(it.version != null ? it.version : '—') + '</td>'
                         + '<td>' + (it.rewritten ? '是' : '—') + '</td>'
                         + '<td>'
@@ -252,7 +261,7 @@
         function openEditModal(id) {
             var item = null;
             ZIYIT_API.backroomsList().then(function (d) {
-                var levels = (d && (d.levels || d.data || d)) || [];
+                var levels = (d && (d.items || d.levels || d.data)) || [];
                 if (Array.isArray(levels)) {
                     for (var i = 0; i < levels.length; i++) {
                         if (idOf(levels[i]) === id) { item = levels[i]; break; }
