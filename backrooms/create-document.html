@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>后室层级文档创建器</title>
+    <title>后室文档创建器</title>
     <link href="/assets/logo.ico" rel="icon" type="image/x-icon">
     <style>
          
@@ -1250,7 +1250,7 @@
     <div class="login-gate" id="login-gate">
         <div class="login-gate-card">
             <h2>🔒 需要登录</h2>
-            <p>使用「后室层级文档创建器」（编辑 / 加载模板 / 上传 HTML / 导出）需要先登录账号。</p>
+            <p>使用「后室文档创建器」（编辑 / 加载模板 / 上传 HTML / 导出）需要先登录账号。</p>
             <p class="login-gate-sub" id="login-gate-sub"></p>
             <a class="login-gate-btn" href="/user/">去登录</a>
             <div class="login-gate-back"><a href="/">← 返回首页</a></div>
@@ -1258,7 +1258,7 @@
     </div>
 
     <header class="topbar">
-        <h1>📄 后室层级文档创建器<span id="page-type-badge"></span></h1>
+        <h1>📄 后室文档创建器<span id="page-type-badge"></span></h1>
         <div class="top-actions">
             <button id="btn-load-template">从模板加载</button>
             <button id="btn-upload-html">上传 HTML</button>
@@ -1280,14 +1280,33 @@
 
             <section class="panel-sec">
                 <h3>基本信息</h3>
-                <label>标题 / 页面编号</label>
-                <input type="text" id="f-title" placeholder="如：Level 0">
+                <label>标题名称</label>
+                <input type="text" id="f-title" placeholder="如：宜居 / 驱笑剂">
+                <label>页面编号（标题前半段）</label>
+                <input type="text" id="f-title-prefix" placeholder="如：Level 0 / Object 3">
                 <label>面包屑 1</label>
                 <input type="text" id="f-crumb1" placeholder="如：层级">
                 <label>面包屑 2</label>
                 <input type="text" id="f-crumb2" placeholder="如：Level 0">
                 <div class="hint" id="rating-status"></div>
                 <button type="button" class="add-row-btn" id="btn-rate-open">⭐ 我的评分（选择绑定）</button>
+            </section>
+
+            <section class="panel-sec" id="sec-objmeta">
+                <h3>物品信息</h3>
+                <label>等级（显示在"等级："后）</label>
+                <input type="text" id="f-obj-level" placeholder="如：安全 / 危险 / 未知">
+                <label>等级说明 1</label>
+                <input type="text" id="f-obj-note1" placeholder="如：物品稀有，在多数层级皆有发现。">
+                <label>等级说明 2</label>
+                <input type="text" id="f-obj-note2" placeholder="如：对多数流浪者的生存至关重要。">
+                <div class="hint">对应物品文档顶部的两张表格；表格里的编号与名称请用上面「标题 / 页面编号」，或直接点预览里的标题修改。</div>
+            </section>
+
+            <section class="panel-sec" id="sec-sections">
+                <h3>正文章节（多段落）</h3>
+                <div id="section-list"></div>
+                <div class="hint">章节按文档类型自动生成；每段/每条可单独编辑、删除，点预览中的段落也可直接修改。</div>
             </section>
 
             <section class="panel-sec" id="sec-sd">
@@ -1313,7 +1332,7 @@
                 <div class="hint">参考「死区→天堂」：选择预设等级，或选择「自定义」填写等级名、颜色与图片。</div>
             </section>
 
-            <section class="panel-sec">
+            <section class="panel-sec" id="sec-descpara">
                 <h3>描述正文（多段落）</h3>
                 <div id="desc-para-list"></div>
                 <button type="button" class="add-row-btn" id="btn-desc-para-add-panel">＋ 增加段落</button>
@@ -1357,9 +1376,9 @@
                     <div id="page-title"><a class="editable" data-field="titlePrefix"></a> - “<a class="editable" data-field="titleName"></a>”<button type="button" class="edit-badge" id="btn-edit-title" title="修改标题">✏️ 编辑标题</button></div>
                     <div id="breadcrumbs"><a class="editable" data-field="crumb1"></a> &raquo; <a class="editable" data-field="crumb2"></a></div>
                     <div id="page-content">
+                      <div id="custom-blocks"></div>
                       <div id="level-body">
                         <span style="white-space: pre-wrap;">&#32;</span><br>
-                        <div id="custom-blocks"></div>
                         <div class="lang-cn sd-container" id="sd-container"></div>
                         <div class="editable html-field" data-field="intro"></div>
 
@@ -1470,6 +1489,11 @@
                 exitIntro: '[NO DATA]',
                 exitItems: ['[NO DATA]'],
                 footerCode: '',
+                // 非层级文档专用：顶部表格里的值 + 正文章节
+                objLevel: '[NO DATA]',
+                objNote1: '[NO DATA]',
+                objNote2: '[NO DATA]',
+                sections: [],
                  
                 type: 'levels'
             };
@@ -1579,22 +1603,35 @@
                     two: NODATA,
                     three: NODATA
                 };
+                // 三类非层级文档的顶部表格 / 分类块里的可编辑值
+                doc.objLevel = NODATA;
+                doc.objNote1 = NODATA;
+                doc.objNote2 = NODATA;
+                // 正文按"章节"组织，章节随类型不同
+                doc.sections = buildTypeSections(doc.type);
             }
 
              
              
-            var LEVEL_ONLY_PANELS = ['sec-sd', 'sec-base', 'sec-block', 'sec-descimg'];
+            var LEVEL_ONLY_PANELS = ['sec-sd', 'sec-descpara', 'sec-base', 'sec-descimg'];
+
+            function setPanelVisible(id, visible) {
+                var el = $(id);
+                if (el) el.style.display = visible ? '' : 'none';
+            }
 
             function initLayoutForType() {
                 var isLevel = doc.type === 'levels';
-                LEVEL_ONLY_PANELS.forEach(function (id) {
-                    var el = $(id);
-                    if (el) el.style.display = isLevel ? '' : 'none';
-                });
+                LEVEL_ONLY_PANELS.forEach(function (id) { setPanelVisible(id, isLevel); });
+                setPanelVisible('sec-sections', !isLevel);
+                setPanelVisible('sec-objmeta', doc.type === 'item');
+                // 自定义区块（页顶说明等）所有类型都能用；「在描述与基地之间插入」只对层级有意义。
+                setPanelVisible('sec-block', true);
+                setPanelVisible('btn-block-insert-panel', isLevel);
                 var lb = $('level-body');
                 if (lb) lb.style.display = isLevel ? '' : 'none';
                  
-                var bc = $('page-content') ? document.getElementById('breadcrumbs') : null;
+                var bc = document.getElementById('breadcrumbs');
                 if (bc) bc.style.display = isLevel ? '' : 'none';
             }
 
@@ -1622,11 +1659,103 @@
             }
 
              
+            // 非层级文档的正文按"章节"组织：{ key, title, strong?, sub?, list?, paras:[] }
+            // sub=true → 渲染成 <h3>（如行为准则下的「应当 / 不应」）；list=true → 渲染成 <ul><li>。
+            var TYPE_SECTIONS = {
+                item: [
+                    { key: 'desc', title: '描述：', strong: true },
+                    { key: 'feature', title: '特性：', strong: true },
+                    { key: 'event', title: '事件：', strong: true },
+                    { key: 'discover', title: '发现记录：' },
+                    { key: 'rule', title: '行为准则：' },
+                    { key: 'should', title: '应当：', sub: true, list: true },
+                    { key: 'shouldNot', title: '不应：', sub: true, list: true }
+                ],
+                entity: [
+                    { key: 'desc', title: '描述' },
+                    { key: 'psych', title: '心理' },
+                    { key: 'pop', title: '习性与种群数量' },
+                    { key: 'history', title: '历史循环' }
+                ],
+                phenomenon: [
+                    { key: 'desc', title: '描述' },
+                    { key: 'discover', title: '发现' },
+                    { key: 'rule', title: '行为准则' },
+                    { key: 'should', title: '应当：', sub: true, list: true },
+                    { key: 'shouldNot', title: '不应：', sub: true, list: true }
+                ]
+            };
+
+            function buildTypeSections(type) {
+                var defs = TYPE_SECTIONS[type];
+                if (!defs) return [];
+                return defs.map(function (d) {
+                    return {
+                        key: d.key,
+                        title: d.title,
+                        strong: !!d.strong,
+                        sub: !!d.sub,
+                        list: !!d.list,
+                        paras: d.sub ? [] : [NODATA]
+                    };
+                });
+            }
+
+            function sectionByKey(key) {
+                var list = doc.sections || [];
+                for (var i = 0; i < list.length; i++) {
+                    if (list[i].key === key) return list[i];
+                }
+                return null;
+            }
+
+             
+            // 顶部表格 / 分类块里的值：预览下可点开编辑，导出时转义输出。
+            function fieldHtml(field, forPreview) {
+                var t = doc[field] == null ? '' : String(doc[field]);
+                if (!forPreview) return escHtml(t);
+                return '<span class="editable" data-field="' + field + '" style="cursor:pointer;">' + escHtml(t) + '</span>';
+            }
+
+             
+            function sectionsHtml(forPreview) {
+                return (doc.sections || []).map(function (s, idx) {
+                    var head = s.sub
+                        ? '<h3 id="toc' + idx + '"><span>' + escHtml(s.title) + '</span></h3>\n'
+                        : '<h1 id="toc' + idx + '"><span>'
+                            + (s.strong ? '<strong>' + escHtml(s.title) + '</strong>' : escHtml(s.title))
+                            + '</span></h1>\n';
+                    var paras = s.paras || [];
+                    if (!paras.length) return head;
+                    var body;
+                    if (s.list) {
+                        body = forPreview
+                            ? '<ul>' + paras.map(function (t, i) {
+                                return '<li><a class="editable" data-field="sec:' + s.key + ':' + i + '" style="cursor:pointer;">' + escHtml(t) + '</a></li>';
+                            }).join('') + '</ul>\n'
+                            : '<ul>' + paras.map(function (t) { return '<li><p>' + escHtml(t) + '</p></li>'; }).join('') + '</ul>\n';
+                    }
+                    else {
+                        body = forPreview
+                            ? parasPreviewHtml(paras, 'sec:' + s.key)
+                            : '<div>' + parasExportHtml(paras) + '</div>\n';
+                    }
+                    return head + body;
+                }).join('');
+            }
+
+             
+            // 顶部「说明」：层级里对应 intro 字段，非层级也一样可编辑。
+            function introHtml(forPreview) {
+                return forPreview
+                    ? '<div class="editable html-field" data-field="intro">' + (doc.intro == null ? '' : String(doc.intro)) + '</div>\n'
+                    : (doc.intro ? '<div>' + absolutizeHtml(doc.intro) + '</div>\n' : '');
+            }
+
+             
             function typeBodyHtml(forPreview) {
-                var desc = forPreview
-                    ? parasPreviewHtml(doc.descParas, 'descPara')
-                    : '<div>' + parasExportHtml(doc.descParas) + '</div>';
-                var p = '<p>' + NODATA + '</p>';
+                var intro = introHtml(forPreview);
+                var sections = sectionsHtml(forPreview);
 
                 if (doc.type === 'entity') {
                     return ''
@@ -1652,10 +1781,8 @@
                         + '  <div class="properties">' + tagRowHtml(ENTITY_TAGS) + '</div>\n'
                         + '  <div class="properties-hazard">' + tagRowHtml(ENTITY_HAZARDS) + '</div>\n'
                         + '</div>\n<hr />\n<br />\n'
-                        + '<h1 id="toc2"><span>描述</span></h1>\n' + desc
-                        + '<h1 id="toc3"><span>心理</span></h1>\n' + p
-                        + '<h1 id="toc4"><span>习性与种群数量</span></h1>\n' + p
-                        + '<h1 id="toc5"><span>历史循环</span></h1>\n' + p;
+                        + intro
+                        + sections;
                 }
 
                 if (doc.type === 'phenomenon') {
@@ -1670,11 +1797,8 @@
                         + '  </div>\n'
                         + '  <hr />\n'
                         + '</div>\n'
-                        + '<h1 id="toc0"><span>描述</span></h1>\n' + desc
-                        + '<h1 id="toc1"><span>发现</span></h1>\n' + p
-                        + '<h1 id="toc2"><span>行为准则</span></h1>\n'
-                        + '<h3><span>应当：</span></h3>\n<ul><li>' + NODATA + '</li></ul>\n'
-                        + '<h3><span>不应：</span></h3>\n<ul><li>' + NODATA + '</li></ul>';
+                        + intro
+                        + sections;
                 }
 
                  
@@ -1682,20 +1806,15 @@
                 var white = 'color: rgb(var(--white-monochrome));';
                 return ''
                     + '<table style="width:100%;"><tr>'
-                    + '<td ' + cell + ' width:30%;"><span ' + white + '><span style="font-size:165%;"><strong>Object ' + NODATA + ':</strong> ' + NODATA + '</span></span></td>'
+                    + '<td ' + cell + ' width:30%;"><span ' + white + '><span style="font-size:165%;"><strong>' + escHtml(doc.titlePrefix) + ':</strong> ' + escHtml(doc.titleName) + '</span></span></td>'
                     + '</tr></table>\n'
                     + '<table style="width:100%;"><tr>'
-                    + '<td ' + cell + ' width:40%;"><span ' + white + '><span style="font-size:110%;"><strong>等级：</strong> ' + NODATA + '</span></span></td>'
-                    + '<td ' + cell + ' width:30%;"><span ' + white + '><span style="font-size:80%;">' + NODATA + '</span></span></td>'
-                    + '<td ' + cell + ' width:30%;"><span ' + white + '><span style="font-size:80%;">' + NODATA + '</span></span></td>'
+                    + '<td ' + cell + ' width:40%;"><span ' + white + '><span style="font-size:110%;"><strong>等级：</strong> ' + fieldHtml('objLevel', forPreview) + '</span></span></td>'
+                    + '<td ' + cell + ' width:30%;"><span ' + white + '><span style="font-size:80%;">' + fieldHtml('objNote1', forPreview) + '</span></span></td>'
+                    + '<td ' + cell + ' width:30%;"><span ' + white + '><span style="font-size:80%;">' + fieldHtml('objNote2', forPreview) + '</span></span></td>'
                     + '</tr></table>\n'
-                    + '<h1 id="toc0"><span><strong>描述：</strong></span></h1>\n' + desc
-                    + '<h1 id="toc1"><span><strong>特性：</strong></span></h1>\n' + p
-                    + '<h1 id="toc2"><span><strong>事件：</strong></span></h1>\n' + p
-                    + '<h1 id="toc3"><span>发现记录：</span></h1>\n' + p
-                    + '<h1 id="toc4"><span>行为准则：</span></h1>\n'
-                    + '<h3><span>应当：</span></h3>\n<ul><li>' + NODATA + '</li></ul>\n'
-                    + '<h3><span>不应：</span></h3>\n<ul><li>' + NODATA + '</li></ul>';
+                    + intro
+                    + sections;
             }
 
             function renderTypeBody() {
@@ -2711,6 +2830,7 @@
                     el.value = v;
                 }
                 setVal('f-title', doc.titleName);
+                setVal('f-title-prefix', doc.titlePrefix);
                 setVal('f-crumb1', doc.crumb1);
                 setVal('f-crumb2', doc.crumb2);
                 setVal('f-sd-name', doc.sd.name);
@@ -2719,8 +2839,66 @@
                 setVal('f-sd-one', doc.sd.one);
                 setVal('f-sd-two', doc.sd.two);
                 setVal('f-sd-three', doc.sd.three);
+                setVal('f-obj-level', doc.objLevel == null ? '' : doc.objLevel);
+                setVal('f-obj-note1', doc.objNote1 == null ? '' : doc.objNote1);
+                setVal('f-obj-note2', doc.objNote2 == null ? '' : doc.objNote2);
                 renderDescImgRows();
                 renderBlockRows();
+                renderSectionEditors();
+            }
+
+             
+            // 非层级正文的章节编辑器：按 doc.sections 动态生成每节的段落/条目列表。
+            function renderSectionEditors() {
+                var box = $('section-list');
+                if (!box) return;
+                box.innerHTML = '';
+                if (doc.type === 'levels') return;
+                (doc.sections || []).forEach(function (s) {
+                    var wrap = document.createElement('div');
+                    if (s.sub) wrap.style.cssText = 'margin-left:12px; padding-left:10px; border-left:2px solid #ddd;';
+                    var head = document.createElement('div');
+                    head.style.cssText = 'font-weight:600; margin:10px 0 4px;';
+                    head.textContent = s.title;
+                    wrap.appendChild(head);
+                    (s.paras || []).forEach(function (p, i) {
+                        var row = document.createElement('div');
+                        row.className = 'para-row';
+                        var ta = document.createElement('textarea');
+                        ta.value = p;
+                        ta.placeholder = s.list ? ('第 ' + (i + 1) + ' 条内容') : ('第 ' + (i + 1) + ' 段内容');
+                        ta.addEventListener('input', function () {
+                            s.paras[i] = ta.value;
+                            syncParaPreview('sec:' + s.key, i, ta.value);
+                        });
+                        ta.addEventListener('blur', function () { render(); });
+                        var del = document.createElement('button');
+                        del.type = 'button';
+                        del.className = 'row-del';
+                        del.textContent = '🗑';
+                        del.title = s.list ? '删除此条' : '删除此段';
+                        del.addEventListener('click', function () {
+                            s.paras.splice(i, 1);
+                            if (!s.paras.length) s.paras.push('');
+                            render();
+                        });
+                        row.appendChild(ta);
+                        row.appendChild(del);
+                        wrap.appendChild(row);
+                    });
+                    var add = document.createElement('button');
+                    add.type = 'button';
+                    add.className = 'add-row-btn';
+                    add.textContent = s.list ? '＋ 增加条目' : '＋ 增加段落';
+                    add.addEventListener('click', function () {
+                        s.paras.push('');
+                        render();
+                        var tas = wrap.querySelectorAll('textarea');
+                        if (tas.length) tas[tas.length - 1].focus();
+                    });
+                    wrap.appendChild(add);
+                    box.appendChild(wrap);
+                });
             }
 
              
@@ -2934,6 +3112,13 @@
                     case 'exitIntro': doc.exitIntro = val; break;
                     case 'entryItem': if (doc.entryItems[+m[1]] !== undefined) doc.entryItems[+m[1]] = val; break;
                     case 'exitItem': if (doc.exitItems[+m[1]] !== undefined) doc.exitItems[+m[1]] = val; break;
+                    case 'objLevel': doc.objLevel = val; break;
+                    case 'objNote1': doc.objNote1 = val; break;
+                    case 'objNote2': doc.objNote2 = val; break;
+                    case 'sec':
+                        var sec = sectionByKey(m[1]);
+                        if (sec && sec.paras && sec.paras[+m[2]] !== undefined) sec.paras[+m[2]] = val;
+                        break;
                 }
                 render();
             }
@@ -2946,6 +3131,8 @@
                     var field = a.getAttribute('data-field');
                     var m = String(field).split(':');
                     var val = '', title = '编辑内容', opts = {};
+                    // 列表型字段（入口/出口条目、行为准则条目）用单行输入框
+                    var kind = (m[0] === 'entryItem' || m[0] === 'exitItem') ? 'list' : null;
                     switch (m[0]) {
                         case 'titlePrefix': val = doc.titlePrefix; title = '编辑页面编号'; break;
                         case 'titleName': val = doc.titleName; title = '编辑标题名称'; break;
@@ -2971,15 +3158,29 @@
                         case 'exitIntro': val = doc.exitIntro; title = '编辑「出口」引导语'; break;
                         case 'entryItem': val = doc.entryItems[+m[1]] || ''; title = '编辑「入口」第 ' + ((+m[1]) + 1) + ' 条'; break;
                         case 'exitItem': val = doc.exitItems[+m[1]] || ''; title = '编辑「出口」第 ' + ((+m[1]) + 1) + ' 条'; break;
+                        case 'objLevel': val = doc.objLevel || ''; title = '编辑物品等级（显示在「等级：」后）'; break;
+                        case 'objNote1': val = doc.objNote1 || ''; title = '编辑等级说明 1'; break;
+                        case 'objNote2': val = doc.objNote2 || ''; title = '编辑等级说明 2'; break;
+                        case 'sec': {
+                            var sec = sectionByKey(m[1]);
+                            if (!sec) return;
+                            var si = +m[2];
+                            val = (sec.paras || [])[si] || '';
+                            title = '编辑「' + sec.title + '」第 ' + (si + 1) + (sec.list ? ' 条' : ' 段');
+                            opts.placeholder = '段落或 HTML 文本';
+                            if (sec.list) kind = 'list';
+                            break;
+                        }
                         default: return;
                     }
-                    openModal(title, val, field, (m[0] === 'entryItem' || m[0] === 'exitItem') ? 'list' : null, opts);
+                    openModal(title, val, field, kind, opts);
                 });
 
                 function bindInput(id, fn) {
                     $(id).addEventListener('input', function () { fn($(id).value); });
                 }
                 bindInput('f-title', function (v) { doc.titleName = v; render(); });
+                bindInput('f-title-prefix', function (v) { doc.titlePrefix = v; render(); });
                 bindInput('f-crumb1', function (v) { doc.crumb1 = v; render(); });
                 bindInput('f-crumb2', function (v) { doc.crumb2 = v; render(); });
                 bindInput('f-sd-name', function (v) {
@@ -3000,6 +3201,9 @@
                 bindInput('f-sd-two', function (v) { doc.sd.two = v; render(); });
                 bindInput('f-sd-three', function (v) { doc.sd.three = v; render(); });
                 bindInput('f-footer-code', function (v) { doc.footerCode = v; render(); });
+                bindInput('f-obj-level', function (v) { doc.objLevel = v; render(); });
+                bindInput('f-obj-note1', function (v) { doc.objNote1 = v; render(); });
+                bindInput('f-obj-note2', function (v) { doc.objNote2 = v; render(); });
 
                  
                 $('btn-desc-img-add').addEventListener('click', function () {
