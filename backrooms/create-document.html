@@ -1268,7 +1268,7 @@
             <button id="btn-load-template">从模板加载</button>
             <button id="btn-upload-html">上传 HTML</button>
             <button id="btn-export">导出 HTML</button>
-            <a class="top-link" href="submit.html">📤 提交层级 / 我的层级</a>
+            <a class="top-link" href="submit.html">📤 提交文档 / 我的文档</a>
             <a class="top-link" href="all-levels.html">🗂 层级列表</a>
         </div>
         <input type="file" id="f-html-file" accept=".html,text/html" style="display:none">
@@ -2660,16 +2660,28 @@
                 }
             }
 
-            function loadTemplate() {
-                fetch('levels.html')
+            function fetchShell() {
+                return fetch('levels.html')
                     .then(function (r) {
                         if (!r.ok) throw new Error('HTTP ' + r.status);
                         return r.text();
-                    })
+                    });
+            }
+
+            function loadTemplate() {
+                fetchShell()
                     .then(parseTemplate)
                     .catch(function (err) {
                         toast('模板加载失败：' + err.message + '（请通过本地服务器访问本页面）');
                     });
+            }
+
+             
+            function loadShell() {
+                if (rawTemplate) return;
+                fetchShell()
+                    .then(function (html) { rawTemplate = html; })
+                    .catch(function () {});
             }
 
             function parseTemplate(html) {
@@ -3932,6 +3944,7 @@
                 if (!rawTemplate) return '';
                 var p = new DOMParser().parseFromString(rawTemplate, 'text/html');
                 var code = codeOverride || ratingCode();
+                var isLevel = doc.type === 'levels';
 
                 if (p.title !== undefined) p.title = doc.titlePrefix + ' - “' + doc.titleName + '” - The Backrooms 中文维基';
 
@@ -3952,7 +3965,7 @@
                     p.head.appendChild(typeMeta);
                      
                     var st = p.createElement('style');
-                    st.textContent = RATING_WIDGET_CSS;
+                    st.textContent = RATING_WIDGET_CSS + (isLevel ? '' : '\n' + docClassCss());
                     p.head.appendChild(st);
                 }
 
@@ -3960,45 +3973,57 @@
                 if (pt) pt.innerHTML = escHtml(doc.titlePrefix) + ' - &ldquo;<strong>' + escHtml(doc.titleName) + '</strong>&rdquo;';
 
                 var bc = p.getElementById('breadcrumbs');
-                if (bc) bc.innerHTML = '<a>' + escHtml(doc.crumb1) + '</a> &raquo; ' + escHtml(doc.crumb2);
+                if (isLevel) {
+                    if (bc) bc.innerHTML = '<a>' + escHtml(doc.crumb1) + '</a> &raquo; ' + escHtml(doc.crumb2);
+                } else if (bc) {
+                     
+                    bc.parentNode.removeChild(bc);
+                }
 
                  
                 var h1a = p.querySelector('#header h1 a');
                 if (h1a) h1a.setAttribute('href', '/backrooms/');
 
                 var pc = p.getElementById('page-content');
-                var sdEl = pc ? pc.querySelector('.sd-container') : null;
-                if (sdEl) {
-                     
-                    if (doc.customBlocks.length) {
-                        var frag = p.createDocumentFragment();
-                        var tmp = p.createElement('div');
-                        tmp.innerHTML = customBlocksExportHtml();
-                        while (tmp.firstChild) frag.appendChild(tmp.firstChild);
-                        sdEl.parentNode.insertBefore(frag, sdEl);
+                if (pc && isLevel) {
+                    var sdEl = pc.querySelector('.sd-container');
+                    if (sdEl) {
+                        
+                        if (doc.customBlocks.length) {
+                            var frag = p.createDocumentFragment();
+                            var tmp = p.createElement('div');
+                            tmp.innerHTML = customBlocksExportHtml();
+                            while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+                            sdEl.parentNode.insertBefore(frag, sdEl);
+                        }
+                         
+                        var tmpR = p.createElement('div');
+                        tmpR.innerHTML = ratingWidgetExportHtml(rid, code);
+                        while (tmpR.firstChild) sdEl.parentNode.insertBefore(tmpR.firstChild, sdEl);
+                         
+                        sdEl.innerHTML = sdExportHtml();
+                         
+                        var cursor = sdEl.nextSibling;
+                        while (cursor) {
+                            var nx = cursor.nextSibling;
+                            pc.removeChild(cursor);
+                            cursor = nx;
+                        }
+                        var tmp2 = p.createElement('div');
+                        tmp2.innerHTML = userBodyExportHtml();
+                        while (tmp2.firstChild) pc.appendChild(tmp2.firstChild);
+                         
+                        if (doc.footerCode) {
+                            var tmp3 = p.createElement('div');
+                            tmp3.innerHTML = absolutizeHtml(doc.footerCode);
+                            while (tmp3.firstChild) pc.appendChild(tmp3.firstChild);
+                        }
                     }
+                } else if (pc) {
                      
-                    var tmpR = p.createElement('div');
-                    tmpR.innerHTML = ratingWidgetExportHtml(rid, code);
-                    while (tmpR.firstChild) sdEl.parentNode.insertBefore(tmpR.firstChild, sdEl);
-                     
-                    sdEl.innerHTML = sdExportHtml();
-                     
-                    var cursor = sdEl.nextSibling;
-                    while (cursor) {
-                        var nx = cursor.nextSibling;
-                        pc.removeChild(cursor);
-                        cursor = nx;
-                    }
-                    var tmp2 = p.createElement('div');
-                    tmp2.innerHTML = userBodyExportHtml();
-                    while (tmp2.firstChild) pc.appendChild(tmp2.firstChild);
-                     
-                    if (doc.footerCode) {
-                        var tmp3 = p.createElement('div');
-                        tmp3.innerHTML = absolutizeHtml(doc.footerCode);
-                        while (tmp3.firstChild) pc.appendChild(tmp3.firstChild);
-                    }
+                    pc.innerHTML = ratingWidgetExportHtml(rid, code)
+                        + typeBodyHtml(false) + '\n'
+                        + absolutizeHtml(doc.footerCode.replace(/<\/script/gi, '<\\/script'));
                 }
 
                  
@@ -4020,7 +4045,7 @@
             }
 
             function buildFullHtml(rid, codeOverride) {
-                if (rawTemplate && doc.type === 'levels') {
+                if (rawTemplate) {
                     var full = buildFullFromTemplate(rid, codeOverride);
                     if (full) return full;
                 }
@@ -4089,6 +4114,7 @@
                      
                      
                     if (doc.type === 'levels') setTimeout(loadTemplate, 300);
+                    else setTimeout(loadShell, 300);
                 });
             }
 

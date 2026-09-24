@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>层级提交 / 我的层级 - The Backrooms 中文维基</title>
+    <title>文档提交 / 我的文档 - The Backrooms 中文维基</title>
     <link href="/assets/logo.ico" rel="icon" type="image/x-icon">
     <script src="/assets/ziyit_api.js"></script>
     <style>
@@ -20,8 +20,8 @@
         .card { background: #fff; border: 1px solid #d9dce1; border-radius: 10px; padding: 16px 18px; margin-bottom: 18px; }
         .card h2 { margin: 0 0 12px; font-size: 16px; }
         .card label { display: block; font-size: 13px; color: #444; margin: 10px 0 4px; }
-        .card input[type="text"] { width: 100%; border: 1px solid #c9cdd4; border-radius: 8px; padding: 9px 12px; font-size: 14px; }
-        .card input[type="text"]:focus { outline: none; border-color: #0078d4; }
+        .card input[type="text"], .card select { width: 100%; border: 1px solid #c9cdd4; border-radius: 8px; padding: 9px 12px; font-size: 14px; background: #fff; }
+        .card input[type="text"]:focus, .card select:focus { outline: none; border-color: #0078d4; }
         .card .hint { color: #888; font-size: 12px; margin: 4px 0 0; }
         .card button { padding: 8px 16px; border: none; border-radius: 6px; background: #0078d4; color: #fff; font-size: 14px; cursor: pointer; margin-top: 14px; }
         .card button:hover { background: #0069b9; }
@@ -35,6 +35,7 @@
         th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e8eaee; vertical-align: top; }
         th { background: #f6f7f9; font-weight: 600; }
         .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; }
+        .t-badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; background: #eef2f7; color: #425466; }
         .b-pending { background: #fff4d6; color: #8a6d00; }
         .b-ai-passed { background: #d9f0ff; color: #005a9e; }
         .b-ai-failed { background: #ffe0e0; color: #b00020; }
@@ -62,7 +63,7 @@
 
 <body>
     <header class="topbar">
-        <h1>📤 层级提交 / 我的层级</h1>
+        <h1>📤 文档提交 / 我的文档</h1>
         <span class="who" id="whoami"></span>
         <div class="links">
             <a href="create-document.html">文档创建器</a>
@@ -75,31 +76,39 @@
     <div class="gate" id="gate">
         <div class="gate-card">
             <h2>🔒 需要登录</h2>
-            <p id="gate-msg">提交与管理层级需要先登录账号。</p>
+            <p id="gate-msg">提交与管理文档需要先登录账号。</p>
             <a href="/user/">去登录</a>
         </div>
     </div>
 
     <main id="main" style="display:none">
         <div class="card">
-            <h2>📤 提交新层级</h2>
-            <label>层级 ID <span style="color:#d13438">*</span></label>
-            <input type="text" id="f-id" placeholder="Level-706 / Level-!+ / Level-NO-DATA">
-            <p class="hint">唯一标识，需以 Level- 开头（如 Level-706、Level-!+、Level-NO-DATA）。</p>
-            <label>层级名称 <span style="color:#d13438">*</span></label>
+            <h2>📤 提交新文档</h2>
+            <label>文档类型 <span style="color:#d13438">*</span></label>
+            <select id="f-type">
+                <option value="level">层级 / Level</option>
+                <option value="entity">实体 / Entity</option>
+                <option value="object">物品 / Object</option>
+                <option value="phenomenon">现象 / Phenomenon</option>
+            </select>
+            <label>文档 ID <span style="color:#d13438">*</span></label>
+            <input type="text" id="f-id">
+            <p class="hint" id="f-id-hint"></p>
+            <label>文档名称 <span style="color:#d13438">*</span></label>
             <input type="text" id="f-name" placeholder="如：回忆">
-            <p class="hint">任意字符串，展示为《Level-706》（回忆）。</p>
+            <p class="hint">任意字符串，展示为《ID》（名称）。</p>
             <label>HTML 文件 <span style="color:#d13438">*</span></label>
             <div class="file-box">
                 <input type="file" id="f-file" accept=".html,text/html">
                 <span class="hint" id="f-file-name"></span>
             </div>
             <p class="hint">文件需 ≤ 1MB，页面结构与「文档创建器」导出格式一致。</p>
+            <p class="hint" id="f-type-hint"></p>
             <button id="btn-submit">提交审核</button>
         </div>
 
         <div class="card">
-            <h2>🗂 我的层级 <span id="mine-count"></span></h2>
+            <h2>🗂 我的文档 <span id="mine-count"></span></h2>
             <button id="btn-refresh" class="secondary" style="margin-top:0">刷新</button>
             <div id="mine-list"></div>
         </div>
@@ -116,6 +125,19 @@
         var USERNAME = '';
         var BASE = (function () { try { return (localStorage.getItem('ziyit_api_base') || 'https://willian-unheady-rawly.ngrok-free.dev').replace(/\/$/, ''); } catch (e) { return 'https://willian-unheady-rawly.ngrok-free.dev'; } })();
         var MAX_SIZE = 1024 * 1024;  
+
+         
+        var DOC_TYPES = [
+            { key: 'level', label: '层级', prefix: 'Level-', example: 'Level-706 / Level-!+ / Level-NO-DATA', marker: '' },
+            { key: 'entity', label: '实体', prefix: 'Entity-', example: 'Entity-111', marker: '正文需包含 IETS 标识（如 IETS：0B 或 iets-wrapper）' },
+            { key: 'object', label: '物品', prefix: 'Object-', example: 'Object-3', marker: '' },
+            { key: 'phenomenon', label: '现象', prefix: 'Phenomenon-', example: 'Phenomenon-34', marker: '正文需包含 IPTS 标识（如 IPTS：0B 或 ipts-wrapper）' }
+        ];
+        function docType(key) {
+            for (var i = 0; i < DOC_TYPES.length; i++) if (DOC_TYPES[i].key === key) return DOC_TYPES[i];
+            return DOC_TYPES[0];
+        }
+        function typeLabel(key) { return docType(key).label; }
 
          
         var STATUS_CLASS = {
@@ -137,10 +159,20 @@
             var cls = STATUS_CLASS[it.status] || 'b-rejected';
             return '<span class="badge ' + cls + '">' + esc(it.statusText || it.status || '未知') + '</span>';
         }
-        function idOf(it) { return it.levelId || it.docId || it.id; }
+        function idOf(it) { return it.id || it.docId || it.levelId; }
         function nameOf(it) { return it.name || ''; }
+        function typeOf(it) { return it.type || 'level'; }
          
         function ownerOf(it) { return (it.author && it.author.username) || it.ownerName || ''; }
+
+         
+        function refreshTypeHints() {
+            var t = docType($('f-type').value);
+            $('f-id').placeholder = t.example;
+            $('f-id-hint').textContent = '唯一标识，需以 ' + t.prefix + ' 开头（如 ' + t.example + '）。';
+            $('f-type-hint').textContent = t.marker || '编号取自 ID 中 ' + t.prefix + ' 之后的部分。';
+        }
+        $('f-type').addEventListener('change', refreshTypeHints);
 
         $('f-file').addEventListener('change', function () {
             $('f-file-name').textContent = this.files && this.files[0] ? this.files[0].name + '（' + fmtSize(this.files[0].size) + '）' : '';
@@ -148,9 +180,9 @@
         function fmtSize(n) { n = Number(n); if (n < 1024) return n + ' B'; if (n < 1048576) return (n / 1024).toFixed(1) + ' KB'; return (n / 1048576).toFixed(2) + ' MB'; }
 
          
-        function fetchLevelHtml(id) {
+        function fetchDocHtml(type, id) {
             var token = window.ZIYIT_API && ZIYIT_API.getToken ? ZIYIT_API.getToken() : '';
-            return fetch(BASE + '/backrooms/levels/' + encodeURIComponent(id), {
+            return fetch(BASE + ZIYIT_API.backroomsPrefix(type) + '/' + encodeURIComponent(id), {
                 headers: {
                     'ngrok-skip-browser-warning': '1',
                     'Authorization': token ? 'Bearer ' + token : ''
@@ -161,8 +193,8 @@
             });
         }
          
-        function viewLevelHtml(id) {
-            fetchLevelHtml(id).then(function (html) {
+        function viewDocHtml(type, id) {
+            fetchDocHtml(type, id).then(function (html) {
                 var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
                 var url = URL.createObjectURL(blob);
                 window.open(url, '_blank');
@@ -170,12 +202,12 @@
             }).catch(function (err) { toast('查看失败：' + errText(err)); });
         }
          
-        function downloadLevelHtml(id) {
-            fetchLevelHtml(id).then(function (html) {
+        function downloadDocHtml(type, id) {
+            fetchDocHtml(type, id).then(function (html) {
                 var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
                 var a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = 'level-' + String(id).replace(/^level-?/i, '') + '.html';
+                a.download = type + '-' + String(id).replace(new RegExp('^' + docType(type).prefix, 'i'), '') + '.html';
                 document.body.appendChild(a); a.click(); a.remove();
                 setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
             }).catch(function (err) { toast('下载失败：' + errText(err)); });
@@ -183,15 +215,17 @@
 
          
         $('btn-submit').addEventListener('click', function () {
+            var type = $('f-type').value;
+            var t = docType(type);
             var id = $('f-id').value.trim();
             var name = $('f-name').value.trim();
             var file = $('f-file').files && $('f-file').files[0];
-            if (!/^level-/i.test(id)) { toast('层级 ID 需以 Level- 开头（如 Level-706 / Level-!+）'); return; }
-            if (!name) { toast('请填写层级名称'); return; }
+            if (id.slice(0, t.prefix.length).toLowerCase() !== t.prefix.toLowerCase()) { toast(t.label + ' ID 需以 ' + t.prefix + ' 开头（如 ' + t.example + '）'); return; }
+            if (!name) { toast('请填写文档名称'); return; }
             if (!file) { toast('请选择 HTML 文件'); return; }
             if (file.size > MAX_SIZE) { toast('文件超过 1MB 限制，请压缩后再提交'); return; }
             var b = this; b.disabled = true; b.textContent = '提交中…';
-            ZIYIT_API.backroomsSubmit(id, name, file).then(function (d) {
+            ZIYIT_API.backroomsTypeSubmit(type, id, name, file).then(function (d) {
                 b.disabled = false; b.textContent = '提交审核';
                 toast((d && (d.message || d.msg)) || '提交成功，等待审核');
                 $('f-id').value = ''; $('f-name').value = ''; $('f-file').value = ''; $('f-file-name').textContent = '';
@@ -201,21 +235,33 @@
                 if (err && err.status === 409) toast('ID 已存在：' + id + '，请更换 ID 或使用「修改」更新');
                 else if (err && err.status === 429) toast('超出限额：已达到每月提交上限 / 个人拥有上限');
                 else if (err && err.status === 403) toast('仅限后室成员使用：当前账号不是后室成员，无法提交');
-                else if (err && err.status === 400) toast('提交失败：' + errText(err));
+                else if (err && err.status === 413) toast('文件超过 1MB 限制，请压缩后再提交');
                 else toast('提交失败：' + errText(err));
             });
         });
 
          
         function loadMine() {
-            ZIYIT_API.backroomsList().then(function (d) {
-                 
-                var levels = (d && (d.items || d.levels || d.data)) || [];
-                if (!Array.isArray(levels)) levels = [];
-                var mine = levels.filter(function (it) {
-                     
+            var reqs = DOC_TYPES.map(function (t) {
+                return ZIYIT_API.backroomsTypeList(t.key).then(function (d) {
+                    var items = (d && (d.items || d.levels || d.data)) || [];
+                    if (!Array.isArray(items)) items = [];
+                    return items.map(function (it) {
+                        if (!it.type) it.type = t.key;
+                        return it;
+                    });
+                }).catch(function () { return []; });
+            });
+            Promise.all(reqs).then(function (groups) {
+                var all = [], order = {};
+                DOC_TYPES.forEach(function (t, i) { order[t.key] = i; });
+                groups.forEach(function (g) { all = all.concat(g); });
+                var mine = all.filter(function (it) {
                     var owner = ownerOf(it);
                     return owner && String(owner).toLowerCase() === String(USERNAME).toLowerCase();
+                });
+                mine.sort(function (a, b) {
+                    return (order[typeOf(a)] || 0) - (order[typeOf(b)] || 0);
                 });
                 renderMine(mine);
             }).catch(function (err) {
@@ -226,21 +272,22 @@
         function renderMine(items) {
             var el = $('mine-list');
             $('mine-count').textContent = items.length ? items.length + ' 条' : '';
-            if (!items.length) { el.innerHTML = '<div class="empty">你还没有提交过层级。</div>'; return; }
-            el.innerHTML = '<table><thead><tr><th>层级</th><th>名称</th><th>状态</th><th>版本</th><th>重写</th><th style="width:230px">操作</th></tr></thead><tbody>'
+            if (!items.length) { el.innerHTML = '<div class="empty">你还没有提交过文档。</div>'; return; }
+            el.innerHTML = '<table><thead><tr><th>类型</th><th>ID</th><th>名称</th><th>状态</th><th>版本</th><th>重写</th><th style="width:230px">操作</th></tr></thead><tbody>'
                 + items.map(function (it) {
-                    var id = idOf(it);
+                    var id = idOf(it), type = typeOf(it);
                     return '<tr>'
+                        + '<td><span class="t-badge">' + esc(typeLabel(type)) + '</span></td>'
                         + '<td><strong>' + esc(id) + '</strong></td>'
                         + '<td>' + esc(nameOf(it) || '—') + '</td>'
                         + '<td>' + badge(it) + '</td>'
                         + '<td>' + esc(it.version != null ? it.version : '—') + '</td>'
                         + '<td>' + (it.rewritten ? '是' : '—') + '</td>'
                         + '<td>'
-                        + '<button data-act="view" data-id="' + esc(id) + '">查看</button> '
-                        + '<button data-act="dl" data-id="' + esc(id) + '">下载</button> '
-                        + '<button data-act="edit" data-id="' + esc(id) + '" class="secondary">修改</button> '
-                        + '<button data-act="del" data-id="' + esc(id) + '" class="danger">删除</button>'
+                        + '<button data-act="view" data-type="' + esc(type) + '" data-id="' + esc(id) + '">查看</button> '
+                        + '<button data-act="dl" data-type="' + esc(type) + '" data-id="' + esc(id) + '">下载</button> '
+                        + '<button data-act="edit" data-type="' + esc(type) + '" data-id="' + esc(id) + '" class="secondary">修改</button> '
+                        + '<button data-act="del" data-type="' + esc(type) + '" data-id="' + esc(id) + '" class="danger">删除</button>'
                         + '</td></tr>';
                 }).join('') + '</tbody></table>';
         }
@@ -248,28 +295,28 @@
         document.getElementById('main').addEventListener('click', function (e) {
             var btn = e.target.closest('button[data-act]');
             if (!btn) return;
-            var act = btn.getAttribute('data-act'), id = btn.getAttribute('data-id');
-            if (act === 'view') viewLevelHtml(id);
-            if (act === 'dl') downloadLevelHtml(id);
-            if (act === 'edit') openEditModal(id);
-            if (act === 'del') doDelete(id);
+            var act = btn.getAttribute('data-act'), id = btn.getAttribute('data-id'), type = btn.getAttribute('data-type') || 'level';
+            if (act === 'view') viewDocHtml(type, id);
+            if (act === 'dl') downloadDocHtml(type, id);
+            if (act === 'edit') openEditModal(type, id);
+            if (act === 'del') doDelete(type, id);
         });
 
         $('btn-refresh').addEventListener('click', loadMine);
 
          
-        function openEditModal(id) {
+        function openEditModal(type, id) {
             var item = null;
-            ZIYIT_API.backroomsList().then(function (d) {
-                var levels = (d && (d.items || d.levels || d.data)) || [];
-                if (Array.isArray(levels)) {
-                    for (var i = 0; i < levels.length; i++) {
-                        if (idOf(levels[i]) === id) { item = levels[i]; break; }
+            ZIYIT_API.backroomsTypeList(type).then(function (d) {
+                var items = (d && (d.items || d.levels || d.data)) || [];
+                if (Array.isArray(items)) {
+                    for (var i = 0; i < items.length; i++) {
+                        if (idOf(items[i]) === id) { item = items[i]; break; }
                     }
                 }
                 var curName = item ? nameOf(item) : '';
-                openModal('<h3>✏ 修改 ' + esc(id) + '</h3>'
-                    + '<label>层级名称</label><input type="text" id="m-name" value="' + esc(curName) + '">'
+                openModal('<h3>✏ 修改 ' + esc(id) + '（' + esc(typeLabel(type)) + '）</h3>'
+                    + '<label>文档名称</label><input type="text" id="m-name" value="' + esc(curName) + '">'
                     + '<label>重新选择 HTML 文件（旧版本自动保留）</label>'
                     + '<input type="file" id="m-file" accept=".html,text/html" style="margin-top:6px">'
                     + '<div class="row"><button id="m-save">保存</button> <button class="secondary" data-close>取消</button></div>');
@@ -279,13 +326,14 @@
                     if (file.size > MAX_SIZE) { toast('文件超过 1MB 限制'); return; }
                     var name = $('m-name').value.trim();
                     var b = this; b.disabled = true; b.textContent = '保存中…';
-                    ZIYIT_API.backroomsUpdate(id, name || null, file).then(function (r) {
+                    ZIYIT_API.backroomsTypeUpdate(type, id, name || null, file).then(function (r) {
                         closeModal();
                         toast((r && (r.message || r.msg)) || '已更新 ' + id + '（旧版本保留）');
                         loadMine();
                     }).catch(function (err) {
                         b.disabled = false; b.textContent = '保存';
                         if (err && err.status === 403) toast('仅限后室成员使用：当前账号无权限');
+                        else if (err && err.status === 413) toast('文件超过 1MB 限制');
                         else toast('更新失败：' + errText(err));
                     });
                 });
@@ -293,9 +341,9 @@
         }
 
          
-        function doDelete(id) {
+        function doDelete(type, id) {
             if (!confirm('确认删除 ' + id + ' ？\n删除后不可恢复，请谨慎！')) return;
-            ZIYIT_API.backroomsDelete(id).then(function (d) {
+            ZIYIT_API.backroomsTypeDelete(type, id).then(function (d) {
                 toast((d && (d.message || d.msg)) || '已删除：' + id);
                 loadMine();
             }).catch(function (err) {
@@ -312,6 +360,7 @@
 
          
         function init() {
+            refreshTypeHints();
             ZIYIT_API.currentUsername().then(function (name) {
                 if (!name) {
                     $('gate-msg').textContent = '未登录或登录已过期，请先登录。';
