@@ -269,6 +269,19 @@ class WidgetSession {
             writable: true,
             value: false
         });
+        // v0.3.21 流水线：拉包循环只等网络，分片进队列由 append 泵按 updateend 逐个消化。
+        Object.defineProperty(this, "_appendQueue", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: []
+        });
+        Object.defineProperty(this, "_appending", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: false
+        });
     }
      
     setHint(stage, text) {
@@ -542,16 +555,20 @@ class WidgetSession {
         });
         return v;
     }
-    // 严格串行拉包：拿到第 n 包并 appendBuffer 之后，才发起第 n+1 包。
+    // 严格串行拉包：拿到第 n 包就立刻发第 n+1 包（服务端游标只认单包，不能并发/跳号）。
     // v0.3.20：改成"边拉边播"的后台任务——每包 append 完就立刻可用（不再攒齐再拼）。
+    // v0.3.21：append 不再挡住下一包请求（否则主线程忙时 updateend 被拖后，拉包跟不上播放）。
     async _pullChunks(ready) {
         const total = Number(ready.chunkCount || this.videoStream?.chunkCount || 0);
         let index = 0;
         let retried = 0;
         let first = true;
+        const appendErrors = [];
         for (;;) {
             if (this._streamAborted)
                 return;
+            if (appendErrors.length)
+                throw appendErrors[0];
             let chunk;
             try {
                 chunk = await videoChunk(this.apiBase, this.challengeId, index, this.sessionId);
@@ -567,14 +584,18 @@ class WidgetSession {
             }
             if (this._streamAborted)
                 return;
-            await this._appendChunk(chunk.data);
+            const appended = this._enqueueAppend(this._decodeChunk(chunk.data));
+            appended.catch((e) => appendErrors.push(e));
             if (first) {
                 first = false;
-                // 首包落地：通知 _prepareVideo 可以开播了。
-                this._markFirstChunk?.();
+                // 首包 append 落地：通知 _prepareVideo 可以开播了（失败则把错误抛回去）。
+                appended.then(() => this._markFirstChunk?.(), (e) => this._markFirstChunk?.(e));
             }
             if (chunk.final) {
-                // 最后一包才 endOfStream：此时 duration 才确定、播放器才知道播完。
+                // 最后一包 append 完才 endOfStream：否则 duration 定不下来、末尾会被截断。
+                await appended.catch(() => { });
+                if (appendErrors.length)
+                    throw appendErrors[0];
                 const ms = this.mediaSource;
                 if (ms && ms.readyState === "open") {
                     try {
@@ -592,42 +613,48 @@ class WidgetSession {
                 return;
         }
     }
-    // 把一包 base64 分片 append 进 SourceBuffer；await updateend 保证同时只有一次 append 在飞。
-    _appendChunk(base64) {
+    // v0.3.21：append 不再阻塞拉包 —— 拉包循环只等网络，分片进队列由 append 泵按 updateend
+    // 逐个消化。原先是"请求 → append → 等 updateend → 再请求"，每包周期 = RTT + append 耗时；
+    // 主线程忙于逐帧合成（getImageData/像素循环）时 updateend 会被拖后，拉包速率掉到播放
+    // 速率以下，播到缓冲末尾就停一下 → 验证时卡顿。
+    _enqueueAppend(bytes) {
+        return new Promise((resolve, reject) => {
+            this._appendQueue.push({ bytes, resolve, reject });
+            this._pumpAppend();
+        });
+    }
+    _pumpAppend() {
+        if (this._appending)
+            return;
         const sb = this.sourceBuffer;
-        if (!sb)
-            return Promise.reject(new Error("SourceBuffer 未就绪"));
+        const item = this._appendQueue.shift();
+        if (!sb || !item)
+            return;
+        this._appending = true;
+        const onEnd = () => {
+            sb.removeEventListener("updateend", onEnd);
+            this._appending = false;
+            item.resolve();
+            this._pumpAppend();
+        };
+        sb.addEventListener("updateend", onEnd);
+        try {
+            sb.appendBuffer(item.bytes);
+        }
+        catch (e) {
+            sb.removeEventListener("updateend", onEnd);
+            this._appending = false;
+            item.reject(e);
+            this._pumpAppend();
+        }
+    }
+    _decodeChunk(base64) {
         const bin = atob(base64 || "");
         const bytes = new Uint8Array(bin.length);
         for (let i = 0; i < bin.length; i++) {
             bytes[i] = bin.charCodeAt(i);
         }
-        return new Promise((resolve, reject) => {
-            const doAppend = () => {
-                try {
-                    sb.appendBuffer(bytes);
-                }
-                catch (e) {
-                    reject(e);
-                    return;
-                }
-                const onEnd = () => {
-                    sb.removeEventListener("updateend", onEnd);
-                    resolve();
-                };
-                sb.addEventListener("updateend", onEnd);
-            };
-            if (sb.updating) {
-                const onIdle = () => {
-                    sb.removeEventListener("updateend", onIdle);
-                    doAppend();
-                };
-                sb.addEventListener("updateend", onIdle);
-            }
-            else {
-                doAppend();
-            }
-        });
+        return bytes;
     }
     // ---- v0.3.3 实时流上报 ----
     // 目的：把"松手后一次性提交整段轨迹"改成"边画边报"。服务端只信每批次的【到达
@@ -794,6 +821,10 @@ class WidgetSession {
         this._markFirstChunk?.();
         this._markFirstChunk = null;
         this._pullDone = null;
+        // 丢弃还没消化的 append 队列，别让这些 promise 永远挂着。
+        const pending = this._appendQueue.splice(0, this._appendQueue.length);
+        this._appending = false;
+        pending.forEach((it) => it.reject(new Error("session destroyed")));
         this.renderer?.stop();
         this.tracker?.stop();
         // 释放 MSE：先摘掉 SourceBuffer（会中止仍在飞的 append），再结束并丢弃 MediaSource。
