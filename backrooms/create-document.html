@@ -1307,7 +1307,9 @@
             </section>
 
             <section class="panel-sec" id="sec-entitymeta">
-                <h3>实体 IETS 与性质</h3>
+                <h3>实体分类、IETS 与性质</h3>
+                <label>分类（CECS，决定分类图标与名称）</label>
+                <select id="f-entity-class"></select>
                 <label>危险程度（0 友好/有益 — 5 当场击杀）</label>
                 <select id="f-iets-danger"></select>
                 <label>智能水平（A 无法理解 — E 动物级低智力）</label>
@@ -1323,7 +1325,7 @@
                 <div id="prop-list" class="tag-checks"></div>
                 <label>危险性质（可多选，不选则不显示）</label>
                 <div id="hazard-list" class="tag-checks"></div>
-                <div class="hint">选择后预览与导出同步：IETS 输出「危险+智能」组合（如 4C、3B+）；性质容器带上所选标签类名，未选时输出 X。</div>
+                <div class="hint">选择后预览与导出同步：分类输出到「分类：」名称与左侧图标；IETS 输出「危险+智能」组合（如 4C、3B+）；性质容器带上所选标签类名，未选时输出 X。</div>
             </section>
 
             <section class="panel-sec" id="sec-sections">
@@ -1517,7 +1519,8 @@
                 objNote1: '[NO DATA]',
                 objNote2: '[NO DATA]',
                 sections: [],
-                // 实体专用：IETS（危险程度 0–5 / 智能水平 A–E，可加 + 或 -）与性质多选
+                // 实体专用：IETS（危险程度 0–5 / 智能水平 A–E，可加 + 或 -）、分类与性质多选
+                entityClass: '',
                 ietsDanger: '',
                 ietsIntel: '',
                 ietsIntelMod: '',
@@ -1636,7 +1639,8 @@
                 doc.objLevel = NODATA;
                 doc.objNote1 = NODATA;
                 doc.objNote2 = NODATA;
-                // 实体 IETS / 性质默认未选：IETS 显示 NODATA，性质容器输出 X（不显示任何标签）
+                // 实体分类 / IETS / 性质默认未选：分类与 IETS 显示 NODATA，性质容器输出 X（不显示任何标签）
+                doc.entityClass = '';
                 doc.ietsDanger = '';
                 doc.ietsIntel = '';
                 doc.ietsIntelMod = '';
@@ -1675,6 +1679,17 @@
             var ENTITY_TAGS = ['HVM', 'VRL-A', 'VRL-B', 'NCR', 'MCH', 'CBR', 'SYN', 'DMN', 'SSV', 'CVL', 'RLA', 'UNQ', 'AGR', 'BNV'];
             var ENTITY_HAZARDS = ['RAD', 'NRO', 'TXC', 'PYR'];
             var ENTITY_CLASSES = ['Spectrous', 'Itemic', 'Bactal', 'Floral', 'Zoophoid', 'Chimeric', 'Anthropoid', 'Enigmatic', '虚灵', '物品', '微生物', '植物', '动物', '诞妄', '类人', '神秘'];
+            // 分类（CECS）单选项：中/英名为同一图标，输出中文名（与现有实体文档一致）
+            var ENTITY_CLASS_OPTS = [
+                { v: '虚灵', t: '虚灵 / Spectrous' },
+                { v: '物品', t: '物品 / Itemic' },
+                { v: '微生物', t: '微生物 / Bactal' },
+                { v: '植物', t: '植物 / Floral' },
+                { v: '动物', t: '动物 / Zoophoid' },
+                { v: '诞妄', t: '诞妄 / Chimeric' },
+                { v: '类人', t: '类人 / Anthropoid' },
+                { v: '神秘', t: '神秘 / Enigmatic' }
+            ];
             // 性质中文名（与样式里的 tooltip 文案一致，作为多选项的提示）
             var ENTITY_TAG_NAMES = {
                 'HVM': '蜂巢思维', 'VRL-A': 'A型病毒', 'VRL-B': 'B型病毒', 'NCR': '坏死',
@@ -1855,9 +1870,9 @@
                         + '  <div>\n'
                         + '    <div class="class-label">分类：</div>\n'
                         + '    <div class="class-wrapper">\n'
-                        + '      <div class="cecs-class"><div class="class-inner">' + NODATA + '</div></div>\n'
+                        + '      <div class="cecs-class"><div class="class-inner' + (forPreview ? ' editable' : '') + '"' + previewAttr(forPreview, 'entityClass') + '>' + escHtml(doc.entityClass || NODATA) + '</div></div>\n'
                         + '      <div class="class-stripe"></div>\n'
-                        + '      <div class="class-image">' + tagRowHtml(ENTITY_CLASSES) + '</div>\n'
+                        + '      <div class="class-image' + (doc.entityClass ? ' ' + escHtml(doc.entityClass) : '') + '">' + tagRowHtml(ENTITY_CLASSES) + '</div>\n'
                         + '    </div>\n'
                         + '  </div>\n'
                         + '  <div class="properties-label">性质：</div>\n'
@@ -3025,7 +3040,11 @@
             }
 
             function renderEntityMeta() {
-                var dSel = $('f-iets-danger'), iSel = $('f-iets-intel'), mSel = $('f-iets-mod');
+                var cSel = $('f-entity-class'), dSel = $('f-iets-danger'), iSel = $('f-iets-intel'), mSel = $('f-iets-mod');
+                if (cSel) {
+                    fillSelect(cSel, [{ v: '', t: '未设置' }].concat(ENTITY_CLASS_OPTS));
+                    cSel.value = doc.entityClass || '';
+                }
                 if (dSel) {
                     fillSelect(dSel, [{ v: '', t: '未设置' }].concat([0, 1, 2, 3, 4, 5].map(function (n) {
                         return { v: String(n), t: n + ' — ' + IETS_DANGER_DESC[String(n)] };
@@ -3279,11 +3298,12 @@
                     if (!a || !a.hasAttribute('data-field')) return;
                     var field = a.getAttribute('data-field');
                     var m = String(field).split(':');
-                    // IETS / 性质是多选控件，点预览直接跳到左侧对应区块。
-                    if (m[0] === 'iets' || m[0] === 'props' || m[0] === 'hazard') {
+                    // 分类 / IETS / 性质是下拉与多选控件，点预览直接跳到左侧对应区块。
+                    if (m[0] === 'entityClass' || m[0] === 'iets' || m[0] === 'props' || m[0] === 'hazard') {
                         var meta = $('sec-entitymeta');
                         if (meta) meta.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        var focusEl = m[0] === 'iets' ? $('f-iets-danger') : $(m[0] === 'props' ? 'prop-list' : 'hazard-list');
+                        var focusId = { entityClass: 'f-entity-class', iets: 'f-iets-danger', props: 'prop-list', hazard: 'hazard-list' }[m[0]];
+                        var focusEl = $(focusId);
                         if (focusEl && focusEl.focus) focusEl.focus();
                         return;
                     }
@@ -3361,7 +3381,8 @@
                 bindInput('f-obj-level', function (v) { doc.objLevel = v; render(); });
                 bindInput('f-obj-note1', function (v) { doc.objNote1 = v; render(); });
                 bindInput('f-obj-note2', function (v) { doc.objNote2 = v; render(); });
-                // 实体 IETS / 性质
+                // 实体分类 / IETS / 性质
+                $('f-entity-class').addEventListener('change', function () { doc.entityClass = this.value; render(); });
                 $('f-iets-danger').addEventListener('change', function () { doc.ietsDanger = this.value; render(); });
                 $('f-iets-intel').addEventListener('change', function () { doc.ietsIntel = this.value; render(); });
                 $('f-iets-mod').addEventListener('change', function () { doc.ietsIntelMod = this.value; render(); });
