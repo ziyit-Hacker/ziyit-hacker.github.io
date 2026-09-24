@@ -280,7 +280,15 @@
             云加密时文件本身不会保存在服务端；恢复密钥由服务端加密托管，查看需再次输入登录密码。
         </p>
 
-        <div class="quota-box" id="quotaArea">加载中…</div>
+        <div class="quota-box" id="quotaArea">
+            <div class="ziyit-loading">
+                <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                <div class="ziyit-loader">
+                    <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                    <div class="loader-bar"><div class="loader-fill"></div></div>
+                </div>
+            </div>
+        </div>
 
         <div class="toolbar">
             <input type="password" id="verifyPassword" autocomplete="off" placeholder="查看恢复密钥需输入登录密码">
@@ -306,6 +314,14 @@
             var keyPanel = document.getElementById('keyPanel');
             var pwdInput = document.getElementById('verifyPassword');
             var refreshBtn = document.getElementById('refreshBtn');
+
+            // 统一加载显示器（与 ziyit-theme.css 的 .ziyit-loading / .ziyit-loader 配套）
+            var LOADING_HTML = '<div class="ziyit-loading">' +
+                '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>' +
+                '<div class="ziyit-loader">' +
+                '<div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>' +
+                '<div class="loader-bar"><div class="loader-fill"></div></div>' +
+                '</div></div>';
 
             function esc(s) {
                 return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -443,8 +459,8 @@
             }
 
             function loadFiles() {
-                quotaArea.textContent = '加载中…';
-                fileArea.innerHTML = '<div class="loading">加载中…</div>';
+                quotaArea.innerHTML = LOADING_HTML;
+                fileArea.innerHTML = LOADING_HTML;
                 refreshBtn.disabled = true;
                 ZIYIT_API.rcFiles().then(function (res) {
                     renderQuota(res);

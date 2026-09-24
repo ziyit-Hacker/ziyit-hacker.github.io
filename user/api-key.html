@@ -579,8 +579,12 @@
             <button type="button" id="refreshBtn">刷新</button>
         </div>
         <div id="keyArea">
-            <div class="loading">
-                <span id="loadingText">加载中…</span>
+            <div class="ziyit-loading">
+                <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                <div class="ziyit-loader">
+                    <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                    <div class="loader-bar"><div class="loader-fill"></div></div>
+                </div>
             </div>
         </div>
     </div>
@@ -660,6 +664,14 @@
             var listTip = document.getElementById('listTip');
             var overlay = document.getElementById('settingsOverlay');
 
+            // 统一加载显示器（与 ziyit-theme.css 的 .ziyit-loading / .ziyit-loader 配套）
+            var LOADING_HTML = '<div class="ziyit-loading">' +
+                '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>' +
+                '<div class="ziyit-loader">' +
+                '<div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>' +
+                '<div class="loader-bar"><div class="loader-fill"></div></div>' +
+                '</div></div>';
+
             function esc(s) {
                 return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             }
@@ -673,8 +685,8 @@
                 return (n === -1 || n === '-1') ? '不限' : (String(n) + ' 次');
             }
 
-            function setLoading(t) {
-                keyArea.innerHTML = '<div class="loading">' + esc(t || '加载中…') + '</div>';
+            function setLoading() {
+                keyArea.innerHTML = LOADING_HTML;
             }
 
             function setError(msg) {
@@ -792,7 +804,7 @@
 
              
             function loadKeys(showLoading) {
-                if (showLoading) setLoading('加载中…');
+                if (showLoading) setLoading();
                 refreshBtn.disabled = true;
                 return ZIYIT_API.request('/api-key/mine').then(function (data) {
                     keyList = (data && data.keys) || [];

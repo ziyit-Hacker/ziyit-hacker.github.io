@@ -286,7 +286,15 @@
 
         <div id="checkResult" style="display: none; margin-bottom: 16px; line-height: 1.6; font-size: 13px;"></div>
 
-        <div id="dlcArea"><div class="loading">加载中…</div></div>
+        <div id="dlcArea">
+            <div class="ziyit-loading">
+                <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                <div class="ziyit-loader">
+                    <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                    <div class="loader-bar"><div class="loader-fill"></div></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -299,6 +307,14 @@
 
             var dlcArea = document.getElementById('dlcArea');
             var refreshBtn = document.getElementById('refreshBtn');
+
+            // 统一加载显示器（与 ziyit-theme.css 的 .ziyit-loading / .ziyit-loader 配套）
+            var LOADING_HTML = '<div class="ziyit-loading">' +
+                '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>' +
+                '<div class="ziyit-loader">' +
+                '<div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>' +
+                '<div class="loader-bar"><div class="loader-fill"></div></div>' +
+                '</div></div>';
 
             function esc(s) {
                 return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -403,7 +419,7 @@
             }
 
             function load() {
-                dlcArea.innerHTML = '<div class="loading">加载中…</div>';
+                dlcArea.innerHTML = LOADING_HTML;
                 return ZIYIT_API.myDlc().then(render).catch(function (err) {
                     dlcArea.innerHTML = '<div class="error-box">加载失败：' + esc(errMsg(err)) + '</div>';
                 });
