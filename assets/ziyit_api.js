@@ -732,6 +732,34 @@
         return post('/afdian/self-check', {});
     }
 
+    // ---- RC BUG 反馈 ----
+    // 公开已知 BUG 列表：含提交者、状态枚举（statuses 按 statusCounts 计数）
+    // 与 Markdown 正文；正文渲染前必须再过一次白名单净化
+    function rcBugs() {
+        return request('/rc/bugs');
+    }
+
+    // 提交反馈：需登录凭据，提交者由服务端从 Bearer token 解析，客户端不能自称身份
+    function rcSubmitBug(payload) {
+        return post('/rc/bugs', payload);
+    }
+
+    // 管理员视图：在公开字段基础上多带联系方式（contact）
+    function adminRcBugs() {
+        return request('/admin/rc/bugs');
+    }
+
+    // 管理员改状态：可选值取 /rc/bugs 回包的 statuses，不要在前端写死
+    function adminRcBugStatus(bugId, status, note) {
+        var body = { status: status };
+        if (note) body.note = note;
+        return request('/admin/rc/bugs/' + bugId, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+    }
+
      
     function backroomsList() {
         return request('/backrooms/levels');
@@ -917,6 +945,10 @@
         rcDeleteFile: rcDeleteFile,
         rcMyKeys: rcMyKeys,
         afdianSelfCheck: afdianSelfCheck,
+        rcBugs: rcBugs,
+        rcSubmitBug: rcSubmitBug,
+        adminRcBugs: adminRcBugs,
+        adminRcBugStatus: adminRcBugStatus,
         backroomsList: backroomsList,
         backroomsView: backroomsView,
         backroomsSubmit: backroomsSubmit,

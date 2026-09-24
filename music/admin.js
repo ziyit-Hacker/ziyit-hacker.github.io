@@ -109,6 +109,19 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('rc-key-search').addEventListener('input', renderRcKeys);
 
      
+    document.querySelector('[data-section="rc-bug-management"]').addEventListener('click', function () {
+        switchSection('rc-bug-management');
+        updateSystemInfo('切换到 RC BUG 管理');
+        loadRcBugs();
+    });
+    document.getElementById('refresh-rc-bugs').addEventListener('click', function () {
+        loadRcBugs();
+        updateSystemInfo('RC BUG 列表已刷新');
+    });
+    document.getElementById('rc-bug-search').addEventListener('input', renderRcBugs);
+    document.getElementById('rc-bug-filter').addEventListener('change', renderRcBugs);
+
+     
     document.querySelector('[data-section="admin-management"]').addEventListener('click', function () {
         switchSection('admin-management');
         updateSystemInfo('切换到管理员管理');
@@ -1845,6 +1858,11 @@ function deleteMod(m) {
 let rcKeyList = [];
 let keyTargetUser = null;
 
+// RC BUG 反馈（管理后台）：列表走 GET /admin/rc/bugs（带联系方式），
+// 状态枚举不写死，统一取公开接口 GET /rc/bugs 回包的 statuses
+let rcBugList = [];
+let rcBugStatuses = [];
+
 function rcUserKeys(u) {
     return Array.isArray(u.keys) ? u.keys
         : (Array.isArray(u.rcKeys) ? u.rcKeys
@@ -1927,6 +1945,135 @@ function renderRcKeys() {
         btn.addEventListener('click', function () {
             removeKey(btn.getAttribute('data-ruid'), btn.getAttribute('data-rhash'));
         });
+    });
+}
+
+// ---- RC BUG 反馈管理 ----
+
+// 报告正文：marked 产出后必须再过 DOMPurify；净化库缺失就拒绝渲染，不注入原始 HTML
+function adminRenderMarkdown(md) {
+    if (!window.DOMPurify || !window.marked) {
+        return '<p style="color:var(--ziyit-danger);">marked / DOMPurify 未加载，已阻止渲染报告</p>';
+    }
+    return DOMPurify.sanitize(marked.parse(md || ''));
+}
+
+function loadRcBugs() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可访问 RC BUG 管理'); return; }
+    document.getElementById('rc-bug-list').innerHTML = loadingHTML();
+    // 管理接口只在公开字段上多给 contact；状态枚举统一从公开接口的 statuses 取，避免写死中文
+    return Promise.all([
+        ZIYIT_API.adminRcBugs(),
+        ZIYIT_API.rcBugs().catch(function () { return null; })
+    ]).then(function (res) {
+        rcBugList = (res[0] && res[0].bugs) || [];
+        rcBugStatuses = (res[1] && res[1].statuses) || [];
+        renderRcBugFilter();
+        renderRcBugs();
+    }).catch(function (err) {
+        document.getElementById('rc-bug-list').innerHTML =
+            '<p style="padding: 20px; color: var(--ziyit-danger);">加载失败: ' + escAdmin(err.message || err) + '</p>';
+    });
+}
+
+function renderRcBugFilter() {
+    const sel = document.getElementById('rc-bug-filter');
+    const keep = sel.value;
+    let html = '<option value="">全部状态</option>';
+    rcBugStatuses.forEach(function (s) {
+        html += '<option value="' + escAdmin(s.key) + '">' + escAdmin(s.label) + '</option>';
+    });
+    sel.innerHTML = html;
+    sel.value = keep || '';
+}
+
+function renderRcBugs() {
+    const search = (document.getElementById('rc-bug-search').value || '').trim().toLowerCase();
+    const statusFilter = document.getElementById('rc-bug-filter').value;
+    const area = document.getElementById('rc-bug-list');
+    const list = rcBugList.filter(function (b) {
+        if (statusFilter && b.status !== statusFilter) return false;
+        if (!search) return true;
+        return [b.code, b.title, b.submitUsername, b.submitUserId].some(function (v) {
+            return String(v == null ? '' : v).toLowerCase().indexOf(search) !== -1;
+        });
+    });
+    if (!list.length) {
+        area.innerHTML = '<p style="padding: 20px; color: var(--ziyit-text-secondary);">暂无 BUG 反馈</p>';
+        return;
+    }
+    const inputStyle = 'padding:4px 8px;border-radius:5px;border:1px solid var(--ziyit-border);font-size:12px;';
+    let html = '';
+    list.forEach(function (b) {
+        const idx = rcBugList.indexOf(b);
+        let options = '';
+        rcBugStatuses.forEach(function (s) {
+            options += '<option value="' + escAdmin(s.key) + '"'
+                + (s.key === b.status ? ' selected' : '') + '>' + escAdmin(s.label) + '</option>';
+        });
+        html += '<div class="user-item wide-item">'
+            + '<div class="user-details">'
+            + '<div class="user-name">' + escAdmin(b.code) + ' ' + escAdmin(b.title)
+            + ' <span style="font-size:11px;color:var(--ziyit-text-secondary);">' + escAdmin(b.statusText || b.status) + '</span></div>'
+            + '<div class="user-email">提交者: ' + escAdmin(b.submitUsername || '-')
+            + '（ID ' + escAdmin(b.submitUserId) + '）｜ 来源: ' + escAdmin(b.sourceText || '-')
+            + '｜ 等级: ' + escAdmin(b.severityText || '-')
+            + (b.version ? '｜ 版本: ' + escAdmin(b.version) : '')
+            + (b.module ? '｜ 模块: ' + escAdmin(b.module) : '')
+            + '</div>'
+            + '<div class="user-email">提交: ' + escAdmin(b.submittedAtText || '-')
+            + '｜ 最近变更: ' + escAdmin(b.updatedAtText || '-')
+            + (b.lastStatusBy ? '（by ' + escAdmin(b.lastStatusBy) + '）' : '')
+            + '｜ 联系方式: ' + escAdmin(b.contact || '未填写')
+            + '</div>'
+            + '</div>'
+            + '<div class="user-actions" style="flex-wrap:wrap;">'
+            + '<select data-bug-status="' + idx + '" style="' + inputStyle + '">' + options + '</select>'
+            + '<input type="text" data-bug-note="' + idx + '" placeholder="变更说明（可选）" style="' + inputStyle + 'width:150px;">'
+            + '<button class="action-btn edit" data-bug-save="' + idx + '">保存状态</button>'
+            + '<button class="action-btn" data-bug-view="' + idx + '">查看报告</button>'
+            + '</div>'
+            + '<div data-bug-report="' + idx + '" style="display:none;flex:1 1 100%;background:var(--ziyit-bg-card);'
+            + 'border:1px solid var(--ziyit-border);border-radius:8px;padding:12px;font-size:13px;overflow-x:auto;"></div>'
+            + '</div>';
+    });
+    area.innerHTML = html;
+
+    area.querySelectorAll('[data-bug-save]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const idx = parseInt(btn.getAttribute('data-bug-save'), 10);
+            const b = rcBugList[idx];
+            if (!b) return;
+            const sel = area.querySelector('[data-bug-status="' + idx + '"]');
+            const noteEl = area.querySelector('[data-bug-note="' + idx + '"]');
+            saveRcBugStatus(b, sel.value, noteEl ? noteEl.value.trim() : '');
+        });
+    });
+    area.querySelectorAll('[data-bug-view]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const idx = parseInt(btn.getAttribute('data-bug-view'), 10);
+            const b = rcBugList[idx];
+            const box = area.querySelector('[data-bug-report="' + idx + '"]');
+            if (!b || !box) return;
+            if (box.style.display === 'none') {
+                box.innerHTML = adminRenderMarkdown(b.markdown);
+                box.style.display = 'block';
+                btn.textContent = '收起报告';
+            } else {
+                box.style.display = 'none';
+                btn.textContent = '查看报告';
+            }
+        });
+    });
+}
+
+function saveRcBugStatus(bug, status, note) {
+    if (!status) { alert('请先选择状态'); return; }
+    ZIYIT_API.adminRcBugStatus(bug.id, status, note).then(function (res) {
+        alert((res && res.message) || '状态已更新');
+        loadRcBugs();
+    }).catch(function (err) {
+        alert('更新失败: ' + (err.message || err));
     });
 }
 

@@ -87,6 +87,9 @@
                     <li class="menu-item" data-section="rc-key-management" data-level="3">
  RC 软件密钥
                     </li>
+                    <li class="menu-item" data-section="rc-bug-management" data-level="3">
+ RC BUG 管理
+                    </li>
                     <li class="menu-item" data-section="backrooms-members" data-level="2">
  后室成员管理
                     </li>
@@ -442,6 +445,18 @@
                             </div>
                         </div>
                     </div>
+                </section>
+
+                <section id="rc-bug-management" class="content-section">
+                    <div class="section-header">
+                        <h2>RC BUG 反馈管理</h2>
+                    </div>
+                    <div class="user-controls">
+                        <input type="text" class="user-search" id="rc-bug-search" placeholder="搜索编号 / 标题 / 提交者...">
+                        <select class="user-search" id="rc-bug-filter" style="max-width:180px;"></select>
+                        <button class="user-btn" id="refresh-rc-bugs">刷新列表</button>
+                    </div>
+                    <div class="user-list" id="rc-bug-list"></div>
                 </section>
 
                 <section id="system-settings" class="content-section">
@@ -947,6 +962,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
     <script src="./admin.js"></script>
 <script src="../assets/ziyit-theme.js"></script>
 </body>

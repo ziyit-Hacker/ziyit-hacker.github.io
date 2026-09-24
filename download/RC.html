@@ -1115,8 +1115,7 @@
                     <div class="req-desc">支持 Windows Defender 排除列表配置，通过主流杀软认证 (360、火绒、卡巴斯基、Defender)</div>
                 </div>
                 <div class="req-item"><span class="req-label">bug提交、软件下载</span>
-                    <div class="req-desc">支持在github进行bug提交，软件下载等操作，连接<a
-                            href="https://github.com/ziyit-Hacker/Release_control">https://github.com/ziyit-Hacker/Release_control</a>
+                    <div class="req-desc">bug 反馈请到本页「<a href="#rc-bug-section">已知 BUG / 反馈</a>」提交，软件下载见下方下载中心
                     </div>
                 </div>
             </div>
@@ -1366,6 +1365,100 @@
                 服务器离线，无法加载 MOD/DLC 列表
             </div>
             <div id="mod-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;"></div>
+        </div>
+
+        <div class="section" id="rc-bug-section">
+            <h3><i class="fas fa-bug"></i> 已知 BUG / 反馈</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
+                <p style="color: var(--ziyit-text-secondary); font-size: 0.85rem; margin: 0;">
+                    列表公开可查（含提交者）；提交反馈需登录 ZIYIT 账号，提交者由服务器按登录身份记录
+                </p>
+                <button id="bug-submit-btn" style="background:#1e293b;color:#fff;border:none;padding:0.45rem 1.2rem;border-radius:40px;font-size:0.8rem;cursor:pointer;font-weight:500;white-space:nowrap;">+ 提交 BUG 反馈</button>
+            </div>
+            <div id="bug-offline-tip" style="display: none; background: rgba(239, 68, 68, 0.15); border-left: 5px solid #ef4444; padding: 0.8rem 1rem; margin-bottom: 1rem; font-size: 0.9rem;">
+                服务器离线，无法加载 BUG 列表
+            </div>
+            <div id="bug-filter-bar" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;"></div>
+            <div id="bug-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;"></div>
+        </div>
+
+        <div id="bugDetailModal" class="modal-overlay">
+            <div class="modal-container" style="max-width:760px;">
+                <div class="modal-header" id="bug-detail-title">BUG 详情</div>
+                <div class="modal-body">
+                    <div id="bug-detail-body" class="update-log-content"></div>
+                </div>
+                <div class="modal-footer">
+                    <button id="bug-detail-close" style="background:var(--ziyit-border);color:var(--ziyit-text-primary);border:none;padding:0.5rem 1.4rem;border-radius:40px;font-size:0.85rem;cursor:pointer;font-weight:500;">关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="bugSubmitModal" class="modal-overlay">
+            <div class="modal-container" style="max-width:560px;">
+                <div class="modal-header">提交 BUG 反馈</div>
+                <div class="modal-body">
+                    <p style="color:var(--ziyit-text-secondary); margin-bottom:1rem;">提交后默认状态为「正在审批」，管理员处理后会更新状态。提交者按你的登录账号自动记录，无需填写。</p>
+                    <div style="margin-bottom:1rem;">
+                        <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">问题标题 *</label>
+                        <input type="text" id="bug-title" maxlength="120" placeholder="一句话描述问题"
+                            style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;">
+                    </div>
+                    <div style="display:flex;gap:1rem;margin-bottom:1rem;">
+                        <div style="flex:1;">
+                            <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">涉及版本</label>
+                            <input type="text" id="bug-version" maxlength="100" placeholder="如 26.9-snapshot-26W35A"
+                                style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;">
+                        </div>
+                        <div style="flex:1;">
+                            <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">涉及模块</label>
+                            <input type="text" id="bug-module" maxlength="100" placeholder="如 进程管理"
+                                style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">危险等级</label>
+                        <select id="bug-severity"
+                            style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;"></select>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">问题描述 *</label>
+                        <textarea id="bug-description" rows="4" maxlength="4000" placeholder="详细描述遇到的问题"
+                            style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;resize:vertical;"></textarea>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">复现步骤</label>
+                        <textarea id="bug-steps" rows="3" maxlength="3000" placeholder="1. 打开… 2. 点击…"
+                            style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;resize:vertical;"></textarea>
+                    </div>
+                    <div style="display:flex;gap:1rem;margin-bottom:1rem;">
+                        <div style="flex:1;">
+                            <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">期望结果</label>
+                            <textarea id="bug-expected" rows="2" maxlength="3000"
+                                style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;resize:vertical;"></textarea>
+                        </div>
+                        <div style="flex:1;">
+                            <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">实际结果</label>
+                            <textarea id="bug-actual" rows="2" maxlength="3000"
+                                style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;resize:vertical;"></textarea>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">补充信息</label>
+                        <textarea id="bug-extra" rows="2" maxlength="3000" placeholder="系统版本、日志等"
+                            style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;resize:vertical;"></textarea>
+                    </div>
+                    <div>
+                        <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">联系方式</label>
+                        <input type="text" id="bug-contact" maxlength="120" placeholder="邮箱 / 社交账号（仅管理员可见）"
+                            style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="bug-submit-cancel" style="background:var(--ziyit-border);color:var(--ziyit-text-primary);border:none;padding:0.5rem 1.4rem;border-radius:40px;font-size:0.85rem;cursor:pointer;font-weight:500;">取消</button>
+                    <button id="bug-submit-confirm" style="background:#1e293b;color:#fff;border:none;padding:0.5rem 1.4rem;border-radius:40px;font-size:0.85rem;cursor:pointer;font-weight:500;">提交</button>
+                </div>
+            </div>
         </div>
 
         
@@ -2920,6 +3013,16 @@
             });
         }
 
+        // Markdown → HTML：marked 产出后必须再过 DOMPurify 白名单净化（服务端只做基础转义，
+        // Markdown 允许多种绕过写法）；净化库缺失时拒绝渲染，不直接注入原始 HTML。
+        function renderMarkdown(md) {
+            if (!window.DOMPurify || !window.marked) {
+                console.error('marked / DOMPurify 未加载，已阻止渲染 Markdown');
+                return '<p>内容渲染组件未加载，请刷新页面重试</p>';
+            }
+            return DOMPurify.sanitize(marked.parse(md || ''));
+        }
+
         async function loadUpdateLog() {
             const container = document.getElementById('updateLogContent');
             if (!container) return;
@@ -2952,7 +3055,7 @@
                 const rcResponse = await fetch(targetPath);
                 if (!rcResponse.ok) throw new Error('无法加载更新日志文件');
                 const markdown = await rcResponse.text();
-                const html = marked.parse(markdown);
+                const html = renderMarkdown(markdown);
                 container.innerHTML = html;
                 enhanceCodeBlocks();
             } catch (error) {
@@ -3062,7 +3165,7 @@
                 const response = await fetch('./RCMOD.md');
                 if (!response.ok) throw new Error('无法加载 RCMOD.md');
                 const markdown = await response.text();
-                const html = marked.parse(markdown);
+                const html = renderMarkdown(markdown);
                 container.innerHTML = html;
                 enhanceCodeBlocks();
             } catch (error) {
@@ -3264,8 +3367,230 @@
                 });
             });
         })();
+
+        // ---- RC 已知 BUG / 反馈 ----
+        // 列表走公开接口 GET /rc/bugs（无需登录）；状态/等级/来源枚举与计数全部取自回包，
+        // 不在前端写死中文；Markdown 正文统一经 renderMarkdown()（marked + DOMPurify）渲染。
+        (function () {
+            const listEl = document.getElementById('bug-list');
+            if (!listEl) return;
+            const filterBar = document.getElementById('bug-filter-bar');
+            const offlineTip = document.getElementById('bug-offline-tip');
+            const detailModal = document.getElementById('bugDetailModal');
+            const detailTitle = document.getElementById('bug-detail-title');
+            const detailBody = document.getElementById('bug-detail-body');
+            const submitModal = document.getElementById('bugSubmitModal');
+
+            let bugs = [];
+            let statuses = [];
+            let severities = [];
+            let statusCounts = {};
+            let activeStatus = 'all';
+
+            // 仅按状态 key 取配色，文案一律用回包里的 label
+            const STATUS_COLORS = {
+                pending: ['rgba(245,158,11,.16)', '#f59e0b'],
+                reviewing: ['rgba(249,115,22,.16)', '#f97316'],
+                planned: ['rgba(59,130,246,.16)', '#3b82f6'],
+                fixing: ['rgba(139,92,246,.16)', '#8b5cf6'],
+                fixed: ['rgba(16,185,129,.16)', '#10b981'],
+                not_a_bug: ['rgba(148,163,184,.2)', '#94a3b8'],
+                wontfix: ['rgba(239,68,68,.16)', '#ef4444']
+            };
+
+            function badge(text, bg, color) {
+                const el = document.createElement('span');
+                el.style.cssText = 'background:' + bg + ';color:' + color +
+                    ';font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:20px;white-space:nowrap;flex-shrink:0;';
+                el.textContent = text;
+                return el;
+            }
+
+            function renderFilters() {
+                filterBar.innerHTML = '';
+                const items = [{ key: 'all', label: '全部' }].concat(statuses);
+                items.forEach(function (s) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    const count = (s.key === 'all') ? bugs.length : (statusCounts[s.key] || 0);
+                    btn.textContent = s.label + ' (' + count + ')';
+                    const on = (activeStatus === s.key);
+                    btn.style.cssText = 'border:1px solid var(--ziyit-border);border-radius:40px;padding:0.3rem 0.9rem;' +
+                        'font-size:0.78rem;cursor:pointer;font-weight:500;' +
+                        (on ? 'background:#1e293b;color:#fff;' : 'background:transparent;color:var(--ziyit-text-secondary);');
+                    btn.addEventListener('click', function () {
+                        activeStatus = s.key;
+                        renderFilters();
+                        renderList();
+                    });
+                    filterBar.appendChild(btn);
+                });
+            }
+
+            function openDetail(b) {
+                detailTitle.textContent = b.code + '｜' + b.title;
+                // 报告正文由服务端成文，这里再做一次白名单净化后才注入
+                detailBody.innerHTML = renderMarkdown(b.markdown);
+                detailModal.style.display = 'flex';
+            }
+
+            function buildCard(b) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.cssText = 'margin-bottom:0;padding:1rem;display:flex;flex-direction:column;';
+
+                const head = document.createElement('div');
+                head.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.4rem;';
+                const code = document.createElement('span');
+                code.style.cssText = 'font-weight:700;font-size:0.8rem;color:var(--ziyit-text-secondary);';
+                code.textContent = b.code;
+                head.appendChild(code);
+                const sc = STATUS_COLORS[b.status] || ['var(--ziyit-primary-light)', 'var(--ziyit-primary)'];
+                head.appendChild(badge(b.statusText || b.status, sc[0], sc[1]));
+
+                const title = document.createElement('div');
+                title.style.cssText = 'font-weight:700;font-size:0.95rem;margin-bottom:0.4rem;word-break:break-word;';
+                title.textContent = b.title;
+
+                const meta = document.createElement('div');
+                meta.style.cssText = 'color:#94a3b8;font-size:0.75rem;margin-bottom:0.6rem;line-height:1.6;';
+                const parts = [
+                    '提交者: ' + (b.submitUsername || '-') + (b.submitUserId ? '（ID ' + b.submitUserId + '）' : ''),
+                    '来源: ' + (b.sourceText || '-'),
+                    '等级: ' + (b.severityText || '-')
+                ];
+                if (b.version) parts.push('版本: ' + b.version);
+                if (b.module) parts.push('模块: ' + b.module);
+                parts.push('提交: ' + (b.submittedAtText || '-'));
+                meta.textContent = parts.join(' | ');
+
+                const btn = document.createElement('button');
+                btn.textContent = '查看详情';
+                btn.style.cssText = 'align-self:flex-start;background:#1e293b;color:#fff;border:none;padding:0.4rem 1.2rem;' +
+                    'border-radius:40px;font-size:0.8rem;cursor:pointer;font-weight:500;';
+                btn.addEventListener('click', function () { openDetail(b); });
+
+                card.appendChild(head);
+                card.appendChild(title);
+                card.appendChild(meta);
+                card.appendChild(btn);
+                return card;
+            }
+
+            function renderList() {
+                listEl.innerHTML = '';
+                const shown = bugs.filter(function (b) {
+                    return activeStatus === 'all' || b.status === activeStatus;
+                });
+                if (!shown.length) {
+                    listEl.innerHTML = '<div style="color:var(--ziyit-text-secondary);font-size:0.9rem;">该状态下暂无反馈</div>';
+                    return;
+                }
+                shown.forEach(function (b) { listEl.appendChild(buildCard(b)); });
+            }
+
+            function loadBugs() {
+                listEl.innerHTML = '<div class="ziyit-loading">' +
+                    '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>' +
+                    '<div class="ziyit-loader">' +
+                    '<div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>' +
+                    '<div class="loader-bar"><div class="loader-fill"></div></div>' +
+                    '</div></div>';
+                offlineTip.style.display = 'none';
+                ZIYIT_API.rcBugs().then(function (res) {
+                    bugs = (res && res.bugs) || [];
+                    statuses = (res && res.statuses) || [];
+                    severities = (res && res.severities) || [];
+                    statusCounts = (res && res.statusCounts) || {};
+                    renderFilters();
+                    renderList();
+                }).catch(function () {
+                    offlineTip.style.display = 'block';
+                    listEl.innerHTML = '';
+                    filterBar.innerHTML = '';
+                });
+            }
+
+            function fillSeverityOptions() {
+                const sel = document.getElementById('bug-severity');
+                if (sel.options.length) return;
+                severities.forEach(function (s) {
+                    const opt = document.createElement('option');
+                    opt.value = s.key;
+                    opt.textContent = s.label;
+                    if (s.key === 'medium') opt.selected = true;
+                    sel.appendChild(opt);
+                });
+            }
+
+            // 详情弹窗
+            document.getElementById('bug-detail-close').addEventListener('click', function () {
+                detailModal.style.display = 'none';
+            });
+            detailModal.addEventListener('click', function (e) {
+                if (e.target === detailModal) detailModal.style.display = 'none';
+            });
+
+            // 提交表单
+            function closeSubmitModal() { submitModal.style.display = 'none'; }
+            document.getElementById('bug-submit-btn').addEventListener('click', function () {
+                if (!ZIYIT_API.getToken()) {
+                    alert('请先登录后再提交反馈');
+                    window.location.href = '../user/';
+                    return;
+                }
+                ['bug-title', 'bug-version', 'bug-module', 'bug-description', 'bug-steps',
+                    'bug-expected', 'bug-actual', 'bug-extra', 'bug-contact'].forEach(function (id) {
+                        document.getElementById(id).value = '';
+                    });
+                fillSeverityOptions();
+                submitModal.style.display = 'flex';
+            });
+            document.getElementById('bug-submit-cancel').addEventListener('click', closeSubmitModal);
+            submitModal.addEventListener('click', function (e) {
+                if (e.target === submitModal) closeSubmitModal();
+            });
+            document.getElementById('bug-submit-confirm').addEventListener('click', function () {
+                const val = function (id) { return document.getElementById(id).value.trim(); };
+                const title = val('bug-title');
+                const description = val('bug-description');
+                if (!title || !description) {
+                    alert('请填写问题标题和问题描述');
+                    return;
+                }
+                const btn = this;
+                const oldText = btn.textContent;
+                btn.textContent = '提交中...';
+                btn.disabled = true;
+                // 提交者由服务端按 Bearer token 解析，这里只传内容
+                ZIYIT_API.rcSubmitBug({
+                    title: title,
+                    description: description,
+                    version: val('bug-version'),
+                    module: val('bug-module'),
+                    severity: document.getElementById('bug-severity').value,
+                    steps: val('bug-steps'),
+                    expected: val('bug-expected'),
+                    actual: val('bug-actual'),
+                    extra: val('bug-extra'),
+                    contact: val('bug-contact')
+                }).then(function (res) {
+                    alert((res && res.message) || '提交成功');
+                    closeSubmitModal();
+                    loadBugs();
+                }).catch(function (err) {
+                    alert('提交失败: ' + (err.message || err));
+                }).finally(function () {
+                    btn.textContent = oldText;
+                    btn.disabled = false;
+                });
+            });
+
+            loadBugs();
+        })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <script src="../assets/ziyit-theme.js"></script>
 </body>
 
