@@ -984,6 +984,104 @@
             }
 
              
+             
+            // ---- 流式回复（POST /guide/chat/stream）----
+            // 六类事件：status 进度提示 / delta 增量追加 / reset 丢弃本轮已显示 /
+            //          final 清洗后的完整正文（覆盖显示）/ done 收尾元数据 / error 失败说明
+            var streamState = null;      
+            var streamRendered = false;  
+
+             
+            function streamBubble() {
+                if (streamState) return streamState;
+                var wrap = document.createElement('div');
+                wrap.className = 'g-msg ai';
+                var name = document.createElement('div');
+                name.className = 'g-name';
+                var who = document.createElement('span');
+                who.textContent = 'AI 助手';
+                name.appendChild(who);
+                wrap.appendChild(name);
+                var body = document.createElement('div');
+                body.className = 'md-body';
+                wrap.appendChild(body);
+                var tm = document.createElement('div');
+                tm.className = 'g-time';
+                tm.textContent = nowTime();
+                wrap.appendChild(tm);
+                el.messages.appendChild(wrap);
+                scrollBottom();
+                streamState = { wrap: wrap, body: body, text: '' };
+                return streamState;
+            }
+
+             
+            function streamDrop() {
+                if (streamState && streamState.wrap) streamState.wrap.remove();
+                streamState = null;
+            }
+
+             
+            function handleStreamEvent(ev) {
+                var t = ev && ev.type;
+                if (t === 'status') {
+                     
+                    var s = streamBubble();
+                    if (!s.text) s.body.textContent = ev.text || '';
+                } else if (t === 'delta') {
+                     
+                    var d = streamBubble();
+                    d.text += (ev.text || '');
+                    d.body.innerHTML = mdToHtml(d.text);
+                } else if (t === 'reset') {
+                     
+                    if (streamState) {
+                        streamState.text = '';
+                        streamState.body.innerHTML = '';
+                    }
+                } else if (t === 'final') {
+                     
+                    var f = streamBubble();
+                    f.text = ev.reply || '';
+                    f.body.innerHTML = mdToHtml(f.text);
+                    streamRendered = true;
+                } else if (t === 'error') {
+                     
+                    streamDrop();
+                }
+                scrollBottom();
+            }
+
+             
+            function streamChat(message) {
+                streamDrop();
+                streamRendered = false;
+                if (!ZIYIT_API.guideChatStream) return ZIYIT_API.guideChat(message);
+                var done = null;
+                var errMsg = '';
+                return ZIYIT_API.guideChatStream(message, function (ev) {
+                    if (!ev) return;
+                    if (ev.type === 'done') { done = ev; return; }
+                    if (ev.type === 'error') errMsg = ev.message || '';
+                    handleStreamEvent(ev);
+                }).then(function () {
+                    if (done) return done;
+                     
+                    streamDrop();
+                    if (errMsg) { addSys(errMsg); return null; }
+                    throw new Error('回复流中断，请重试');
+                }).catch(function (err) {
+                    if (done) return done;
+                    streamDrop();
+                     
+                    if (err && (err.status === 404 || err.status === 405 || err.noStream)) {
+                        return ZIYIT_API.guideChat(message);
+                    }
+                    throw err;
+                });
+            }
+
+             
             function send() {
                 if (G.sending || G.locked) return;
                 if (G.closed) {
@@ -1006,7 +1104,7 @@
                 el.input.value = '';
                 el.count.textContent = '0 / 500';
 
-                ZIYIT_API.guideChat(text).then(function (d) {
+                streamChat(text).then(function (d) {
                     G.sending = false;
                     el.send.disabled = G.locked;
                     handleChatReply(d, text);
@@ -1026,12 +1124,16 @@
                 var rid = d.id || ((d.ts || '') + '|' + (d.reply || ''));
                 if (rid && rid !== '|') G.rendered[rid] = true;
                 if (d.sessionId) G.sessionId = d.sessionId;
+                if (d.humanAdmin) G.humanAdmin = d.humanAdmin;
                 if (d.sessionStatus) applySessionStatus(d.sessionStatus);
                 if (d.remaining != null) updateQuota(d);
                 if (d.welcome != null && !G.welcomeShown) {
                     G.welcomeShown = true;
                     addMsg('ai', d.welcome, {});
                 }
+                 
+                if (streamRendered && d.reply) d.reply = null;
+                streamRendered = false;
                 var rt = d.replyType || 'ai';
                  
                 var hasHuman = G.sessionStatus === 'human' || G.sessionStatus === 'transfer_active' || !!humanAdminName(G.humanAdmin);
@@ -1093,6 +1195,12 @@
                     setStatusBadge('AI 助手');
                     hideTransferWait();
                     if (d.reply) addSys(d.reply);
+                    return;
+                }
+                if (rt === 'ai_end') {
+                     
+                    setClosedUI(closedText());
+                    if (d.reply) addMsg('ai', d.reply, {});
                     return;
                 }
                 if (rt === 'session_closed') {
@@ -1163,7 +1271,7 @@
                 setStatusBadge('等待人工客服接入', 'waiting');
                 showTransferWait();
                  
-                ZIYIT_API.guideChat('转人工').then(function (d) {
+                streamChat('转人工').then(function (d) {
                     if (d && d.sessionStatus) applySessionStatus(d.sessionStatus);
                     if (d && d.replyType === 'transfer_confirm') {
                         showTransferModal();

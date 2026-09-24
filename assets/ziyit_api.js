@@ -540,6 +540,81 @@
         });
     }
 
+    // 流式对话：POST /guide/chat/stream（SSE）。
+    // EventSource 只发 GET 且无法携带 Authorization 头，所以这里用 fetch + ReadableStream 手工读帧，
+    // 每帧形如 `data: {json}\n\n`。onEvent 依次收到六类事件：
+    //   status 进度提示（同时是心跳） / delta 增量片段 / reset 丢弃本轮已显示
+    //   final  清洗后的完整正文（覆盖显示） / done 收尾元数据 / error 失败说明
+    // 返回的 Promise 在流结束或失败时 settle（不 resolve 事件本身）。
+    function guideChatStream(message, onEvent) {
+        var token = getToken();
+        var base = getBases()[0] || DEFAULT_BASE;
+        return fetch(base + '/guide/chat/stream', {
+            method: 'POST',
+            cache: 'no-store',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'text/event-stream',
+                'ngrok-skip-browser-warning': '1',
+                'Authorization': token ? 'Bearer ' + token : ''
+            },
+            body: JSON.stringify({ message: message })
+        }).then(function (res) {
+            if (!res.ok) {
+                // 还没开始推流就失败（如 401/403/429）：按普通错误抛出，
+                // 调用方看到 404/405 说明该后端没有流式路由，可降级到非流式接口
+                return res.json().catch(function () { return null; }).then(function (data) {
+                    var err = new Error(errorText(data && data.detail) || ('请求失败 ' + res.status));
+                    err.status = res.status;
+                    err.data = data;
+                    err.retryAfter = parseInt(res.headers.get('retry-after') || '0', 10) || 0;
+                    throw err;
+                });
+            }
+            if (!res.body || typeof res.body.getReader !== 'function') {
+                var noStream = new Error('当前环境不支持流式读取');
+                noStream.noStream = true;
+                throw noStream;
+            }
+            var reader = res.body.getReader();
+            var decoder = new TextDecoder('utf-8');
+            var buf = '';
+
+            function parseFrame(frame) {
+                var payload = '';
+                frame.split('\n').forEach(function (line) {
+                    var l = line.replace(/\r$/, '');
+                    if (l.indexOf('data:') === 0) payload += l.slice(5).trim();
+                });
+                if (!payload) return;
+                var ev;
+                try { ev = JSON.parse(payload); } catch (e) { return; }
+                if (onEvent) onEvent(ev);
+            }
+
+            function drain() {
+                var frames = buf.split(/\r?\n\r?\n/);
+                buf = frames.pop();      // 末段可能被切断，留到下一块再拼
+                frames.forEach(parseFrame);
+            }
+
+            function pump() {
+                return reader.read().then(function (r) {
+                    if (r.done) {
+                        buf += decoder.decode();
+                        if (buf.trim()) parseFrame(buf);
+                        return;
+                    }
+                    buf += decoder.decode(r.value, { stream: true });
+                    drain();
+                    return pump();
+                });
+            }
+
+            return pump();
+        });
+    }
+
      
     function guideSession() {
         return request('/guide/session');
@@ -923,6 +998,7 @@
         adminChatBroadcast: adminChatBroadcast,
         guideAuthSync: guideAuthSync,
         guideChat: guideChat,
+        guideChatStream: guideChatStream,
         guideSession: guideSession,
         guideStatus: guideStatus,
         guideHumanInbox: guideHumanInbox,
