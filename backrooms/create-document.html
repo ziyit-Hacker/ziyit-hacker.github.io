@@ -53,6 +53,9 @@
         .panel-sec input[type="file"] { display: none; }
         .panel-sec textarea { width: 100%; min-height: 70px; resize: vertical; border: 1px solid #cfd3d9; border-radius: 5px; font-size: 13px; font-family: inherit; padding: 6px 8px; box-sizing: border-box; margin-top: 6px; }
         .panel-sec .hint { font-size: 11px; color: #999; margin-top: 4px; line-height: 1.5; }
+        .tag-checks { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; }
+        .tag-checks label { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #444; margin: 0; cursor: pointer; }
+        .tag-checks label input { margin: 0; }
         .img-thumb { max-width: 100%; max-height: 90px; border-radius: 5px; margin-top: 6px; border: 1px solid #ddd; display: block; object-fit: contain; }
         .img-row, .block-row { border: 1px solid #e5e8ec; border-radius: 6px; padding: 8px; margin-bottom: 8px; background: #fff; }
         .img-row .row-actions { display: flex; gap: 6px; margin-top: 6px; }
@@ -1303,6 +1306,26 @@
                 <div class="hint">对应物品文档顶部的两张表格；表格里的编号与名称请用上面「标题 / 页面编号」，或直接点预览里的标题修改。</div>
             </section>
 
+            <section class="panel-sec" id="sec-entitymeta">
+                <h3>实体 IETS 与性质</h3>
+                <label>危险程度（0 友好/有益 — 5 当场击杀）</label>
+                <select id="f-iets-danger"></select>
+                <label>智能水平（A 无法理解 — E 动物级低智力）</label>
+                <select id="f-iets-intel"></select>
+                <label>智能细化（可加可不加）</label>
+                <select id="f-iets-mod">
+                    <option value="">不细化</option>
+                    <option value="+">+</option>
+                    <option value="-">-</option>
+                </select>
+                <div class="hint" id="iets-hint"></div>
+                <label>性质（可多选，不选则不显示）</label>
+                <div id="prop-list" class="tag-checks"></div>
+                <label>危险性质（可多选，不选则不显示）</label>
+                <div id="hazard-list" class="tag-checks"></div>
+                <div class="hint">选择后预览与导出同步：IETS 输出「危险+智能」组合（如 4C、3B+）；性质容器带上所选标签类名，未选时输出 X。</div>
+            </section>
+
             <section class="panel-sec" id="sec-sections">
                 <h3>正文章节（多段落）</h3>
                 <div id="section-list"></div>
@@ -1494,6 +1517,12 @@
                 objNote1: '[NO DATA]',
                 objNote2: '[NO DATA]',
                 sections: [],
+                // 实体专用：IETS（危险程度 0–5 / 智能水平 A–E，可加 + 或 -）与性质多选
+                ietsDanger: '',
+                ietsIntel: '',
+                ietsIntelMod: '',
+                entityProps: [],
+                hazardProps: [],
                  
                 type: 'levels'
             };
@@ -1607,6 +1636,12 @@
                 doc.objLevel = NODATA;
                 doc.objNote1 = NODATA;
                 doc.objNote2 = NODATA;
+                // 实体 IETS / 性质默认未选：IETS 显示 NODATA，性质容器输出 X（不显示任何标签）
+                doc.ietsDanger = '';
+                doc.ietsIntel = '';
+                doc.ietsIntelMod = '';
+                doc.entityProps = [];
+                doc.hazardProps = [];
                 // 正文按"章节"组织，章节随类型不同
                 doc.sections = buildTypeSections(doc.type);
             }
@@ -1625,6 +1660,7 @@
                 LEVEL_ONLY_PANELS.forEach(function (id) { setPanelVisible(id, isLevel); });
                 setPanelVisible('sec-sections', !isLevel);
                 setPanelVisible('sec-objmeta', doc.type === 'item');
+                setPanelVisible('sec-entitymeta', doc.type === 'entity');
                 // 自定义区块（页顶说明等）所有类型都能用；「在描述与基地之间插入」只对层级有意义。
                 setPanelVisible('sec-block', true);
                 setPanelVisible('btn-block-insert-panel', isLevel);
@@ -1639,6 +1675,29 @@
             var ENTITY_TAGS = ['HVM', 'VRL-A', 'VRL-B', 'NCR', 'MCH', 'CBR', 'SYN', 'DMN', 'SSV', 'CVL', 'RLA', 'UNQ', 'AGR', 'BNV'];
             var ENTITY_HAZARDS = ['RAD', 'NRO', 'TXC', 'PYR'];
             var ENTITY_CLASSES = ['Spectrous', 'Itemic', 'Bactal', 'Floral', 'Zoophoid', 'Chimeric', 'Anthropoid', 'Enigmatic', '虚灵', '物品', '微生物', '植物', '动物', '诞妄', '类人', '神秘'];
+            // 性质中文名（与样式里的 tooltip 文案一致，作为多选项的提示）
+            var ENTITY_TAG_NAMES = {
+                'HVM': '蜂巢思维', 'VRL-A': 'A型病毒', 'VRL-B': 'B型病毒', 'NCR': '坏死',
+                'MCH': '机械', 'CBR': '网络', 'SYN': '合成', 'DMN': '支配', 'SSV': '卑顺',
+                'CVL': '开化', 'RLA': '现实扭曲', 'UNQ': '独特', 'AGR': '敌意', 'BNV': '善意'
+            };
+            var ENTITY_HAZARD_NAMES = { 'RAD': '放射性', 'NRO': '神经损害', 'TXC': '毒性', 'PYR': '烧灼' };
+            // IETS 危险程度 / 智能水平的说明文案（取自 IETS 规则页）
+            var IETS_DANGER_DESC = {
+                '0': '对人类友好或有益，有时两者都有。',
+                '1': '对人类无害。这并不意味着该实体是友好的。',
+                '2': '能够伤害人类，但要么几乎不可能造成持续伤害，要么必须受到刺激后才会造成伤害。',
+                '3': '对人类有相当大的威胁。最坏情形下可能对虚弱或易受影响者造成致命伤。',
+                '4': '很可能会杀死未采取适当预防措施的人员，或造成致命伤。',
+                '5': '会在未知情况下当场击杀你。不惜一切代价避开。'
+            };
+            var IETS_INTEL_DESC = {
+                'A': '拥有远超人类、无法理解的极高智力。',
+                'B': '拥有与人类相当的高智力。',
+                'C': '拥有与人类相当的低智力。',
+                'D': '拥有动物水平的高智力（相当于海豚、老鼠或狗）。',
+                'E': '拥有动物水平的低智力（相当于昆虫、鸟类或两栖动物）。'
+            };
 
             function tagRowHtml(list, extraClass) {
                 return list.map(function (t) { return '<div class="' + escHtml(t) + '">' + escHtml(t) + '</div>'; }).join('');
@@ -1653,9 +1712,28 @@
                     + '  </div>\n';
             }
 
-            function ietsValHtml(href, name) {
+            // IETS 取值：危险程度 0–5 + 智能水平 A–E（可加 + / -），如 4C、3B+。
+            // 类名 danger-N / intel-X 控制配色，文本为「危险+智能」；未选时显示 NODATA。
+            function ietsValHtml(href, name, forPreview) {
+                var d = (doc.ietsDanger === '' || doc.ietsDanger == null) ? '' : String(doc.ietsDanger);
+                var it = doc.ietsIntel || '';
+                var mod = doc.ietsIntelMod || '';
+                var cls = 'iets-val', text = NODATA;
+                if (d !== '') cls += ' danger-' + d;
+                if (it) cls += ' intel-' + it;
+                if (d !== '' || it) text = d + it + (it ? mod : '');
+                var val = '<span class="' + cls + '"><strong>' + escHtml(text) + '</strong></span>';
+                if (forPreview) {
+                    val = '<span class="editable" data-field="iets" style="display:inline-block;">' + val + '</span>';
+                }
                 return '    <div class="iets"><div class="iets-wrapper"><strong><a href="' + escHtml(toAbsUrl(href)) + '">' + escHtml(name) + '</a>：</strong><br />\n'
-                    + '      <span class="iets-val danger-X intel-X"><strong>' + NODATA + '</strong></span></div></div>\n';
+                    + '      ' + val + '</div></div>\n';
+            }
+
+            // 性质容器类名：选中项逐一作为类名（CSS 用它决定显示哪些标签）；未选输出 X。
+            function propsCls(selected) {
+                var s = selected || [];
+                return s.length ? s.join(' ') : 'X';
             }
 
              
@@ -1717,6 +1795,11 @@
                 return '<span class="editable" data-field="' + field + '" style="cursor:pointer;">' + escHtml(t) + '</span>';
             }
 
+            // 预览下给「多选类」元素挂上可点击标记（点击跳到左侧面板对应区块）。
+            function previewAttr(forPreview, field) {
+                return forPreview ? ' data-field="' + field + '" style="cursor:pointer;"' : '';
+            }
+
              
             function sectionsHtml(forPreview) {
                 return (doc.sections || []).map(function (s, idx) {
@@ -1765,7 +1848,7 @@
                         + '  <div class="cecs-wrapper">\n'
                         + '    <div class="base">\n'
                         + '      <div class="text-box">编号：' + NODATA + '<br />栖息地：' + NODATA + '</div>\n'
-                        + ietsValHtml('/backrooms/entities/iets', 'IETS')
+                        + ietsValHtml('/backrooms/entities/iets', 'IETS', forPreview)
                         + '    </div>\n'
                         + '    <div class="last-stripe"></div>\n'
                         + '  </div>\n'
@@ -1778,8 +1861,8 @@
                         + '    </div>\n'
                         + '  </div>\n'
                         + '  <div class="properties-label">性质：</div>\n'
-                        + '  <div class="properties">' + tagRowHtml(ENTITY_TAGS) + '</div>\n'
-                        + '  <div class="properties-hazard">' + tagRowHtml(ENTITY_HAZARDS) + '</div>\n'
+                        + '  <div class="properties ' + propsCls(doc.entityProps) + '"' + previewAttr(forPreview, 'props') + '>' + tagRowHtml(ENTITY_TAGS) + '</div>\n'
+                        + '  <div class="properties-hazard ' + propsCls(doc.hazardProps) + '"' + previewAttr(forPreview, 'hazard') + '>' + tagRowHtml(ENTITY_HAZARDS) + '</div>\n'
                         + '</div>\n<hr />\n<br />\n'
                         + intro
                         + sections;
@@ -2845,6 +2928,7 @@
                 renderDescImgRows();
                 renderBlockRows();
                 renderSectionEditors();
+                renderEntityMeta();
             }
 
              
@@ -2899,6 +2983,71 @@
                     wrap.appendChild(add);
                     box.appendChild(wrap);
                 });
+            }
+
+             
+            // 实体 IETS 与性质编辑器：只在内容变化时重建 DOM，每次都按 doc 回填选中状态。
+            function fillSelect(sel, items) {
+                var sig = items.map(function (o) { return o.v; }).join('\u0001');
+                if (sel.getAttribute('data-sig') !== sig) {
+                    sel.innerHTML = items.map(function (o) {
+                        return '<option value="' + escHtml(o.v) + '">' + escHtml(o.t) + '</option>';
+                    }).join('');
+                    sel.setAttribute('data-sig', sig);
+                }
+            }
+
+            function renderTagChecks(boxId, tags, names, selected) {
+                var box = $(boxId);
+                if (!box) return;
+                var sig = tags.join('\u0001');
+                if (box.getAttribute('data-sig') !== sig) {
+                    box.innerHTML = tags.map(function (t) {
+                        var id = boxId + '-' + t.replace(/[^A-Za-z0-9-]/g, '_');
+                        return '<label for="' + id + '"><input type="checkbox" id="' + id + '" value="' + escHtml(t) + '">'
+                            + escHtml(names[t] ? t + ' ' + names[t] : t) + '</label>';
+                    }).join('');
+                    box.setAttribute('data-sig', sig);
+                }
+                var inputs = box.querySelectorAll('input[type="checkbox"]');
+                var cur = selected || [];
+                for (var i = 0; i < inputs.length; i++) {
+                    inputs[i].checked = cur.indexOf(inputs[i].value) >= 0;
+                }
+            }
+
+            function checkedValues(box) {
+                var out = [], inputs = box.querySelectorAll('input[type="checkbox"]');
+                for (var i = 0; i < inputs.length; i++) {
+                    if (inputs[i].checked) out.push(inputs[i].value);
+                }
+                return out;
+            }
+
+            function renderEntityMeta() {
+                var dSel = $('f-iets-danger'), iSel = $('f-iets-intel'), mSel = $('f-iets-mod');
+                if (dSel) {
+                    fillSelect(dSel, [{ v: '', t: '未设置' }].concat([0, 1, 2, 3, 4, 5].map(function (n) {
+                        return { v: String(n), t: n + ' — ' + IETS_DANGER_DESC[String(n)] };
+                    })));
+                    dSel.value = doc.ietsDanger || '';
+                }
+                if (iSel) {
+                    fillSelect(iSel, [{ v: '', t: '未设置' }].concat(['A', 'B', 'C', 'D', 'E'].map(function (c) {
+                        return { v: c, t: c + ' — ' + IETS_INTEL_DESC[c] };
+                    })));
+                    iSel.value = doc.ietsIntel || '';
+                }
+                if (mSel) mSel.value = doc.ietsIntelMod || '';
+                var hint = $('iets-hint');
+                if (hint) {
+                    var d = doc.ietsDanger, it = doc.ietsIntel, mod = doc.ietsIntelMod || '';
+                    hint.textContent = (d === '' || d == null) && !it
+                        ? '未选择 IETS，预览与导出显示 [NO DATA]。'
+                        : '当前 IETS：' + (d === '' || d == null ? '' : d) + (it || '') + (it ? mod : '');
+                }
+                renderTagChecks('prop-list', ENTITY_TAGS, ENTITY_TAG_NAMES, doc.entityProps);
+                renderTagChecks('hazard-list', ENTITY_HAZARDS, ENTITY_HAZARD_NAMES, doc.hazardProps);
             }
 
              
@@ -3130,6 +3279,14 @@
                     if (!a || !a.hasAttribute('data-field')) return;
                     var field = a.getAttribute('data-field');
                     var m = String(field).split(':');
+                    // IETS / 性质是多选控件，点预览直接跳到左侧对应区块。
+                    if (m[0] === 'iets' || m[0] === 'props' || m[0] === 'hazard') {
+                        var meta = $('sec-entitymeta');
+                        if (meta) meta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        var focusEl = m[0] === 'iets' ? $('f-iets-danger') : $(m[0] === 'props' ? 'prop-list' : 'hazard-list');
+                        if (focusEl && focusEl.focus) focusEl.focus();
+                        return;
+                    }
                     var val = '', title = '编辑内容', opts = {};
                     // 列表型字段（入口/出口条目、行为准则条目）用单行输入框
                     var kind = (m[0] === 'entryItem' || m[0] === 'exitItem') ? 'list' : null;
@@ -3204,6 +3361,18 @@
                 bindInput('f-obj-level', function (v) { doc.objLevel = v; render(); });
                 bindInput('f-obj-note1', function (v) { doc.objNote1 = v; render(); });
                 bindInput('f-obj-note2', function (v) { doc.objNote2 = v; render(); });
+                // 实体 IETS / 性质
+                $('f-iets-danger').addEventListener('change', function () { doc.ietsDanger = this.value; render(); });
+                $('f-iets-intel').addEventListener('change', function () { doc.ietsIntel = this.value; render(); });
+                $('f-iets-mod').addEventListener('change', function () { doc.ietsIntelMod = this.value; render(); });
+                $('prop-list').addEventListener('change', function () {
+                    doc.entityProps = checkedValues($('prop-list'));
+                    render();
+                });
+                $('hazard-list').addEventListener('change', function () {
+                    doc.hazardProps = checkedValues($('hazard-list'));
+                    render();
+                });
 
                  
                 $('btn-desc-img-add').addEventListener('click', function () {
