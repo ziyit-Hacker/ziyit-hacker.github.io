@@ -1309,26 +1309,31 @@
             </section>
 
             <section class="panel-sec" id="sec-entitymeta">
-                <h3>实体分类、IETS 与性质</h3>
-                <label>分类（CECS，决定分类图标与名称）</label>
-                <select id="f-entity-class"></select>
-                <label>危险程度（0 友好/有益 — 5 当场击杀）</label>
+                <h3 id="cecs-title">实体分类、IETS 与性质</h3>
+                <div id="cecs-class-only">
+                    <label>分类（CECS，决定分类图标与名称）</label>
+                    <select id="f-entity-class"></select>
+                </div>
+                <label id="lbl-iets-danger">危险程度（0 友好/有益 — 5 当场击杀）</label>
                 <select id="f-iets-danger"></select>
-                <label>智能水平（A 无法理解 — E 动物级低智力）</label>
+                <label id="lbl-iets-intel">智能水平（A 无法理解 — E 动物级低智力）</label>
                 <select id="f-iets-intel"></select>
-                <label>智能细化（可加可不加）</label>
+                <label id="lbl-iets-mod">智能细化（可加可不加）</label>
                 <select id="f-iets-mod">
                     <option value="">不细化</option>
                     <option value="+">+</option>
                     <option value="-">-</option>
                 </select>
                 <div class="hint" id="iets-hint"></div>
-                <label>性质（可多选，互斥项会自动置灰不可选）</label>
-                <div id="prop-list" class="tag-checks"></div>
-                <div class="hint" id="prop-hint"></div>
-                <label>危险性质（可多选，不互斥）</label>
-                <div id="hazard-list" class="tag-checks"></div>
-                <div class="hint">选择后预览与导出同步：分类输出到「分类：」名称与左侧图标；IETS 输出「危险+智能」组合（如 4C、3B+）；性质容器带上所选标签类名，未选时输出 X。</div>
+                <div id="cecs-props-only">
+                    <label>性质（可多选，互斥项会自动置灰不可选）</label>
+                    <div id="prop-list" class="tag-checks"></div>
+                    <div class="hint" id="prop-hint"></div>
+                    <label>危险性质（可多选，不互斥）</label>
+                    <div id="hazard-list" class="tag-checks"></div>
+                    <div class="hint">选择后预览与导出同步：分类输出到「分类：」名称与左侧图标；IETS 输出「危险+智能」组合（如 4C、3B+）；性质容器带上所选标签类名，未选时输出 X。</div>
+                </div>
+                <div class="hint" id="cecs-scale-hint">选择后预览与导出同步：IPTS 输出「影响+难度」组合（如 2S+、3B）。</div>
             </section>
 
             <section class="panel-sec" id="sec-habitat">
@@ -1676,12 +1681,27 @@
 
             function initLayoutForType() {
                 var isLevel = doc.type === 'levels';
+                var isEntity = doc.type === 'entity';
+                var isPhenomenon = doc.type === 'phenomenon';
+                var sc = scaleOf();
                 LEVEL_ONLY_PANELS.forEach(function (id) { setPanelVisible(id, isLevel); });
                 setPanelVisible('sec-sections', !isLevel);
                 setPanelVisible('sec-objmeta', doc.type === 'item');
-                setPanelVisible('sec-entitymeta', doc.type === 'entity');
-                setPanelVisible('sec-habitat', doc.type === 'entity');
-                if (doc.type === 'entity') loadHabitats();
+                // 实体与现象共用「分类 + 评级」区：现象无 CECS 分类与性质，只有 IPTS。
+                setPanelVisible('sec-entitymeta', isEntity || isPhenomenon);
+                setPanelVisible('sec-habitat', isEntity);
+                setPanelVisible('cecs-class-only', isEntity);
+                setPanelVisible('cecs-props-only', isEntity);
+                setPanelVisible('cecs-scale-hint', isPhenomenon);
+                var cTitle = $('cecs-title');
+                if (cTitle) cTitle.textContent = isPhenomenon ? '异常分类与 IPTS' : '实体分类、IETS 与性质';
+                var lblDanger = $('lbl-iets-danger');
+                if (lblDanger) lblDanger.textContent = sc.dangerLabel;
+                var lblIntel = $('lbl-iets-intel');
+                if (lblIntel) lblIntel.textContent = sc.intelLabel;
+                var lblMod = $('lbl-iets-mod');
+                if (lblMod) lblMod.textContent = sc.modLabel;
+                if (isEntity) loadHabitats();
                 // 自定义区块（页顶说明等）所有类型都能用；「在描述与基地之间插入」只对层级有意义。
                 setPanelVisible('sec-block', true);
                 setPanelVisible('btn-block-insert-panel', isLevel);
@@ -1758,6 +1778,46 @@
                 'D': '拥有动物水平的高智力（相当于海豚、老鼠或狗）。',
                 'E': '拥有动物水平的低智力（相当于昆虫、鸟类或两栖动物）。'
             };
+            // IPTS（现象）与 IETS（实体）结构相同：第一栏 0–5，第二栏字母 + 可选 +/-，
+            // 差别只在文案、字母集（多一个 S）与说明页，故统一成一份配置。
+            var IPTS_DANGER_DESC = {
+                '0': '对人类有利，只不过很难出现。',
+                '1': '具有双面性，但绝大多数情况下都具有传播性。',
+                '2': '能使人类出现不明的行为，并像神经病一样幻想，随后自杀。',
+                '3': '对单个人类有相当大的威胁。最坏情形下可能对虚弱或易受影响者造成致命伤。',
+                '4': '很可能会立刻消灭条件成立的人类。',
+                '5': '会在未知情况下当场制造场景，并威胁多个场景的实体安全。'
+            };
+            var IPTS_INTEL_DESC = {
+                'S': '人类几乎无法处理以及收容。',
+                'A': '需要立刻撤离，处理影响等难度极大。',
+                'B': '只需要派遣 2 级管理员解决。',
+                'C': '只需要避免条件全面封锁即可收容管控。',
+                'D': '只需要区巡逻员处理即可。',
+                'E': '可以受到物理伤害，血量较低，无智能。'
+            };
+
+            var SCALES = {
+                iets: {
+                    key: 'iets', label: 'IETS', href: '/backrooms/entities/iets',
+                    dangerLabel: '危险程度（0 友好/有益 — 5 当场击杀）',
+                    intelLabel: '智能水平（A 无法理解 — E 动物级低智力）',
+                    modLabel: '智能细化（可加可不加）',
+                    danger: IETS_DANGER_DESC, intel: IETS_INTEL_DESC, intelKeys: ['A', 'B', 'C', 'D', 'E']
+                },
+                ipts: {
+                    key: 'ipts', label: 'IPTS', href: '/backrooms/phenomena/ipts',
+                    dangerLabel: '影响程度（0 对人类有利 — 5 当场制造场景）',
+                    intelLabel: '处理难度（S 几乎无法处理 — E 无智能）',
+                    modLabel: '难度细化（可加可不加）',
+                    danger: IPTS_DANGER_DESC, intel: IPTS_INTEL_DESC, intelKeys: ['S', 'A', 'B', 'C', 'D', 'E']
+                }
+            };
+
+            // 当前类型的评级系统：实体 IETS，现象 IPTS（层级与物品没有）。
+            function scaleOf() {
+                return doc.type === 'phenomenon' ? SCALES.ipts : SCALES.iets;
+            }
 
             // 栖息地候选：静态层级列表（normal-levels/index.html）与后端已收录层级合并去重。
             // 每项 { key, num, name, href }，key 为去掉 "Level" 前缀后的编号，用于去重与回填。
@@ -1919,9 +1979,10 @@
                     + '  </div>\n';
             }
 
-            // IETS 取值：危险程度 0–5 + 智能水平 A–E（可加 + / -），如 4C、3B+。
-            // 类名 danger-N / intel-X 控制配色，文本为「危险+智能」；未选时显示 NODATA。
-            function ietsValHtml(href, name, forPreview) {
+            // IETS / IPTS 取值：第一栏 0–5 + 第二栏字母（可加 + / -），如 4C、3B+、2S+。
+            // 类名 danger-N / intel-X 控制配色，文本为「数字+字母+修饰」；未选时显示 NODATA。
+            function ietsValHtml(forPreview) {
+                var sc = scaleOf();
                 var d = (doc.ietsDanger === '' || doc.ietsDanger == null) ? '' : String(doc.ietsDanger);
                 var it = doc.ietsIntel || '';
                 var mod = doc.ietsIntelMod || '';
@@ -1933,7 +1994,7 @@
                 if (forPreview) {
                     val = '<span class="editable" data-field="iets" style="display:inline-block;">' + val + '</span>';
                 }
-                return '    <div class="iets"><div class="iets-wrapper"><strong><a href="' + escHtml(toAbsUrl(href)) + '">' + escHtml(name) + '</a>：</strong><br />\n'
+                return '    <div class="iets"><div class="iets-wrapper"><strong><a href="' + escHtml(toAbsUrl(sc.href)) + '">' + escHtml(sc.label) + '</a>：</strong><br />\n'
                     + '      ' + val + '</div></div>\n';
             }
 
@@ -2059,7 +2120,7 @@
                         + '  <div class="cecs-wrapper">\n'
                         + '    <div class="base">\n'
                         + '      <div class="text-box">编号：' + numHtml + '<br />栖息地：' + habitatHtml(forPreview) + '</div>\n'
-                        + ietsValHtml('/backrooms/entities/iets', 'IETS', forPreview)
+                        + ietsValHtml(forPreview)
                         + '    </div>\n'
                         + '    <div class="last-stripe"></div>\n'
                         + '  </div>\n'
@@ -2085,7 +2146,7 @@
                         + cecsLabelHtml('统合异常分类系统')
                         + '  <div class="cecs-wrapper">\n'
                         + '    <div class="base">\n'
-                        + ietsValHtml('/backrooms/phenomena/ipts', 'IPTS')
+                        + ietsValHtml(forPreview)
                         + '    </div>\n'
                         + '    <div class="last-stripe"></div>\n'
                         + '  </div>\n'
@@ -3433,6 +3494,7 @@
             }
 
             function renderEntityMeta() {
+                var sc = scaleOf();
                 var cSel = $('f-entity-class'), dSel = $('f-iets-danger'), iSel = $('f-iets-intel'), mSel = $('f-iets-mod');
                 doc.entityProps = sanitizeProps(doc.entityProps, PROP_CONFLICT_MAP);
                 if (cSel) {
@@ -3441,13 +3503,13 @@
                 }
                 if (dSel) {
                     fillSelect(dSel, [{ v: '', t: '未设置' }].concat([0, 1, 2, 3, 4, 5].map(function (n) {
-                        return { v: String(n), t: n + ' — ' + IETS_DANGER_DESC[String(n)] };
+                        return { v: String(n), t: n + ' — ' + sc.danger[String(n)] };
                     })));
                     dSel.value = doc.ietsDanger || '';
                 }
                 if (iSel) {
-                    fillSelect(iSel, [{ v: '', t: '未设置' }].concat(['A', 'B', 'C', 'D', 'E'].map(function (c) {
-                        return { v: c, t: c + ' — ' + IETS_INTEL_DESC[c] };
+                    fillSelect(iSel, [{ v: '', t: '未设置' }].concat(sc.intelKeys.map(function (c) {
+                        return { v: c, t: c + ' — ' + sc.intel[c] };
                     })));
                     iSel.value = doc.ietsIntel || '';
                 }
@@ -3456,8 +3518,8 @@
                 if (hint) {
                     var d = doc.ietsDanger, it = doc.ietsIntel, mod = doc.ietsIntelMod || '';
                     hint.textContent = (d === '' || d == null) && !it
-                        ? '未选择 IETS，预览与导出显示 [NO DATA]。'
-                        : '当前 IETS：' + (d === '' || d == null ? '' : d) + (it || '') + (it ? mod : '');
+                        ? '未选择 ' + sc.label + '，预览与导出显示 [NO DATA]。'
+                        : '当前 ' + sc.label + '：' + (d === '' || d == null ? '' : d) + (it || '') + (it ? mod : '');
                 }
                 var pHint = $('prop-hint');
                 if (pHint) {
