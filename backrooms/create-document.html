@@ -1321,9 +1321,10 @@
                     <option value="-">-</option>
                 </select>
                 <div class="hint" id="iets-hint"></div>
-                <label>性质（可多选，不选则不显示）</label>
+                <label>性质（可多选，互斥项会自动置灰不可选）</label>
                 <div id="prop-list" class="tag-checks"></div>
-                <label>危险性质（可多选，不选则不显示）</label>
+                <div class="hint" id="prop-hint"></div>
+                <label>危险性质（可多选，不互斥）</label>
                 <div id="hazard-list" class="tag-checks"></div>
                 <div class="hint">选择后预览与导出同步：分类输出到「分类：」名称与左侧图标；IETS 输出「危险+智能」组合（如 4C、3B+）；性质容器带上所选标签类名，未选时输出 X。</div>
             </section>
@@ -1697,6 +1698,34 @@
                 'CVL': '开化', 'RLA': '现实扭曲', 'UNQ': '独特', 'AGR': '敌意', 'BNV': '善意'
             };
             var ENTITY_HAZARD_NAMES = { 'RAD': '放射性', 'NRO': '神经损害', 'TXC': '毒性', 'PYR': '烧灼' };
+            // 性质互斥表（对称对）。前四组直接取自 CECS 官方定义，其余为按定义补充的形态/来源冲突：
+            //   VRL-A 以人类躯体为宿主 / VRL-B 无法感染人类
+            //   CVL 开化的定义明确排除蜂巢思维
+            //   HVM 蜂巢思维无独立思维 / SSV 卑顺具备独立思维
+            //   DMN 支配 / SSV 卑顺；AGR 敌意 / BNV 善意
+            //   机械形态不可能源自死亡生物、也无法以人类躯体为宿主
+            //   完全存在于电子系统者与实体机械、坏死体、寄生于人类躯体的病毒互斥
+            // 危险性质（RAD/NRO/TXC/PYR）不设互斥，可任意多选。
+            var PROP_CONFLICTS = [
+                ['VRL-A', 'VRL-B'],
+                ['HVM', 'CVL'],
+                ['HVM', 'SSV'],
+                ['DMN', 'SSV'],
+                ['AGR', 'BNV'],
+                ['MCH', 'NCR'],
+                ['MCH', 'VRL-A'],
+                ['CBR', 'MCH'],
+                ['CBR', 'NCR'],
+                ['CBR', 'VRL-A']
+            ];
+            var PROP_CONFLICT_MAP = (function () {
+                var map = {};
+                PROP_CONFLICTS.forEach(function (pair) {
+                    (map[pair[0]] = map[pair[0]] || []).push(pair[1]);
+                    (map[pair[1]] = map[pair[1]] || []).push(pair[0]);
+                });
+                return map;
+            })();
             // IETS 危险程度 / 智能水平的说明文案（取自 IETS 规则页）
             var IETS_DANGER_DESC = {
                 '0': '对人类友好或有益，有时两者都有。',
@@ -3012,7 +3041,8 @@
                 }
             }
 
-            function renderTagChecks(boxId, tags, names, selected) {
+            // conflicts：可选的互斥表（tag -> [冲突 tag]）；命中已选项的复选框会被置灰，无法勾选。
+            function renderTagChecks(boxId, tags, names, selected, conflicts) {
                 var box = $(boxId);
                 if (!box) return;
                 var sig = tags.join('\u0001');
@@ -3029,6 +3059,39 @@
                 for (var i = 0; i < inputs.length; i++) {
                     inputs[i].checked = cur.indexOf(inputs[i].value) >= 0;
                 }
+                if (!conflicts) return;
+                for (var j = 0; j < inputs.length; j++) {
+                    var clash = '', list = conflicts[inputs[j].value] || [];
+                    for (var k = 0; k < inputs.length; k++) {
+                        if (k !== j && inputs[k].checked && list.indexOf(inputs[k].value) >= 0) {
+                            clash = inputs[k].value;
+                            break;
+                        }
+                    }
+                    inputs[j].disabled = !!clash;
+                    if (clash) inputs[j].checked = false;
+                    inputs[j].parentNode.style.opacity = clash ? '0.4' : '';
+                    inputs[j].parentNode.style.cursor = clash ? 'not-allowed' : '';
+                    var label = inputs[j].parentNode;
+                    if (clash) {
+                        label.title = '与已选「' + clash + ' ' + (names[clash] || '') + '」互斥';
+                    } else {
+                        label.removeAttribute('title');
+                    }
+                }
+            }
+
+            // 去掉与已选项互斥的项（保留先出现的那个），用于兜底修正外部带入的数据。
+            function sanitizeProps(list, conflicts) {
+                var kept = [];
+                (list || []).forEach(function (t) {
+                    var clash = false, list2 = conflicts[t] || [];
+                    for (var i = 0; i < kept.length; i++) {
+                        if (list2.indexOf(kept[i]) >= 0) { clash = true; break; }
+                    }
+                    if (!clash) kept.push(t);
+                });
+                return kept;
             }
 
             function checkedValues(box) {
@@ -3041,6 +3104,7 @@
 
             function renderEntityMeta() {
                 var cSel = $('f-entity-class'), dSel = $('f-iets-danger'), iSel = $('f-iets-intel'), mSel = $('f-iets-mod');
+                doc.entityProps = sanitizeProps(doc.entityProps, PROP_CONFLICT_MAP);
                 if (cSel) {
                     fillSelect(cSel, [{ v: '', t: '未设置' }].concat(ENTITY_CLASS_OPTS));
                     cSel.value = doc.entityClass || '';
@@ -3065,7 +3129,18 @@
                         ? '未选择 IETS，预览与导出显示 [NO DATA]。'
                         : '当前 IETS：' + (d === '' || d == null ? '' : d) + (it || '') + (it ? mod : '');
                 }
-                renderTagChecks('prop-list', ENTITY_TAGS, ENTITY_TAG_NAMES, doc.entityProps);
+                var pHint = $('prop-hint');
+                if (pHint) {
+                    var blocked = [];
+                    doc.entityProps.forEach(function (t) {
+                        (PROP_CONFLICT_MAP[t] || []).forEach(function (o) {
+                            if (blocked.indexOf(o) < 0) blocked.push(o);
+                        });
+                    });
+                    pHint.textContent = '已选 ' + (doc.entityProps.join(' ') || '无')
+                        + '；互斥不可选：' + (blocked.join(' ') || '无');
+                }
+                renderTagChecks('prop-list', ENTITY_TAGS, ENTITY_TAG_NAMES, doc.entityProps, PROP_CONFLICT_MAP);
                 renderTagChecks('hazard-list', ENTITY_HAZARDS, ENTITY_HAZARD_NAMES, doc.hazardProps);
             }
 
@@ -3387,7 +3462,7 @@
                 $('f-iets-intel').addEventListener('change', function () { doc.ietsIntel = this.value; render(); });
                 $('f-iets-mod').addEventListener('change', function () { doc.ietsIntelMod = this.value; render(); });
                 $('prop-list').addEventListener('change', function () {
-                    doc.entityProps = checkedValues($('prop-list'));
+                    doc.entityProps = sanitizeProps(checkedValues($('prop-list')), PROP_CONFLICT_MAP);
                     render();
                 });
                 $('hazard-list').addEventListener('change', function () {
