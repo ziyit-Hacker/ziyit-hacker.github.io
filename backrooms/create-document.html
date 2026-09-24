@@ -2781,8 +2781,11 @@
                 var tm = p.querySelector('meta[name="doc-type"]');
                 if (tm) {
                     var t = (tm.getAttribute('content') || '').toLowerCase();
-                    if (t === 'levels' || t === 'item' || t === 'entity' || t === 'phenomenon') doc.type = t;
+                    if (TYPE_LABELS[t]) doc.type = t;
                 }
+                 
+                if (doc.type !== 'levels') applyNodataDoc();
+                doc.sections = buildTypeSections(doc.type);
 
                  
                 var rateBox = p.querySelector('.ziyit-rate');
@@ -2861,13 +2864,159 @@
                     if (n.className && String(n.className).indexOf('sd-container') >= 0) startIdx = i;
                 });
 
-                collectTopBlocks(nodes, startIdx);
-                parseBodyLoop(nodes, startIdx);
+                if (doc.type === 'levels') {
+                    collectTopBlocks(nodes, startIdx);
+                    parseBodyLoop(nodes, startIdx);
+                } else {
+                    parseTypeBody(pc);
+                }
 
                 initPresetSelect();
                 syncPanel();
                 render();
                 toast('已读取 HTML 文件，可继续编辑');
+            }
+
+             
+            // 非层级文档导入：还原 CECS / 顶部表格 / 正文章节。
+            // 层级另有 sd-container 与正文状态机（collectTopBlocks / parseBodyLoop），不适用。
+            function parseTypeBody(pc) {
+                if (!pc) return;
+                parseTypeIntro(pc);
+                if (doc.type === 'entity' || doc.type === 'phenomenon') parseCecs(pc);
+                if (doc.type === 'item') parseObjectTop(pc);
+                parseTypeSections(pc);
+            }
+
+             
+            // 顶部「说明」：导出为独立 <div>，位于分类块 / 表格之后、第一个章节标题之前，按原文 HTML 还原。
+            function parseTypeIntro(pc) {
+                var nodes = Array.prototype.slice.call(pc.children);
+                for (var i = 0; i < nodes.length; i++) {
+                    var n = nodes[i], tag = (n.tagName || '').toLowerCase();
+                    if (tag === 'h1' || tag === 'h2' || tag === 'h3') return;
+                    if (tag !== 'div') continue;
+                    if (n.classList && (n.classList.contains('wrapper') || n.classList.contains('ziyit-rate'))) continue;
+                    if (!(n.textContent || '').trim()) continue;
+                    doc.intro = n.innerHTML;
+                    return;
+                }
+            }
+
+             
+            // 统合实体 / 异常分类系统：编号取自 #page-title，这里还原栖息地 / IETS·IPTS / 分类 / 性质。
+            function parseCecs(pc) {
+                 
+                var box = pc.querySelector('.cecs-wrapper .text-box');
+                if (box) {
+                    var hs = [];
+                    Array.prototype.forEach.call(box.querySelectorAll('a'), function (a) {
+                        var label = (a.textContent || '').replace(/\s+/g, ' ').trim();
+                        var key = habitatKey(label);
+                        if (!key) return;
+                        hs.push({ key: key, num: label, name: '', href: a.getAttribute('href') || '' });
+                    });
+                    if (hs.length) doc.habitats = hs;
+                }
+
+                 
+                var iv = pc.querySelector('.cecs-wrapper .iets-val');
+                if (iv) {
+                    var icls = String(iv.getAttribute('class') || '');
+                    var dm = icls.match(/danger-([0-9]+)/);
+                    var im = icls.match(/intel-([A-Za-z]+)/);
+                    var vm = ((iv.textContent || '').replace(/\s+/g, '')).match(/^([0-9])?([A-Za-z])?([+\-])?$/);
+                    doc.ietsDanger = dm ? dm[1] : (vm && vm[1] ? vm[1] : '');
+                    doc.ietsIntel = im ? im[1] : (vm && vm[2] ? vm[2] : '');
+                    doc.ietsIntelMod = vm && vm[3] ? vm[3] : '';
+                }
+
+                 
+                var ci = pc.querySelector('.class-wrapper .class-inner');
+                if (ci) {
+                    var cn = (ci.textContent || '').replace(/\s+/g, ' ').trim();
+                    doc.entityClass = (cn && cn !== NODATA) ? cn : '';
+                }
+
+                 
+                doc.entityProps = propsFromEl(pc.querySelector('.properties'));
+                doc.hazardProps = propsFromEl(pc.querySelector('.properties-hazard'));
+            }
+
+             
+            // 性质容器：类名即选中项（未选时类名为 X），按对应标签池过滤以防误读。
+            function propsFromEl(el) {
+                if (!el) return [];
+                var cls = String(el.getAttribute('class') || '');
+                var pool = cls.indexOf('properties-hazard') >= 0 ? ENTITY_HAZARDS : ENTITY_TAGS;
+                var out = [];
+                cls.split(/\s+/).forEach(function (c) {
+                    if (c && pool.indexOf(c) >= 0 && out.indexOf(c) < 0) out.push(c);
+                });
+                return out;
+            }
+
+             
+            // 物品顶部两行表格：Entity [编号]: [名称] / 等级 / 备注 1 / 备注 2
+            function parseObjectTop(pc) {
+                var tbs = pc.querySelectorAll('table');
+                if (tbs[0]) {
+                    var tm2 = (tbs[0].textContent || '').replace(/\s+/g, ' ').trim().match(/^(.*?):\s*(.*)$/);
+                    if (tm2) {
+                        if (tm2[1].trim()) doc.titlePrefix = tm2[1].trim();
+                        if (tm2[2].trim()) doc.titleName = tm2[2].trim();
+                    }
+                }
+                if (!tbs[1]) return;
+                var tds = tbs[1].querySelectorAll('td');
+                var lv = tds[0] ? (tds[0].textContent || '').replace(/\s+/g, ' ').trim().replace(/^等级：\s*/, '') : '';
+                if (lv) doc.objLevel = lv;
+                var n1 = tds[1] ? (tds[1].textContent || '').replace(/\s+/g, ' ').trim() : '';
+                if (n1) doc.objNote1 = n1;
+                var n2 = tds[2] ? (tds[2].textContent || '').replace(/\s+/g, ' ').trim() : '';
+                if (n2) doc.objNote2 = n2;
+            }
+
+             
+            // 章节：标题 <h1>/<h3> 对应 doc.sections 的 title，
+            // 正文为 <div><p>…</p></div>，列表章节为 <ul><li><p>…</p></li></ul>。
+            function parseTypeSections(pc) {
+                var list = doc.sections || [];
+                if (!list.length) return;
+                var byTitle = {};
+                list.forEach(function (s) { byTitle[String(s.title).replace(/[:：\s]+$/, '')] = s; });
+                var cur = null;
+                Array.prototype.forEach.call(pc.children, function (n) {
+                    var tag = (n.tagName || '').toLowerCase();
+                    if (tag === 'h1' || tag === 'h3') {
+                        var t = (n.textContent || '').replace(/\s+/g, ' ').trim().replace(/[:：\s]+$/, '');
+                        cur = byTitle[t] || null;
+                        return;
+                    }
+                    if (!cur) return;
+                    if (tag === 'ul') {
+                        if (!cur.list) return;
+                        var items = Array.prototype.map.call(n.querySelectorAll('li'), function (li) {
+                            return (li.textContent || '').replace(/\s+/g, ' ').trim();
+                        }).filter(function (x) { return x; });
+                        if (items.length) cur.paras = items;
+                        return;
+                    }
+                    if (cur.list) return;
+                    if (tag !== 'div' && tag !== 'p') return;
+                    var out = [];
+                    var pEls = n.querySelectorAll ? n.querySelectorAll('p') : [];
+                    if (pEls.length) {
+                        Array.prototype.forEach.call(pEls, function (pe) {
+                            var tt = (pe.textContent || '').replace(/\s+/g, ' ').trim();
+                            if (tt) out.push(tt);
+                        });
+                    } else {
+                        var self = (n.textContent || '').replace(/\s+/g, ' ').trim();
+                        if (self) out.push(self);
+                    }
+                    if (out.length) cur.paras = out;
+                });
             }
 
              
