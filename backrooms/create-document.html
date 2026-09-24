@@ -56,6 +56,8 @@
         .tag-checks { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; }
         .tag-checks label { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #444; margin: 0; cursor: pointer; }
         .tag-checks label input { margin: 0; }
+        .tag-checks.habitat-checks { display: block; max-height: 240px; overflow-y: auto; border: 1px solid #e2e2e2; border-radius: 4px; padding: 6px 8px; }
+        .tag-checks.habitat-checks label { display: flex; padding: 1px 0; }
         .img-thumb { max-width: 100%; max-height: 90px; border-radius: 5px; margin-top: 6px; border: 1px solid #ddd; display: block; object-fit: contain; }
         .img-row, .block-row { border: 1px solid #e5e8ec; border-radius: 6px; padding: 8px; margin-bottom: 8px; background: #fff; }
         .img-row .row-actions { display: flex; gap: 6px; margin-top: 6px; }
@@ -1329,6 +1331,15 @@
                 <div class="hint">选择后预览与导出同步：分类输出到「分类：」名称与左侧图标；IETS 输出「危险+智能」组合（如 4C、3B+）；性质容器带上所选标签类名，未选时输出 X。</div>
             </section>
 
+            <section class="panel-sec" id="sec-habitat">
+                <h3>栖息地</h3>
+                <label>搜索并多选已有层级（来自静态层级列表与后端已收录层级）</label>
+                <input type="text" id="f-habitat-search" placeholder="如：5 / Level 5 / 恐怖旅馆">
+                <div id="habitat-list" class="tag-checks habitat-checks"></div>
+                <div class="hint" id="habitat-hint"></div>
+                <div class="hint">编号取自上方「页面编号」去掉前缀（如 Entity 111 → 111）；栖息地在预览与导出中输出为指向该层级的链接，未选时输出 [NO DATA]。</div>
+            </section>
+
             <section class="panel-sec" id="sec-sections">
                 <h3>正文章节（多段落）</h3>
                 <div id="section-list"></div>
@@ -1527,6 +1538,8 @@
                 ietsIntelMod: '',
                 entityProps: [],
                 hazardProps: [],
+                // 实体栖息地：多选已有层级，元素形如 { key, num, name, href }
+                habitats: [],
                  
                 type: 'levels'
             };
@@ -1647,6 +1660,7 @@
                 doc.ietsIntelMod = '';
                 doc.entityProps = [];
                 doc.hazardProps = [];
+                doc.habitats = [];
                 // 正文按"章节"组织，章节随类型不同
                 doc.sections = buildTypeSections(doc.type);
             }
@@ -1666,6 +1680,8 @@
                 setPanelVisible('sec-sections', !isLevel);
                 setPanelVisible('sec-objmeta', doc.type === 'item');
                 setPanelVisible('sec-entitymeta', doc.type === 'entity');
+                setPanelVisible('sec-habitat', doc.type === 'entity');
+                if (doc.type === 'entity') loadHabitats();
                 // 自定义区块（页顶说明等）所有类型都能用；「在描述与基地之间插入」只对层级有意义。
                 setPanelVisible('sec-block', true);
                 setPanelVisible('btn-block-insert-panel', isLevel);
@@ -1742,6 +1758,153 @@
                 'D': '拥有动物水平的高智力（相当于海豚、老鼠或狗）。',
                 'E': '拥有动物水平的低智力（相当于昆虫、鸟类或两栖动物）。'
             };
+
+            // 栖息地候选：静态层级列表（normal-levels/index.html）与后端已收录层级合并去重。
+            // 每项 { key, num, name, href }，key 为去掉 "Level" 前缀后的编号，用于去重与回填。
+            var HABITAT_OPTIONS = [];
+            var HABITAT_MAP = {};
+            var HABITAT_LOADED = false;
+            var HABITAT_SHOW_LIMIT = 60;
+
+            function habitatKey(s) {
+                return String(s == null ? '' : s).toLowerCase().replace(/^level[\s\-–]*/, '').replace(/\s+/g, '').trim();
+            }
+
+            function entityNumber() {
+                var s = String(doc.titlePrefix || '').trim();
+                var m = s.match(/^Entity[\s\-–]*(.*)$/i);
+                return ((m ? m[1] : s).trim()) || NODATA;
+            }
+
+            function addHabitat(opt) {
+                if (!opt || !opt.key) return;
+                var cur = HABITAT_MAP[opt.key];
+                if (cur) {
+                    if (!cur.name && opt.name) cur.name = opt.name;
+                    return;
+                }
+                HABITAT_MAP[opt.key] = opt;
+                HABITAT_OPTIONS.push(opt);
+            }
+
+            function sortHabitats() {
+                HABITAT_OPTIONS.sort(function (a, b) {
+                    var na = parseFloat(a.key), nb = parseFloat(b.key);
+                    if (isNaN(na) && isNaN(nb)) return a.key < b.key ? -1 : 1;
+                    if (isNaN(na)) return 1;
+                    if (isNaN(nb)) return -1;
+                    return na - nb;
+                });
+            }
+
+            // 静态列表形如：<li><a href="levels/level-5.html">Level 5</a> - “恐怖旅馆”</li>
+            function parseStaticLevels(html) {
+                var p = new DOMParser().parseFromString(html, 'text/html');
+                var links = p.querySelectorAll('a[href]');
+                for (var i = 0; i < links.length; i++) {
+                    var href = links[i].getAttribute('href') || '';
+                    if (!/^levels\/level-[\d.\-]+\.html$/i.test(href)) continue;
+                    var num = (links[i].textContent || '').replace(/\s+/g, ' ').trim();
+                    var key = habitatKey(num || href);
+                    if (!key) continue;
+                    var li = links[i].closest ? links[i].closest('li') : null;
+                    var name = ((li ? li.textContent : '').match(/[“"]([^”"]+)[”"]/) || [])[1] || '';
+                    if (name === NODATA) name = '';
+                    addHabitat({ key: key, num: 'Level ' + key, name: name, href: toAbsUrl('/backrooms/normal-levels/' + href) });
+                }
+            }
+
+            function loadHabitats() {
+                if (HABITAT_LOADED) return;
+                HABITAT_LOADED = true;
+                fetch('normal-levels/index.html')
+                    .then(function (r) {
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        return r.text();
+                    })
+                    .then(function (html) {
+                        parseStaticLevels(html);
+                        sortHabitats();
+                        renderHabitatList();
+                        updateHabitatHint();
+                    })
+                    .catch(function () {});
+                if (window.ZIYIT_API && ZIYIT_API.backroomsList) {
+                    ZIYIT_API.backroomsList().then(function (d) {
+                        var items = (d && (d.items || d.levels || d.data)) || [];
+                        if (!Array.isArray(items)) items = [];
+                        items.forEach(function (it) {
+                            var id = it.id || it.levelId || it.docId || '';
+                            var key = habitatKey(id);
+                            if (!key) return;
+                            addHabitat({
+                                key: key,
+                                num: 'Level ' + key,
+                                name: it.name || '',
+                                href: toAbsUrl('/backrooms/all-levels.html?open_level=' + encodeURIComponent(id))
+                            });
+                        });
+                        sortHabitats();
+                        renderHabitatList();
+                        updateHabitatHint();
+                    }).catch(function () {});
+                }
+            }
+
+            function renderHabitatList() {
+                var box = $('habitat-list');
+                if (!box) return;
+                if (!HABITAT_OPTIONS.length) {
+                    box.innerHTML = '<div class="hint">层级列表加载中…</div>';
+                    return;
+                }
+                var kw = (($('f-habitat-search') || {}).value || '').trim().toLowerCase();
+                var picked = {};
+                (doc.habitats || []).forEach(function (h) { picked[h.key] = true; });
+                // 候选与选中集都未变时跳过重建，避免每次输入都重刷上百个复选框。
+                var sig = HABITAT_OPTIONS.length + '|' + kw + '|' + Object.keys(picked).join(',');
+                if (box.getAttribute('data-sig') === sig) return;
+                box.setAttribute('data-sig', sig);
+                var matched = HABITAT_OPTIONS.filter(function (o) {
+                    if (!kw) return true;
+                    return o.num.toLowerCase().indexOf(kw) >= 0 || (o.name || '').toLowerCase().indexOf(kw) >= 0;
+                });
+                if (!matched.length) {
+                    box.innerHTML = '<div class="hint">无匹配层级。</div>';
+                    return;
+                }
+                // 未搜索时只列前 N 项（已选项始终保留），避免上千条一次性铺开。
+                var shown = matched.filter(function (o, i) { return kw || i < HABITAT_SHOW_LIMIT || picked[o.key]; });
+                box.innerHTML = shown.map(function (o) {
+                    return '<label><input type="checkbox" value="' + escHtml(o.key) + '"' + (picked[o.key] ? ' checked' : '') + '>'
+                        + escHtml(o.num + (o.name ? ' ' + o.name : '')) + '</label>';
+                }).join('')
+                    + (matched.length > shown.length
+                        ? '<div class="hint">另有 ' + (matched.length - shown.length) + ' 个层级，请输入关键词搜索。</div>'
+                        : '');
+            }
+
+            function updateHabitatHint() {
+                var hint = $('habitat-hint');
+                if (!hint) return;
+                var hs = doc.habitats || [];
+                hint.textContent = hs.length
+                    ? '已选 ' + hs.length + ' 个：' + hs.map(function (h) { return h.num; }).join('、')
+                    : '未选择栖息地，预览与导出显示 [NO DATA]。';
+            }
+
+            // 栖息地输出：多个层级用「、」连接，指向该层级页面。
+            function habitatHtml(forPreview) {
+                var hs = doc.habitats || [];
+                var inner = hs.length
+                    ? hs.map(function (h) {
+                        return '<a href="' + escHtml(h.href || '#') + '">' + escHtml(h.num) + '</a>';
+                    }).join('、')
+                    : escHtml(NODATA);
+                return forPreview
+                    ? '<span class="editable" data-field="habitat" style="cursor:pointer;">' + inner + '</span>'
+                    : inner;
+            }
 
             function tagRowHtml(list, extraClass) {
                 return list.map(function (t) { return '<div class="' + escHtml(t) + '">' + escHtml(t) + '</div>'; }).join('');
@@ -1885,13 +2048,17 @@
                 var sections = sectionsHtml(forPreview);
 
                 if (doc.type === 'entity') {
+                    // 编号 = 页面编号（标题前半段）去掉 "Entity " 前缀
+                    var numHtml = forPreview
+                        ? '<span class="editable" data-field="titlePrefix" style="cursor:pointer;">' + escHtml(entityNumber()) + '</span>'
+                        : escHtml(entityNumber());
                     return ''
                         + '<div style="clear:both; height: 0px; font-size: 1px"></div>\n<hr />\n'
                         + '<div class="wrapper">\n'
                         + cecsLabelHtml('统合实体分类系统')
                         + '  <div class="cecs-wrapper">\n'
                         + '    <div class="base">\n'
-                        + '      <div class="text-box">编号：' + NODATA + '<br />栖息地：' + NODATA + '</div>\n'
+                        + '      <div class="text-box">编号：' + numHtml + '<br />栖息地：' + habitatHtml(forPreview) + '</div>\n'
                         + ietsValHtml('/backrooms/entities/iets', 'IETS', forPreview)
                         + '    </div>\n'
                         + '    <div class="last-stripe"></div>\n'
@@ -2973,6 +3140,8 @@
                 renderBlockRows();
                 renderSectionEditors();
                 renderEntityMeta();
+                renderHabitatList();
+                updateHabitatHint();
             }
 
              
@@ -3374,10 +3543,11 @@
                     var field = a.getAttribute('data-field');
                     var m = String(field).split(':');
                     // 分类 / IETS / 性质是下拉与多选控件，点预览直接跳到左侧对应区块。
-                    if (m[0] === 'entityClass' || m[0] === 'iets' || m[0] === 'props' || m[0] === 'hazard') {
-                        var meta = $('sec-entitymeta');
+                    if (m[0] === 'entityClass' || m[0] === 'iets' || m[0] === 'props' || m[0] === 'hazard' || m[0] === 'habitat') {
+                        var secId = m[0] === 'habitat' ? 'sec-habitat' : 'sec-entitymeta';
+                        var meta = $(secId);
                         if (meta) meta.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        var focusId = { entityClass: 'f-entity-class', iets: 'f-iets-danger', props: 'prop-list', hazard: 'hazard-list' }[m[0]];
+                        var focusId = { entityClass: 'f-entity-class', iets: 'f-iets-danger', props: 'prop-list', hazard: 'hazard-list', habitat: 'f-habitat-search' }[m[0]];
                         var focusEl = $(focusId);
                         if (focusEl && focusEl.focus) focusEl.focus();
                         return;
@@ -3467,6 +3637,19 @@
                 });
                 $('hazard-list').addEventListener('change', function () {
                     doc.hazardProps = checkedValues($('hazard-list'));
+                    render();
+                });
+                // 栖息地：搜索过滤 + 多选（按候选顺序回填，保证导出稳定）
+                $('f-habitat-search').addEventListener('input', function () { renderHabitatList(); });
+                $('habitat-list').addEventListener('change', function () {
+                    var box = $('habitat-list');
+                    var inputs = box.querySelectorAll('input[type="checkbox"]'), picked = {};
+                    for (var i = 0; i < inputs.length; i++) {
+                        if (inputs[i].checked) picked[inputs[i].value] = true;
+                    }
+                    var out = [];
+                    HABITAT_OPTIONS.forEach(function (o) { if (picked[o.key]) out.push(o); });
+                    doc.habitats = out;
                     render();
                 });
 
