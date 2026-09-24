@@ -243,6 +243,32 @@ class WidgetSession {
             writable: true,
             value: 0
         });
+        // v0.3.20 实时拉流：不等整段收完，后台逐包 append，首包落地即可开播。
+        Object.defineProperty(this, "_streamAborted", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: false
+        });
+        Object.defineProperty(this, "_pullDone", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
+        });
+        Object.defineProperty(this, "_markFirstChunk", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
+        });
+        // 会话已关闭（关弹窗/重挂载）：start() 的异步步骤据此提前退出，不再动已销毁的 DOM。
+        Object.defineProperty(this, "_sessionClosed", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: false
+        });
     }
      
     setHint(stage, text) {
@@ -282,6 +308,9 @@ class WidgetSession {
             // 间隔变大→批次数不足，反而会被否决。
             this.streamIntervalMs = Number(streamCfg.intervalMs) > 0 ? Number(streamCfg.intervalMs) : 50;
             const videoEl = await this._prepareVideo(challenge);
+            // 拉流期间用户关掉了弹窗/重挂了组件：直接收工，别再去动已销毁的 DOM。
+            if (this._sessionClosed)
+                return;
             // previewSeconds 由后端下发且与"视频里真实存在的提示段长度"同源，
             // 不用本地 CONFIG 硬编码，避免前后端漂移导致切割点落在提示段中间。
             const previewSeconds = Number(raw.previewSeconds) > 0
@@ -421,6 +450,7 @@ class WidgetSession {
     // v0.3.19：视频改为「分包下发 + MediaSource 播放」。
     // /challenge 的 video 已恒为 null，改读 videoStream；拉包前必须先 POST /video/ready
     // 握手（服务端把分包游标归零），且只能严格串行逐包拉 —— 并发预取 / 跳号都会被 409 拒。
+    // v0.3.20：拉包不再阻塞开播 —— 首包 append 完就返回，剩下的在后台继续边到边 append。
     async _prepareVideo(challenge) {
         const vs = challenge && challenge.videoStream;
         if (!vs || !vs.chunkCount) {
@@ -462,10 +492,6 @@ class WidgetSession {
             });
             // SourceBuffer.mode 保持默认的 "segments"：每包都以 IDR 关键帧开头，依序 append 即可无缝播放
             this.sourceBuffer = ms.addSourceBuffer(type);
-            await this._pullChunks(ready);
-            if (ms.readyState === "open") {
-                ms.endOfStream();
-            }
         }
         catch (e) {
             v.remove();
@@ -476,7 +502,35 @@ class WidgetSession {
             this.sourceBuffer = null;
             throw e;
         }
-        // 等元数据：endOfStream 之后 duration 才确定，渲染器要用 currentTime / duration 取帧
+        // v0.3.20 实时拉流：不再"整段收完再组合"——首包 append 落地就能开播，其余分包
+        // 由 _pullChunks 在后台按 0,1,2… 继续取，到一包 append 一包（仍严格串行，不预取）。
+        this._streamAborted = false;
+        let markFirst, failFirst;
+        const firstChunk = new Promise((resolve, reject) => {
+            markFirst = resolve;
+            failFirst = reject;
+        });
+        // 首包落地 → resolve（可开播）；首包之前就失败 → reject（交给 start() 的重来链路）。
+        this._markFirstChunk = (err) => {
+            const fn = err ? failFirst : markFirst;
+            this._markFirstChunk = null;
+            fn?.(err);
+        };
+        firstChunk.catch(() => { });
+        this._pullDone = this._pullChunks(ready).catch((e) => {
+            this._markFirstChunk?.(e);
+            if (this._streamAborted)
+                return;
+            // 后台拉流中断：已缓冲的片段仍可播，但后续帧永远到不了——上报错误。
+            this.status.textContent = "视频流中断，请重新验证";
+            this.onError(e);
+        });
+        // 等首包（初始化段 + 第 1 个分片）落地：play() 才有数据，元数据才会就绪。
+        await Promise.race([
+            firstChunk,
+            new Promise((resolve) => window.setTimeout(resolve, 5000)),
+        ]);
+        // 等元数据：readyState >= 1 才有 videoWidth，渲染器才会合成视频前景。
         await new Promise((resolve) => {
             if (v.readyState >= 1)
                 return resolve();
@@ -489,11 +543,15 @@ class WidgetSession {
         return v;
     }
     // 严格串行拉包：拿到第 n 包并 appendBuffer 之后，才发起第 n+1 包。
+    // v0.3.20：改成"边拉边播"的后台任务——每包 append 完就立刻可用（不再攒齐再拼）。
     async _pullChunks(ready) {
         const total = Number(ready.chunkCount || this.videoStream?.chunkCount || 0);
         let index = 0;
         let retried = 0;
+        let first = true;
         for (;;) {
+            if (this._streamAborted)
+                return;
             let chunk;
             try {
                 chunk = await videoChunk(this.apiBase, this.challengeId, index, this.sessionId);
@@ -507,9 +565,25 @@ class WidgetSession {
                 }
                 throw e;
             }
-            await this._appendChunk(chunk.data);
-            if (chunk.final)
+            if (this._streamAborted)
                 return;
+            await this._appendChunk(chunk.data);
+            if (first) {
+                first = false;
+                // 首包落地：通知 _prepareVideo 可以开播了。
+                this._markFirstChunk?.();
+            }
+            if (chunk.final) {
+                // 最后一包才 endOfStream：此时 duration 才确定、播放器才知道播完。
+                const ms = this.mediaSource;
+                if (ms && ms.readyState === "open") {
+                    try {
+                        ms.endOfStream();
+                    }
+                    catch (e) { /* ignore */ }
+                }
+                return;
+            }
             const next = Number(chunk.nextIndex);
             if (!Number.isFinite(next) || next <= index)
                 return;
@@ -709,11 +783,17 @@ class WidgetSession {
         };
     }
     destroy() {
+        this._sessionClosed = true;
         this._unbind();
         window.clearTimeout(this.retryTimer);
         window.clearTimeout(this.previewTimer);
         window.clearInterval(this.streamTimer);
         this.streamTimer = 0;
+        // 中止后台拉流：置标志后拉包循环在下一个检查点退出（在飞的那次 append 由下方释放兜住）。
+        this._streamAborted = true;
+        this._markFirstChunk?.();
+        this._markFirstChunk = null;
+        this._pullDone = null;
         this.renderer?.stop();
         this.tracker?.stop();
         // 释放 MSE：先摘掉 SourceBuffer（会中止仍在飞的 append），再结束并丢弃 MediaSource。
