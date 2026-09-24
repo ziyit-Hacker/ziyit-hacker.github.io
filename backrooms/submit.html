@@ -84,6 +84,7 @@
     <main id="main" style="display:none">
         <div class="card">
             <h2>📤 提交新文档</h2>
+            <p class="hint" id="perm-hint"></p>
             <label>文档类型 <span style="color:#d13438">*</span></label>
             <select id="f-type">
                 <option value="level">层级 / Level</option>
@@ -234,7 +235,7 @@
                 b.disabled = false; b.textContent = '提交审核';
                 if (err && err.status === 409) toast('ID 已存在：' + id + '，请更换 ID 或使用「修改」更新');
                 else if (err && err.status === 429) toast('超出限额：已达到每月提交上限 / 个人拥有上限');
-                else if (err && err.status === 403) toast('仅限后室成员使用：当前账号不是后室成员，无法提交');
+                else if (err && err.status === 403) toast('无权提交：' + errText(err));
                 else if (err && err.status === 413) toast('文件超过 1MB 限制，请压缩后再提交');
                 else toast('提交失败：' + errText(err));
             });
@@ -332,7 +333,7 @@
                         loadMine();
                     }).catch(function (err) {
                         b.disabled = false; b.textContent = '保存';
-                        if (err && err.status === 403) toast('仅限后室成员使用：当前账号无权限');
+                        if (err && err.status === 403) toast('无权修改：' + errText(err));
                         else if (err && err.status === 413) toast('文件超过 1MB 限制');
                         else toast('更新失败：' + errText(err));
                     });
@@ -347,7 +348,7 @@
                 toast((d && (d.message || d.msg)) || '已删除：' + id);
                 loadMine();
             }).catch(function (err) {
-                if (err && err.status === 403) toast('无权删除：' + id);
+                if (err && err.status === 403) toast('无权删除：' + errText(err));
                 else toast('删除失败：' + errText(err));
             });
         }
@@ -371,10 +372,26 @@
                 $('whoami').textContent = '当前用户：' + name;
                 $('main').style.display = '';
                 loadMine();
+                applyPermHint(name);
             }).catch(function () {
                 $('gate-msg').textContent = '未登录或登录已过期，请先登录。';
                 $('gate').classList.add('show');
             });
+        }
+
+         
+        function applyPermHint(name) {
+            var STAFF = { '成员': 1, '管理员': 1, '超级管理员': 1 };
+            ZIYIT_API.userType().then(function (t) {
+                t = String(t || '').trim();
+                if (!t) return;
+                $('whoami').textContent = '当前用户：' + name + '（' + t + '）';
+                $('perm-hint').textContent = STAFF[t]
+                    ? '当前身份：' + t + '，可直接提交文档；提交后按审核流程处理。'
+                    : '当前身份：' + t + '。投稿已对全体登录用户开放（无需后室成员身份）：提交后由管理员审核，'
+                      + '层级 ID 以 Level- 开头、实体以 Entity- 开头（正文须含 IETS 标识）、'
+                      + '物品以 Object- 开头、现象以 Phenomenon- 开头（正文须含 IPTS 标识）。';
+            }).catch(function () {});
         }
 
         init();
