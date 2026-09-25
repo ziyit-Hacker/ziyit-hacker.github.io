@@ -1021,6 +1021,14 @@
                 streamState = null;
             }
 
+            // 一轮流式回复结束时的收尾：final 事件已渲染完整正文则保留该气泡（只解除引用，
+            // 否则下一轮 streamChat() 开头的 streamDrop() 会把上一条已完成的回复误删）；
+            // 只收到 status/delta、未定稿的占位气泡则丢弃，正文交给 handleChatReply 渲染。
+            function finishStream() {
+                if (streamRendered) streamState = null;
+                else streamDrop();
+            }
+
              
             function handleStreamEvent(ev) {
                 var t = ev && ev.type;
@@ -1065,13 +1073,13 @@
                     if (ev.type === 'error') errMsg = ev.message || '';
                     handleStreamEvent(ev);
                 }).then(function () {
-                    if (done) return done;
+                    if (done) { finishStream(); return done; }
                      
                     streamDrop();
                     if (errMsg) { addSys(errMsg); return null; }
                     throw new Error('回复流中断，请重试');
                 }).catch(function (err) {
-                    if (done) return done;
+                    if (done) { finishStream(); return done; }
                     streamDrop();
                      
                     if (err && (err.status === 404 || err.status === 405 || err.noStream)) {
