@@ -103,6 +103,51 @@
         document.cookie = 'ziyit_cred=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     }
 
+    // ---- 后端域名下的图片（头像 / 文档配图）----
+    // ngrok 免费版会给浏览器请求插一页拦截页（ERR_NGROK_6024，Content-Type 是 text/html），
+    // 而 <img src> 带不上 ngrok-skip-browser-warning 头，直接引用必定显示不出来（拿到的是那段 HTML）。
+    // 所以后端域名下的图片统一先 fetch 成 blob，再把 blob: 地址交给 <img>。
+    // （backroomsTypeOpen 里打开正文用的是同一套办法）
+    function isBackendUrl(url) {
+        var u = String(url || '');
+        if (!u) return false;
+        if (u.charAt(0) === '/') return true;
+        var bases = getBases();
+        for (var i = 0; i < bases.length; i++) {
+            if (u.indexOf(bases[i]) === 0) return true;
+        }
+        return false;
+    }
+
+    // 后端域名的图片 → blob: 地址；外部图片原样返回
+    function imageBlobUrl(url) {
+        if (!url) return Promise.resolve('');
+        if (!isBackendUrl(url)) return Promise.resolve(url);
+        return fetch(url, { headers: { 'ngrok-skip-browser-warning': '1' } }).then(function (res) {
+            if (!res.ok) throw new Error('图片加载失败(' + res.status + ')');
+            return res.blob();
+        }).then(function (blob) {
+            return URL.createObjectURL(blob);
+        });
+    }
+
+    // 把图片塞进 <img>：内部会释放上一个 blob 地址；取不到图就用 fallback（默认占位图）
+    function applyImage(el, url, fallback) {
+        if (!el) return Promise.reject(new Error('缺少图片元素'));
+        function set(u) {
+            if (el.dataset && el.dataset.ziyitBlob) {
+                try { URL.revokeObjectURL(el.dataset.ziyitBlob); } catch (e) { }
+                el.dataset.ziyitBlob = '';
+            }
+            if (u && u.indexOf('blob:') === 0 && el.dataset) el.dataset.ziyitBlob = u;
+            el.src = u || fallback || '';
+        }
+        return imageBlobUrl(url).then(set, function (err) {
+            set('');
+            throw err;
+        });
+    }
+
      
      
     // 受限票据（enrollToken）：被强制要求第二种验证方式时，它只能在安全中心接口用，
@@ -1126,6 +1171,9 @@
         setCredentials: setCredentials,
         getCredentials: getCredentials,
         clearCredentials: clearCredentials,
+        isBackendUrl: isBackendUrl,
+        imageBlobUrl: imageBlobUrl,
+        applyImage: applyImage,
         request: request,
         login: login,
         register: register,

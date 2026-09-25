@@ -408,9 +408,9 @@
                     infoLastLogin.textContent = formatTime(user.lastLoginTime || user.last_login);
                     infoPasswordChanged.textContent = formatTime(user.passwordChangedAt);
 
-                    // 头像地址由后端下发（/img/{id} 或完整地址）；未设置时回退默认占位图
+                    // 头像地址由后端下发（/img/{id} 或完整地址）；后端域名下的图要走 blob，否则拿到 ngrok 拦截页
                     const avatarPreview = document.getElementById('avatarPreview');
-                    if (avatarPreview) avatarPreview.src = user.avatarUrl || '../assets/logo.ico';
+                    if (avatarPreview) ZIYIT_API.applyImage(avatarPreview, user.avatarUrl, '../assets/logo.ico').catch(function () { });
 
                     if (user.emailVerified) {
                         infoEmail.textContent = isBoundEmail(user.email) ? user.email : '未绑定';
@@ -946,7 +946,8 @@
                 function applyAvatar(id, done) {
                     ZIYIT_API.updateAvatar(id).then(function (data) {
                         const url = (data && data.avatarUrl) || '';
-                        if (url) document.getElementById('avatarPreview').src = url;
+                        const preview = document.getElementById('avatarPreview');
+                        if (preview) ZIYIT_API.applyImage(preview, url, '../assets/logo.ico').catch(function () { });
                         done(null, data);
                     }).catch(function (err) {
                         done(err);

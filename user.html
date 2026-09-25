@@ -318,10 +318,10 @@
             const userTypeDisplay = document.getElementById('userTypeDisplay');
 
             ZIYIT_API.currentUser().then(function (user) {
-                // 显示本人头像（/auth/me 下发的 avatarUrl，未设置时回退默认占位图）
-                userAvatar.src = user.avatarUrl || './assets/ziyit.png';
+                // 显示本人头像（/auth/me 下发的 avatarUrl；后端域名下的图要走 blob，否则拿到 ngrok 拦截页）
                 userAvatar.alt = (user.username || '用户') + ' 的头像';
                 userAvatar.style.display = 'block';
+                ZIYIT_API.applyImage(userAvatar, user.avatarUrl, './assets/ziyit.png').catch(function () { });
                 usernameDisplay.textContent = user.username || '未知';
                 userTypeDisplay.textContent = ZIYIT_API.isVip(user) ? 'vip用户' : '普通用户';
 

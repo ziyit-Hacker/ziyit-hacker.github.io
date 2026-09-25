@@ -94,7 +94,7 @@
          
          
         function authorOf(it) { return (it.author && it.author.username) || it.ownerName || '未知用户'; }
-        function avatarOf(it) { return (it.author && it.author.avatarUrl) || DEFAULT_AVATAR; }
+        function avatarOf(it) { return (it.author && it.author.avatarUrl) || ''; }
          
         function badge(it) {
             var cls = STATUS_CLASS[it.status] || 'b-rejected';
@@ -138,12 +138,25 @@
                     return '<tr data-id="' + esc(id) + '">'
                         + '<td><strong>' + esc(id) + '</strong></td>'
                         + '<td>' + esc(nameOf(it) || '—') + '</td>'
-                        + '<td><img class="avatar" src="' + esc(avatarOf(it)) + '" alt="" onerror="this.style.display=\'none\'">' + esc(authorOf(it)) + '</td>'
+                        + '<td><img class="avatar" data-avatar="' + esc(avatarOf(it)) + '" alt="" onerror="this.style.display=\'none\'">' + esc(authorOf(it)) + '</td>'
                         + '<td>' + badge(it) + '</td>'
                         + '<td>' + esc(it.version != null ? it.version : '—') + '</td>'
                         + '<td>' + (it.rewritten ? rewMark() : '—') + '</td>'
                         + '</tr>';
                 }).join('') + '</tbody></table>';
+            applyAvatars();
+        }
+
+        // 后端域名下的头像要走 blob（ngrok 免费版会给 <img> 请求插一页拦截 HTML），渲染后异步补上
+        function applyAvatars() {
+            var imgs = $('list').querySelectorAll('img.avatar[data-avatar]');
+            for (var i = 0; i < imgs.length; i++) {
+                (function (img) {
+                    var url = img.getAttribute('data-avatar');
+                    img.removeAttribute('data-avatar');
+                    ZIYIT_API.applyImage(img, url, DEFAULT_AVATAR).catch(function () { });
+                })(imgs[i]);
+            }
         }
 
         $('search').addEventListener('input', render);
