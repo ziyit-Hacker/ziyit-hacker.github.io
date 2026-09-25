@@ -2029,8 +2029,10 @@ function renderRcBugs() {
             + '</div>'
             + '<div class="user-actions" style="flex-wrap:wrap;">'
             + '<select data-bug-status="' + idx + '" style="' + inputStyle + '">' + options + '</select>'
+            + '<input type="text" data-bug-appeared="' + idx + '" value="' + escAdmin(b.appearedVersion || '') + '" placeholder="出现版本（如 26.9）" style="' + inputStyle + 'width:140px;">'
+            + '<input type="text" data-bug-fixed="' + idx + '" value="' + escAdmin(b.fixedVersion || '') + '" placeholder="解决版本（填了即编号）" style="' + inputStyle + 'width:150px;">'
             + '<input type="text" data-bug-note="' + idx + '" placeholder="变更说明（可选）" style="' + inputStyle + 'width:150px;">'
-            + '<button class="action-btn edit" data-bug-save="' + idx + '">保存状态</button>'
+            + '<button class="action-btn edit" data-bug-save="' + idx + '">保存</button>'
             + '<button class="action-btn" data-bug-view="' + idx + '">查看报告</button>'
             + '</div>'
             + '<div data-bug-report="' + idx + '" style="display:none;flex:1 1 100%;background:var(--ziyit-bg-card);'
@@ -2046,7 +2048,14 @@ function renderRcBugs() {
             if (!b) return;
             const sel = area.querySelector('[data-bug-status="' + idx + '"]');
             const noteEl = area.querySelector('[data-bug-note="' + idx + '"]');
-            saveRcBugStatus(b, sel.value, noteEl ? noteEl.value.trim() : '');
+            const appearedEl = area.querySelector('[data-bug-appeared="' + idx + '"]');
+            const fixedEl = area.querySelector('[data-bug-fixed="' + idx + '"]');
+            saveRcBugStatus(b, {
+                status: sel ? sel.value : '',
+                note: noteEl ? noteEl.value.trim() : '',
+                appearedVersion: appearedEl ? appearedEl.value.trim() : '',
+                fixedVersion: fixedEl ? fixedEl.value.trim() : ''
+            });
         });
     });
     area.querySelectorAll('[data-bug-view]').forEach(function (btn) {
@@ -2067,10 +2076,11 @@ function renderRcBugs() {
     });
 }
 
-function saveRcBugStatus(bug, status, note) {
-    if (!status) { alert('请先选择状态'); return; }
-    ZIYIT_API.adminRcBugStatus(bug.id, status, note).then(function (res) {
-        alert((res && res.message) || '状态已更新');
+function saveRcBugStatus(bug, opts) {
+    const o = opts || {};
+    if (!o.status && !o.appearedVersion && !o.fixedVersion) { alert('请先选择状态，或填写出现 / 解决版本'); return; }
+    ZIYIT_API.adminRcBugStatus(bug.id, o).then(function (res) {
+        alert((res && res.message) || '已更新');
         loadRcBugs();
     }).catch(function (err) {
         alert('更新失败: ' + (err.message || err));

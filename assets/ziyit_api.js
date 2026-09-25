@@ -831,10 +831,17 @@
         return request('/admin/rc/bugs');
     }
 
-    // 管理员改状态：可选值取 /rc/bugs 回包的 statuses，不要在前端写死
-    function adminRcBugStatus(bugId, status, note) {
-        var body = { status: status };
-        if (note) body.note = note;
+    // 管理员改状态 / 填版本：可选值取 /rc/bugs 回包的 statuses，不要在前端写死。
+    // opts = { status, note, appearedVersion, fixedVersion }；空字段一律不传 ——
+    // 后端对未传字段保持原值，而传了空白 fixedVersion 会把已编号的反馈挡下（400）。
+    // 填了 fixedVersion 后由后端分配 RCVE 漏洞编号并把 [编号] 加在标题前，回包 message 里有。
+    function adminRcBugStatus(bugId, opts) {
+        var o = opts || {};
+        var body = {};
+        ['status', 'note', 'appearedVersion', 'fixedVersion'].forEach(function (k) {
+            var v = o[k];
+            if (v != null && String(v).trim() !== '') body[k] = String(v).trim();
+        });
         return request('/admin/rc/bugs/' + bugId, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
