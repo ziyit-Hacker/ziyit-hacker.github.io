@@ -301,6 +301,13 @@
 
             <button type="button" id="otherSubmit" class="alt-btn">用这种方式登录</button>
             <button type="button" id="otherPasskey" class="alt-btn" style="display: none;">用 Passkey 完成验证</button>
+
+            <!-- 表单被隐藏后「保持登录」也会跟着不见，所以这里再放一个，与表单里那个互为镜像 -->
+            <div style="margin-top: 12px; display: flex; align-items: center;">
+                <input type="checkbox" id="otherRemember">
+                <label for="otherRemember" class="bt" style="margin-bottom: 0;">保持登录</label>
+            </div>
+
             <div class="field-hint"><a href="javascript:location.reload()">返回密码登录</a></div>
         </div>
 
@@ -464,6 +471,8 @@
                 showError('登录响应异常，请稍后再试');
                 return;
             }
+            // 「保持登录」以表单里那个为准（它与面板里的 #otherRemember 互为镜像，见下方绑定）
+            pendingRemember = !!document.getElementById('rememberMe').checked;
             ZIYIT_API.setToken(token, pendingRemember);
             if (pendingUsername && pendingPasswordMd5) {
                 ZIYIT_API.setCredentials(pendingUsername, pendingPasswordMd5, pendingRemember);
@@ -636,7 +645,8 @@
             }
             pendingUsername = uname;
             pendingPasswordMd5 = '';
-            pendingRemember = !!document.getElementById('rememberMe').checked;
+            // 面板打开后表单会被整体隐藏，把「保持登录」的状态同步到面板里那个复选框
+            document.getElementById('otherRemember').checked = !!document.getElementById('rememberMe').checked;
             loginFailed = false;
             hideAppealLink();
             if (errorDiv) errorDiv.style.display = 'none';
@@ -871,6 +881,18 @@
             updateMfaRows();
             if (this.value === 'email') sendMfaEmailCode();
         });
+
+        // ---- 「保持登录」：表单里一个、其他方式面板里一个，两者互为镜像 ----
+        // （面板打开时表单被整体隐藏，不镜像的话在面板里勾了也会被表单里的旧值覆盖）
+        function mirrorRemember(srcId, dstId) {
+            const src = document.getElementById(srcId);
+            const dst = document.getElementById(dstId);
+            if (!src || !dst) return;
+            src.addEventListener('change', function () { dst.checked = src.checked; });
+        }
+        mirrorRemember('rememberMe', 'otherRemember');
+        mirrorRemember('otherRemember', 'rememberMe');
+
         // 第二步不在 form 里，回车要自己接
         document.getElementById('mfaCode').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
