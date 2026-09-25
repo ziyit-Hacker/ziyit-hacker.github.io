@@ -1870,21 +1870,26 @@ function rcUserKeys(u) {
                 : (Array.isArray(u.keyList) ? u.keyList : [])));
 }
 
+// /admin/rc/keys 回包是 rc_key_view：给的是【明文密钥】productKey，不再是哈希
+// （服务端只落盘 AES 加密明文，校验用的 base64(md5) 哈希按需派生、不外发）
 function rcKeyFields(k) {
     if (!k) return {};
     return {
-        hash: k.keyHash || k.key_hash || k.hash || k.key || '-',
-        permission: k.permission || '-',
-        validDays: k.validDays != null ? k.validDays : (k.valid_days != null ? k.valid_days : '-'),
-        expire: k.expireAt || k.expire_at || k.expiresAt || k.expireTime || k.expiry || ''
+        productKey: k.productKey || k.product_key || '',
+        permission: k.permission || k.software || '-',
+        permissionName: k.permissionName || k.permission || '-',
+        expire: k.expireAt || k.expire_at || '',
+        permanent: !!k.permanent,
+        expired: !!k.expired,
+        source: k.source || ''
     };
 }
 
 function loadRcKeys() {
     if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可访问 RC 软件密钥'); return; }
     document.getElementById('rc-key-list').innerHTML = loadingHTML();;
-    return ZIYIT_API.request('/admin/keys').then(function (data) {
-        rcKeyList = Array.isArray(data) ? data : (data.keys || data.users || data.data || []);
+    return ZIYIT_API.request('/admin/rc/keys').then(function (data) {
+        rcKeyList = Array.isArray(data) ? data : ((data && (data.users || data.keys || data.data)) || []);
         renderRcKeys();
     }).catch(function (err) {
         document.getElementById('rc-key-list').innerHTML = '<p style="padding: 20px; color: var(--ziyit-danger);">加载失败: ' + escAdmin(err.message || err) + '</p>';
@@ -1899,7 +1904,7 @@ function renderRcKeys() {
         const userId = u.userId != null ? u.userId : (u.user_id != null ? u.user_id : '');
         const username = u.username || u.userName || '';
         const keyText = rcUserKeys(u).map(function (k) {
-            return String(rcKeyFields(k).hash || '');
+            return String(rcKeyFields(k).productKey || '');
         }).join(' ');
         return String(username).toLowerCase().indexOf(search) !== -1
             || String(userId).toLowerCase().indexOf(search) !== -1
@@ -1922,11 +1927,13 @@ function renderRcKeys() {
         } else {
             keys.forEach(function (k) {
                 const kf = rcKeyFields(k);
-                html += '<div class="user-email" style="font-family: monospace;">' + escAdmin(kf.hash)
-                    + ' ｜ 权限: ' + escAdmin(kf.permission)
-                    + ' ｜ 有效: ' + escAdmin(kf.validDays) + ' 天'
-                    + (kf.expire ? ' ｜ 到期: ' + escAdmin(kf.expire) : '')
-                    + ' <button class="action-btn danger" data-ruid="' + escAdmin(userId) + '" data-rhash="' + escAdmin(kf.hash) + '" style="font-size:11px;padding:2px 8px;margin-left:4px;">移除</button>'
+                html += '<div class="user-email" style="font-family: monospace;">'
+                    + escAdmin(kf.productKey || '（明文不可回显：历史记录）')
+                    + ' ｜ 权限: ' + escAdmin(kf.permissionName)
+                    + ' ｜ ' + (kf.permanent ? '永久' : '到期: ' + escAdmin(kf.expire || '—'))
+                    + (kf.expired ? ' <span style="color:var(--ziyit-danger);">已过期</span>' : '')
+                    + (kf.source ? ' ｜ 来源: ' + escAdmin(kf.source) : '')
+                    + ' <button class="action-btn danger" data-ruid="' + escAdmin(userId) + '" data-rperm="' + escAdmin(kf.permission) + '" style="font-size:11px;padding:2px 8px;margin-left:4px;">移除</button>'
                     + '</div>';
             });
         }
@@ -1941,9 +1948,9 @@ function renderRcKeys() {
         if (!u) return;
         btn.addEventListener('click', function () { openAddKey(u); });
     });
-    area.querySelectorAll('[data-rhash]').forEach(function (btn) {
+    area.querySelectorAll('[data-rperm]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            removeKey(btn.getAttribute('data-ruid'), btn.getAttribute('data-rhash'));
+            removeKey(btn.getAttribute('data-ruid'), btn.getAttribute('data-rperm'));
         });
     });
 }
@@ -2091,7 +2098,7 @@ function openAddKey(u) {
     keyTargetUser = u;
     const userId = u.userId != null ? u.userId : (u.user_id != null ? u.user_id : '-');
     document.getElementById('key-userinfo').value = (u.username || u.userName || '') + '（ID: ' + userId + '）';
-    document.getElementById('key-hash').value = '';
+    document.getElementById('key-plain').value = '';
     document.getElementById('key-permission').value = 'Pr';
     document.getElementById('key-valid-days').value = '365';
     document.getElementById('key-add-modal').classList.add('active');
@@ -2100,9 +2107,10 @@ function openAddKey(u) {
 function saveKeyAdd() {
     if (!keyTargetUser) return;
     const userId = keyTargetUser.userId != null ? keyTargetUser.userId : keyTargetUser.user_id;
-    const hash = document.getElementById('key-hash').value.trim();
-    if (!hash) {
-        alert('请输入密钥哈希');
+    // 后端 /admin/users/{id}/keys 收的是【明文密钥】productKey，服务端自己加密落盘并派生校验哈希
+    const productKey = document.getElementById('key-plain').value.trim();
+    if (!productKey) {
+        alert('请输入明文密钥');
         return;
     }
     const permission = document.getElementById('key-permission').value;
@@ -2110,9 +2118,9 @@ function saveKeyAdd() {
     ZIYIT_API.request('/admin/users/' + userId + '/keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyHash: hash, permission: permission, validDays: validDays })
-    }).then(function () {
-        alert('密钥已添加');
+        body: JSON.stringify({ productKey: productKey, permission: permission, validDays: validDays })
+    }).then(function (data) {
+        alert('密钥已添加：' + ((data && data.productKey) || productKey));
         document.getElementById('key-add-modal').classList.remove('active');
         loadRcKeys();
     }).catch(function (err) {
@@ -2120,12 +2128,13 @@ function saveKeyAdd() {
     });
 }
 
-function removeKey(userId, keyHash) {
-    if (!confirm('确定移除密钥 ' + keyHash + ' 吗？')) return;
+// 同一权限至多一条记录（续期是覆盖，不叠加），所以按权限定位、不需要哈希
+function removeKey(userId, permission) {
+    if (!confirm('确定移除该用户权限为 ' + permission + ' 的密钥吗？\n移除后该用户需重新获取密钥才能继续使用。')) return;
     ZIYIT_API.request('/admin/users/' + userId + '/keys/remove', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyHash: keyHash })
+        body: JSON.stringify({ permission: permission })
     }).then(function () {
         alert('密钥已移除');
         loadRcKeys();
