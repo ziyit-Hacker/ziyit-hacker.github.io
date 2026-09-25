@@ -270,7 +270,39 @@
 
             <button type="button" id="passkeyLogin" class="alt-btn">用 Passkey 登录</button>
             <div class="field-hint" id="passkeyHint">指纹 / Windows Hello / 安全密钥登录，免输密码；需先填好上方用户名。换电脑 / 换手机就刷不了。</div>
+
+            <button type="button" id="otherWays" class="alt-btn">使用其他方式登录</button>
+            <div class="field-hint">账号没开密码登录，或忘了密码时走这里：邮箱验证码 / 2FA 动态码 / 一次性恢复码 / Passkey，同样要先填好上方用户名。</div>
         </form>
+
+        <!-- 第一种因子不用密码：邮箱验证码 / 2FA / 恢复码 / Passkey -->
+        <div class="mfa-step" id="otherStep">
+            <p class="mfa-tip" id="otherMsg"></p>
+
+            <div>
+                <label for="otherFactor" class="bt">验证方式</label>
+                <select id="otherFactor">
+                    <option value="email">邮箱验证码</option>
+                    <option value="totp">2FA 动态码（身份验证器）</option>
+                    <option value="recovery">一次性恢复码</option>
+                    <option value="passkey">Passkey（指纹 / Windows Hello）</option>
+                </select>
+            </div>
+
+            <div id="otherPrepRow">
+                <button type="button" id="otherPrep" class="alt-btn">获取验证码</button>
+                <div class="field-hint" id="otherPrepHint"></div>
+            </div>
+
+            <div id="otherCodeRow">
+                <label for="otherCode" class="bt">验证码</label>
+                <input type="text" id="otherCode" autocomplete="one-time-code" placeholder="输入验证码">
+            </div>
+
+            <button type="button" id="otherSubmit" class="alt-btn">用这种方式登录</button>
+            <button type="button" id="otherPasskey" class="alt-btn" style="display: none;">用 Passkey 完成验证</button>
+            <div class="field-hint"><a href="javascript:location.reload()">返回密码登录</a></div>
+        </div>
 
         <!-- 第二重验证：/auth/login 回 mfaRequired 时展开，按回包 methods 渲染可选方式 -->
         <div class="mfa-step" id="mfaStep">
@@ -448,16 +480,24 @@
 
             savedMfaToken = data.mfaToken || savedMfaToken;
             mfaMethods = data.methods || [];
+            // /auth/login/factor 不收密码，回包里的 password 只能当「第一步用密码」用，这里得滤掉
             mfaCodeFactors = mfaMethods.filter(function (m) {
                 return m === 'totp' || m === 'recovery' || m === 'email';
             });
+            const hasPasskey = mfaMethods.indexOf('passkey') >= 0;
 
             document.querySelector('form').style.display = 'none';
+            document.getElementById('otherStep').style.display = 'none';
             document.getElementById('mfaStep').style.display = 'block';
 
             const satisfied = (data.satisfied || []).map(factorLabel).join('、');
-            document.getElementById('mfaMsg').textContent = (data.message || '请继续完成第二重验证。')
+            let msg = (data.message || '请继续完成第二重验证。')
                 + (satisfied ? '（已通过：' + satisfied + '）' : '');
+            // 剩下的只有密码（/factor 收不了）＝ 这条第一步走不通，让用户改用密码登录
+            if (!mfaCodeFactors.length && !hasPasskey && mfaMethods.indexOf('password') >= 0) {
+                msg += ' 剩下的可用方式是密码，请点上方的「返回重新登录」，第一步改用密码登录。';
+            }
+            document.getElementById('mfaMsg').textContent = msg;
 
             const sel = document.getElementById('mfaFactor');
             sel.innerHTML = mfaCodeFactors.map(function (m) {
@@ -468,7 +508,7 @@
             document.getElementById('mfaCodeRow').style.display = mfaCodeFactors.length ? 'block' : 'none';
             document.getElementById('mfaSubmit').style.display = mfaCodeFactors.length ? 'block' : 'none';
             document.getElementById('mfaEmailRow').style.display = mfaCodeFactors.indexOf('email') >= 0 ? 'block' : 'none';
-            document.getElementById('mfaPasskey').style.display = mfaMethods.indexOf('passkey') >= 0 ? 'block' : 'none';
+            document.getElementById('mfaPasskey').style.display = hasPasskey ? 'block' : 'none';
 
             updateCodePlaceholder();
             // 默认就是邮箱验证码的话，先把码发出去，省得用户再点一次
@@ -553,6 +593,128 @@
             btn.disabled = true;
             btn.textContent = '用 Passkey 登录（当前环境不可用）';
             if (hint) hint.textContent = (window.passkeyUnsupportedReason && passkeyUnsupportedReason()) || '';
+        }
+
+        // ---- 不用密码的第一重验证：邮箱验证码 / 2FA 动态码 / 恢复码 / Passkey ----
+        // 注意：/auth/login/factor 只认 totp / recovery / email，密码不能当第二因子，
+        // 所以下面渲染第二步时要把回包 methods 里的 password 过滤掉，免得给用户一个死胡同。
+
+        function currentUsername() {
+            return (document.getElementById('username').value || '').trim();
+        }
+
+        // 后端没有单独的「2FA 起始」接口，2FA / 恢复码当第一因子时也走 email/start 取票据
+        function otherNeedsTicket(f) {
+            return f === 'email' || f === 'totp' || f === 'recovery';
+        }
+
+        function useOtherWays() {
+            const uname = currentUsername();
+            if (!uname) {
+                showError('请先输入用户名，这些方式都不支持盲找账号');
+                return;
+            }
+            pendingUsername = uname;
+            pendingPasswordMd5 = '';
+            pendingRemember = !!document.getElementById('rememberMe').checked;
+            loginFailed = false;
+            hideAppealLink();
+            if (errorDiv) errorDiv.style.display = 'none';
+
+            document.querySelector('form').style.display = 'none';
+            document.getElementById('otherStep').style.display = 'block';
+            document.getElementById('otherMsg').textContent = '用「' + uname + '」这个账号，不输密码完成第一重验证。';
+            onOtherFactorChange();
+        }
+
+        function onOtherFactorChange() {
+            const f = document.getElementById('otherFactor').value;
+            const isPasskey = f === 'passkey';
+            savedMfaToken = null;
+
+            document.getElementById('otherPrepRow').style.display = isPasskey ? 'none' : 'block';
+            document.getElementById('otherCodeRow').style.display = isPasskey ? 'none' : 'block';
+            document.getElementById('otherSubmit').style.display = isPasskey ? 'none' : 'block';
+            document.getElementById('otherPasskey').style.display = isPasskey ? 'block' : 'none';
+
+            const prepBtn = document.getElementById('otherPrep');
+            prepBtn.textContent = f === 'email' ? '获取验证码' : '继续';
+            const pkBtn = document.getElementById('otherPasskey');
+            const pkOk = !window.passkeySupported || passkeySupported();
+            pkBtn.disabled = !pkOk;
+            pkBtn.textContent = pkOk ? '用 Passkey 完成验证' : '用 Passkey 完成验证（当前环境不可用）';
+            document.getElementById('otherPrepHint').textContent = isPasskey
+                ? (pkOk ? '' : ((window.passkeyUnsupportedReason && passkeyUnsupportedReason()) || '当前环境不支持 Passkey。'))
+                : (f === 'email' ? ''
+                    : '后端没有单独的 2FA 起始接口，点「继续」先取一张验证票据；若该账号开了邮箱验证，你还会收到一封验证码邮件，忽略即可。');
+
+            const codeInput = document.getElementById('otherCode');
+            codeInput.value = '';
+            if (f === 'recovery') codeInput.placeholder = '输入 10 位一次性恢复码';
+            else if (f === 'totp') codeInput.placeholder = '输入 6 位动态码';
+            else codeInput.placeholder = '输入邮箱收到的 6 位验证码';
+        }
+
+        function otherPrep() {
+            const f = document.getElementById('otherFactor').value;
+            if (!otherNeedsTicket(f)) return;
+            const uname = pendingUsername || currentUsername();
+            if (!uname) {
+                showError('请先输入用户名');
+                return;
+            }
+            const btn = document.getElementById('otherPrep');
+            const hint = document.getElementById('otherPrepHint');
+            btn.disabled = true;
+            hint.textContent = '正在获取…';
+            // 有了票据就带着它重发，避免「60 秒冷却」把票据换成一张不绑定账号的废票
+            const body = savedMfaToken ? { mfaToken: savedMfaToken } : { username: uname };
+            ZIYIT_API.loginEmailStart(body).then(function (res) {
+                if (res && res.mfaToken) savedMfaToken = res.mfaToken;
+                hint.textContent = f === 'email'
+                    ? ((res && res.message) || '验证码已发送，请查收邮箱')
+                    : '票据已取到，请输入验证码。';
+                btn.textContent = f === 'email' ? '重新获取' : '重新取票据';
+                btn.disabled = false;
+                document.getElementById('otherCode').focus();
+            }).catch(function (err) {
+                hint.textContent = '';
+                btn.disabled = false;
+                showError(loginErrDetail(err) || '获取失败，请稍后再试');
+            });
+        }
+
+        function submitOtherFactor() {
+            const f = document.getElementById('otherFactor').value;
+            if (!otherNeedsTicket(f)) return;
+            const code = document.getElementById('otherCode').value.trim();
+            if (!code) {
+                showError(f === 'recovery' ? '请输入一次性恢复码' : '请输入验证码');
+                return;
+            }
+            if (!savedMfaToken) {
+                showError('请先点上方按钮获取验证票据');
+                return;
+            }
+            const btn = document.getElementById('otherSubmit');
+            btn.disabled = true;
+            ZIYIT_API.loginFactor({ mfaToken: savedMfaToken, code: code, factor: f }).then(function (data) {
+                if (data && data.mfaToken) savedMfaToken = data.mfaToken;
+                handleLoginResponse(data);
+            }).catch(function (err) {
+                showError(loginErrDetail(err) || '验证失败，请重新获取票据后再试');
+            }).finally(function () {
+                btn.disabled = false;
+            });
+        }
+
+        function otherPasskeyLogin(btn) {
+            const uname = pendingUsername || currentUsername();
+            if (!uname) {
+                showError('请先输入用户名');
+                return;
+            }
+            passkeyLogin({ username: uname }, btn);
         }
 
          
@@ -693,6 +855,24 @@
             if (e.key === 'Enter') {
                 e.preventDefault();
                 submitMfaFactor();
+            }
+        });
+
+        // ---- 「使用其他方式登录」面板 ----
+        document.getElementById('otherWays').addEventListener('click', function(e) {
+            e.preventDefault();
+            useOtherWays();
+        });
+        document.getElementById('otherFactor').addEventListener('change', onOtherFactorChange);
+        document.getElementById('otherPrep').addEventListener('click', otherPrep);
+        document.getElementById('otherSubmit').addEventListener('click', submitOtherFactor);
+        document.getElementById('otherPasskey').addEventListener('click', function() {
+            otherPasskeyLogin(this);
+        });
+        document.getElementById('otherCode').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitOtherFactor();
             }
         });
 
