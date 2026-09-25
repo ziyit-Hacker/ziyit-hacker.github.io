@@ -95,7 +95,6 @@
 
     function passkeyErrorMessage(err) {
         if (!err) return 'Passkey 操作失败，请重试';
-        if (err.name === 'NoPasskeyError') return err.message || '该账号没有可用的 Passkey';
         if (err.name === 'NotAllowedError') return '已取消，或操作超时（也可以检查设备是否已设置指纹 / Windows Hello）';
         if (err.name === 'InvalidStateError') return '这个 Passkey 已经绑定过了';
         if (err.name === 'SecurityError') return '当前页面域名不允许使用 Passkey，请从官网 https://ziyit-hacker.github.io/ 打开';
@@ -132,14 +131,9 @@
      *          accessToken / mfaRequired + mfaToken / enrollRequired + enrollToken
      */
     function loginWithPasskey(opts) {
+        // 账号不存在 / 没绑过 Passkey 时后端直接 400（两种情况的文案一致，防枚举），
+        // 所以这里不会拿到空列表、也就不会去弹 navigator.credentials.get()
         return window.ZIYIT_API.passkeyLoginStart(opts).then(function (start) {
-            // 账号不存在或没绑过 Passkey 时后端照样 200，只是允许列表为空 —— 提前给出可读提示
-            var allow = (start.publicKey && start.publicKey.allowCredentials) || [];
-            if (!allow.length) {
-                var e = new Error('该账号没有可用的 Passkey');
-                e.name = 'NoPasskeyError';
-                throw e;
-            }
             // ② 弹设备验证
             return navigator.credentials.get(toRequestOptions(start.publicKey)).then(function (cred) {
                 // ③ 验签；失败一律 401（后端不区分原因，防探测）

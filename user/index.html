@@ -323,6 +323,12 @@
                 <input type="text" id="mfaCode" autocomplete="one-time-code" placeholder="输入验证码">
             </div>
 
+            <!-- 第一因子不是密码时（比如邮箱码先过），第二因子也可以直接用密码 -->
+            <div id="mfaPasswordRow" style="display: none;">
+                <label for="mfaPassword" class="bt">登录密码</label>
+                <input type="password" id="mfaPassword" autocomplete="current-password" placeholder="输入登录密码">
+            </div>
+
             <button type="button" id="mfaSubmit" class="alt-btn">继续验证</button>
             <button type="button" id="mfaPasskey" class="alt-btn" style="display: none;">用 Passkey 完成验证</button>
             <div class="field-hint"><a href="javascript:location.reload()">返回重新登录</a></div>
@@ -346,7 +352,7 @@
         // 多因子登录：第二重验证要用的中间票据与第一因子的值
         let savedMfaToken = null;
         let mfaMethods = [];
-        let mfaCodeFactors = [];
+        let mfaStepFactors = [];
         let pendingUsername = '';
         let pendingPasswordMd5 = '';
         let pendingRemember = false;
@@ -469,6 +475,7 @@
             if (f === 'totp') return '2FA 动态码（身份验证器）';
             if (f === 'recovery') return '一次性恢复码';
             if (f === 'email') return '邮箱验证码';
+            if (f === 'password') return '密码';
             if (f === 'passkey') return 'Passkey（指纹 / Windows Hello）';
             return f;
         }
@@ -480,9 +487,9 @@
 
             savedMfaToken = data.mfaToken || savedMfaToken;
             mfaMethods = data.methods || [];
-            // /auth/login/factor 不收密码，回包里的 password 只能当「第一步用密码」用，这里得滤掉
-            mfaCodeFactors = mfaMethods.filter(function (m) {
-                return m === 'totp' || m === 'recovery' || m === 'email';
+            // 第二步可选方式：password 也能当第二因子了（首因子=邮箱 → 第二因子=密码 / 2FA / Passkey）
+            mfaStepFactors = mfaMethods.filter(function (m) {
+                return m === 'password' || m === 'totp' || m === 'recovery' || m === 'email';
             });
             const hasPasskey = mfaMethods.indexOf('passkey') >= 0;
 
@@ -491,37 +498,37 @@
             document.getElementById('mfaStep').style.display = 'block';
 
             const satisfied = (data.satisfied || []).map(factorLabel).join('、');
-            let msg = (data.message || '请继续完成第二重验证。')
+            document.getElementById('mfaMsg').textContent = (data.message || '请继续完成第二重验证。')
                 + (satisfied ? '（已通过：' + satisfied + '）' : '');
-            // 剩下的只有密码（/factor 收不了）＝ 这条第一步走不通，让用户改用密码登录
-            if (!mfaCodeFactors.length && !hasPasskey && mfaMethods.indexOf('password') >= 0) {
-                msg += ' 剩下的可用方式是密码，请点上方的「返回重新登录」，第一步改用密码登录。';
-            }
-            document.getElementById('mfaMsg').textContent = msg;
 
             const sel = document.getElementById('mfaFactor');
-            sel.innerHTML = mfaCodeFactors.map(function (m) {
+            sel.innerHTML = mfaStepFactors.map(function (m) {
                 return '<option value="' + m + '">' + factorLabel(m) + '</option>';
             }).join('');
 
-            document.getElementById('mfaFactorRow').style.display = mfaCodeFactors.length > 1 ? 'block' : 'none';
-            document.getElementById('mfaCodeRow').style.display = mfaCodeFactors.length ? 'block' : 'none';
-            document.getElementById('mfaSubmit').style.display = mfaCodeFactors.length ? 'block' : 'none';
-            document.getElementById('mfaEmailRow').style.display = mfaCodeFactors.indexOf('email') >= 0 ? 'block' : 'none';
+            document.getElementById('mfaFactorRow').style.display = mfaStepFactors.length > 1 ? 'block' : 'none';
+            document.getElementById('mfaSubmit').style.display = mfaStepFactors.length ? 'block' : 'none';
+            document.getElementById('mfaEmailRow').style.display = mfaStepFactors.indexOf('email') >= 0 ? 'block' : 'none';
             document.getElementById('mfaPasskey').style.display = hasPasskey ? 'block' : 'none';
 
-            updateCodePlaceholder();
+            updateMfaRows();
             // 默认就是邮箱验证码的话，先把码发出去，省得用户再点一次
             if (sel.value === 'email') sendMfaEmailCode();
         }
 
-        function updateCodePlaceholder() {
+        // 验证码框与密码框互斥：选「密码」时只显示密码框
+        function updateMfaRows() {
             const factor = document.getElementById('mfaFactor').value;
+            const isPwd = factor === 'password';
+            document.getElementById('mfaCodeRow').style.display = (factor && !isPwd) ? 'block' : 'none';
+            document.getElementById('mfaPasswordRow').style.display = isPwd ? 'block' : 'none';
+
             const input = document.getElementById('mfaCode');
             if (factor === 'recovery') input.placeholder = '输入 10 位一次性恢复码';
             else if (factor === 'email') input.placeholder = '输入邮箱收到的 6 位验证码';
             else input.placeholder = '输入 6 位动态码';
             input.value = '';
+            document.getElementById('mfaPassword').value = '';
         }
 
         function sendMfaEmailCode() {
@@ -533,7 +540,8 @@
                 // 后端可能换一张新票据，一律覆盖本地旧的
                 if (res && res.mfaToken) savedMfaToken = res.mfaToken;
                 if (res && res.methods) mfaMethods = res.methods;
-                hint.textContent = (res && res.message) || '验证码已发送，请查收邮箱';
+                hint.textContent = ((res && res.message) || '验证码已发送，请查收邮箱')
+                    + '（有效期内重复发送是同一封邮件里的同一个码）';
                 let left = 60;
                 const timer = setInterval(function () {
                     left--;
@@ -554,19 +562,31 @@
 
         function submitMfaFactor() {
             const factor = document.getElementById('mfaFactor').value || 'totp';
-            const code = document.getElementById('mfaCode').value.trim();
-            if (!code) {
-                showError('请输入验证码');
-                return;
-            }
             const btn = document.getElementById('mfaSubmit');
+            const body = { mfaToken: savedMfaToken, factor: factor };
+            if (factor === 'password') {
+                const pwd = document.getElementById('mfaPassword').value;
+                if (!pwd) {
+                    showError('请输入登录密码');
+                    return;
+                }
+                // 必须和 /auth/login 完全一致：bcrypt(base64(md5))，换成 hex 会全线 401
+                body.password = CryptoJS.MD5(pwd).toString(CryptoJS.enc.Base64);
+            } else {
+                const code = document.getElementById('mfaCode').value.trim();
+                if (!code) {
+                    showError('请输入验证码');
+                    return;
+                }
+                body.code = code;
+            }
             btn.disabled = true;
-            ZIYIT_API.loginFactor({ mfaToken: savedMfaToken, code: code, factor: factor }).then(function (data) {
+            ZIYIT_API.loginFactor(body).then(function (data) {
                 if (data && data.mfaToken) savedMfaToken = data.mfaToken;
                 handleLoginResponse(data);
             }).catch(function (err) {
                 showError(loginErrDetail(err) || (err && err.status === 401
-                    ? '验证码不正确，或票据已过期，请重新登录'
+                    ? '验证码或密码不正确，或票据已过期，请重新登录'
                     : '验证失败，请稍后再试'));
             }).finally(function () {
                 btn.disabled = false;
@@ -672,7 +692,8 @@
             ZIYIT_API.loginEmailStart(body).then(function (res) {
                 if (res && res.mfaToken) savedMfaToken = res.mfaToken;
                 hint.textContent = f === 'email'
-                    ? ((res && res.message) || '验证码已发送，请查收邮箱')
+                    ? (((res && res.message) || '验证码已发送，请查收邮箱')
+                        + '（有效期内重复发送是同一封邮件里的同一个码）')
                     : '票据已取到，请输入验证码。';
                 btn.textContent = f === 'email' ? '重新获取' : '重新取票据';
                 btn.disabled = false;
@@ -847,11 +868,17 @@
             passkeyLogin({ mfaToken: savedMfaToken }, this);
         });
         document.getElementById('mfaFactor').addEventListener('change', function() {
-            updateCodePlaceholder();
+            updateMfaRows();
             if (this.value === 'email') sendMfaEmailCode();
         });
         // 第二步不在 form 里，回车要自己接
         document.getElementById('mfaCode').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitMfaFactor();
+            }
+        });
+        document.getElementById('mfaPassword').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 submitMfaFactor();
