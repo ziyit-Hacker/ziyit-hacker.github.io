@@ -1037,6 +1037,7 @@ var SITE_PAGES = [
     'user/password.html',
     'user/profile.html',
     'user/register.html',
+    'user/security.html',
     'user/username.html',
     'wsh/index.html',
     'wsh/user.html',

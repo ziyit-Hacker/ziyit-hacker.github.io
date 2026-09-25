@@ -114,6 +114,66 @@
             margin-top: 16px;
         }
 
+        /* 次要按钮（用 Passkey 登录 / 发送验证码 / 继续验证） */
+        .alt-btn {
+            background-color: var(--ziyit-bg-card);
+            color: var(--ziyit-primary);
+            border: 1px solid var(--ziyit-primary);
+            padding: 10px 24px;
+            width: 100%;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .alt-btn:hover {
+            background-color: var(--ziyit-bg-hover);
+        }
+
+        .alt-btn:disabled {
+            color: var(--ziyit-text-disabled);
+            border-color: var(--ziyit-border);
+            cursor: not-allowed;
+        }
+
+        .field-hint {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+            margin-top: 6px;
+            line-height: 1.6;
+        }
+
+        .mfa-step {
+            display: none;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px dashed var(--ziyit-border);
+        }
+
+        .mfa-step .bt {
+            margin-top: 8px;
+        }
+
+        .mfa-step select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 4px;
+            background-color: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            font-size: 14px;
+        }
+
+        .mfa-tip {
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--ziyit-text-secondary);
+            margin-bottom: 6px;
+        }
+
         @media (max-width: 768px) {
             .form-container {
                 width: 90%;
@@ -207,7 +267,34 @@
             </div>
 
             <input type="submit" id="login" value="登录">
+
+            <button type="button" id="passkeyLogin" class="alt-btn">用 Passkey 登录</button>
+            <div class="field-hint" id="passkeyHint">指纹 / Windows Hello / 安全密钥登录，免输密码；需先填好上方用户名。换电脑 / 换手机就刷不了。</div>
         </form>
+
+        <!-- 第二重验证：/auth/login 回 mfaRequired 时展开，按回包 methods 渲染可选方式 -->
+        <div class="mfa-step" id="mfaStep">
+            <p class="mfa-tip" id="mfaMsg"></p>
+
+            <div id="mfaFactorRow" style="display: none;">
+                <label for="mfaFactor" class="bt">验证方式</label>
+                <select id="mfaFactor"></select>
+            </div>
+
+            <div id="mfaEmailRow" style="display: none;">
+                <button type="button" id="mfaSendCode" class="alt-btn">发送验证码到邮箱</button>
+                <div class="field-hint" id="mfaSendHint"></div>
+            </div>
+
+            <div id="mfaCodeRow">
+                <label for="mfaCode" class="bt">验证码</label>
+                <input type="text" id="mfaCode" autocomplete="one-time-code" placeholder="输入验证码">
+            </div>
+
+            <button type="button" id="mfaSubmit" class="alt-btn">继续验证</button>
+            <button type="button" id="mfaPasskey" class="alt-btn" style="display: none;">用 Passkey 完成验证</button>
+            <div class="field-hint"><a href="javascript:location.reload()">返回重新登录</a></div>
+        </div>
 
         <div class="form-footer">
             <a href="register">没有账号？点这里注册！</a><br>
@@ -216,12 +303,21 @@
     </div>
 
     <script src="../assets/ziyit_api.js"></script>
+    <script src="../assets/webauthn.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <script>
         let errorDiv = null;
         let loginFailed = false;
         let appealLink = null;
+
+        // 多因子登录：第二重验证要用的中间票据与第一因子的值
+        let savedMfaToken = null;
+        let mfaMethods = [];
+        let mfaCodeFactors = [];
+        let pendingUsername = '';
+        let pendingPasswordMd5 = '';
+        let pendingRemember = false;
 
          
         function checkFocus() {
@@ -277,19 +373,13 @@
 
              
             const md5Hash = CryptoJS.MD5(password).toString(CryptoJS.enc.Base64);
+            pendingUsername = username;
+            pendingPasswordMd5 = md5Hash;
+            pendingRemember = rememberMe;
 
              
             ZIYIT_API.login(username, md5Hash)
-                .then(data => {
-                    const token = data.accessToken || data.access_token || data.token;
-                    if (!token) {
-                        showError('登录响应异常，请稍后再试');
-                        return;
-                    }
-                    ZIYIT_API.setToken(token, rememberMe);
-                    ZIYIT_API.setCredentials(username, md5Hash, rememberMe);
-                    window.location.href = '../';
-                })
+                .then(handleLoginResponse)
                 .catch(error => {
                     console.error('登录失败:', error);
                     if (error.status === 401) {
@@ -308,6 +398,161 @@
                         hideAppealLink();
                     }
                 });
+        }
+
+         
+        // ---- 多因子登录：/auth/login 的三种回包 + 第二重验证 ----
+
+        function handleLoginResponse(data) {
+            if (!data) {
+                showError('登录响应异常，请稍后再试');
+                return;
+            }
+            // ③ 策略要求两种，可这个账号只启用了一种：先进「账号安全」绑第二方式
+            if (data.enrollRequired) {
+                try { sessionStorage.setItem('ziyit_enroll_token', data.enrollToken || ''); } catch (e) { }
+                showError(data.message || '该账号要求两种验证方式，请先在「账号安全」里绑定第二方式');
+                setTimeout(function () { window.location.href = 'security.html?enroll=1'; }, 1500);
+                return;
+            }
+            // ② 还差第二类因子：不是失败，展开第二步 UI
+            if (data.mfaRequired) {
+                showMfaStep(data);
+                return;
+            }
+            // ① 够了：与改造前的登录成功流程完全一致
+            const token = data.accessToken || data.access_token || data.token;
+            if (!token) {
+                showError('登录响应异常，请稍后再试');
+                return;
+            }
+            ZIYIT_API.setToken(token, pendingRemember);
+            if (pendingUsername && pendingPasswordMd5) {
+                ZIYIT_API.setCredentials(pendingUsername, pendingPasswordMd5, pendingRemember);
+            }
+            window.location.href = '../';
+        }
+
+        function factorLabel(f) {
+            if (f === 'totp') return '2FA 动态码（身份验证器）';
+            if (f === 'recovery') return '一次性恢复码';
+            if (f === 'email') return '邮箱验证码';
+            if (f === 'passkey') return 'Passkey（指纹 / Windows Hello）';
+            return f;
+        }
+
+        function showMfaStep(data) {
+            loginFailed = false;
+            hideAppealLink();
+            if (errorDiv) errorDiv.style.display = 'none';
+
+            savedMfaToken = data.mfaToken || savedMfaToken;
+            mfaMethods = data.methods || [];
+            mfaCodeFactors = mfaMethods.filter(function (m) {
+                return m === 'totp' || m === 'recovery' || m === 'email';
+            });
+
+            document.querySelector('form').style.display = 'none';
+            document.getElementById('mfaStep').style.display = 'block';
+
+            const satisfied = (data.satisfied || []).map(factorLabel).join('、');
+            document.getElementById('mfaMsg').textContent = (data.message || '请继续完成第二重验证。')
+                + (satisfied ? '（已通过：' + satisfied + '）' : '');
+
+            const sel = document.getElementById('mfaFactor');
+            sel.innerHTML = mfaCodeFactors.map(function (m) {
+                return '<option value="' + m + '">' + factorLabel(m) + '</option>';
+            }).join('');
+
+            document.getElementById('mfaFactorRow').style.display = mfaCodeFactors.length > 1 ? 'block' : 'none';
+            document.getElementById('mfaCodeRow').style.display = mfaCodeFactors.length ? 'block' : 'none';
+            document.getElementById('mfaSubmit').style.display = mfaCodeFactors.length ? 'block' : 'none';
+            document.getElementById('mfaEmailRow').style.display = mfaCodeFactors.indexOf('email') >= 0 ? 'block' : 'none';
+            document.getElementById('mfaPasskey').style.display = mfaMethods.indexOf('passkey') >= 0 ? 'block' : 'none';
+
+            updateCodePlaceholder();
+            // 默认就是邮箱验证码的话，先把码发出去，省得用户再点一次
+            if (sel.value === 'email') sendMfaEmailCode();
+        }
+
+        function updateCodePlaceholder() {
+            const factor = document.getElementById('mfaFactor').value;
+            const input = document.getElementById('mfaCode');
+            if (factor === 'recovery') input.placeholder = '输入 10 位一次性恢复码';
+            else if (factor === 'email') input.placeholder = '输入邮箱收到的 6 位验证码';
+            else input.placeholder = '输入 6 位动态码';
+            input.value = '';
+        }
+
+        function sendMfaEmailCode() {
+            const btn = document.getElementById('mfaSendCode');
+            const hint = document.getElementById('mfaSendHint');
+            btn.disabled = true;
+            hint.textContent = '正在发送…';
+            ZIYIT_API.loginEmailStart({ mfaToken: savedMfaToken }).then(function (res) {
+                // 后端可能换一张新票据，一律覆盖本地旧的
+                if (res && res.mfaToken) savedMfaToken = res.mfaToken;
+                if (res && res.methods) mfaMethods = res.methods;
+                hint.textContent = (res && res.message) || '验证码已发送，请查收邮箱';
+                let left = 60;
+                const timer = setInterval(function () {
+                    left--;
+                    if (left <= 0) {
+                        clearInterval(timer);
+                        btn.disabled = false;
+                        btn.textContent = '发送验证码到邮箱';
+                        return;
+                    }
+                    btn.textContent = left + ' 秒后可重发';
+                }, 1000);
+            }).catch(function (err) {
+                btn.disabled = false;
+                hint.textContent = '';
+                showError(loginErrDetail(err) || '发送失败，请稍后再试');
+            });
+        }
+
+        function submitMfaFactor() {
+            const factor = document.getElementById('mfaFactor').value || 'totp';
+            const code = document.getElementById('mfaCode').value.trim();
+            if (!code) {
+                showError('请输入验证码');
+                return;
+            }
+            const btn = document.getElementById('mfaSubmit');
+            btn.disabled = true;
+            ZIYIT_API.loginFactor({ mfaToken: savedMfaToken, code: code, factor: factor }).then(function (data) {
+                if (data && data.mfaToken) savedMfaToken = data.mfaToken;
+                handleLoginResponse(data);
+            }).catch(function (err) {
+                showError(loginErrDetail(err) || (err && err.status === 401
+                    ? '验证码不正确，或票据已过期，请重新登录'
+                    : '验证失败，请稍后再试'));
+            }).finally(function () {
+                btn.disabled = false;
+            });
+        }
+
+        // Passkey：第一因子传 { username }，第二因子传 { mfaToken }，返回体与 /auth/login 同构
+        function passkeyLogin(opts, btn) {
+            const original = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '等待设备验证…';
+            window.loginWithPasskey(opts).then(handleLoginResponse).catch(function (err) {
+                showError(window.passkeyErrorMessage
+                    ? passkeyErrorMessage(err)
+                    : ((err && err.message) || 'Passkey 登录失败'));
+            }).finally(function () {
+                btn.disabled = false;
+                btn.textContent = original;
+            });
+        }
+
+        function checkPasskeySupport(btn, hint) {
+            if (!btn || !window.passkeySupported || passkeySupported()) return;
+            btn.disabled = true;
+            btn.textContent = '用 Passkey 登录（当前环境不可用）';
+            if (hint) hint.textContent = (window.passkeyUnsupportedReason && passkeyUnsupportedReason()) || '';
         }
 
          
@@ -419,6 +664,40 @@
         document.getElementById('login').addEventListener('click', function(e) {
             e.preventDefault();
             checkPassword();
+        });
+
+        // ---- 多因子 / Passkey 事件绑定 ----
+
+        // Passkey 不支持盲找账号，必须先把用户名填上
+        document.getElementById('passkeyLogin').addEventListener('click', function(e) {
+            e.preventDefault();
+            const uname = (document.getElementById('username').value || '').trim();
+            if (!uname) {
+                showError('请先输入用户名，Passkey 不支持盲找账号');
+                return;
+            }
+            passkeyLogin({ username: uname }, this);
+        });
+
+        document.getElementById('mfaSendCode').addEventListener('click', sendMfaEmailCode);
+        document.getElementById('mfaSubmit').addEventListener('click', submitMfaFactor);
+        document.getElementById('mfaPasskey').addEventListener('click', function() {
+            passkeyLogin({ mfaToken: savedMfaToken }, this);
+        });
+        document.getElementById('mfaFactor').addEventListener('change', function() {
+            updateCodePlaceholder();
+            if (this.value === 'email') sendMfaEmailCode();
+        });
+        // 第二步不在 form 里，回车要自己接
+        document.getElementById('mfaCode').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitMfaFactor();
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', function() {
+            checkPasskeySupport(document.getElementById('passkeyLogin'), document.getElementById('passkeyHint'));
         });
     </script>
 

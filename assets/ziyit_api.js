@@ -105,6 +105,11 @@
 
      
      
+    // 受限票据（enrollToken）：被强制要求第二种验证方式时，它只能在安全中心接口用，
+    // 别的接口一律 401，所以只在 security.html?enroll=1 期间设置。
+    var enrollToken = null;
+    function setEnrollToken(t) { enrollToken = t || null; }
+
     var reloginPromise = null;
     function loginWithCredentials() {
         var cred = getCredentials();
@@ -144,7 +149,7 @@
         options = options || {};
         options.headers = options.headers || {};
         options.headers['ngrok-skip-browser-warning'] = '1';
-        var token = getToken();
+        var token = enrollToken || getToken();
         if (token) {
             options.headers['Authorization'] = 'Bearer ' + token;
         }
@@ -165,7 +170,7 @@
             });
         }).catch(function (err) {
             if (err && err.status) {
-                if (err.status === 401 && !retried && path.indexOf('/auth/login') !== 0 && getCredentials()) {
+                if (err.status === 401 && !retried && path.indexOf('/auth/login') !== 0 && getCredentials() && !enrollToken) {
                     return loginWithCredentials().then(function () {
                         return request(path, options, 0, true, withMeta);
                     }, function (loginErr) {
@@ -789,6 +794,74 @@
         return role === 'zc' || role === 'admin' || role === 'vip' || role === 'vip用户' || role === 'isztg' || role === 'ztg';
     }
 
+    // ---- 账号安全：多因子登录与安全中心（WebAuthn / TOTP / 邮箱验证码）----
+    // 登录第二步的三种形态统一由后端返回：accessToken（够了）/ mfaRequired + mfaToken（还差因子）
+    // / enrollRequired + enrollToken（被强制要求两种，必须先绑第二方式）。
+
+    // 往已验证邮箱发一次性验证码：带 mfaToken = 当第二因子；带 username = 当第一因子
+    function loginEmailStart(body) {
+        return post('/auth/login/email/start', body || {});
+    }
+
+    // 补齐因子：factor = totp（动态码）/ recovery（一次性恢复码）/ email（邮箱验证码）
+    function loginFactor(body) {
+        return post('/auth/login/factor', body || {});
+    }
+
+    // Passkey 登录第一步：回 challengeId + 可直接喂 navigator.credentials.get() 的 publicKey
+    function passkeyLoginStart(body) {
+        return post('/auth/login/passkey/start', body || {});
+    }
+
+    // Passkey 登录第二步：把 navigator.credentials.get() 的结果原样回传
+    function passkeyLoginFinish(body) {
+        return post('/auth/login/passkey/finish', body || {});
+    }
+
+    // 安全中心总览：含 passkeys[]、canDisablePassword、availableFactors 等
+    function securityOverview() {
+        return request('/auth/security');
+    }
+
+    // 改策略：requiredFactors / emailFactor / passwordEnabled，必须带身份证明（factor + code|password）
+    function securityPolicy(body) {
+        return post('/auth/security/policy', body || {});
+    }
+
+    // 2FA：setup 拿密钥 + qrPng（可直接 <img src>）→ enable 输码启用，此刻一次性下发恢复码
+    function totpSetup() {
+        return post('/auth/security/totp/setup', {});
+    }
+
+    function totpEnable(code) {
+        return post('/auth/security/totp/enable', { code: code });
+    }
+
+    // 关闭 2FA：不接受只用密码，须 factor=totp|recovery + code
+    function totpDisable(body) {
+        return post('/auth/security/totp/disable', body || {});
+    }
+
+    // 重新生成恢复码：旧的立刻作废，新码只回这一次
+    function regenerateRecoveryCodes(body) {
+        return post('/auth/security/recovery-codes', body || {});
+    }
+
+    // Passkey 绑定第一步：回 ticketId + 可直接喂 navigator.credentials.create() 的 publicKey
+    function passkeySetup() {
+        return post('/auth/security/passkey/setup', {});
+    }
+
+    // Passkey 绑定第二步：把 navigator.credentials.create() 的结果原样回传（别自己拼 authenticatorData）
+    function passkeyEnable(body) {
+        return post('/auth/security/passkey/enable', body || {});
+    }
+
+    // 删除某个 Passkey：需要身份证明（factor=password|totp|recovery + password|code）
+    function passkeyDelete(body) {
+        return post('/auth/security/passkey/delete', body || {});
+    }
+
     // ---- RC 文件加密：恢复密钥托管 / 云加密用量 ----
     function rcFiles() {
         return request('/rc/files');
@@ -1124,6 +1197,20 @@
         rcDeleteFile: rcDeleteFile,
         rcMyKeys: rcMyKeys,
         afdianSelfCheck: afdianSelfCheck,
+        loginEmailStart: loginEmailStart,
+        loginFactor: loginFactor,
+        passkeyLoginStart: passkeyLoginStart,
+        passkeyLoginFinish: passkeyLoginFinish,
+        securityOverview: securityOverview,
+        securityPolicy: securityPolicy,
+        totpSetup: totpSetup,
+        totpEnable: totpEnable,
+        totpDisable: totpDisable,
+        regenerateRecoveryCodes: regenerateRecoveryCodes,
+        passkeySetup: passkeySetup,
+        passkeyEnable: passkeyEnable,
+        passkeyDelete: passkeyDelete,
+        setEnrollToken: setEnrollToken,
         rcBugs: rcBugs,
         rcSubmitBug: rcSubmitBug,
         adminRcBugs: adminRcBugs,

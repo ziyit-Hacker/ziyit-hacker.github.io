@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账号安全 - ZIYIT</title>
+    <meta name="description" content="管理 ZIYIT 账号的验证方式：2FA 身份验证器、一次性恢复码、Passkey 与登录策略。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/security.html">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <script src="../assets/webauthn.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: default !important;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--ziyit-primary);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: var(--ziyit-bg);
+        }
+
+        .page {
+            max-width: 860px;
+            margin: 20px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .page h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .back-link {
+            display: block;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        .banner {
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.8;
+            margin-bottom: 14px;
+            border: 1px solid var(--ziyit-primary);
+            background: var(--ziyit-primary-light);
+            color: var(--ziyit-text-primary);
+        }
+
+        .banner.warn {
+            border-color: var(--ziyit-warning);
+            background: rgba(243, 167, 7, .12);
+        }
+
+        .card {
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: var(--ziyit-bg);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            margin-bottom: 10px;
+        }
+
+        .hint {
+            font-size: 12.5px;
+            line-height: 1.8;
+            color: var(--ziyit-text-secondary);
+            margin: 6px 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 8px 18px;
+        }
+
+        .grid .item {
+            font-size: 13px;
+            line-height: 1.9;
+            color: var(--ziyit-text-primary);
+            word-break: break-all;
+        }
+
+        .grid .item .lbl {
+            color: var(--ziyit-text-secondary);
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 8px 0;
+            font-size: 13px;
+            color: var(--ziyit-text-primary);
+        }
+
+        .row .bt {
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            font-size: 13px;
+        }
+
+        select,
+        input[type="text"],
+        input[type="password"] {
+            padding: 8px 12px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 6px;
+            background-color: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            font-size: 13px;
+            cursor: auto !important;
+        }
+
+        select:focus,
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--ziyit-primary);
+        }
+
+        button {
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        button:disabled {
+            background-color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        button.sec {
+            background-color: transparent;
+            color: var(--ziyit-text-primary);
+            border: 1px solid var(--ziyit-border);
+        }
+
+        button.sec:hover {
+            background-color: var(--ziyit-bg-hover);
+        }
+
+        button.danger {
+            background-color: var(--ziyit-danger);
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .chk {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--ziyit-text-primary);
+            cursor: pointer;
+        }
+
+        .chk input {
+            cursor: pointer;
+        }
+
+        .badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .badge.ok {
+            background: rgba(40, 167, 69, .16);
+            color: var(--ziyit-success);
+            border: 1px solid var(--ziyit-success);
+        }
+
+        .badge.warn {
+            background: rgba(243, 167, 7, .16);
+            color: var(--ziyit-warning);
+            border: 1px solid var(--ziyit-warning);
+        }
+
+        .badge.bad {
+            background: rgba(242, 87, 103, .16);
+            color: var(--ziyit-danger);
+            border: 1px solid var(--ziyit-danger);
+        }
+
+        .pkey-card {
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            background: var(--ziyit-bg-card);
+        }
+
+        .pkey-card .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+
+        .pkey-card .nm {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .pkey-card .meta {
+            font-size: 12.5px;
+            line-height: 1.9;
+            color: var(--ziyit-text-secondary);
+            word-break: break-all;
+        }
+
+        .empty-box,
+        .error-box {
+            padding: 16px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 8px;
+        }
+
+        .error-box {
+            color: var(--ziyit-danger);
+            border-color: var(--ziyit-danger);
+        }
+
+        /* ---- 弹窗 ---- */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            z-index: 999;
+            overflow: auto;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-box {
+            max-width: 440px;
+            margin: 8vh auto 40px;
+            padding: 22px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, .25);
+        }
+
+        .modal-box h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            margin-bottom: 8px;
+        }
+
+        .modal-box .bt {
+            display: block;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--ziyit-text-primary);
+            margin: 10px 0 4px;
+        }
+
+        .modal-box input[type="text"],
+        .modal-box input[type="password"],
+        .modal-box select {
+            width: 100%;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .modal-err {
+            font-size: 12.5px;
+            color: var(--ziyit-danger);
+            margin-top: 10px;
+            min-height: 16px;
+        }
+
+        #totpQr {
+            display: block;
+            width: 200px;
+            height: 200px;
+            margin: 6px auto;
+            background: #fff;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            padding: 6px;
+        }
+
+        .secret-line {
+            font-size: 12.5px;
+            color: var(--ziyit-text-secondary);
+            line-height: 1.9;
+            text-align: center;
+            word-break: break-all;
+        }
+
+        .secret-line code {
+            font-family: Consolas, 'Courier New', monospace;
+            color: var(--ziyit-primary);
+            font-weight: 600;
+            user-select: all;
+        }
+
+        .codes {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .codes code {
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-align: center;
+            padding: 8px 4px;
+            background: var(--ziyit-bg);
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 6px;
+            color: var(--ziyit-text-primary);
+            user-select: all;
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <script src="../assets/blacklist.js"></script>
+</head>
+
+<body>
+
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/rc-key.html">我的RC密钥</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/security.html">账号安全</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page">
+        <h1>账号安全</h1>
+        <a href="./profile.html" class="back-link">返回用户中心</a>
+
+        <div class="banner" id="enrollBanner" style="display: none;"></div>
+
+        <div id="loadingBox">
+            <div class="ziyit-loading">
+                <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                <div class="ziyit-loader">
+                    <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                    <div class="loader-bar"><div class="loader-fill"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content" style="display: none;">
+
+            <section class="card">
+                <h2>总览</h2>
+                <div class="grid" id="overviewGrid"></div>
+                <p class="hint" id="overviewHint"></p>
+            </section>
+
+            <section class="card">
+                <h2>验证策略</h2>
+                <p class="hint">
+                    登录时需要几种验证方式。改成 2 种后，必须至少有 2 类<b>不同</b>的可用方式
+                    （同一类做两遍不算两种）；自家不给自家挖坑，改完不够数后端会直接拒绝。
+                </p>
+                <div class="row">
+                    <label class="bt" for="requiredFactors">要求验证方式数量</label>
+                    <select id="requiredFactors">
+                        <option value="1">1 种</option>
+                        <option value="2">2 种（更安全）</option>
+                    </select>
+                    <button type="button" id="saveRequired">保存</button>
+                </div>
+                <div class="row">
+                    <label class="chk"><input type="checkbox" id="emailFactor"> 开启邮箱验证码（需先验证邮箱）</label>
+                    <button type="button" id="saveEmailFactor">保存</button>
+                </div>
+                <div class="row">
+                    <label class="chk"><input type="checkbox" id="passwordEnabled"> 允许用密码登录（关闭即「无密码登录」）</label>
+                    <button type="button" id="savePasswordEnabled">保存</button>
+                </div>
+                <p class="hint" id="policyHint"></p>
+            </section>
+
+            <section class="card">
+                <h2>两步验证（2FA · 身份验证器）</h2>
+                <div id="totpStatus" class="hint"></div>
+                <div class="actions" id="totpActions"></div>
+            </section>
+
+            <section class="card">
+                <h2>一次性恢复码</h2>
+                <div id="recoveryStatus" class="hint"></div>
+                <div class="actions">
+                    <button type="button" id="regenCodes">重新生成恢复码</button>
+                </div>
+                <p class="hint">每个恢复码只能用一次，用于手机丢失 / 换设备时登录。重新生成会让旧的立刻全部作废。</p>
+            </section>
+
+            <section class="card">
+                <h2>Passkey（设备钥匙）</h2>
+                <p class="hint">
+                    Passkey 是绑在<b>具体设备</b>上的钥匙，用指纹 / Windows Hello / 安全密钥解锁，免输密码；
+                    换电脑或换手机会刷不了 —— 建议至少在两个设备上各绑一个（一个账号最多 10 个），
+                    并保留 2FA / 恢复码作为退路。
+                </p>
+                <div id="passkeyList"></div>
+                <div class="actions">
+                    <input type="text" id="passkeyName" placeholder="备注名（可选），如「我的笔记本」">
+                    <button type="button" id="bindPasskeyBtn">绑定 Passkey</button>
+                </div>
+                <p class="hint" id="passkeyHint"></p>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- 身份证明弹窗：所有「弱化」安全设置的操作都要先过这一关 -->
+    <div class="modal" id="proofModal">
+        <div class="modal-box">
+            <h3 id="proofTitle">身份验证</h3>
+            <p class="hint" id="proofTip"></p>
+            <div id="proofFactorRow">
+                <label class="bt" for="proofFactor">验证方式</label>
+                <select id="proofFactor"></select>
+            </div>
+            <label class="bt" for="proofSecret" id="proofSecretLabel">登录密码</label>
+            <input type="password" id="proofSecret" autocomplete="current-password" placeholder="输入登录密码">
+            <div class="modal-actions">
+                <button type="button" id="proofOk">确认</button>
+                <button type="button" class="sec" id="proofCancel">取消</button>
+            </div>
+            <p class="modal-err" id="proofErr"></p>
+        </div>
+    </div>
+
+    <!-- 2FA 绑定弹窗：qrPng 直接 <img src>，不需要二维码库 -->
+    <div class="modal" id="totpModal">
+        <div class="modal-box">
+            <h3>绑定 2FA（身份验证器）</h3>
+            <p class="hint">
+                用微软 / Google Authenticator 等扫描下面的二维码，然后输入 6 位验证码完成绑定。
+                密钥 15 分钟内有效，过期请关掉重来。
+            </p>
+            <img id="totpQr" alt="2FA 二维码">
+            <p class="secret-line">扫不了码就手动输入密钥：<code id="totpSecret"></code></p>
+            <label class="bt" for="totpCode">6 位验证码</label>
+            <input type="text" id="totpCode" inputmode="numeric" autocomplete="one-time-code" placeholder="输入 6 位动态码">
+            <div class="modal-actions">
+                <button type="button" id="totpEnableBtn">确认绑定</button>
+                <button type="button" class="sec" id="totpCancel">取消</button>
+            </div>
+            <p class="modal-err" id="totpErr"></p>
+        </div>
+    </div>
+
+    <!-- 恢复码弹窗：后端只存 hash，只回这一次，必须让用户确认已保存 -->
+    <div class="modal" id="codesModal">
+        <div class="modal-box">
+            <h3 id="codesTitle">请立即保存这些恢复码</h3>
+            <p class="hint">
+                每个只能用一次，用于手机丢失 / 换设备时登录。后端只保存哈希值，
+                <b>关掉这个弹窗之后就再也查不回来了</b>。
+            </p>
+            <div class="codes" id="codesBox"></div>
+            <label class="chk"><input type="checkbox" id="codesConfirm"> 我已抄写 / 保存在安全的地方</label>
+            <div class="modal-actions">
+                <button type="button" id="codesDone" disabled>完成</button>
+                <button type="button" class="sec" id="codesCopy">复制全部</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var enrolling = /[?&]enroll=1/.test(window.location.search);
+            var enrollToken = '';
+            if (enrolling) {
+                try { enrollToken = sessionStorage.getItem('ziyit_enroll_token') || ''; } catch (e) { }
+            }
+            if (enrollToken) {
+                // 受限票据只在安全中心接口被认，别的接口一律 401
+                ZIYIT_API.setEnrollToken(enrollToken);
+            } else if (!ZIYIT_API.getToken()) {
+                alert('请先登录后再进入账号安全');
+                window.location.href = './';
+                return;
+            }
+
+            var state = null;
+
+            var loadingBox = document.getElementById('loadingBox');
+            var content = document.getElementById('content');
+            var enrollBanner = document.getElementById('enrollBanner');
+            var overviewGrid = document.getElementById('overviewGrid');
+            var overviewHint = document.getElementById('overviewHint');
+            var policyHint = document.getElementById('policyHint');
+            var requiredFactorsSel = document.getElementById('requiredFactors');
+            var emailFactorChk = document.getElementById('emailFactor');
+            var passwordEnabledChk = document.getElementById('passwordEnabled');
+            var totpStatus = document.getElementById('totpStatus');
+            var totpActions = document.getElementById('totpActions');
+            var recoveryStatus = document.getElementById('recoveryStatus');
+            var passkeyList = document.getElementById('passkeyList');
+            var passkeyHint = document.getElementById('passkeyHint');
+            var passkeyName = document.getElementById('passkeyName');
+            var bindPasskeyBtn = document.getElementById('bindPasskeyBtn');
+
+            /* ---------- 小工具 ---------- */
+
+            function esc(s) {
+                return String(s == null ? '' : s)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            function fmtTime(t) {
+                if (!t) return '-';
+                var d = new Date(t);
+                if (isNaN(d.getTime())) return esc(t);
+                var p = function (x) { return (x < 10 ? '0' : '') + x; };
+                return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' '
+                    + p(d.getHours()) + ':' + p(d.getMinutes());
+            }
+
+            function errMsg(err, fallback) {
+                if (err && err.data) {
+                    var d = err.data.detail;
+                    if (typeof d === 'string' && d) return d;
+                    if (d && typeof d === 'object') {
+                        if (typeof d.message === 'string' && d.message) return d.message;
+                        if (typeof d.msg === 'string' && d.msg) return d.msg;
+                        try { return JSON.stringify(d); } catch (e) { }
+                    }
+                    if (typeof err.data.message === 'string' && err.data.message) return err.data.message;
+                }
+                if (err && err.status === 401) return '凭据无效或已过期，请重新登录后再试';
+                if (err && err.status === 403) return '身份证明失败，或这个操作会不够要求的验证方式数量';
+                return (err && err.message) || fallback || '请求失败，请稍后再试';
+            }
+
+            function factorLabel(f) {
+                if (f === 'password') return '密码';
+                if (f === 'email') return '邮箱验证码';
+                if (f === 'totp') return '2FA 动态码';
+                if (f === 'recovery') return '一次性恢复码';
+                if (f === 'passkey') return 'Passkey';
+                return f;
+            }
+
+            function openModal(el) { el.classList.add('show'); }
+            function closeModal(el) { el.classList.remove('show'); }
+
+            /* ---------- 身份证明弹窗 ---------- */
+
+            var proofModal = document.getElementById('proofModal');
+            var proofTitle = document.getElementById('proofTitle');
+            var proofTip = document.getElementById('proofTip');
+            var proofFactorSel = document.getElementById('proofFactor');
+            var proofFactorRow = document.getElementById('proofFactorRow');
+            var proofSecret = document.getElementById('proofSecret');
+            var proofSecretLabel = document.getElementById('proofSecretLabel');
+            var proofErr = document.getElementById('proofErr');
+            var proofResolve = null;
+
+            /**
+             * 收身份证明。opts:
+             *   noPassword  true = 不接受只用密码（2FA 已启用时的「弱化」操作）
+             *   weakening   true = 弱化（已绑 2FA 时后端不收纯密码）
+             */
+            function askProof(opts) {
+                var o = opts || {};
+                return new Promise(function (resolve) {
+                    var list = [];
+                    if (state && state.totpEnabled) list.push('totp');
+                    if (state && state.recoveryCodesLeft > 0) list.push('recovery');
+                    var passwordUsable = !o.noPassword
+                        && !(o.weakening && state && state.totpEnabled)
+                        && !(state && state.passwordEnabled === false);
+                    if (passwordUsable) list.push('password');
+
+                    if (!list.length) {
+                        alert('当前没有可用的身份证明方式，请先绑定 2FA，或先登录后重新进入本页');
+                        resolve(null);
+                        return;
+                    }
+
+                    proofTitle.textContent = o.title || '身份验证';
+                    proofTip.textContent = o.tip || '安全设置改动需要出示身份证明，防止登录凭据被偷后被人改掉安全选项。';
+                    proofErr.textContent = '';
+                    proofFactorSel.innerHTML = list.map(function (f) {
+                        return '<option value="' + f + '">' + esc(factorLabel(f)) + '</option>';
+                    }).join('');
+                    proofFactorRow.style.display = list.length > 1 ? 'block' : 'none';
+                    syncProofInput();
+                    proofSecret.value = '';
+                    proofResolve = resolve;
+                    openModal(proofModal);
+                    proofSecret.focus();
+                });
+            }
+
+            function syncProofInput() {
+                var factor = proofFactorSel.value;
+                proofErr.textContent = '';
+                proofSecret.value = '';
+                if (factor === 'password') {
+                    proofSecretLabel.textContent = '登录密码';
+                    proofSecret.type = 'password';
+                    proofSecret.setAttribute('autocomplete', 'current-password');
+                    proofSecret.placeholder = '输入登录密码';
+                } else if (factor === 'recovery') {
+                    proofSecretLabel.textContent = '一次性恢复码';
+                    proofSecret.type = 'text';
+                    proofSecret.setAttribute('autocomplete', 'one-time-code');
+                    proofSecret.placeholder = '输入 10 位恢复码';
+                } else {
+                    proofSecretLabel.textContent = '2FA 验证码';
+                    proofSecret.type = 'text';
+                    proofSecret.setAttribute('autocomplete', 'one-time-code');
+                    proofSecret.placeholder = '输入 6 位动态码';
+                }
+            }
+
+            function finishProof(value) {
+                var r = proofResolve;
+                proofResolve = null;
+                closeModal(proofModal);
+                if (r) r(value);
+            }
+
+            function buildProof() {
+                var factor = proofFactorSel.value;
+                var raw = proofSecret.value;
+                if (!raw || !raw.trim()) {
+                    proofErr.textContent = factor === 'password' ? '请输入登录密码' : '请输入验证码';
+                    return null;
+                }
+                var body = { factor: factor };
+                if (factor === 'password') {
+                    // 密码一律传 md5（Base64），和后端登录口径一致
+                    body.password = CryptoJS.MD5(raw).toString(CryptoJS.enc.Base64);
+                } else {
+                    body.code = raw.trim();
+                }
+                return body;
+            }
+
+            proofFactorSel.addEventListener('change', syncProofInput);
+            document.getElementById('proofCancel').addEventListener('click', function () { finishProof(null); });
+            proofModal.addEventListener('click', function (e) {
+                if (e.target === proofModal) finishProof(null);
+            });
+            proofSecret.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('proofOk').click();
+                }
+            });
+            document.getElementById('proofOk').addEventListener('click', function () {
+                var body = buildProof();
+                if (body) finishProof(body);
+            });
+
+            /* ---------- 恢复码弹窗 ---------- */
+
+            var codesModal = document.getElementById('codesModal');
+            var codesTitle = document.getElementById('codesTitle');
+            var codesBox = document.getElementById('codesBox');
+            var codesConfirm = document.getElementById('codesConfirm');
+            var codesDone = document.getElementById('codesDone');
+            var codesCopy = document.getElementById('codesCopy');
+            var codesResolve = null;
+            var codesRaw = [];
+
+            // 必须勾上「已保存」才放行关闭 —— 后端不会再给第二次
+            function showCodes(codes, title) {
+                return new Promise(function (resolve) {
+                    codesRaw = codes || [];
+                    codesTitle.textContent = title || '请立即保存这些恢复码';
+                    codesBox.innerHTML = codesRaw.map(function (c) {
+                        return '<code>' + esc(c) + '</code>';
+                    }).join('');
+                    codesConfirm.checked = false;
+                    codesDone.disabled = true;
+                    codesResolve = resolve;
+                    openModal(codesModal);
+                });
+            }
+
+            codesConfirm.addEventListener('change', function () {
+                codesDone.disabled = !codesConfirm.checked;
+            });
+            codesCopy.addEventListener('click', function () {
+                var text = codesRaw.join('\n');
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(function () {
+                        codesCopy.textContent = '已复制';
+                        setTimeout(function () { codesCopy.textContent = '复制全部'; }, 1500);
+                    }, function () {
+                        alert('复制失败，请手动选择后复制');
+                    });
+                } else {
+                    alert('当前浏览器不支持自动复制，请手动选择后复制');
+                }
+            });
+            codesDone.addEventListener('click', function () {
+                var r = codesResolve;
+                codesResolve = null;
+                closeModal(codesModal);
+                if (r) r();
+            });
+
+            /* ---------- 2FA 绑定弹窗 ---------- */
+
+            var totpModal = document.getElementById('totpModal');
+            var totpQr = document.getElementById('totpQr');
+            var totpSecret = document.getElementById('totpSecret');
+            var totpCode = document.getElementById('totpCode');
+            var totpErr = document.getElementById('totpErr');
+            var totpEnableBtn = document.getElementById('totpEnableBtn');
+
+            document.getElementById('totpCancel').addEventListener('click', function () {
+                closeModal(totpModal);
+            });
+            totpModal.addEventListener('click', function (e) {
+                if (e.target === totpModal) closeModal(totpModal);
+            });
+
+            // 绑定成功后如果回包带 accessToken，说明是被强制绑定的，登录流程已算完
+            function afterEnroll(res) {
+                var token = res && (res.accessToken || res.access_token || res.token);
+                if (token) {
+                    ZIYIT_API.setToken(token, false);
+                    ZIYIT_API.setEnrollToken(null);
+                    try { sessionStorage.removeItem('ziyit_enroll_token'); } catch (e) { }
+                    alert('第二方式已绑定，正在进入……');
+                    window.location.href = '../';
+                    return true;
+                }
+                return false;
+            }
+
+            function doTotpEnable() {
+                var code = (totpCode.value || '').trim();
+                if (!code) {
+                    totpErr.textContent = '请输入 6 位动态码';
+                    return;
+                }
+                totpErr.textContent = '';
+                totpEnableBtn.disabled = true;
+                ZIYIT_API.totpEnable(code).then(function (res) {
+                    closeModal(totpModal);
+                    var codes = (res && res.recoveryCodes) || [];
+                    var next = function () {
+                        if (afterEnroll(res)) return;
+                        alert((res && res.message) || '2FA 已启用');
+                        load();
+                    };
+                    if (codes.length) return showCodes(codes).then(next);
+                    return next();
+                }).catch(function (err) {
+                    totpErr.textContent = errMsg(err, '绑定失败，请检查验证码是否正确');
+                }).finally(function () {
+                    totpEnableBtn.disabled = false;
+                });
+            }
+
+            totpEnableBtn.addEventListener('click', doTotpEnable);
+            totpCode.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    doTotpEnable();
+                }
+            });
+
+            /* ---------- 渲染 ---------- */
+
+            function renderAll() {
+                renderOverview();
+                renderPolicy();
+                renderTotp();
+                renderRecovery();
+                renderPasskey();
+            }
+
+            function renderOverview() {
+                var s = state || {};
+                var available = (s.availableFactors || []).map(factorLabel).join('、') || '-';
+                var items = [
+                    ['账号 ID', esc(s.userId)],
+                    ['邮箱', esc(s.email || '未绑定') + (s.email ? (s.emailVerified ? ' <span class="badge ok">已验证</span>' : ' <span class="badge warn">未验证</span>') : '')],
+                    ['要求验证方式', s.requiredFactors + ' 种' + (s.policySource === 'admin' ? '（管理员强制）' : '')],
+                    ['可用验证方式', esc(available)],
+                    ['2FA', s.totpEnabled ? '<span class="badge ok">已启用</span>' : '<span class="badge warn">未启用</span>'],
+                    ['Passkey', s.passkeyCount > 0 ? '<span class="badge ok">已绑定 ' + esc(s.passkeyCount) + ' 个</span>' : '<span class="badge warn">未绑定</span>'],
+                    ['恢复码剩余', esc(s.recoveryCodesLeft || 0) + ' 个'],
+                    ['密码登录', s.passwordEnabled === false ? '<span class="badge warn">已关闭（无密码登录）</span>' : '<span class="badge ok">已开启</span>']
+                ];
+                overviewGrid.innerHTML = items.map(function (it) {
+                    return '<div class="item"><span class="lbl">' + it[0] + '：</span>' + it[1] + '</div>';
+                }).join('');
+
+                var tips = [];
+                if (s.requiredFactors >= 2 && !s.passkeyCount && !s.totpEnabled) {
+                    tips.push('你的账号要求两种验证方式，但现在除了密码还没有第二种 —— 建议绑定 Passkey 或 2FA。');
+                } else if (s.requiredFactors >= 2 && s.passkeyCount === 0) {
+                    tips.push('建议再绑一个 Passkey：2FA 依赖手机，手机丢了要靠恢复码，Passkey 能多留一条路。');
+                }
+                if (s.totpEnabled && s.recoveryCodesLeft === 0) {
+                    tips.push('恢复码已经用完了，建议重新生成一批并保存好 —— 手机丢失时它是唯一的退路。');
+                }
+                if (s.passkeyCount > 0 && s.passkeyCount < 2) {
+                    tips.push('只在 1 个设备上绑了 Passkey，换设备就刷不了；建议在第二个设备上也绑一个。');
+                }
+                overviewHint.innerHTML = tips.join('<br>') || '';
+                overviewHint.style.display = tips.length ? 'block' : 'none';
+
+                if (s.enrollRequired) {
+                    enrollBanner.style.display = 'block';
+                    enrollBanner.innerHTML = '<b>你被要求先绑定第二种验证方式</b>：本次登录尚未完成，'
+                        + '请先绑定 2FA 或 Passkey（绑定成功即可直接进入），15 分钟内有效。';
+                }
+            }
+
+            function renderPolicy() {
+                var s = state || {};
+                requiredFactorsSel.value = String(s.requiredFactors || 1);
+                // 管理员强制两种，后端也会 403，前端干脆不给改
+                requiredFactorsSel.disabled = !!s.isAdmin || s.policySource === 'admin';
+                document.getElementById('saveRequired').disabled = requiredFactorsSel.disabled;
+
+                emailFactorChk.checked = !!s.emailFactor;
+                emailFactorChk.disabled = !s.emailVerified && !s.emailFactor;
+                document.getElementById('saveEmailFactor').disabled = emailFactorChk.disabled;
+
+                var canDisable = !!s.canDisablePassword;
+                passwordEnabledChk.checked = s.passwordEnabled !== false;
+                // 已开着密码且前提不满足 → 关不掉；已经是无密码状态 → 允许开回来
+                passwordEnabledChk.disabled = !canDisable && s.passwordEnabled !== false;
+                document.getElementById('savePasswordEnabled').disabled = passwordEnabledChk.disabled;
+
+                var notes = [];
+                if (s.isAdmin || s.policySource === 'admin') {
+                    notes.push('管理员账号强制两种验证方式，不能调低。');
+                }
+                if (!s.emailVerified) {
+                    notes.push('邮箱还没验证，先把邮箱验证掉才能开启「邮箱验证码」。');
+                }
+                if (!canDisable) {
+                    var need = [];
+                    if (!s.emailVerified) need.push('已验证邮箱');
+                    if (!s.totpEnabled) need.push('绑定 2FA');
+                    if (!s.passkeyCount) need.push('绑定 Passkey');
+                    notes.push('想开启「无密码登录」（关掉密码登录），还需要：' + (need.join(' + ') || '满足全部前提') + '。');
+                }
+                if (s.totpEnabled) {
+                    notes.push('已启用 2FA 的账号，做弱化操作（调低数量 / 关邮箱验证 / 关密码登录）不接受只用密码，需要给 2FA 码或恢复码。');
+                }
+                policyHint.innerHTML = notes.join('<br>');
+                policyHint.style.display = notes.length ? 'block' : 'none';
+            }
+
+            function renderTotp() {
+                var s = state || {};
+                if (s.totpEnabled) {
+                    totpStatus.innerHTML = '<span class="badge ok">已启用</span> 启用时间：' + fmtTime(s.totpEnabledAt);
+                    totpActions.innerHTML = '<button type="button" id="totpDisableBtn" class="danger">关闭 2FA</button>';
+                    document.getElementById('totpDisableBtn').addEventListener('click', closeTotp);
+                } else {
+                    totpStatus.innerHTML = '<span class="badge warn">未启用</span> 建议绑定：登录时多一道 6 位动态码，密码泄露也不至于直接进账号。';
+                    totpActions.innerHTML = '<button type="button" id="totpSetupBtn">绑定 2FA</button>';
+                    document.getElementById('totpSetupBtn').addEventListener('click', startTotpSetup);
+                }
+            }
+
+            function renderRecovery() {
+                var s = state || {};
+                if (!s.totpEnabled) {
+                    recoveryStatus.textContent = '恢复码是 2FA 的备用通道，绑定 2FA 的时候会一次性下发 10 个。';
+                    document.getElementById('regenCodes').disabled = true;
+                    return;
+                }
+                document.getElementById('regenCodes').disabled = false;
+                recoveryStatus.innerHTML = '剩余 <b>' + esc(s.recoveryCodesLeft || 0) + '</b> 个（共 10 个）。';
+            }
+
+            function renderPasskey() {
+                var s = state || {};
+                var list = s.passkeys || [];
+                if (!list.length) {
+                    passkeyList.innerHTML = '<div class="empty-box">还没有绑定任何 Passkey。</div>';
+                } else {
+                    passkeyList.innerHTML = list.map(function (pk, i) {
+                        return '<div class="pkey-card"><div class="top">'
+                            + '<span class="nm">' + esc(pk.name || ('Passkey #' + (i + 1))) + '</span>'
+                            + '<span>' + (pk.backedUp ? '<span class="badge ok">已同步云端</span>' : '<span class="badge warn">仅本机</span>')
+                            + ' <button type="button" class="danger" data-del="' + esc(pk.credentialId) + '" data-name="' + esc(pk.name || '') + '">删除</button></span>'
+                            + '</div>'
+                            + '<div class="meta">绑定时间：' + fmtTime(pk.createdAt)
+                            + '　最后使用：' + fmtTime(pk.lastUsedAt) + '</div>'
+                            + '</div>';
+                    }).join('');
+                    Array.prototype.forEach.call(passkeyList.querySelectorAll('[data-del]'), function (btn) {
+                        btn.addEventListener('click', function () {
+                            deletePasskey(btn.getAttribute('data-del'), btn.getAttribute('data-name'));
+                        });
+                    });
+                }
+
+                var supported = !!window.passkeySupported && passkeySupported();
+                bindPasskeyBtn.disabled = !supported || list.length >= 10;
+                if (!supported) {
+                    passkeyHint.textContent = (window.passkeyUnsupportedReason && passkeyUnsupportedReason())
+                        || '当前环境不支持 Passkey。';
+                } else if (list.length >= 10) {
+                    passkeyHint.textContent = '已经绑满 10 个 Passkey，想再绑请先删掉不用的。';
+                } else {
+                    passkeyHint.textContent = '绑定时会弹出指纹 / Windows Hello / 安全密钥验证；必须从官网 https://ziyit-hacker.github.io/ 打开才能用。';
+                }
+            }
+
+            /* ---------- 动作 ---------- */
+
+            function load() {
+                loadingBox.style.display = 'block';
+                loadingBox.innerHTML = '<div class="ziyit-loading">'
+                    + '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>'
+                    + '<div class="ziyit-loader">'
+                    + '<div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>'
+                    + '<div class="loader-bar"><div class="loader-fill"></div></div>'
+                    + '</div></div>';
+                content.style.display = 'none';
+                return ZIYIT_API.securityOverview().then(function (data) {
+                    state = data || {};
+                    loadingBox.style.display = 'none';
+                    content.style.display = 'block';
+                    renderAll();
+                }).catch(function (err) {
+                    loadingBox.innerHTML = '<div class="error-box">加载失败：' + esc(errMsg(err)) + '</div>';
+                });
+            }
+
+            // 改策略的统一入口：先收身份证明，再合并进请求体
+            function applyPolicy(body, weakening, okText) {
+                return askProof({ weakening: weakening }).then(function (proof) {
+                    if (!proof) return;
+                    for (var k in proof) body[k] = proof[k];
+                    return ZIYIT_API.securityPolicy(body).then(function (data) {
+                        if (data && data.userId != null) state = data;
+                        renderAll();
+                        alert(okText || '已保存');
+                    }).catch(function (err) {
+                        alert('修改失败：' + errMsg(err));
+                    });
+                });
+            }
+
+            document.getElementById('saveRequired').addEventListener('click', function () {
+                var want = parseInt(requiredFactorsSel.value, 10) || 1;
+                if (want === state.requiredFactors) { alert('没有变化'); return; }
+                applyPolicy({ requiredFactors: want }, want < state.requiredFactors,
+                    want >= 2 ? '已改为要求两种验证方式' : '已改为只要求一种验证方式');
+            });
+
+            document.getElementById('saveEmailFactor').addEventListener('click', function () {
+                var want = !!emailFactorChk.checked;
+                if (want === !!state.emailFactor) { alert('没有变化'); return; }
+                applyPolicy({ emailFactor: want }, want === false,
+                    want ? '已开启邮箱验证码' : '已关闭邮箱验证码');
+            });
+
+            document.getElementById('savePasswordEnabled').addEventListener('click', function () {
+                var want = !!passwordEnabledChk.checked;
+                if (want === (state.passwordEnabled !== false)) { alert('没有变化'); return; }
+                applyPolicy({ passwordEnabled: want }, want === false,
+                    want ? '已开启密码登录' : '已开启无密码登录');
+            });
+
+            function startTotpSetup() {
+                var btn = document.getElementById('totpSetupBtn');
+                btn.disabled = true;
+                ZIYIT_API.totpSetup().then(function (d) {
+                    totpQr.src = (d && d.qrPng) || '';
+                    totpSecret.textContent = (d && d.secret) || '';
+                    totpCode.value = '';
+                    totpErr.textContent = '';
+                    openModal(totpModal);
+                }).catch(function (err) {
+                    alert('获取 2FA 密钥失败：' + errMsg(err));
+                }).finally(function () {
+                    btn.disabled = false;
+                });
+            }
+
+            function closeTotp() {
+                // 关闭 2FA 不接受只用密码，必须给 2FA 码或恢复码
+                askProof({
+                    noPassword: true,
+                    title: '关闭 2FA',
+                    tip: '开了 2FA 之后，密码单独不能关掉它 —— 请输入当前动态码或一个恢复码。'
+                }).then(function (proof) {
+                    if (!proof) return;
+                    return ZIYIT_API.totpDisable(proof).then(function (data) {
+                        if (data && data.userId != null) state = data;
+                        renderAll();
+                        alert('2FA 已关闭');
+                    }).catch(function (err) {
+                        alert('关闭失败：' + errMsg(err));
+                    });
+                });
+            }
+
+            document.getElementById('regenCodes').addEventListener('click', function () {
+                askProof({
+                    noPassword: true,
+                    title: '重新生成恢复码',
+                    tip: '旧的恢复码会立刻全部作废，请先确认新码能保存好。'
+                }).then(function (proof) {
+                    if (!proof) return;
+                    return ZIYIT_API.regenerateRecoveryCodes(proof).then(function (res) {
+                        var codes = (res && res.recoveryCodes) || [];
+                        if (!codes.length) {
+                            alert((res && res.message) || '已重新生成');
+                            return load();
+                        }
+                        return showCodes(codes, '新的恢复码（旧的已全部作废）').then(function () {
+                            alert('恢复码已更新，请妥善保存');
+                            return load();
+                        });
+                    }).catch(function (err) {
+                        alert('重新生成失败：' + errMsg(err));
+                    });
+                });
+            });
+
+            bindPasskeyBtn.addEventListener('click', function () {
+                if (!window.passkeySupported || !passkeySupported()) {
+                    alert((window.passkeyUnsupportedReason && passkeyUnsupportedReason()) || '当前环境不支持 Passkey');
+                    return;
+                }
+                bindPasskeyBtn.disabled = true;
+                bindPasskeyBtn.textContent = '等待设备验证…';
+                bindPasskey(passkeyName.value.trim() || undefined).then(function (res) {
+                    passkeyName.value = '';
+                    if (afterEnroll(res)) return;
+                    alert((res && res.message) || 'Passkey 已绑定');
+                    return load();
+                }).catch(function (err) {
+                    alert(window.passkeyErrorMessage ? passkeyErrorMessage(err) : errMsg(err, 'Passkey 绑定失败'));
+                }).finally(function () {
+                    bindPasskeyBtn.disabled = false;
+                    bindPasskeyBtn.textContent = '绑定 Passkey';
+                });
+            });
+
+            function deletePasskey(credentialId, name) {
+                askProof({
+                    weakening: true,
+                    title: '删除 Passkey',
+                    tip: '删除「' + (name || credentialId) + '」属于弱化安全设置，需要出示身份证明。'
+                }).then(function (proof) {
+                    if (!proof) return;
+                    proof.credentialId = credentialId;
+                    return ZIYIT_API.passkeyDelete(proof).then(function (res) {
+                        alert((res && res.message) || '已删除');
+                        return load();
+                    }).catch(function (err) {
+                        alert('删除失败：' + errMsg(err));
+                    });
+                });
+            }
+
+            load();
+        });
+    </script>
+
+    <script>
+        function checkLoginStatus() {
+            var navItems = document.querySelectorAll('.nav-item');
+            if (!ZIYIT_API.getToken()) {
+                // 被强制绑定第二方式时用的是受限票据，拿不到 /auth/me —— 只显示公共导航
+                navItems.forEach(function (item) {
+                    var show = item.getAttribute('data-role') === 'all';
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                var isVip = ZIYIT_API.isVip(user);
+                var uname = user.username || '';
+                var isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(function (item) {
+                    var role = item.getAttribute('data-role');
+                    var show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                var loginLink = document.getElementById('loginLink');
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(function (item) {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>
