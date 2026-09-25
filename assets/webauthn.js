@@ -1,7 +1,8 @@
 /**
  * Passkey（WebAuthn）前端工具 —— 只依赖浏览器原生 API，不引任何第三方库。
  * 契约见「网站功能与结构说明.md」61.3 / 61.7。三个必须记住的坑：
- *   1. challenge / id / rawId 是 base64url 字符串：喂浏览器前转 ArrayBuffer，回传时再转回来；
+ *   1. challenge / id / rawId / user.id 是 base64url 字符串：喂浏览器前转 ArrayBuffer，回传时再转回来
+ *      （最容易漏的是 user.id —— 展开 {...publicKey} 会把字符串原样带进去，浏览器直接抛错）；
  *   2. 注册时不要自己拼 authenticatorData，把 navigator.credentials.create() 的 response 原样回传
  *      （后端从 attestationObject 里自己解 CBOR）；
  *   3. 必须 HTTPS 且「页面域名 == RP ID」（官网是 ziyit-hacker.github.io），
@@ -53,6 +54,11 @@
     function toCreationOptions(publicKey) {           // 注册用
         var pk = Object.assign({}, publicKey);
         pk.challenge = b64urlToBuf(publicKey.challenge);                       // ← 必转
+        // user.id 同样是 base64url：展开会把字符串原样带进去，浏览器读 publicKey.user
+        // 时直接抛错，请求根本没发出去 —— 所以这里必须再单独转一次
+        if (publicKey.user) {
+            pk.user = Object.assign({}, publicKey.user, { id: b64urlToBuf(publicKey.user.id) });
+        }
         pk.excludeCredentials = (publicKey.excludeCredentials || []).map(function (c) {
             return { type: c.type, id: b64urlToBuf(c.id), transports: c.transports };
         });
