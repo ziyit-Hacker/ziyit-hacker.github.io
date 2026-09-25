@@ -314,10 +314,15 @@
                     style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1px solid var(--ziyit-border);">
                 <span style="font-size:13px;color:var(--ziyit-text-secondary);">当前头像（未设置时显示默认占位图）；设置后所有文档上的头像会立刻同步。</span>
             </div>
-            <input type="text" id="newAvatar" autocomplete="off" placeholder="图片ID（64 位十六进制，须为你自己上传过的图片）">
-            <button id="avatarBtn" type="button">设置头像</button>
-            <button id="avatarClearBtn" type="button"
-                style="background: var(--ziyit-text-secondary); margin-left: 8px;">清除头像</button>
+            <input type="file" id="avatarFile" accept="image/*" style="display: none;">
+            <button id="avatarPickBtn" type="button">选择图片并设为头像</button>
+            <span style="font-size:13px;color:var(--ziyit-text-secondary);margin-left:8px;">支持 JPG / PNG / GIF / WebP，≤10MB；上传后由服务器自动压缩（与文档图片同一套）</span>
+            <div style="margin-top:10px;">
+                <input type="text" id="newAvatar" autocomplete="off" placeholder="或直接填图片ID（64 位十六进制，须为你自己上传过的图片）">
+                <button id="avatarBtn" type="button">用图片ID设置</button>
+                <button id="avatarClearBtn" type="button"
+                    style="background: var(--ziyit-text-secondary); margin-left: 8px;">清除头像</button>
+            </div>
             <div class="result" id="avatarResult"></div>
         </div>
 
@@ -915,16 +920,27 @@
 
             // ---- 头像设置 / 清除（PUT /users/avatar） ----
             // 请求体 { avatar: "<图片ID>" }，空串表示清除；图片 ID 必须是本账号自己上传过的图片。
+            // 也可以直接选文件：先 POST /img/upload（后端有损压缩为 ≤50KB 的 PNG），拿回 ID 再设置。
             (function () {
                 const btn = document.getElementById('avatarBtn');
                 const clearBtn = document.getElementById('avatarClearBtn');
                 const input = document.getElementById('newAvatar');
                 const result = document.getElementById('avatarResult');
+                const pickBtn = document.getElementById('avatarPickBtn');
+                const fileInput = document.getElementById('avatarFile');
+                const AVATAR_MAX_BYTES = 10 * 1024 * 1024;   // 与后端 /img/upload 的上限保持一致
 
                 function showAvatarResult(msg, ok) {
                     result.textContent = msg;
                     result.className = 'result ' + (ok ? 'success' : 'error');
                     result.style.display = 'block';
+                }
+
+                function detailOf(err) {
+                    const d = err && err.data && err.data.detail;
+                    if (typeof d === 'string' && d) return d;
+                    if (d && typeof d.message === 'string' && d.message) return d.message;
+                    return '';
                 }
 
                 function applyAvatar(id, done) {
@@ -936,6 +952,49 @@
                         done(err);
                     });
                 }
+
+                // 选文件 → 上传（服务器压缩）→ 设为头像
+                pickBtn.addEventListener('click', function () {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', function () {
+                    const file = fileInput.files && fileInput.files[0];
+                    fileInput.value = '';                    // 清空，方便重复选同一个文件
+                    if (!file) return;
+                    if (file.type.indexOf('image/') !== 0) {
+                        showAvatarResult('请选择图片文件（JPG / PNG / GIF / WebP）', false);
+                        return;
+                    }
+                    if (file.size > AVATAR_MAX_BYTES) {
+                        showAvatarResult('图片不能超过 10MB，请先压缩后再上传', false);
+                        return;
+                    }
+                    pickBtn.disabled = true;
+                    showAvatarResult('上传中…（服务器会自动压缩）', true);
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    ZIYIT_API.request('/img/upload', { method: 'POST', body: fd }).then(function (data) {
+                        const id = (data && data.id) || '';
+                        if (!id) {
+                            pickBtn.disabled = false;
+                            showAvatarResult('上传失败：服务器没有返回图片 ID', false);
+                            return;
+                        }
+                        applyAvatar(id, function (err) {
+                            pickBtn.disabled = false;
+                            if (err) {
+                                if (err.status === 401) showAvatarResult('登录已过期，请重新登录', false);
+                                else showAvatarResult('设置失败：' + (detailOf(err) || '请稍后再试'), false);
+                                return;
+                            }
+                            showAvatarResult('上传并设置成功（已压缩），所有文档上的头像已同步', true);
+                        });
+                    }).catch(function (err) {
+                        pickBtn.disabled = false;
+                        showAvatarResult('上传失败：' + (detailOf(err) || (err && err.message) || '请稍后再试'), false);
+                    });
+                });
 
                 btn.addEventListener('click', function () {
                     const id = input.value.trim();

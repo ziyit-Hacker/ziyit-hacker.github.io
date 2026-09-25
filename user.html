@@ -208,7 +208,7 @@
 
 <body>
     <div style="position: absolute; right: 10px; top: 10px; text-align: center;">
-        <img id="userAvatar" src="" alt="" style="width: 65px; height: 50px; display: none;">
+        <img id="userAvatar" src="" alt="" style="width: 65px; height: 65px; border-radius: 50%; object-fit: cover; border: 1px solid var(--ziyit-border); display: none;">
         <div id="userInfo" style="color: var(--ziyit-text-primary); font-size: 18px;">
             <strong><span id="usernameDisplay">未登录</span></strong>
             <br>
@@ -318,7 +318,9 @@
             const userTypeDisplay = document.getElementById('userTypeDisplay');
 
             ZIYIT_API.currentUser().then(function (user) {
-                userAvatar.src = './assets/ziyit.png';
+                // 显示本人头像（/auth/me 下发的 avatarUrl，未设置时回退默认占位图）
+                userAvatar.src = user.avatarUrl || './assets/ziyit.png';
+                userAvatar.alt = (user.username || '用户') + ' 的头像';
                 userAvatar.style.display = 'block';
                 usernameDisplay.textContent = user.username || '未知';
                 userTypeDisplay.textContent = ZIYIT_API.isVip(user) ? 'vip用户' : '普通用户';
