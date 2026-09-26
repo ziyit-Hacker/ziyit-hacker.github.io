@@ -485,10 +485,15 @@
             pendingRemember = wantRemember();
             if (rememberToken) {
                 ZIYIT_API.setRememberToken(rememberToken);
-            } else if (pendingRemember && pendingUsername && pendingPasswordMd5) {
-                // 后端还没下发永久凭证时的旧兜底：本地存「用户名|md5」，401 时静默重登一次。
-                // 永久凭证上线后这段可以整段删掉。
-                ZIYIT_API.setCredentials(pendingUsername, pendingPasswordMd5, true);
+            } else {
+                // 这次没拿到永久凭证（没勾保持登录，或后端还没上线）：把上一次留下的清掉。
+                // 留着它就会顶替本次会话 —— 换个账号登录还会带着旧身份的凭证。
+                ZIYIT_API.clearRememberToken();
+                if (pendingRemember && pendingUsername && pendingPasswordMd5) {
+                    // 后端还没下发永久凭证时的旧兜底：本地存「用户名|md5」，401 时静默重登一次。
+                    // 永久凭证上线后这一段可以整段删掉。
+                    ZIYIT_API.setCredentials(pendingUsername, pendingPasswordMd5, true);
+                }
             }
             ZIYIT_API.setToken(token, pendingRemember);
             window.location.href = '../';

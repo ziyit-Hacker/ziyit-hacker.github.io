@@ -74,11 +74,18 @@
         if (!token) return;
         setCookie(REMEMBER_COOKIE, token, 3650);   // 本地给足 10 年，真正什么时候失效由服务端说了算
         localStorage.setItem(REMEMBER_KEY, token);
+        // 站内还有上千个自动生成的历史页面（Backrooms 静态页、管理员后台引的 blacklist.js 等）
+        // 只会读 authToken 这个老键来判断登录态、拼 Bearer 头，所以把永久凭证同时镜像进去，
+        // 它们就自动用上长期登录，不必逐个文件去改。
+        setCookie('authToken', token, 3650);
+        localStorage.setItem('authToken', token);
     }
 
     function clearRememberToken() {
         document.cookie = REMEMBER_COOKIE + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         localStorage.removeItem(REMEMBER_KEY);
+        // 老键里存的是这张凭证的镜像，不同步清掉的话 getToken() 会从那里又把它捞回来
+        clearLegacyTokenKeys();
     }
 
     function getToken() {
@@ -86,6 +93,9 @@
     }
 
     function setToken(token, remember) {
+        // 手里已经有永久凭证时，authToken 这个老键必须留给它（见 setRememberToken 的镜像），
+        // 再往里面塞 7 天有效的短期 JWT 会把长期登录顶掉。
+        if (getRememberToken()) return;
         var days = remember ? 60 : null;
         if (days) {
             setCookie('authToken', token, days);
@@ -95,12 +105,16 @@
         localStorage.setItem('authToken', token);
     }
 
-    function clearToken() {
+    // 清掉「老键」authToken（永久凭证会镜像进这两个键，见 setRememberToken，所以清的时候必须一起清）
+    function clearLegacyTokenKeys() {
         document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/ziyit/;';
         document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/ziyit;';
         document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
         localStorage.removeItem('authToken');
+    }
+
+    function clearToken() {
         clearRememberToken();
         clearCredentials();
     }

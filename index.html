@@ -1186,7 +1186,8 @@
 
             if (ut > 240 && (username === 'cache' || username === 'temp')) {
                 localStorage.setItem('ut', 1024);
-                localStorage.removeItem('authToken');
+                // 体验结束＝把本地凭据整个清掉（含「保持登录」的永久凭证，否则自动又登回来）
+                ZIYIT_API.clearToken();
                 location.reload();
                 return;
             }
@@ -1210,7 +1211,7 @@
                         localStorage.setItem('ut', currentUt);
                         if (currentUt + 1 > 240) {
                             alert('体验时间已结束');
-                            localStorage.removeItem('authToken');
+                            ZIYIT_API.clearToken();
                             location.reload();
                             clearInterval(timer);
                         }

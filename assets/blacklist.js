@@ -186,8 +186,8 @@ function getCurrentUser() {
     
      
     const userData = getCookie('authToken') || localStorage.getItem('authToken');
-    console.log('从cookie/localStorage获取的用户数据:', userData);
-    
+    // 不要打印 userData 本身：可能是「保持登录」的永久凭证，控制台里能看到的 token 会被同页脚本顺走
+
     if (!userData) {
         console.log('未找到任何用户数据');
         return null;
@@ -208,7 +208,7 @@ function getCurrentUser() {
         console.error('解析用户数据失败:', error);
     }
     
-    console.log('用户数据解析失败，返回原始数据:', userData);
+    console.log('用户数据解析失败');
     return userData;  
 }
 
