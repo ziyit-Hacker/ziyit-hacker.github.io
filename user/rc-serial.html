@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RC 授权管理 - ZIYIT</title>
+    <meta name="description" content="生成一次性 RC 授权串，用它就能让 RC 客户端换取长期登录凭据，无需 RC 许可证密钥。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/rc-serial.html">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--ziyit-primary);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: var(--ziyit-bg);
+        }
+
+        .page {
+            max-width: 880px;
+            margin: 20px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .page h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            margin: 6px 0 16px;
+            line-height: 1.7;
+        }
+
+        .back-link {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        h2 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            margin: 26px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--ziyit-border);
+        }
+
+        .gen-box {
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 16px;
+            background: var(--ziyit-bg);
+        }
+
+        .gen-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .gen-row input[type="text"] {
+            flex: 1 1 220px;
+            min-width: 0;
+            padding: 9px 12px;
+            font-size: 14px;
+            color: var(--ziyit-text-primary);
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 6px;
+        }
+
+        .btn {
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        .btn:disabled {
+            background-color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        .btn.ghost {
+            background-color: transparent;
+            color: var(--ziyit-primary);
+            border: 1px solid var(--ziyit-primary);
+        }
+
+        .btn.ghost:hover {
+            background-color: rgba(0, 0, 0, .04);
+        }
+
+        .btn.small {
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 400;
+        }
+
+        .btn.danger {
+            background-color: var(--ziyit-danger);
+        }
+
+        /* 生成结果：明文串只在这里显示一次 */
+        #genResult {
+            display: none;
+            margin-top: 14px;
+            border: 1px solid var(--ziyit-warning);
+            background: rgba(243, 156, 18, .10);
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        #genResult .title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ziyit-warning);
+            margin-bottom: 8px;
+        }
+
+        .serial-code {
+            display: block;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.9;
+            word-break: break-all;
+            user-select: all;
+            color: var(--ziyit-primary);
+            background: var(--ziyit-bg-card);
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+        }
+
+        #genResult .warn {
+            font-size: 13px;
+            line-height: 1.9;
+            color: var(--ziyit-text-primary);
+        }
+
+        #genResult .warn b {
+            color: var(--ziyit-danger);
+        }
+
+        .card {
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            background: var(--ziyit-bg);
+        }
+
+        .card .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .card .title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .card .line {
+            font-size: 13px;
+            line-height: 2;
+            color: var(--ziyit-text-primary);
+            word-break: break-all;
+        }
+
+        .card .line .lbl {
+            color: var(--ziyit-text-secondary);
+        }
+
+        .card code {
+            font-family: Consolas, 'Courier New', monospace;
+            font-weight: 600;
+            color: var(--ziyit-primary);
+        }
+
+        .badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .badge.ok {
+            background: rgba(39, 174, 96, .16);
+            color: var(--ziyit-success);
+            border: 1px solid var(--ziyit-success);
+        }
+
+        .badge.warn {
+            background: rgba(243, 156, 18, .16);
+            color: var(--ziyit-warning);
+            border: 1px solid var(--ziyit-warning);
+        }
+
+        .badge.bad {
+            background: rgba(231, 76, 60, .16);
+            color: var(--ziyit-danger);
+            border: 1px solid var(--ziyit-danger);
+        }
+
+        .error-box,
+        .empty-box {
+            padding: 18px;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.9;
+            color: var(--ziyit-text-secondary);
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 10px;
+        }
+
+        .error-box {
+            color: var(--ziyit-danger);
+            border-color: var(--ziyit-danger);
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <script src="../assets/blacklist.js"></script>
+</head>
+
+<body>
+
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/rc-key.html">我的RC密钥</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/rc-serial.html">RC授权管理</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/dlc.html">我的扩展包</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/file-keys.html">我的文件密钥</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/pentest.html">渗透测试</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page">
+        <h1>RC 授权管理</h1>
+        <a href="javascript:history.back()" class="back-link">返回</a>
+        <p class="page-sub">
+            在这里生成一串 <code>RCS-…</code> 开头的<b>一次性授权串</b>，把它粘进 RC 客户端的「RC 授权串」输入框，
+            RC 就能换到一张长期登录凭据，之后一直用它访问后端。<br>
+            <b>没有 RC 许可证密钥？用这里生成的授权串也能在 RC 里登录</b>（渗透测试账号必须走这条路，它没有许可证）。
+        </p>
+
+        <div class="gen-box">
+            <div class="gen-row">
+                <input type="text" id="labelInput" maxlength="40" placeholder="备注（可选，填设备名好认，如「我的笔记本」）"
+                    autocomplete="off">
+                <button type="button" class="btn" id="genBtn">生成 RC 授权串</button>
+            </div>
+            <div id="genResult">
+                <div class="title">生成成功 —— 请立刻复制这串授权串</div>
+                <code class="serial-code" id="serialText"></code>
+                <div class="gen-row" style="margin-bottom: 8px;">
+                    <button type="button" class="btn ghost small" id="copySerialBtn">一键复制</button>
+                </div>
+                <div class="warn">
+                    <b>只显示一次</b>：服务器只保存它的哈希，关掉本页就再也看不到这一串了。<br>
+                    <b>15 分钟内有效</b>，<b>而且只能用一次</b>（兑换成功立刻作废）。<br>
+                    请立刻粘贴进 RC 客户端的「RC 授权串」框里换取长期凭据；不要截图发人、不要贴到公开的地方。
+                </div>
+                <div class="warn" id="genNotice" style="color: var(--ziyit-text-secondary);"></div>
+            </div>
+        </div>
+
+        <h2>我生成的授权串</h2>
+        <div id="serialArea" class="empty-box">加载中…</div>
+
+        <h2>RC 长期凭据</h2>
+        <p class="page-sub" style="margin-bottom: 10px;">
+            这些是 RC 客户端用授权串换到的长期凭据（只记哈希，这里看不到明文）。吊销后 RC 端下次请求就会失效，
+            需要重新用授权串换一张。吊销<b>不会</b>影响你在网页端的登录状态。
+        </p>
+        <div id="tokenArea" class="empty-box">加载中…</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!ZIYIT_API.getToken()) {
+                alert('请先登录后再管理 RC 授权');
+                window.location.href = './';
+                return;
+            }
+
+            var labelInput = document.getElementById('labelInput');
+            var genBtn = document.getElementById('genBtn');
+            var genResult = document.getElementById('genResult');
+            var serialText = document.getElementById('serialText');
+            var copySerialBtn = document.getElementById('copySerialBtn');
+            var genNotice = document.getElementById('genNotice');
+            var serialArea = document.getElementById('serialArea');
+            var tokenArea = document.getElementById('tokenArea');
+
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            function fmtTime(t) {
+                if (!t) return '-';
+                var d = new Date(t);
+                if (isNaN(d.getTime())) return esc(t);
+                var p = function (x) { return (x < 10 ? '0' : '') + x; };
+                return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+                    + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+            }
+
+            // 后端的 detail 一律原样展示：400（已有 3 个没用过的串）/ 429（生成太频繁）/ 403（账号被封禁）
+            function errMsg(err, fallback) {
+                if (err && err.data) {
+                    if (typeof err.data === 'string' && err.data) return err.data;
+                    if (err.data.detail) {
+                        return typeof err.data.detail === 'string' ? err.data.detail : JSON.stringify(err.data.detail);
+                    }
+                    if (err.data.message) return err.data.message;
+                }
+                if (err && err.message) return err.message;
+                if (err && err.status === 401) return '登录状态已失效，请重新登录';
+                return fallback || '请求失败，请稍后再试';
+            }
+
+            function copyText(text, btn, doneText) {
+                var done = function () {
+                    var old = btn.textContent;
+                    btn.textContent = doneText || '已复制';
+                    setTimeout(function () { btn.textContent = old; }, 1500);
+                };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(done, function () {
+                        alert('复制失败，请手动选中后复制');
+                    });
+                } else {
+                    alert('当前浏览器不支持自动复制，请手动选中后复制');
+                }
+            }
+
+            var serialStatusBadge = {
+                pending: '<span class="badge ok">未使用</span>',
+                used: '<span class="badge warn">已兑换</span>',
+                expired: '<span class="badge bad">已过期</span>',
+                revoked: '<span class="badge bad">已撤销</span>'
+            };
+
+            function renderSerials(data) {
+                var list = (data && data.serials) || [];
+                if (!list.length) {
+                    serialArea.className = 'empty-box';
+                    serialArea.innerHTML = '还没有生成过授权串。上面生成一串，粘进 RC 就能换到长期凭据。';
+                    return;
+                }
+                serialArea.className = '';
+                serialArea.innerHTML = list.map(function (s) {
+                    var html = '<div class="card"><div class="top">'
+                        + '<span class="title">…' + esc(s.serialTail || '') + '</span>'
+                        + (serialStatusBadge[s.status] || esc(s.statusLabel || s.status || ''))
+                        + '</div>';
+                    if (s.label) html += '<div class="line"><span class="lbl">备注：</span>' + esc(s.label) + '</div>';
+                    html += '<div class="line"><span class="lbl">生成时间：</span>' + fmtTime(s.createdAt) + '</div>'
+                        + '<div class="line"><span class="lbl">失效时间：</span>' + fmtTime(s.expiresAt) + '</div>';
+                    if (s.usedAt) {
+                        html += '<div class="line"><span class="lbl">兑换时间：</span>' + fmtTime(s.usedAt) + '</div>';
+                        if (s.usedIp) html += '<div class="line"><span class="lbl">兑换 IP：</span>' + esc(s.usedIp) + '</div>';
+                    }
+                    if (s.status === 'pending') {
+                        html += '<div class="top" style="margin: 10px 0 0;"><button type="button" class="btn danger small"'
+                            + ' data-revoke-serial="' + esc(s.serialId) + '" data-tail="' + esc(s.serialTail || '') + '">撤销</button></div>';
+                    }
+                    return html + '</div>';
+                }).join('');
+            }
+
+            function renderTokens(data) {
+                var list = (data && data.tokens) || [];
+                if (!list.length) {
+                    tokenArea.className = 'empty-box';
+                    tokenArea.innerHTML = '还没有 RC 长期凭据。在 RC 里用授权串换取之后，这里会列出每一台设备。';
+                    return;
+                }
+                tokenArea.className = '';
+                tokenArea.innerHTML = list.map(function (t) {
+                    var active = !t.revokedAt;
+                    var html = '<div class="card"><div class="top">'
+                        + '<span class="title">' + esc(t.label || '未命名设备') + '</span>'
+                        + (active ? '<span class="badge ok">生效中</span>' : '<span class="badge bad">已吊销</span>')
+                        + '</div>'
+                        + '<div class="line"><span class="lbl">凭据 ID：</span><code>' + esc(t.tokenId || '') + '</code></div>'
+                        + '<div class="line"><span class="lbl">签发时间：</span>' + fmtTime(t.createdAt) + '</div>'
+                        + '<div class="line"><span class="lbl">最近使用：</span>' + fmtTime(t.lastSeenAt) + '</div>';
+                    if (t.lastIp) html += '<div class="line"><span class="lbl">最近 IP：</span>' + esc(t.lastIp) + '</div>';
+                    if (t.revokedAt) html += '<div class="line"><span class="lbl">吊销时间：</span>' + fmtTime(t.revokedAt) + '</div>';
+                    if (active) {
+                        html += '<div class="top" style="margin: 10px 0 0;"><button type="button" class="btn danger small"'
+                            + ' data-revoke-token="' + esc(t.tokenId) + '" data-label="' + esc(t.label || '') + '">吊销</button></div>';
+                    }
+                    return html + '</div>';
+                }).join('');
+            }
+
+            function load() {
+                return ZIYIT_API.rcSerialMine().then(function (data) {
+                    renderSerials(data);
+                    renderTokens(data);
+                }).catch(function (err) {
+                    serialArea.className = 'error-box';
+                    serialArea.innerHTML = '加载失败：' + esc(errMsg(err));
+                    tokenArea.className = 'error-box';
+                    tokenArea.innerHTML = '加载失败：' + esc(errMsg(err));
+                });
+            }
+
+            genBtn.addEventListener('click', function () {
+                genBtn.disabled = true;
+                var old = genBtn.textContent;
+                genBtn.textContent = '生成中…';
+                ZIYIT_API.rcSerialIssue(labelInput.value.trim()).then(function (data) {
+                    // 明文串只进 DOM，不写 localStorage / sessionStorage / URL / console
+                    serialText.textContent = (data && data.serial) || '';
+                    genNotice.textContent = (data && data.notice) || '';
+                    genResult.style.display = 'block';
+                    labelInput.value = '';
+                    return load();
+                }).catch(function (err) {
+                    alert('生成失败：' + errMsg(err));
+                }).finally(function () {
+                    genBtn.disabled = false;
+                    genBtn.textContent = old;
+                });
+            });
+
+            copySerialBtn.addEventListener('click', function () {
+                copyText(serialText.textContent || '', copySerialBtn);
+            });
+
+            serialArea.addEventListener('click', function (e) {
+                var btn = e.target.closest('[data-revoke-serial]');
+                if (!btn) return;
+                var id = btn.getAttribute('data-revoke-serial');
+                if (!confirm('确定撤销以 …' + btn.getAttribute('data-tail') + ' 结尾的授权串？\n撤销后它在 RC 里就换不到凭据了。')) return;
+                btn.disabled = true;
+                ZIYIT_API.rcSerialRevoke(id).then(function () {
+                    return load();
+                }).catch(function (err) {
+                    alert('撤销失败：' + errMsg(err));
+                    btn.disabled = false;
+                });
+            });
+
+            tokenArea.addEventListener('click', function (e) {
+                var btn = e.target.closest('[data-revoke-token]');
+                if (!btn) return;
+                var id = btn.getAttribute('data-revoke-token');
+                var label = btn.getAttribute('data-label') || '未命名设备';
+                if (!confirm('确定吊销「' + label + '」这张 RC 长期凭据？\n吊销后 RC 端需要重新用授权串换取。')) return;
+                btn.disabled = true;
+                ZIYIT_API.rcTokenRevoke(id).then(function () {
+                    return load();
+                }).catch(function (err) {
+                    alert('吊销失败：' + errMsg(err));
+                    btn.disabled = false;
+                });
+            });
+
+            load();
+        });
+    </script>
+
+    <script>
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(function (item) {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(function (item) {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                const loginLink = document.getElementById('loginLink');
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(function (item) {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

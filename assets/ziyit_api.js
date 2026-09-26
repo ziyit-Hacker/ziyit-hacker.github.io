@@ -1000,6 +1000,133 @@
         return post('/afdian/self-check', {});
     }
 
+    // ---- RC 长期授权串（六十三章）：网页生成串 → RC 端兑换 → 长期 Token ----
+
+    // 生成一张 RC 授权串。回包里的 serial 是**明文、只在这一次响应里出现**，落盘只存 sha256；
+    // 调用方必须直接展示给用户，绝不能写进 localStorage / sessionStorage / URL / console。
+    // opts = { label }：可选备注（一般填设备名）。
+    function rcSerialIssue(label) {
+        return post('/rc/serial', { label: label == null ? '' : String(label) });
+    }
+
+    // 我名下：授权串列表（只回显末 4 位 serialTail，不含明文）+ RC 长期凭据列表（不含明文）
+    function rcSerialMine() {
+        return request('/rc/serial/mine');
+    }
+
+    // 撤销一张还没兑换掉的授权串；404 = 不存在 / 已兑换 / 已过期 / 不属于我
+    function rcSerialRevoke(serialId) {
+        return request('/rc/serial/mine/' + encodeURIComponent(serialId), { method: 'DELETE' });
+    }
+
+    // 只查 RC 长期凭据（与 rcSerialMine 的 tokens[] 同源）
+    function rcTokensMine() {
+        return request('/rc/tokens/mine');
+    }
+
+    // 吊销自己名下的一张 RC 长期凭据。只影响 RC，不会把网页端登录态踢掉。
+    function rcTokenRevoke(tokenId) {
+        return request('/rc/tokens/mine/' + encodeURIComponent(tokenId), { method: 'DELETE' });
+    }
+
+    // ---- 渗透测试账号（六十二章）----
+    // 任何登录用户都能申请，理由可选；后端限同 IP 10 分钟 3 次，
+    // 重复申请回 400（"你已有一个待审批的申请" / "你名下已有生效中的渗透测试编号"），detail 原样展示。
+    function pentestApply(reason) {
+        return post('/pentest/apply', { reason: reason == null ? '' : String(reason) });
+    }
+
+    // 用户侧视图：isPentest / code（本人编号 + 站长派的任务）/ applications（自己提交过的申请）
+    function pentestMy() {
+        return request('/pentest/my');
+    }
+
+    // 测试者更新**自己**编号下某个任务的进度；opts = { status: 'open|doing|done', note }
+    function pentestUpdateMyTask(taskId, opts) {
+        var o = opts || {};
+        var body = {};
+        if (o.status != null) body.status = o.status;
+        if (o.note != null) body.note = String(o.note);
+        return request('/pentest/my/tasks/' + encodeURIComponent(taskId), {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+    }
+
+    // 吊销自己的编号：账号立即被物理删除，当前凭据随之失效，调用方要按"已登出"处理。
+    function pentestRevoke(reason) {
+        return post('/pentest/revoke', { reason: reason == null ? '' : String(reason) });
+    }
+
+    // 重置自己的编号：回包带新的 username 与**只显示一次**的 password，当前凭据随即失效。
+    function pentestReset() {
+        return post('/pentest/reset', {});
+    }
+
+    // ---- 渗透测试账号：后台（Lv.1+ 可读；下面这些写操作仅站长，非站长会被后端挡 403）----
+    function adminPentest() {
+        return request('/admin/pentest');
+    }
+
+    function adminPentestAssign(applicantUserId, reason, note) {
+        return post('/admin/pentest/assign', {
+            applicantUserId: Number(applicantUserId),
+            reason: reason == null ? '' : String(reason),
+            note: note == null ? '' : String(note)
+        });
+    }
+
+    // 回包带新的 username + 只显示一次的 password
+    function adminPentestApprove(applicationId, note) {
+        return post('/admin/pentest/applications/' + encodeURIComponent(applicationId) + '/approve', {
+            note: note == null ? '' : String(note)
+        });
+    }
+
+    function adminPentestReject(applicationId, note) {
+        return post('/admin/pentest/applications/' + encodeURIComponent(applicationId) + '/reject', {
+            note: note == null ? '' : String(note)
+        });
+    }
+
+    // 重置编号（编号悬空 accountExists=false 时也直接调它）；回包带新 username + 只显示一次的 password
+    function adminPentestReset(code) {
+        return post('/admin/pentest/' + encodeURIComponent(code) + '/reset', {});
+    }
+
+    function adminPentestRevoke(code, reason) {
+        return post('/admin/pentest/' + encodeURIComponent(code) + '/revoke', {
+            reason: reason == null ? '' : String(reason)
+        });
+    }
+
+    function adminPentestTaskAdd(code, title, detail) {
+        return post('/admin/pentest/' + encodeURIComponent(code) + '/tasks', {
+            title: String(title == null ? '' : title),
+            detail: detail == null ? '' : String(detail)
+        });
+    }
+
+    // 后端只接受 status / note（标题与说明不可改）
+    function adminPentestTaskUpdate(code, taskId, opts) {
+        var o = opts || {};
+        var body = {};
+        if (o.status != null) body.status = o.status;
+        if (o.note != null) body.note = String(o.note);
+        return request('/admin/pentest/' + encodeURIComponent(code) + '/tasks/' + encodeURIComponent(taskId), {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+    }
+
+    function adminPentestTaskDelete(code, taskId) {
+        return request('/admin/pentest/' + encodeURIComponent(code) + '/tasks/' + encodeURIComponent(taskId), {
+            method: 'DELETE'
+        });
+    }
+
     // ---- RC BUG 反馈 ----
     // 公开已知 BUG 列表：含提交者、状态枚举（statuses 按 statusCounts 计数）
     // 与 Markdown 正文；正文渲染前必须再过一次白名单净化
@@ -1340,6 +1467,25 @@
         rcDeleteFile: rcDeleteFile,
         rcMyKeys: rcMyKeys,
         afdianSelfCheck: afdianSelfCheck,
+        rcSerialIssue: rcSerialIssue,
+        rcSerialMine: rcSerialMine,
+        rcSerialRevoke: rcSerialRevoke,
+        rcTokensMine: rcTokensMine,
+        rcTokenRevoke: rcTokenRevoke,
+        pentestApply: pentestApply,
+        pentestMy: pentestMy,
+        pentestUpdateMyTask: pentestUpdateMyTask,
+        pentestRevoke: pentestRevoke,
+        pentestReset: pentestReset,
+        adminPentest: adminPentest,
+        adminPentestAssign: adminPentestAssign,
+        adminPentestApprove: adminPentestApprove,
+        adminPentestReject: adminPentestReject,
+        adminPentestReset: adminPentestReset,
+        adminPentestRevoke: adminPentestRevoke,
+        adminPentestTaskAdd: adminPentestTaskAdd,
+        adminPentestTaskUpdate: adminPentestTaskUpdate,
+        adminPentestTaskDelete: adminPentestTaskDelete,
         loginEmailStart: loginEmailStart,
         loginFactor: loginFactor,
         passkeyLoginStart: passkeyLoginStart,

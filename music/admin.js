@@ -121,6 +121,25 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('rc-bug-search').addEventListener('input', renderRcBugs);
     document.getElementById('rc-bug-filter').addEventListener('change', renderRcBugs);
 
+    // 渗透测试管理：Lv.1+ 都能看，写操作按钮只给站长（更细的权限由后端 require_admin_super 兜底）
+    document.querySelector('[data-section="pentest-management"]').addEventListener('click', function () {
+        switchSection('pentest-management');
+        updateSystemInfo('切换到渗透测试管理');
+        loadPentest();
+    });
+    document.getElementById('refresh-pentest').addEventListener('click', function () {
+        loadPentest();
+        updateSystemInfo('渗透测试列表已刷新');
+    });
+    document.getElementById('pentest-code-search').addEventListener('input', renderPentestCodes);
+    document.getElementById('pentest-app-search').addEventListener('input', renderPentestApps);
+    document.getElementById('pentest-assign-btn').addEventListener('click', doPentestAssign);
+    document.getElementById('pentest-pw-copy').addEventListener('click', copyPentestPassword);
+    document.getElementById('pentest-pw-close').addEventListener('click', closePentestPasswordModal);
+    // 列表会整体重绘，所以按钮一律走容器上的事件委托，只绑这一次
+    document.getElementById('pentest-code-list').addEventListener('click', onPentestCodeClick);
+    document.getElementById('pentest-app-list').addEventListener('click', onPentestAppClick);
+
      
     document.querySelector('[data-section="admin-management"]').addEventListener('click', function () {
         switchSection('admin-management');
@@ -2094,6 +2113,460 @@ function saveRcBugStatus(bug, opts) {
     }).catch(function (err) {
         alert('更新失败: ' + (err.message || err));
     });
+}
+
+// ===== 渗透测试管理（第六十二章）=====
+//  查看：Lv.1+ 都可以；分配 / 审批 / 驳回 / 重置 / 吊销 / 派任务：仅站长。
+//  后端判站长的条件是 userId === ADMIN_USER_ID(1)（main.py require_admin_super），这里用同一判据，
+//  免得前端放开按钮、后端照样回 403。
+let pentestData = { codes: [], applications: [], pendingApplications: 0 };
+const PENTEST_TASK_LABELS = { open: '待执行', doing: '进行中', done: '已完成' };
+
+function pentestIsSuper() {
+    return !!(currentAdminInfo && Number(currentAdminInfo.userId) === 1);
+}
+
+// 后端的 detail 一律原样展示（400 / 403 / 404）
+function pentestErr(err, fallback) {
+    if (err && err.data) {
+        if (typeof err.data === 'string' && err.data) return err.data;
+        if (err.data.detail) {
+            return typeof err.data.detail === 'string' ? err.data.detail : JSON.stringify(err.data.detail);
+        }
+        if (err.data.message) return err.data.message;
+    }
+    if (err && err.message) return err.message;
+    return fallback || '请求失败';
+}
+
+function pentestSourceText(s) {
+    if (s === 'admin') return '站长操作';
+    if (s === 'self') return '本人操作';
+    return s || '-';
+}
+
+function penBadge(kind, text) {
+    const map = {
+        ok: ['rgba(39,174,96,.16)', 'var(--ziyit-success)'],
+        warn: ['rgba(243,156,18,.16)', 'var(--ziyit-warning)'],
+        bad: ['rgba(231,76,60,.16)', 'var(--ziyit-danger)']
+    };
+    const c = map[kind] || map.warn;
+    return '<span style="font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap;background:'
+        + c[0] + ';color:' + c[1] + ';border:1px solid ' + c[1] + ';">' + escAdmin(text) + '</span>';
+}
+
+function penInputStyle() {
+    return 'padding:4px 8px;border-radius:5px;border:1px solid var(--ziyit-border);font-size:12px;'
+        + 'background:var(--ziyit-bg-card);color:var(--ziyit-text-primary);';
+}
+
+function loadPentest() {
+    const codeList = document.getElementById('pentest-code-list');
+    const appList = document.getElementById('pentest-app-list');
+    if (!codeList || !appList) return Promise.resolve();
+    if (!canAccess(1)) {
+        codeList.innerHTML = '<p style="padding:20px;color:var(--ziyit-danger);">仅 Lv.1+ 管理员可查看渗透测试管理</p>';
+        appList.innerHTML = '';
+        return Promise.resolve();
+    }
+    codeList.innerHTML = loadingHTML();
+    appList.innerHTML = loadingHTML();
+    // 站长专属控件（分配台）只管显隐，真正的写权限由后端 require_admin_super 兜底
+    const assignBox = document.getElementById('pentest-assign-box');
+    if (assignBox) assignBox.style.display = pentestIsSuper() ? '' : 'none';
+    return ZIYIT_API.adminPentest().then(function (data) {
+        pentestData = {
+            codes: (data && data.codes) || [],
+            applications: (data && data.applications) || [],
+            pendingApplications: Number((data && data.pendingApplications) || 0)
+        };
+        renderPentestCodes();
+        renderPentestApps();
+    }).catch(function (err) {
+        codeList.innerHTML = '<p style="padding:20px;color:var(--ziyit-danger);">加载失败: ' + escAdmin(pentestErr(err)) + '</p>';
+        appList.innerHTML = '';
+    });
+}
+
+function renderPentestCodes() {
+    const area = document.getElementById('pentest-code-list');
+    const countEl = document.getElementById('pentest-code-count');
+    const all = pentestData.codes;
+    if (countEl) countEl.textContent = all.length;
+    const search = (document.getElementById('pentest-code-search').value || '').trim().toLowerCase();
+    const list = all.filter(function (c) {
+        if (!search) return true;
+        return [c.code, c.username, c.applicantUsername, c.applicantUserId, c.userId, c.statusLabel]
+            .some(function (v) { return String(v == null ? '' : v).toLowerCase().indexOf(search) !== -1; });
+    });
+    if (!list.length) {
+        area.innerHTML = '<p style="padding:20px;color:var(--ziyit-text-secondary);">'
+            + (all.length ? '没有匹配的编号' : '还没有分配过渗透测试编号') + '</p>';
+        return;
+    }
+    const isSuper = pentestIsSuper();
+    let html = '';
+    list.forEach(function (c) {
+        const idx = all.indexOf(c);
+        const acc = c.account;
+        const ts = c.taskSummary || { total: 0, done: 0, open: 0 };
+        html += '<div class="user-item wide-item">'
+            + '<div class="user-details">'
+            + '<div class="user-name">' + escAdmin(c.code) + ' '
+            + (c.status === 'active' ? penBadge('ok', '生效中') : penBadge('bad', '已吊销'))
+            + '</div>'
+            + '<div class="user-email">测试账号: '
+            + (acc
+                ? escAdmin(acc.username) + '（ID ' + escAdmin(acc.userId) + '）'
+                    + (acc.banned ? '　' + penBadge('bad', '已封禁') : '')
+                    + (acc.strict ? '　' + penBadge('warn', '严管期') : '')
+                : '<b>账号不存在（编号悬空，可直接重置救活）</b>')
+            + '</div>'
+            + '<div class="user-email">申请这个账号的账号: '
+            + escAdmin(c.applicantUsername || '-') + '（ID ' + escAdmin(c.applicantUserId) + '）'
+            + '　｜ 来源: ' + escAdmin(pentestSourceText(c.source))
+            + '　｜ 分配: ' + escAdmin(c.assignedAt || '-')
+            + '</div>'
+            + '<div class="user-email">任务进度: ' + escAdmin(ts.done) + '/' + escAdmin(ts.total)
+            + '　｜ 重置次数: ' + escAdmin(c.resets || 0)
+            + (c.note ? '　｜ 备注: ' + escAdmin(c.note) : '')
+            + '</div>';
+        if (c.status !== 'active') {
+            html += '<div class="user-email">吊销: ' + escAdmin(c.revokedAt || '-')
+                + '　｜ 来源: ' + escAdmin(pentestSourceText(c.revokeSource))
+                + '　｜ 操作人 ID: ' + escAdmin(c.revokedBy)
+                + (c.revokeReason ? '　｜ 原因: ' + escAdmin(c.revokeReason) : '')
+                + '</div>';
+        }
+        html += '</div>'
+            + '<div class="user-actions" style="flex-wrap:wrap;">'
+            + '<button class="action-btn" data-pentest-tasks="' + idx + '">任务 (' + escAdmin(ts.total) + ')</button>'
+            + (isSuper
+                ? '<button class="action-btn edit" data-pentest-reset="' + idx + '">重置</button>'
+                    + '<button class="action-btn delete" data-pentest-revoke="' + idx + '">吊销</button>'
+                : '')
+            + '</div>'
+            + '<div data-pentest-panel="' + idx + '" style="display:none;flex:1 1 100%;background:var(--ziyit-bg-card);'
+            + 'border:1px solid var(--ziyit-border);border-radius:8px;padding:12px;font-size:13px;"></div>'
+            + '</div>';
+    });
+    area.innerHTML = html;
+}
+
+function pentestPanelHTML(idx) {
+    const c = pentestData.codes[idx];
+    if (!c) return '';
+    const isSuper = pentestIsSuper();
+    const inputStyle = penInputStyle();
+    let html = '';
+    const tasks = c.tasks || [];
+    if (!tasks.length) html += '<p style="color:var(--ziyit-text-secondary);">还没有派过任务。</p>';
+    tasks.forEach(function (t) {
+        html += '<div style="border-top:1px solid var(--ziyit-border);padding:8px 0;">'
+            + '<div>#' + escAdmin(t.id) + ' ' + escAdmin(t.title) + '　'
+            + (t.status === 'done' ? penBadge('ok', t.statusLabel || '已完成')
+                : (t.status === 'doing' ? penBadge('warn', t.statusLabel || '进行中')
+                    : penBadge('bad', t.statusLabel || '待执行')))
+            + '</div>';
+        if (t.detail) html += '<div style="color:var(--ziyit-text-secondary);">说明: ' + escAdmin(t.detail) + '</div>';
+        if (t.note) html += '<div style="color:var(--ziyit-text-secondary);">备注: ' + escAdmin(t.note) + '</div>';
+        html += '<div style="color:var(--ziyit-text-secondary);font-size:12px;">更新: '
+            + escAdmin(t.updatedAt || t.createdAt || '-') + '</div>';
+        if (isSuper) {
+            const key = idx + '|' + t.id;
+            let options = '';
+            Object.keys(PENTEST_TASK_LABELS).forEach(function (k) {
+                options += '<option value="' + k + '"' + (t.status === k ? ' selected' : '') + '>'
+                    + PENTEST_TASK_LABELS[k] + '</option>';
+            });
+            html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">'
+                + '<select data-task-status="' + key + '" style="' + inputStyle + '">' + options + '</select>'
+                + '<input type="text" data-task-note="' + key + '" placeholder="站长备注（可选）" style="' + inputStyle + 'width:200px;">'
+                + '<button class="action-btn edit" data-task-save="' + key + '">保存</button>'
+                + '<button class="action-btn delete" data-task-del="' + key + '">删除</button>'
+                + '</div>';
+        }
+        html += '</div>';
+    });
+    if (isSuper) {
+        html += '<div style="border-top:1px solid var(--ziyit-border);padding-top:10px;margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">'
+            + '<input type="text" data-task-new-title="' + idx + '" placeholder="新任务标题（必填）" style="' + inputStyle + 'width:220px;">'
+            + '<input type="text" data-task-new-detail="' + idx + '" placeholder="任务说明（可选）" style="' + inputStyle + 'width:260px;">'
+            + '<button class="action-btn" data-task-add="' + idx + '">派任务</button>'
+            + '</div>';
+        if (c.status !== 'active') {
+            html += '<p style="color:var(--ziyit-danger);margin-top:6px;">该编号已吊销，无法再派任务。</p>';
+        }
+    }
+    return html;
+}
+
+// 任务增删改后列表要重算进度，但把展开中的任务面板保持打开
+function reloadPentestKeepPanel(idx) {
+    return loadPentest().then(function () {
+        if (idx == null) return;
+        const btn = document.querySelector('[data-pentest-tasks="' + idx + '"]');
+        const panel = document.querySelector('[data-pentest-panel="' + idx + '"]');
+        if (btn && panel) {
+            panel.innerHTML = pentestPanelHTML(idx);
+            panel.style.display = 'block';
+            btn.textContent = '收起任务';
+        }
+    });
+}
+
+function renderPentestApps() {
+    const area = document.getElementById('pentest-app-list');
+    const badge = document.getElementById('pentest-pending-badge');
+    const pending = Number(pentestData.pendingApplications || 0);
+    if (badge) {
+        badge.style.display = pending ? '' : 'none';
+        badge.textContent = '待审批 ' + pending;
+    }
+    const all = pentestData.applications;
+    const search = (document.getElementById('pentest-app-search').value || '').trim().toLowerCase();
+    const list = all.filter(function (a) {
+        if (!search) return true;
+        return [a.id, a.applicantUsername, a.applicantUserId, a.reason, a.code]
+            .some(function (v) { return String(v == null ? '' : v).toLowerCase().indexOf(search) !== -1; });
+    });
+    if (!list.length) {
+        area.innerHTML = '<p style="padding:20px;color:var(--ziyit-text-secondary);">'
+            + (all.length ? '没有匹配的申请' : '还没有收到过申请') + '</p>';
+        return;
+    }
+    const isSuper = pentestIsSuper();
+    const inputStyle = penInputStyle();
+    let html = '';
+    list.forEach(function (a) {
+        const idx = all.indexOf(a);
+        const badgeHtml = a.status === 'pending' ? penBadge('warn', '待审批')
+            : (a.status === 'approved' ? penBadge('ok', '已通过') : penBadge('bad', '已驳回'));
+        html += '<div class="user-item wide-item">'
+            + '<div class="user-details">'
+            + '<div class="user-name">申请 #' + escAdmin(a.id) + ' ' + badgeHtml
+            + (a.direct ? ' ' + penBadge('warn', '站长直接分配') : '')
+            + '</div>'
+            + '<div class="user-email">申请人: ' + escAdmin(a.applicantUsername || '-')
+            + '（ID ' + escAdmin(a.applicantUserId) + '）</div>'
+            + (a.reason ? '<div class="user-email">理由: ' + escAdmin(a.reason) + '</div>' : '')
+            + '<div class="user-email">提交: ' + escAdmin(a.createdAt || '-')
+            + (a.decidedAt ? '　｜ 审批: ' + escAdmin(a.decidedAt) + '（操作人 ID ' + escAdmin(a.decidedBy) + '）' : '')
+            + (a.code ? '　｜ 编号: ' + escAdmin(a.code) : '')
+            + '</div>'
+            + (a.decisionNote ? '<div class="user-email">审批备注: ' + escAdmin(a.decisionNote) + '</div>' : '')
+            + '</div>';
+        if (isSuper && a.status === 'pending') {
+            html += '<div class="user-actions" style="flex-wrap:wrap;">'
+                + '<input type="text" data-app-note="' + idx + '" placeholder="审批备注（可选）" style="' + inputStyle + 'width:180px;">'
+                + '<button class="action-btn edit" data-app-approve="' + idx + '">通过</button>'
+                + '<button class="action-btn delete" data-app-reject="' + idx + '">驳回</button>'
+                + '</div>';
+        }
+        html += '</div>';
+    });
+    area.innerHTML = html;
+}
+
+function onPentestCodeClick(e) {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    function split(v) {
+        const p = String(v || '').split('|');
+        return { idx: Number(p[0]), taskId: Number(p[1]) };
+    }
+    if (btn.hasAttribute('data-pentest-tasks')) {
+        const idx = Number(btn.getAttribute('data-pentest-tasks'));
+        const panel = document.querySelector('[data-pentest-panel="' + idx + '"]');
+        if (!panel) return;
+        if (panel.style.display === 'none') {
+            panel.innerHTML = pentestPanelHTML(idx);
+            panel.style.display = 'block';
+            btn.textContent = '收起任务';
+        } else {
+            panel.style.display = 'none';
+            const c = pentestData.codes[idx];
+            btn.textContent = '任务 (' + ((c && c.tasks ? c.tasks.length : 0)) + ')';
+        }
+        return;
+    }
+    if (btn.hasAttribute('data-pentest-reset')) { doPentestReset(Number(btn.getAttribute('data-pentest-reset'))); return; }
+    if (btn.hasAttribute('data-pentest-revoke')) { doPentestRevoke(Number(btn.getAttribute('data-pentest-revoke'))); return; }
+    if (btn.hasAttribute('data-task-save')) { doPentestTaskSave(split(btn.getAttribute('data-task-save')), btn); return; }
+    if (btn.hasAttribute('data-task-del')) { doPentestTaskDelete(split(btn.getAttribute('data-task-del'))); return; }
+    if (btn.hasAttribute('data-task-add')) { doPentestTaskAdd(Number(btn.getAttribute('data-task-add'))); return; }
+}
+
+function onPentestAppClick(e) {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    if (btn.hasAttribute('data-app-approve')) { doPentestApprove(Number(btn.getAttribute('data-app-approve'))); return; }
+    if (btn.hasAttribute('data-app-reject')) { doPentestReject(Number(btn.getAttribute('data-app-reject'))); return; }
+}
+
+function doPentestReset(idx) {
+    const c = pentestData.codes[idx];
+    if (!c) return;
+    const loose = !c.accountExists;
+    if (!confirm('确定重置编号 ' + c.code + ' 吗？\n'
+        + (loose ? '该编号当前悬空（绑定账号已不存在），重置会把编号重新绑到一个全新账号上。\n'
+            : '旧测试账号会被立即销毁，编号不变，换发一个全新账号。\n')
+        + '新密码只显示一次，请准备好转交给测试者。')) return;
+    ZIYIT_API.adminPentestReset(c.code).then(function (data) {
+        showPentestPassword(data);
+        reloadPentestKeepPanel(null);
+    }).catch(function (err) {
+        alert('重置失败: ' + pentestErr(err));
+    });
+}
+
+function doPentestRevoke(idx) {
+    const c = pentestData.codes[idx];
+    if (!c) return;
+    const reason = prompt('吊销编号 ' + c.code + ' 的原因（可留空）：', '');
+    if (reason === null) return;
+    if (!confirm('确定吊销编号 ' + c.code + ' 吗？\n测试账号会被立即物理删除（编号记录保留为「已吊销」供审计）。')) return;
+    ZIYIT_API.adminPentestRevoke(c.code, reason).then(function (res) {
+        alert((res && res.message) || '编号已吊销');
+        reloadPentestKeepPanel(idx);
+    }).catch(function (err) {
+        alert('吊销失败: ' + pentestErr(err));
+    });
+}
+
+function doPentestTaskAdd(idx) {
+    const c = pentestData.codes[idx];
+    if (!c) return;
+    const titleEl = document.querySelector('[data-task-new-title="' + idx + '"]');
+    const detailEl = document.querySelector('[data-task-new-detail="' + idx + '"]');
+    const title = titleEl ? titleEl.value.trim() : '';
+    const detail = detailEl ? detailEl.value.trim() : '';
+    if (!title) { alert('请填写任务标题'); return; }
+    ZIYIT_API.adminPentestTaskAdd(c.code, title, detail).then(function () {
+        reloadPentestKeepPanel(idx);
+    }).catch(function (err) {
+        alert('派任务失败: ' + pentestErr(err));
+    });
+}
+
+function doPentestTaskSave(ref, btn) {
+    const c = pentestData.codes[ref.idx];
+    if (!c) return;
+    const key = ref.idx + '|' + ref.taskId;
+    const statusEl = document.querySelector('[data-task-status="' + key + '"]');
+    const noteEl = document.querySelector('[data-task-note="' + key + '"]');
+    if (btn) btn.disabled = true;
+    ZIYIT_API.adminPentestTaskUpdate(c.code, ref.taskId, {
+        status: statusEl ? statusEl.value : '',
+        note: noteEl ? noteEl.value.trim() : ''
+    }).then(function () {
+        reloadPentestKeepPanel(ref.idx);
+    }).catch(function (err) {
+        alert('保存失败: ' + pentestErr(err));
+        if (btn) btn.disabled = false;
+    });
+}
+
+function doPentestTaskDelete(ref) {
+    const c = pentestData.codes[ref.idx];
+    if (!c) return;
+    if (!confirm('确定删除编号 ' + c.code + ' 下的任务 #' + ref.taskId + ' 吗？')) return;
+    ZIYIT_API.adminPentestTaskDelete(c.code, ref.taskId).then(function () {
+        reloadPentestKeepPanel(ref.idx);
+    }).catch(function (err) {
+        alert('删除失败: ' + pentestErr(err));
+    });
+}
+
+function doPentestApprove(idx) {
+    const a = pentestData.applications[idx];
+    if (!a) return;
+    const noteEl = document.querySelector('[data-app-note="' + idx + '"]');
+    const note = noteEl ? noteEl.value.trim() : '';
+    if (!confirm('确定通过申请 #' + a.id + '（申请人 ' + (a.applicantUsername || a.applicantUserId)
+        + '）吗？\n通过后会立即创建渗透测试账号，初始密码只显示一次。')) return;
+    ZIYIT_API.adminPentestApprove(a.id, note).then(function (data) {
+        showPentestPassword(data);
+        loadPentest();
+    }).catch(function (err) {
+        alert('审批失败: ' + pentestErr(err));
+    });
+}
+
+function doPentestReject(idx) {
+    const a = pentestData.applications[idx];
+    if (!a) return;
+    const noteEl = document.querySelector('[data-app-note="' + idx + '"]');
+    const note = noteEl ? noteEl.value.trim() : '';
+    if (!confirm('确定驳回申请 #' + a.id + '（申请人 ' + (a.applicantUsername || a.applicantUserId) + '）吗？')) return;
+    ZIYIT_API.adminPentestReject(a.id, note).then(function (res) {
+        alert((res && res.message) || '申请已驳回');
+        loadPentest();
+    }).catch(function (err) {
+        alert('驳回失败: ' + pentestErr(err));
+    });
+}
+
+function doPentestAssign() {
+    const uidEl = document.getElementById('pentest-assign-uid');
+    const reasonEl = document.getElementById('pentest-assign-reason');
+    const noteEl = document.getElementById('pentest-assign-note');
+    const uid = Number(uidEl.value);
+    if (!uid) { alert('请填写申请人的用户 ID'); return; }
+    if (!confirm('确定为用户 ID ' + uid + ' 直接分配一个渗透测试账号吗？\n初始密码只显示一次。')) return;
+    const btn = document.getElementById('pentest-assign-btn');
+    btn.disabled = true;
+    ZIYIT_API.adminPentestAssign(uid, reasonEl.value.trim(), noteEl.value.trim()).then(function (data) {
+        showPentestPassword(data);
+        uidEl.value = '';
+        reasonEl.value = '';
+        noteEl.value = '';
+        loadPentest();
+    }).catch(function (err) {
+        alert('分配失败: ' + pentestErr(err));
+    }).finally(function () {
+        btn.disabled = false;
+    });
+}
+
+// 初始密码只显示这一次：只写进 DOM 的只读输入框，不落 localStorage / sessionStorage / URL / console，
+// 也不回传后端或任何第三方。关闭时顺手清空，免得密码继续留在页面上。
+function showPentestPassword(data) {
+    document.getElementById('pentest-pw-code').value = (data && data.code) || '';
+    document.getElementById('pentest-pw-username').value = (data && data.username) || '';
+    document.getElementById('pentest-pw-password').value = (data && data.password) || '';
+    document.getElementById('pentest-pw-notice').textContent = (data && data.passwordNotice) || '';
+    document.getElementById('pentest-password-modal').classList.add('active');
+}
+
+function closePentestPasswordModal() {
+    document.getElementById('pentest-pw-code').value = '';
+    document.getElementById('pentest-pw-username').value = '';
+    document.getElementById('pentest-pw-password').value = '';
+    document.getElementById('pentest-pw-notice').textContent = '';
+    document.getElementById('pentest-password-modal').classList.remove('active');
+}
+
+function copyPentestPassword() {
+    const code = document.getElementById('pentest-pw-code').value;
+    const username = document.getElementById('pentest-pw-username').value;
+    const password = document.getElementById('pentest-pw-password').value;
+    if (!password) { alert('没有可复制的密码'); return; }
+    const text = '渗透测试账号（编号 ' + code + '）\n用户名: ' + username + '\n初始密码: ' + password
+        + '\n该密码只显示一次，请立刻使用或转交。';
+    const btn = document.getElementById('pentest-pw-copy');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+            const old = btn.textContent;
+            btn.textContent = '已复制';
+            setTimeout(function () { btn.textContent = old; }, 1500);
+        }, function () {
+            alert('复制失败，请手动选中后复制');
+        });
+    } else {
+        alert('当前浏览器不支持自动复制，请手动选中后复制');
+    }
 }
 
 function openAddKey(u) {

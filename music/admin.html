@@ -90,6 +90,9 @@
                     <li class="menu-item" data-section="rc-bug-management" data-level="3">
  RC BUG 管理
                     </li>
+                    <li class="menu-item" data-section="pentest-management" data-level="1">
+ 渗透测试
+                    </li>
                     <li class="menu-item" data-section="backrooms-members" data-level="2">
  后室成员管理
                     </li>
@@ -566,6 +569,46 @@
                 </section>
 
                 
+                <section id="pentest-management" class="content-section">
+                    <div class="section-header">
+                        <h2>渗透测试管理</h2>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span id="pentest-pending-badge" class="user-btn danger" style="display: none;"></span>
+                            <button class="user-btn" id="refresh-pentest">刷新列表</button>
+                        </div>
+                    </div>
+                    <p style="padding: 4px 2px 10px; color: var(--ziyit-text-secondary); font-size: 13px; line-height: 1.8;">
+                        所有管理员（Lv.1+）都可以查看；<b>分配 / 审批 / 驳回 / 重置 / 吊销 / 派任务只给站长</b>，其他管理员只读（后端同样会挡，非站长拿到 403）。<br>
+                        分配 / 审批 / 重置产生的初始密码<b>只显示这一次</b>，请立刻转交给测试者。
+                    </p>
+
+                    <div id="pentest-assign-box" style="display: none; border: 1px solid var(--ziyit-border); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">站长直接分配（不必先走申请）</div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <input type="number" class="user-search" id="pentest-assign-uid" placeholder="申请人的用户 ID（必填）" style="max-width: 200px;">
+                            <input type="text" class="user-search" id="pentest-assign-reason" placeholder="事由（可留空）" style="max-width: 260px;">
+                            <input type="text" class="user-search" id="pentest-assign-note" placeholder="备注（可留空）" style="max-width: 220px;">
+                            <button class="user-btn success" id="pentest-assign-btn">分配账号</button>
+                        </div>
+                    </div>
+
+                    <div class="section-header" style="margin-bottom: 10px;">
+                        <h3>编号（<span id="pentest-code-count">0</span>）</h3>
+                    </div>
+                    <div class="user-controls">
+                        <input type="text" class="user-search" id="pentest-code-search" placeholder="搜索编号 / 测试账号 / 申请人...">
+                    </div>
+                    <div class="user-list" id="pentest-code-list"></div>
+
+                    <div class="section-header" style="margin: 20px 0 10px;">
+                        <h3>申请记录</h3>
+                    </div>
+                    <div class="user-controls">
+                        <input type="text" class="user-search" id="pentest-app-search" placeholder="搜索申请号 / 申请人 / 理由...">
+                    </div>
+                    <div class="user-list" id="pentest-app-list"></div>
+                </section>
+
                 <section id="backrooms-members" class="content-section">
                     <div class="section-header">
                         <h2>后室成员管理</h2>
@@ -976,6 +1019,34 @@
             <div class="modal-actions">
                 <button type="button" class="user-btn danger" id="cancel-broadcast">取消</button>
                 <button type="button" class="user-btn success" id="confirm-broadcast">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="pentest-password-modal">
+        <div class="modal-content">
+            <div class="modal-header">初始密码（只显示一次）</div>
+            <p style="padding: 0 0 12px; color: var(--ziyit-text-secondary); font-size: 13px; line-height: 1.8;">
+                <b style="color: var(--ziyit-danger);">该密码只显示一次，请立刻转交给测试者。</b>
+                后端只保存哈希，关掉这个窗口就再也找不回来了。
+            </p>
+            <div class="form-group">
+                <label class="form-label">编号</label>
+                <input type="text" class="form-input" id="pentest-pw-code" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">测试账号</label>
+                <input type="text" class="form-input" id="pentest-pw-username" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">初始密码</label>
+                <input type="text" class="form-input" id="pentest-pw-password" readonly
+                    style="font-family: Consolas, 'Courier New', monospace; font-weight: 600;">
+            </div>
+            <p id="pentest-pw-notice" style="padding: 0 0 8px; color: var(--ziyit-text-secondary); font-size: 12px; line-height: 1.8;"></p>
+            <div class="modal-actions">
+                <button type="button" class="user-btn" id="pentest-pw-copy">复制账号与密码</button>
+                <button type="button" class="user-btn success" id="pentest-pw-close">我已记下</button>
             </div>
         </div>
     </div>
