@@ -489,10 +489,10 @@
                 // 这次没拿到永久凭证（没勾保持登录，或后端还没上线）：把上一次留下的清掉。
                 // 留着它就会顶替本次会话 —— 换个账号登录还会带着旧身份的凭证。
                 ZIYIT_API.clearRememberToken();
-                if (pendingRemember && pendingUsername && pendingPasswordMd5) {
-                    // 后端还没下发永久凭证时的旧兜底：本地存「用户名|md5」，401 时静默重登一次。
-                    // 永久凭证上线后这一段可以整段删掉。
-                    ZIYIT_API.setCredentials(pendingUsername, pendingPasswordMd5, true);
+                if (pendingUsername && pendingPasswordMd5) {
+                    // 令牌失效时静默重登用的本地凭据，改造前就一直是这么存的（与勾没勾「保持登录」无关，
+                    // 勾选只决定这份 Cookie 存多久）。后端下发永久凭证并且确认不再依赖它之后再删。
+                    ZIYIT_API.setCredentials(pendingUsername, pendingPasswordMd5, pendingRemember);
                 }
             }
             ZIYIT_API.setToken(token, pendingRemember);
