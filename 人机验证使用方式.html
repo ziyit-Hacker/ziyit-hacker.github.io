@@ -101,11 +101,15 @@
     <script type="module" src="https://ziyit-hacker.github.io/Human_verification/main.js"></script>
     <script>
         window.PHANTOM_API_KEY = 'YOUR_API_KEY';
-        window.__phantom = { verified: false, challengeId: '', sessionId: '', pendingSubmit: false };
+        // v0.3.34（64.6 第 1 条）：原先这里还有一份 window.__phantom = { verified: false, … }
+        // 的状态，已删除 —— 页面里的变量永远不能当门，任何脚本都能自己写出来。
     </script>
     <script>
+        // UI 提示专用示例（64.6 第 2 条）：phantom:verified 事件只用来做界面反馈，
+        // 绝不能拿它决定是否展示受保护功能 —— 该事件由页面自己派发，任何脚本都能派发。
+        // 官方页面（Human_verification/main.js）只有在服务端把 receipt 兑换通过后才派发它。
         window.addEventListener('phantom:verified', function (e) {
-             
+            console.log('验证完成（仅 UI 提示）', e && e.detail);
         });
     </script>
     <script>

@@ -32,8 +32,11 @@ async function readError(res) {
 }
 
 async function fetchTicket(base) {
+    // credentials: "include" —— 服务端会顺带下发/续期 Phantom 设备会话 Cookie（phantom_dev）。
+    // 它只用于设备识别（识别不出就当新设备处理，绝不拒绝），不是任何授权凭据，前端也读不到。
     const res = await fetch(`${base}/session`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: "{}",
     });
@@ -70,6 +73,9 @@ async function postJson(apiBase, path, body) {
     for (let attempt = 0; attempt < 2; attempt++) {
         const res = await fetch(`${base}${path}`, {
             method: "POST",
+            // 所有 Phantom 请求都带凭据：CORS 第一方来源会回显具体 Origin 并允许带凭证，
+            // 设备会话 Cookie 才能随请求一起走。
+            credentials: "include",
             headers: { "Content-Type": "application/json", ...(await authHeaders(base)) },
             body: JSON.stringify(body),
         });
@@ -122,4 +128,14 @@ export function videoReady(apiBase, challengeId, sessionId) {
 // 跳号 / 抢跑 / 并发预取一律 409；同一包的重复请求是幂等的（重发同一份内容、不推进游标）。
 export function videoChunk(apiBase, challengeId, index, sessionId) {
     return postJson(apiBase, "/video/chunk", { challengeId, index, sessionId });
+}
+
+// v0.3.34 严格式：/verify 不再直接回判定结果，浏览器通道下 passed 恒为 null，改为签发一张
+// 一次性 receipt（明文只在 /verify 响应里出现一次）。调用方必须拿这张 receipt 到这里兑换：
+//   响应 { valid, challengeId, verifiedAt, detail }
+//   valid=false 时 detail 是 receipt_invalid_or_used / receipt_owner_mismatch（故意合并口径）
+// receipt 只能用一次（服务端 GETDEL）、默认 120 秒有效、归属按 userId 校验、不含任何权限。
+// 兑换结果只对当次有效：不得写入 localStorage/sessionStorage，不得跨刷新复用。
+export function consumeVerify(apiBase, receipt) {
+    return postJson(apiBase, "/verify/consume", { receipt });
 }

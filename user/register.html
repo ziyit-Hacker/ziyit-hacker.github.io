@@ -276,10 +276,7 @@
         }
     </script>
     <script>
-        // v0.3.7：不再在页面里硬编码 API 密钥（公开页面里的任何长期密钥都会被抓走，
-        // XOR 混淆只是换个写法）。凭据改由 Human_verification/api.js 向 /session 领取
-        // 短期票据（绑定 Origin + IP + UA，密钥永不下发）。
-        window.__phantom = { verified: false, challengeId: '', sessionId: '', pendingSubmit: false };
+        window.__phantom = { challengeId: '', sessionId: '', pendingSubmit: false };
     </script>
     <script type="module">
         import { mount } from "https://ziyit-hacker.github.io/Human_verification/phantom.js";
@@ -315,7 +312,8 @@
         function resetPhantomToIdle() {
             const st = window.__phantom;
             if (!st) return;
-            st.verified = false;
+            // 只清「这道题的编号」，不再维护任何 verified 布尔值：页面里的变量不能当门，
+            // 真正的判定由后端在注册接口里按 challengeId / sessionId 校验。
             st.challengeId = '';
             st.sessionId = '';
             st.pendingSubmit = false;
@@ -341,7 +339,6 @@
             onSuccess(r) {
                  
                 const st = window.__phantom;
-                st.verified = true;
                 st.challengeId = r.challengeId || '';
                 st.sessionId = r.sessionId || '';
                 const cap = document.getElementById('captchaTip');
@@ -356,7 +353,6 @@
             onFail() {
                  
                 const st = window.__phantom;
-                st.verified = false;
                 st.challengeId = '';
                 st.sessionId = '';
                 showCaptchaHint('验证未通过，请重新拖动滑块');
@@ -372,6 +368,13 @@
                 if (e && e.code === 'ENV_AUTOMATION') {
                      
                     showCaptchaHint('检测到自动化工具环境，请使用真实浏览器完成验证');
+                    resetPhantomToIdle();
+                    return;
+                }
+                // 连「整段拼接 + Blob 播放」都走不通（64.6 第 8 条）：明确提示浏览器版本，
+                // 不静默失败、也不把用户判成「验证失败」。
+                if (e && e.code === 'PLAYBACK_UNSUPPORTED') {
+                    showCaptchaHint('当前浏览器无法播放验证视频，请使用最新版 Chrome / Edge / Firefox / Safari 后重试');
                     resetPhantomToIdle();
                     return;
                 }

@@ -9,6 +9,13 @@ import { injectStyles } from "./styles.js";
 import { collectEnvEvidence } from "./env.js";
 const VERSION = "0.1.0";
 
+// v0.3.34 无障碍去向（64.6 第 9 条）：视觉引导类验证对低视力 / 色觉障碍 / 运动障碍用户
+// 不友好，且当前没有等价替代通道。至少在验证界面给出明确的说明与求助入口，指向在线客服。
+// 接入方可用 window.__phantomA11yHelpUrl 覆盖成自己的客服地址。
+const A11Y_HELP_URL =
+    (typeof window !== "undefined" && window.__phantomA11yHelpUrl) ||
+    "https://ziyit-hacker.github.io/guide.html";
+
 
 const PREVIEW_MS = CONFIG.previewSeconds * 1000;
 
@@ -354,16 +361,30 @@ class WidgetSession {
         catch (e) {
             this.onError(e);
             const code = (e && e.status) || 0;
-            if (code === 429) {
+            if (e && e.code === "PLAYBACK_UNSUPPORTED") {
+                // 连「整段拼接 + Blob 播放」也走不通：明确提示浏览器版本并给出重试按钮，
+                // 既不静默失败，也不把用户判成「验证失败」（64.6 第 8 条）。
+                this.status.textContent = "当前浏览器无法播放验证视频。请使用最新版 Chrome / Edge / Firefox / Safari 后重试。";
+                this.setHint("blocked", "");
+                this.turnIntoRetryButton();
+            }
+            else if (code === 429) {
                  
                 this.status.textContent = "尝试次数过多，请稍后再试";
                 this.scheduleRetry(60000);
             }
+            else if (code === 401) {
+                // 401 = 票据过期/被吊销。api 层已经自动重取票据重试过一次，仍然 401 就重新取题
+                // 再走一遍 —— 绝不能当作「验证失败」（64.6 第 6 条）。
+                this.status.textContent = "会话已刷新，正在重新取题…";
+                this.scheduleRetry(800, "auto-restart");
+            }
             else if (code === 403 || code === 410) {
-                // 403 = 会话绑定不符（换了 IP/UA 或 sessionId 对不上）；410 = 题目或分包已过期。
+                // 口径（64.6 第 7 条）：403 现在主要是环境证据拒绝（UA 自动化特征 / UA 与 Client
+                // Hints 矛盾）或票据绑定不符；IP / UA 漂移不再产生 403。410 = 题目或分包已过期。
                 // 两者都无法在当前这道题上继续，只能重新取题 —— 与验证失败共用同一条自动重来链路。
                 this.status.textContent = code === 403
-                    ? "会话校验失败，正在重新取题…"
+                    ? "环境校验未通过，正在重新取题…"
                     : "验证已过期，正在重新取题…";
                 this.scheduleRetry(800, "auto-restart");
             }
@@ -473,13 +494,23 @@ class WidgetSession {
         const mime = vs.mime || challenge.videoMime || "video/mp4";
         // codec 由后端从码流的 avcC box 读出，必须原样用；自己拼错会导致 isTypeSupported 失败、黑屏。
         const type = vs.codec ? `${mime}; codecs="${vs.codec}"` : mime;
-        if (typeof MediaSource === "undefined" || !MediaSource.isTypeSupported(type)) {
-            throw new Error("当前浏览器不支持该视频编码");
-        }
-        // 握手：确认后端就绪并把游标归零（握手之前任何 /video/chunk 都会被拒）
+        // 握手：确认后端就绪并把游标归零（握手之前任何 /video/chunk 都会被拒）。
+        // 降级路径同样要先握手，所以这一步提到 MSE 判定之前。
         const ready = await videoReady(this.apiBase, this.challengeId, this.sessionId);
         if (!ready || ready.ready !== true) {
             throw new Error("视频尚未就绪，请重试");
+        }
+        // v0.3.34 降级路径（64.6 第 8 条）：MediaSource 不存在、或明确不支持该编码时，
+        // 不报错、不判失败 —— 改走「整段串行拉包 → 拼完整 MP4 → Blob 播放」。
+        let mseOk = false;
+        try {
+            mseOk = typeof MediaSource !== "undefined" && !!MediaSource.isTypeSupported(type);
+        }
+        catch (e) {
+            mseOk = false;
+        }
+        if (!mseOk) {
+            return await this._prepareVideoFallback(mime, ready);
         }
         const ms = new MediaSource();
         const url = URL.createObjectURL(ms);
@@ -507,13 +538,14 @@ class WidgetSession {
             this.sourceBuffer = ms.addSourceBuffer(type);
         }
         catch (e) {
+            // addSourceBuffer 抛错 / MediaSource 打不开：同样降级，不把用户判成验证失败。
             v.remove();
             URL.revokeObjectURL(url);
             this.videoEl = null;
             this.videoUrl = "";
             this.mediaSource = null;
             this.sourceBuffer = null;
-            throw e;
+            return await this._prepareVideoFallback(mime, ready);
         }
         // v0.3.20 实时拉流：不再"整段收完再组合"——首包 append 落地就能开播，其余分包
         // 由 _pullChunks 在后台按 0,1,2… 继续取，到一包 append 一包（仍严格串行，不预取）。
@@ -554,6 +586,103 @@ class WidgetSession {
             window.setTimeout(done, 5000);
         });
         return v;
+    }
+    // v0.3.34 降级播放（64.6 第 8 条）：浏览器没有 MediaSource（或 addSourceBuffer 抛错）时，
+    // 仍然严格串行按 index = 0,1,2… 拉完所有分包，base64 解码后按序拼成完整 MP4，
+    // 用 Blob + createObjectURL 交给普通 <video> 播放。采集与实时上报逻辑完全不变
+    // （降级只是"不能边下边播"）。连拼接播放也不可用时抛 PLAYBACK_UNSUPPORTED，
+    // 由 start() 明确提示浏览器版本 + 重试，不静默失败、也不判为验证失败。
+    async _prepareVideoFallback(mime, ready) {
+        this._streamAborted = false;
+        this.status.textContent = "正在下载验证题…";
+        const total = Number(ready.chunkCount || this.videoStream?.chunkCount || 0);
+        const parts = [];
+        let index = 0;
+        let retried = 0;
+        for (;;) {
+            if (this._streamAborted)
+                throw new Error("视频下载已中止");
+            let chunk;
+            try {
+                chunk = await videoChunk(this.apiBase, this.challengeId, index, this.sessionId);
+            }
+            catch (e) {
+                // 与 MSE 路径同口径：409 = 本地序号与服务端游标不同步，重取当前游标指的那一包。
+                if (e && e.status === 409 && retried < 5) {
+                    retried++;
+                    continue;
+                }
+                throw e;
+            }
+            parts.push(this._decodeChunk(chunk.data));
+            if (chunk.final)
+                break;
+            const next = Number(chunk.nextIndex);
+            if (!Number.isFinite(next) || next <= index)
+                break;
+            index = next;
+            if (total && index >= total)
+                break;
+        }
+        if (this._streamAborted)
+            throw new Error("视频下载已中止");
+        const size = parts.reduce((n, p) => n + p.length, 0);
+        if (!size)
+            throw this._playbackUnsupported("视频分包为空");
+        const bytes = new Uint8Array(size);
+        let offset = 0;
+        for (const p of parts) {
+            bytes.set(p, offset);
+            offset += p.length;
+        }
+        let url = "";
+        let v = null;
+        try {
+            const blob = new Blob([bytes], { type: mime });
+            url = URL.createObjectURL(blob);
+            v = document.createElement("video");
+            v.src = url;
+            v.muted = true;
+            v.playsInline = true;
+            v.setAttribute("playsinline", "");
+            v.preload = "auto";
+            // 与 MSE 路径一致：透明且不接收事件，挂进 DOM 才有帧可 drawImage，销毁时随节点移除。
+            v.style.cssText = "position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
+            this.canvas.parentElement?.appendChild(v);
+            this.videoEl = v;
+            this.videoUrl = url;
+            this.mediaSource = null;
+            this.sourceBuffer = null;
+            // 必须等元数据落地：渲染器靠 videoWidth 才合成视频前景，靠 duration 才算跟随段进度。
+            await new Promise((resolve, reject) => {
+                if (v.readyState >= 1)
+                    return resolve();
+                const done = () => resolve();
+                v.addEventListener("loadedmetadata", done, { once: true });
+                v.addEventListener("durationchange", done, { once: true });
+                v.addEventListener("error", () => reject(this._playbackUnsupported("视频无法解码")), { once: true });
+                window.setTimeout(done, 8000);
+            });
+            if (!v.videoWidth || !v.duration)
+                throw this._playbackUnsupported("视频元数据不可用");
+        }
+        catch (e) {
+            if (v)
+                v.remove();
+            if (url)
+                URL.revokeObjectURL(url);
+            this.videoEl = null;
+            this.videoUrl = "";
+            throw e.code === "PLAYBACK_UNSUPPORTED" ? e : this._playbackUnsupported(e && e.message);
+        }
+        this.status.textContent = "";
+        return v;
+    }
+    _playbackUnsupported(message) {
+        const err = new Error(message || "当前浏览器无法播放该视频编码");
+        err.status = 0;
+        err.code = "PLAYBACK_UNSUPPORTED";
+        return err;
     }
     // 严格串行拉包：拿到第 n 包就立刻发第 n+1 包（服务端游标只认单包，不能并发/跳号）。
     // v0.3.20：改成"边拉边播"的后台任务——每包 append 完就立刻可用（不再攒齐再拼）。
@@ -736,7 +865,17 @@ class WidgetSession {
              
             result.challengeId = this.challengeId;
             result.sessionId = this.sessionId;
-            if (result.passed) {
+            // v0.3.34 严格式（64.6 第 3/4 条）：浏览器通道下 passed 恒为 null、score 恒为 0.0，
+            // 通过时只回一张一次性 receipt。null 不等于失败 —— 必须拿 receipt 去
+            // POST /verify/consume 兑换，"服务端给出的 valid"才是权威结论。
+            // 这里把判定权交给页面：页面拿 receipt 去兑换，只有明确回 false 才算未通过。
+            if (result.passed === null || result.passed === undefined) {
+                this.status.textContent = result.receipt ? "验证完成，正在确认结果…" : "正在确认验证结果…";
+            }
+            // 只有页面明确回 false 才算未通过（第三方页面的 onSuccess 习惯不返回值）。
+            const confirmed = (await this.onResult(result)) !== false;
+            this.status.textContent = "";
+            if (confirmed) {
                  
                 this.activateBtn.classList.add("phantom-success");
                 this.activateBtn.textContent = "验证通过";
@@ -747,7 +886,6 @@ class WidgetSession {
                 this.activateBtn.textContent = "验证失败";
                 this.scheduleRetry();
             }
-            this.onResult(result);
         }
         catch (e) {
             this.renderer?.stop();
@@ -764,6 +902,20 @@ class WidgetSession {
                  
                 this.status.textContent = "验证已失效，请重新滑动";
                 this.activateBtn.textContent = "验证已失效";
+                this.scheduleRetry(800, "auto-restart");
+            }
+            else if (code === 401) {
+                // 票据过期/被吊销：api 层已自动重取票据重试过一次，仍 401 就重新取题，
+                // 不当作「验证失败」（64.6 第 6 条）。
+                this.status.textContent = "会话已刷新，正在重新验证…";
+                this.activateBtn.textContent = "正在重试";
+                this.scheduleRetry(800, "auto-restart");
+            }
+            else if (code === 403) {
+                // 403 = 环境证据拒绝（UA 自动化特征 / UA 与 Client Hints 矛盾）或票据绑定不符；
+                // 与网络 / IP 漂移无关（64.6 第 7 条）。只能重新取题。
+                this.status.textContent = "环境校验未通过，正在重新取题…";
+                this.activateBtn.textContent = "正在重新取题";
                 this.scheduleRetry(800, "auto-restart");
             }
             else {
@@ -988,15 +1140,44 @@ export function mount(el, opts) {
         body.appendChild(stageWrap);
         body.appendChild(activateBtn);
         body.appendChild(status);
+        // 无障碍去向（64.6 第 9 条）：本验证是视觉引导类（看闪烁方块 + 拖动跟随），对低视力 /
+        // 色觉障碍 / 运动障碍用户不友好，当前没有等价替代通道。至少在界面上把求助入口给出来。
+        const a11y = document.createElement("div");
+        a11y.className = "phantom-a11y-help";
+        a11y.style.cssText = "margin-top:10px;font-size:12px;line-height:1.6;text-align:center;opacity:.75;";
+        a11y.appendChild(document.createTextNode("无障碍用户（低视力 / 色觉障碍 / 运动障碍）无法完成本验证？"));
+        const a11yLink = document.createElement("a");
+        a11yLink.href = A11Y_HELP_URL;
+        a11yLink.target = "_blank";
+        a11yLink.rel = "noopener";
+        a11yLink.style.cssText = "color:inherit;text-decoration:underline;";
+        a11yLink.textContent = "点此联系人工";
+        a11y.appendChild(a11yLink);
+        body.appendChild(a11y);
         modalCard.appendChild(head);
         modalCard.appendChild(body);
         return { hint, canvas, overlay, activateBtn, status, progress };
     };
-    const dispatch = (r) => {
-        if (r.passed)
-            opts.onSuccess?.(r);
-        else
+    // v0.3.34 严格式（64.6 第 1/2/3/4 条）：浏览器通道下 /verify 的 passed 恒为 null ——
+    // 通过时回一张一次性 receipt，未通过 / 未验证则 receipt 也为 null（两者在客户端看来
+    // 完全一样，这是有意设计，防调参自我放行）。判定规则：
+    //   passed === false                  → 未通过
+    //   passed 为 null 且没有 receipt     → 未通过
+    //   其余（passed === true，或 null 但带 receipt）→ 交给页面，页面拿 receipt 去
+    //     POST /verify/consume 兑换，服务端回的 valid 才是权威结论。
+    // 注意：这里绝不产生任何「客户端旗帜」，也不会把 null 当成通过。
+    const dispatch = async (r) => {
+        if (r.passed === false || (!r.receipt && r.passed !== true)) {
             opts.onFail?.(r);
+            return false;
+        }
+        return (await opts.onSuccess?.(r)) !== false;
+    };
+    const handleResult = async (r) => {
+        const ok = await dispatch(r);
+        if (ok)
+            onVerified();
+        return ok;
     };
      
     const openModal = () => {
@@ -1029,18 +1210,10 @@ export function mount(el, opts) {
             status.textContent = "正在准备验证题…";
             session = new WidgetSession(canvas, opts.apiBase, status, overlay, hint, activateBtn, 
              
-            (r) => {
-                dispatch(r);
-                if (r.passed)
-                    onVerified();
-            }, (e) => opts.onError?.(e), resetSession);
+            handleResult, (e) => opts.onError?.(e), resetSession);
             void session.start();
         };
-        let session = new WidgetSession(canvas, opts.apiBase, status, overlay, hint, activateBtn, (r) => {
-            dispatch(r);
-            if (r.passed)
-                onVerified();
-        }, (e) => opts.onError?.(e), resetSession);
+        let session = new WidgetSession(canvas, opts.apiBase, status, overlay, hint, activateBtn, handleResult, (e) => opts.onError?.(e), resetSession);
         modal = { node, session, closing: false };
         setBarState("verifying");
         void session.start();

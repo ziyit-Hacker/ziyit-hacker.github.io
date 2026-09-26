@@ -45,7 +45,7 @@
     function resetCaptcha() {
         const st = window.__phantom;
         if (!st) return;
-        st.verified = false;
+        // 不再维护 verified 布尔值（页面变量不能当门）：清掉本题编号即回到"未验证"。
         st.challengeId = '';
         st.sessionId = '';
         if (typeof st.reset === 'function') st.reset();
@@ -78,7 +78,7 @@
         hideTip('confirmPasswordError');
 
          
-        if (!st || !st.verified || !st.challengeId || !st.sessionId) {
+        if (!st || !st.challengeId || !st.sessionId) {
             if (captchaTip) captchaTip.style.display = 'block';
             if (st) {
                 st.pendingSubmit = true;

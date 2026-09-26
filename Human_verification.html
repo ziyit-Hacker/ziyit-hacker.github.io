@@ -634,6 +634,13 @@
           </div>
           <div class="demo-card-body">
             <div id="app"></div>
+            <!-- 无障碍去向（64.6 第 9 条）：本验证为视觉引导类（看闪烁方块 + 拖动跟随），
+                 对低视力 / 色觉障碍 / 运动障碍用户不友好，当前没有等价替代通道。 -->
+            <p style="margin-top:12px;font-size:12px;line-height:1.7;opacity:.75;">
+              无障碍用户（低视力 / 色觉障碍 / 运动障碍）无法完成本验证？
+              <a href="https://ziyit-hacker.github.io/guide.html" target="_blank" rel="noopener">点此联系人工</a>。
+              该验证仅用于防刷，不是登录 / 付款的唯一凭据。
+            </p>
           </div>
         </div>
       </section>
@@ -662,9 +669,6 @@
     }
   </script>
   <script>
-    // v0.3.7：本页不再硬编码 API 密钥——控件自己会向 /session 领短期票据（密钥永不下发）。
-    // 下方"免费获取 API Key"拿到的是用户自己的密钥，则改走 api-key 头。
-    window.__phantom = { verified: false, challengeId: '', sessionId: '', pendingSubmit: false };
   </script>
   <script type="module" src="https://ziyit-hacker.github.io/Human_verification/main.js"></script>
   <script>

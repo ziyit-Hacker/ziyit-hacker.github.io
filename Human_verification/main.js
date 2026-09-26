@@ -4,6 +4,7 @@
  
  
 import { mount } from "./phantom.js";
+import { consumeVerify } from "./api.js";
 const apiBase = "https://willian-unheady-rawly.ngrok-free.dev";
 const THEME_KEY = "theme";
 const CYCLE = ["light", "dark", "system"];
@@ -117,17 +118,45 @@ function mountWidget(mode) {
     handle = mount("#app", {
         apiBase,
         theme: resolvedTheme(mode),
-        onSuccess: (r) => {
-            console.log("验证通过，score =", (r.score || 0).toFixed(2), "challengeId =", r.challengeId);
-             
-             
-            window.__phantomVerified = true;
-            window.__phantomChallengeId = r.challengeId;
-            window.__phantomSessionId = r.sessionId;
-            window.dispatchEvent(new CustomEvent('phantom:verified', { detail: { challengeId: r.challengeId, sessionId: r.sessionId } }));
+        onSuccess: async (r) => {
+            // v0.3.34 严格式（64.6 第 1/2/3/4 条）：
+            //  · 不再写 window.__phantomVerified / __phantomChallengeId / __phantomSessionId
+            //    这类「客户端旗帜」—— 页面里的变量永远不能当门，任何脚本都能自己写出来。
+            //  · 判定只认服务端出口：拿 /verify 回的一次性 receipt 去 POST /verify/consume，
+            //    服务端回的 valid 才是权威结论。
+            //  · 兑换结果只对当次有效：不落 localStorage / sessionStorage，不做「已通过」长期标记，
+            //    也不跨刷新复用（receipt 本身一次即废）。
+            // 兼容模式（PHANTOM_RECEIPT_STRICT=0）下服务端仍回真实判定、但没有 receipt，
+            // 此时只按 UX 提示处理，绝不写任何本地标记。
+            if (!r || !r.receipt) {
+                return !!(r && r.passed === true);
+            }
+            try {
+                const c = await consumeVerify(apiBase, r.receipt);
+                if (c && c.valid === true) {
+                    // 服务端已确认通过并消费掉这张凭据。这里派发的事件仅供 UI 提示使用
+                    // （例如隐藏验证遮罩、显示「验证完成」），不是授权信号。
+                    window.dispatchEvent(new CustomEvent("phantom:verified", {
+                        detail: { challengeId: c.challengeId },
+                    }));
+                    return true;
+                }
+                console.warn("receipt 兑换未通过:", c && c.detail);
+            }
+            catch (e) {
+                // 凭据机制被关掉时 /verify/consume 会 404：退回真实判定（若可得）。
+                if (e && e.status === 404 && r.passed === true) {
+                    window.dispatchEvent(new CustomEvent("phantom:verified", {
+                        detail: { challengeId: r.challengeId },
+                    }));
+                    return true;
+                }
+                console.error("receipt 兑换失败:", e);
+            }
+            return false;
         },
         onFail: (r) => {
-            console.log("验证未通过，detail =", r.detail);
+            console.log("验证未通过，detail =", r && r.detail);
         },
         onError: (e) => {
             const kd = detectKeyDenied(e);
