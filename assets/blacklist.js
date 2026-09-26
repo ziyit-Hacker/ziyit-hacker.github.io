@@ -195,8 +195,9 @@ function getCurrentUser() {
     
     try {
          
+        // 别把 parts 打进控制台：现在 authToken 里镜像的就是「保持登录」的永久凭证，
+        // 它不含 '-'，打出来等于把完整凭证公开在控制台里（上一处日志已删，这里是补漏）。
         const parts = userData.split('-');
-        console.log('解析用户数据部分:', parts);
         
         if (parts.length >= 2) {
              

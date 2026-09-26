@@ -217,32 +217,37 @@ function canAccess(needLevel) {
     return (currentAdminLevel || 0) >= needLevel;
 }
 
+// 401 可能来自任意一个请求（权限校验、服务器状态轮询、客服轮询……），
+// 统一从这里出去：整页只提示 + 跳转一次，不再和下面 adminMe 的 .catch 各弹一遍。
+let authRedirecting = false;
+function leaveAdminPage(message) {
+    if (authRedirecting) return;
+    authRedirecting = true;
+    alert(message);
+    window.location.href = '../user/';
+}
+
 function checkUserPermission() {
     const authToken = ZIYIT_API.getToken();
 
     if (!authToken) {
-        alert('请先登录以访问管理员页面');
-        window.location.href = '../user/';
+        leaveAdminPage('请先登录以访问管理员页面');
         return;
     }
 
      
     window.ZIYIT_ON_UNAUTHORIZED = function () {
-        if (window.location.href.indexOf('music/admin') === -1) return;
-        alert('登录已过期，请重新登录');
-        window.location.href = '../user/';
+        leaveAdminPage('登录已过期，请重新登录');
     };
 
     ZIYIT_API.adminMe().then(function (me) {
         if (!me) {
-            alert('您没有权限访问管理员页面');
-            window.location.href = '../user/';
+            leaveAdminPage('您没有权限访问管理员页面');
             return;
         }
         const level = Number(me.level != null ? me.level : 0);
         if (!level) {
-            alert('您没有权限访问管理员页面');
-            window.location.href = '../user/';
+            leaveAdminPage('您没有权限访问管理员页面');
             return;
         }
         currentAdminLevel = level;
@@ -272,14 +277,11 @@ function checkUserPermission() {
         }
     }).catch(function (err) {
         console.error('权限校验失败:', err);
-        if (err && err.status === 403) {
-            alert('您没有权限访问管理员页面');
-        } else if (err && err.status === 401) {
-            alert('登录已过期，请重新登录');
+        if (err && err.status === 401) {
+            leaveAdminPage('登录已过期，请重新登录');
         } else {
-            alert('您没有权限访问管理员页面');
+            leaveAdminPage('您没有权限访问管理员页面');
         }
-        window.location.href = '../user/';
     });
 }
 

@@ -198,9 +198,20 @@
         var cred = getCredentials();
         if (!cred) return Promise.reject(new Error('no credentials'));
         if (reloginPromise) return reloginPromise;
-        reloginPromise = post('/auth/login', { username: cred.username, password: cred.password }).then(function (data) {
-            var token = data.accessToken || data.access_token || data.token;
+        // 必须带 remember=true：不带的话静默重登只换回 7 天有效的短期 JWT，后端一重启它就作废，
+        // 「保持登录」等于白勾，用户会被反复判成「登录已过期」。
+        reloginPromise = post('/auth/login', {
+            username: cred.username,
+            password: cred.password,
+            remember: true
+        }).then(function (data) {
+            // 账号要求第二重验证时这里拿不到 token（回包里是 mfaRequired）：静默重登没法凭空
+            // 完成验证码/指纹，交给调用方去引导用户重新登录，别当成凭证失效处理。
+            if (data && data.mfaRequired) throw new Error('mfa required');
+            var token = data && (data.accessToken || data.access_token || data.token);
             if (!token) throw new Error('login failed');
+            var rememberToken = data.rememberToken || data.remember_token || '';
+            if (rememberToken) setRememberToken(rememberToken);
             setToken(token, true);
             return token;
         }).finally(function () {
@@ -254,14 +265,23 @@
         }).catch(function (err) {
             if (err && err.status) {
                 var isLoginPath = path.indexOf('/auth/login') === 0;
-                // 带着永久凭证还被 401：凭证已被吊销或失效（在别处登出 / 改过密码 / 管理员吊销），
-                // 不能靠"再登一次"救回来，直接清干净并广播登录态失效。
-                if (err.status === 401 && !retried && !enrollToken && !isLoginPath && getRememberToken()) {
+                // 401 ≠ 登录态失效：后端还有一堆业务性 401（改密码时旧密码填错、验证码不对、
+                // RC 软件密钥校验失败……），只有「后端明确说这枚令牌不认」才算会话失效。
+                var isAuthRejected = /invalid or expired token|user not found|user deleted|invalid authorization header|missing authorization header|authorization required/i.test(String(err.message || ''));
+                // 判决只能针对「这次请求真正带出去的那枚令牌」。以前是看 catch 这一刻「有没有永久凭证」，
+                // 并发请求、刚登录完凭证还没写进 Cookie 的竞态都会让它误判，一误判就把「保持登录」的
+                // 永久凭证销毁了，用户此后每次打开管理员页都被判「登录已过期」。
+                var sentToken = String((options.headers && options.headers['Authorization']) || '').replace(/^Bearer\s+/i, '');
+                var rememberNow = getRememberToken();
+                if (err.status === 401 && isAuthRejected && !retried && !enrollToken && !isLoginPath
+                    && rememberNow && sentToken === rememberNow) {
+                    // 带出去的就是这枚永久凭证，后端明确不认 → 它确实失效了（在别处登出 / 改过密码 /
+                    // 管理员吊销），静默重登也救不回来，清干净并广播登录态失效。
                     clearToken();
                     handleUnauthorized();
                     throw err;
                 }
-                if (err.status === 401 && !retried && !isLoginPath && getCredentials() && !enrollToken) {
+                if (err.status === 401 && isAuthRejected && !retried && !isLoginPath && !rememberNow && getCredentials() && !enrollToken) {
                     return loginWithCredentials().then(function () {
                         return request(path, options, 0, true, withMeta);
                     }, function (loginErr) {
@@ -273,7 +293,7 @@
                         throw err;
                     });
                 }
-                if (err.status === 401 && !retried && !getCredentials() && !getRememberToken()) {
+                if (err.status === 401 && isAuthRejected && !retried && !getCredentials() && !getRememberToken()) {
                      
                     clearToken();
                     handleUnauthorized();
