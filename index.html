@@ -1111,13 +1111,9 @@
 
          
         function getCurrentUser() {
-             
-            const authToken = getCookie('authToken');
-            if (authToken) {
-                return authToken;
-            }
-             
-            return localStorage.getItem('authToken');
+            // ZIYIT_API.getToken() 会优先给「保持登录」的永久凭证，其次才是 authToken，
+            // 所以这里直接复用，别再只看 authToken —— 否则勾了保持登录的用户回到首页会被当成未登录。
+            return ZIYIT_API.getToken() || null;
         }
 
          
@@ -1175,7 +1171,7 @@
                 const invalidAuth = authError && authError.status === 401;
                 if (invalidAuth) {
                     ZIYIT_API.clearToken();
-                } else if (authToken && !hasCred) {
+                } else if (authToken && !hasCred && !ZIYIT_API.getRememberToken()) {
                     ZIYIT_API.clearToken();
                 }
                 showLoggedOut();

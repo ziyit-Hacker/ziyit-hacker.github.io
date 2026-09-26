@@ -139,7 +139,8 @@
                 // ③ 验签；失败一律 401（后端不区分原因，防探测）
                 return window.ZIYIT_API.passkeyLoginFinish({
                     challengeId: start.challengeId,
-                    credential: serializeCredential(cred)
+                    credential: serializeCredential(cred),
+                    remember: !!(opts && opts.remember)   // 「保持登录」：让后端随回包下发永久凭证
                 });
             });
         });

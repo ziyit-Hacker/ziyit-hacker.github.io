@@ -58,8 +58,31 @@
         document.cookie = name + '=' + encodeURIComponent(value) + expires + '; path=/';
     }
 
+    // ---- 「保持登录」的永久凭证 ----
+    // 勾选保持登录时，后端会随登录回包额外下发 rememberToken：真·永久，
+    // 只有用户登出 / 改密码 / 管理员吊销才失效。它可以直接当 Bearer 用，
+    // 所以存下来之后所有请求都优先带上它；后端据此判断
+    // 「该用户最近 2 分钟内是否用过这个凭证访问后端」= 在线。
+    var REMEMBER_COOKIE = 'ziyit_remember';
+    var REMEMBER_KEY = 'ziyit_remember_token';
+
+    function getRememberToken() {
+        return getCookie(REMEMBER_COOKIE) || localStorage.getItem(REMEMBER_KEY) || '';
+    }
+
+    function setRememberToken(token) {
+        if (!token) return;
+        setCookie(REMEMBER_COOKIE, token, 3650);   // 本地给足 10 年，真正什么时候失效由服务端说了算
+        localStorage.setItem(REMEMBER_KEY, token);
+    }
+
+    function clearRememberToken() {
+        document.cookie = REMEMBER_COOKIE + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        localStorage.removeItem(REMEMBER_KEY);
+    }
+
     function getToken() {
-        return getCookie('authToken') || localStorage.getItem('authToken') || '';
+        return getRememberToken() || getCookie('authToken') || localStorage.getItem('authToken') || '';
     }
 
     function setToken(token, remember) {
@@ -78,6 +101,7 @@
         document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/ziyit;';
         document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
         localStorage.removeItem('authToken');
+        clearRememberToken();
         clearCredentials();
     }
 
@@ -215,7 +239,15 @@
             });
         }).catch(function (err) {
             if (err && err.status) {
-                if (err.status === 401 && !retried && path.indexOf('/auth/login') !== 0 && getCredentials() && !enrollToken) {
+                var isLoginPath = path.indexOf('/auth/login') === 0;
+                // 带着永久凭证还被 401：凭证已被吊销或失效（在别处登出 / 改过密码 / 管理员吊销），
+                // 不能靠"再登一次"救回来，直接清干净并广播登录态失效。
+                if (err.status === 401 && !retried && !enrollToken && !isLoginPath && getRememberToken()) {
+                    clearToken();
+                    handleUnauthorized();
+                    throw err;
+                }
+                if (err.status === 401 && !retried && !isLoginPath && getCredentials() && !enrollToken) {
                     return loginWithCredentials().then(function () {
                         return request(path, options, 0, true, withMeta);
                     }, function (loginErr) {
@@ -227,7 +259,7 @@
                         throw err;
                     });
                 }
-                if (err.status === 401 && !retried && !getCredentials()) {
+                if (err.status === 401 && !retried && !getCredentials() && !getRememberToken()) {
                      
                     clearToken();
                     handleUnauthorized();
@@ -264,8 +296,9 @@
         });
     }
 
-    function login(username, md5Password) {
-        return post('/auth/login', { username: username, password: md5Password });
+    // remember=true → 让后端在登录回包里额外下发永久凭证 rememberToken（「保持登录」）
+    function login(username, md5Password, remember) {
+        return post('/auth/login', { username: username, password: md5Password, remember: !!remember });
     }
 
     function register(username, email, md5Password, challengeId, sessionId) {
@@ -362,11 +395,12 @@
     }
 
     function logout() {
-        var token = getToken();
-        if (token) {
-            return post('/auth/logout', {}).catch(function () {});
-        }
-        return Promise.resolve();
+        // 永久凭证必须显式上报给后端才会被吊销 —— 否则「退出登录」之后它依然是有效的
+        var remember = getRememberToken();
+        if (!getToken()) return Promise.resolve();
+        return post('/auth/logout', { rememberToken: remember }).catch(function () { }).then(function () {
+            clearToken();
+        });
     }
 
     function getIpLocation(userId, ip) {
@@ -1162,12 +1196,39 @@
         });
     }
 
+    // ---- 在线心跳 ----
+    // 后端把「最近 2 分钟内用凭证访问过后端」算作在线（见 /stats/online、/admin/online），
+    // 页面开着就每分钟报一次到，免得用户只是停在页面上读文档就被算成离线。
+    var HEARTBEAT_MS = 60000;
+    var heartbeatTimer = null;
+
+    function startHeartbeat() {
+        if (heartbeatTimer || typeof setInterval === 'undefined') return;
+        heartbeatTimer = setInterval(function () {
+            if (document.hidden) return;          // 页面在后台标签页里就不算在线
+            if (enrollToken) return;              // 受限票据只能打安全中心那几个接口，别去触发 401
+            if (!getToken()) return;
+            request('/auth/me').catch(function () { });
+        }, HEARTBEAT_MS);
+    }
+
+    if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startHeartbeat);
+        } else {
+            startHeartbeat();
+        }
+    }
+
     window.ZIYIT_API = {
         BASE: DEFAULT_BASE,
         getBases: getBases,
         getToken: getToken,
         setToken: setToken,
         clearToken: clearToken,
+        getRememberToken: getRememberToken,
+        setRememberToken: setRememberToken,
+        clearRememberToken: clearRememberToken,
         setCredentials: setCredentials,
         getCredentials: getCredentials,
         clearCredentials: clearCredentials,

@@ -364,6 +364,14 @@
         let pendingPasswordMd5 = '';
         let pendingRemember = false;
 
+        // 「保持登录」：表单里一个复选框、其他方式面板里一个，两者互为镜像（见 mirrorRemember）。
+        // 提交任何一步之前都按这个读，保证面板里勾的也算数。
+        function wantRemember() {
+            const a = document.getElementById('rememberMe');
+            const b = document.getElementById('otherRemember');
+            return !!((a && a.checked) || (b && b.checked));
+        }
+
          
         function checkFocus() {
             const activeElement = document.activeElement;
@@ -404,7 +412,7 @@
             hideAppealLink();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
+            const rememberMe = wantRemember();
 
             if (!username.trim()) {
                 showError('用户名不能为空');
@@ -423,7 +431,7 @@
             pendingRemember = rememberMe;
 
              
-            ZIYIT_API.login(username, md5Hash)
+            ZIYIT_API.login(username, md5Hash, rememberMe)
                 .then(handleLoginResponse)
                 .catch(error => {
                     console.error('登录失败:', error);
@@ -471,12 +479,18 @@
                 showError('登录响应异常，请稍后再试');
                 return;
             }
-            // 「保持登录」以表单里那个为准（它与面板里的 #otherRemember 互为镜像，见下方绑定）
-            pendingRemember = !!document.getElementById('rememberMe').checked;
-            ZIYIT_API.setToken(token, pendingRemember);
-            if (pendingUsername && pendingPasswordMd5) {
-                ZIYIT_API.setCredentials(pendingUsername, pendingPasswordMd5, pendingRemember);
+            // 「保持登录」：后端会额外下发永久凭证 rememberToken（可直接当 Bearer 用，服务端也能单独吊销）。
+            // 存下它才是真正的长期登录；authToken 本身仍是 7 天有效的短期令牌。
+            const rememberToken = data.rememberToken || data.remember_token || '';
+            pendingRemember = wantRemember();
+            if (rememberToken) {
+                ZIYIT_API.setRememberToken(rememberToken);
+            } else if (pendingRemember && pendingUsername && pendingPasswordMd5) {
+                // 后端还没下发永久凭证时的旧兜底：本地存「用户名|md5」，401 时静默重登一次。
+                // 永久凭证上线后这段可以整段删掉。
+                ZIYIT_API.setCredentials(pendingUsername, pendingPasswordMd5, true);
             }
+            ZIYIT_API.setToken(token, pendingRemember);
             window.location.href = '../';
         }
 
@@ -572,7 +586,7 @@
         function submitMfaFactor() {
             const factor = document.getElementById('mfaFactor').value || 'totp';
             const btn = document.getElementById('mfaSubmit');
-            const body = { mfaToken: savedMfaToken, factor: factor };
+            const body = { mfaToken: savedMfaToken, factor: factor, remember: wantRemember() };
             if (factor === 'password') {
                 const pwd = document.getElementById('mfaPassword').value;
                 if (!pwd) {
@@ -625,8 +639,7 @@
         }
 
         // ---- 不用密码的第一重验证：邮箱验证码 / 2FA 动态码 / 恢复码 / Passkey ----
-        // 注意：/auth/login/factor 只认 totp / recovery / email，密码不能当第二因子，
-        // 所以下面渲染第二步时要把回包 methods 里的 password 过滤掉，免得给用户一个死胡同。
+        // /auth/login/factor 现在也收 factor=password（当第二因子用），所以第二步不再过滤密码。
 
         function currentUsername() {
             return (document.getElementById('username').value || '').trim();
@@ -729,7 +742,7 @@
             }
             const btn = document.getElementById('otherSubmit');
             btn.disabled = true;
-            ZIYIT_API.loginFactor({ mfaToken: savedMfaToken, code: code, factor: f }).then(function (data) {
+            ZIYIT_API.loginFactor({ mfaToken: savedMfaToken, code: code, factor: f, remember: wantRemember() }).then(function (data) {
                 if (data && data.mfaToken) savedMfaToken = data.mfaToken;
                 handleLoginResponse(data);
             }).catch(function (err) {
@@ -745,7 +758,7 @@
                 showError('请先输入用户名');
                 return;
             }
-            passkeyLogin({ username: uname }, btn);
+            passkeyLogin({ username: uname, remember: wantRemember() }, btn);
         }
 
          
@@ -869,13 +882,13 @@
                 showError('请先输入用户名，Passkey 不支持盲找账号');
                 return;
             }
-            passkeyLogin({ username: uname }, this);
+            passkeyLogin({ username: uname, remember: wantRemember() }, this);
         });
 
         document.getElementById('mfaSendCode').addEventListener('click', sendMfaEmailCode);
         document.getElementById('mfaSubmit').addEventListener('click', submitMfaFactor);
         document.getElementById('mfaPasskey').addEventListener('click', function() {
-            passkeyLogin({ mfaToken: savedMfaToken }, this);
+            passkeyLogin({ mfaToken: savedMfaToken, remember: wantRemember() }, this);
         });
         document.getElementById('mfaFactor').addEventListener('change', function() {
             updateMfaRows();
