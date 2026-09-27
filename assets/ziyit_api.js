@@ -1,6 +1,53 @@
 (function () {
     var DEFAULT_BASE = 'https://willian-unheady-rawly.ngrok-free.dev';
+
      
+    var SCRIPT_SRC = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
+
+    var loadedBase = '';
+    var backendPromise = null;
+
+    function backendTxtUrl() {
+        try {
+            if (SCRIPT_SRC) return new URL('../backend.txt', SCRIPT_SRC).href;
+        } catch (e) {}
+        return 'backend.txt';
+    }
+
+    function loadBackendBase() {
+        return new Promise(function (resolve) {
+            var done = false;
+            function finish(v) { if (!done) { done = true; resolve(v || ''); } }
+            try {
+                fetch(backendTxtUrl(), { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': '1' } })
+                    .then(function (res) { return res.ok ? res.text() : ''; })
+                    .then(function (txt) {
+                        var url = String(txt || '').trim().split(/\s+/)[0].replace(/\/+$/, '');
+                        if (/^https?:\/\//i.test(url)) { loadedBase = url; finish(url); }
+                        else finish('');
+                    })
+                    .catch(function () { finish(''); });
+            } catch (e) {
+                finish('');
+            }
+            setTimeout(function () { finish(''); }, 4000);
+        });
+    }
+
+    function backendReady() {
+        if (!backendPromise) backendPromise = loadBackendBase();
+        return backendPromise;
+    }
+
+    function currentBase() {
+        try {
+            var c = localStorage.getItem('ziyit_api_base');
+            if (c) return String(c).replace(/\/+$/, '');
+        } catch (e) {}
+        if (loadedBase) return loadedBase;
+        return DEFAULT_BASE;
+    }
+
     var REQUEST_TIMEOUT_MS = 20000;
 
     function fetchWithTimeout(url, options) {
@@ -35,8 +82,9 @@
         var list = [];
         try {
             var custom = localStorage.getItem('ziyit_api_base');
-            if (custom) list.push(custom);
+            if (custom) list.push(String(custom).replace(/\/+$/, ''));
         } catch (e) {}
+        if (loadedBase && list.indexOf(loadedBase) === -1) list.push(loadedBase);
         list.push(DEFAULT_BASE);
         return list;
     }
@@ -240,6 +288,12 @@
     }
 
     function request(path, options, baseIndex, retried, withMeta) {
+        return backendReady().then(function () {
+            return doRequest(path, options, baseIndex, retried, withMeta);
+        });
+    }
+
+    function doRequest(path, options, baseIndex, retried, withMeta) {
         options = options || {};
         options.headers = options.headers || {};
         options.headers['ngrok-skip-browser-warning'] = '1';
@@ -1273,7 +1327,7 @@
 
      
     function backroomsTypeOpen(type, id) {
-        var base = (localStorage.getItem('ziyit_api_base') || DEFAULT_BASE).replace(/\/$/, '');
+        var base = currentBase();
         var token = getToken();
         return fetchWithTimeout(base + backroomsPrefix(type) + '/' + encodeURIComponent(id), {
             headers: {
@@ -1347,7 +1401,7 @@
 
      
     function backroomsDownloadStandard() {
-        var base = (localStorage.getItem('ziyit_api_base') || DEFAULT_BASE).replace(/\/$/, '');
+        var base = currentBase();
         return fetchWithTimeout(base + '/backrooms/normal-levels/slyq.md')
             .then(function (r) {
                 if (!r.ok) { var e = new Error('下载失败 ' + r.status); e.status = r.status; throw e; }
@@ -1364,20 +1418,21 @@
 
      
     function backroomsBase() {
-        return (localStorage.getItem('ziyit_api_base') || DEFAULT_BASE).replace(/\/$/, '');
+        return currentBase();
     }
 
      
      
     function backroomsOpenLevel(id) {
-        var bases = getBases();
-        var base = bases[0] || DEFAULT_BASE;
-        var token = getToken();
-        return fetchWithTimeout(base + '/backrooms/levels/' + encodeURIComponent(id), {
-            headers: {
-                'ngrok-skip-browser-warning': '1',
-                'Authorization': token ? 'Bearer ' + token : ''
-            }
+        return backendReady().then(function () {
+            var base = currentBase();
+            var token = getToken();
+            return fetchWithTimeout(base + '/backrooms/levels/' + encodeURIComponent(id), {
+                headers: {
+                    'ngrok-skip-browser-warning': '1',
+                    'Authorization': token ? 'Bearer ' + token : ''
+                }
+            });
         }).then(function (res) {
             if (!res.ok) {
                 var err = new Error('请求失败 ' + res.status);
@@ -1419,6 +1474,8 @@
 
     window.ZIYIT_API = {
         BASE: DEFAULT_BASE,
+        backendReady: backendReady,
+        base: currentBase,
         getBases: getBases,
         getToken: getToken,
         setToken: setToken,

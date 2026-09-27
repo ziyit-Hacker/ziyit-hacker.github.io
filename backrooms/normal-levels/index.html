@@ -2911,12 +2911,6 @@
          
          
         (function () {
-            var BASE = (function () {
-                try {
-                    return (localStorage.getItem('ziyit_api_base') || 'https://willian-unheady-rawly.ngrok-free.dev').replace(/\/$/, '');
-                } catch (e) { return 'https://willian-unheady-rawly.ngrok-free.dev'; }
-            })();
-
             function esc(s) {
                 return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
                     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];

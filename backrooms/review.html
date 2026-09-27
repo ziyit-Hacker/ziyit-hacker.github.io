@@ -118,7 +118,9 @@
 
     <script>
         var ME = null, LEVEL = 0;
-        var BASE = (function () { try { return (localStorage.getItem('ziyit_api_base') || 'https://willian-unheady-rawly.ngrok-free.dev').replace(/\/$/, ''); } catch (e) { return 'https://willian-unheady-rawly.ngrok-free.dev'; } })();
+        function currentBase() {
+            return (window.ZIYIT_API && ZIYIT_API.base) ? ZIYIT_API.base() : 'https://willian-unheady-rawly.ngrok-free.dev';
+        }
 
          
         var STATUS_CLASS = {
@@ -153,9 +155,10 @@
         document.getElementById('modal-mask').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 
          
-        function fetchLevelHtml(id) {
+        async function fetchLevelHtml(id) {
+            try { if (window.ZIYIT_API && ZIYIT_API.backendReady) await ZIYIT_API.backendReady(); } catch (e) { }
             var token = window.ZIYIT_API && ZIYIT_API.getToken ? ZIYIT_API.getToken() : '';
-            return fetch(BASE + '/backrooms/levels/' + encodeURIComponent(id), {
+            return fetch(currentBase() + '/backrooms/levels/' + encodeURIComponent(id), {
                 headers: {
                     'ngrok-skip-browser-warning': '1',
                     'Authorization': token ? 'Bearer ' + token : ''

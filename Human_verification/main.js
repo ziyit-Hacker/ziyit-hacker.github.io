@@ -4,8 +4,7 @@
  
  
 import { mount } from "./phantom.js";
-import { consumeVerify } from "./api.js";
-const apiBase = "https://willian-unheady-rawly.ngrok-free.dev";
+import { consumeVerify, backendReady, apiBase } from "./api.js";
 const THEME_KEY = "theme";
 const CYCLE = ["light", "dark", "system"];
 const prefersDark = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -113,10 +112,11 @@ function showKeyDeniedPanel(tips) {
 
  
 let handle = null;
-function mountWidget(mode) {
+async function mountWidget(mode) {
     handle?.destroy();
+    await backendReady();
     handle = mount("#app", {
-        apiBase,
+        apiBase: apiBase(),
         theme: resolvedTheme(mode),
         onSuccess: async (r) => {
              
@@ -139,7 +139,7 @@ function mountWidget(mode) {
                 return !!(r && r.passed === true);
             }
             try {
-                const c = await consumeVerify(apiBase, receipts);
+                const c = await consumeVerify(apiBase(), receipts);
                 if (c && c.valid === true) {
                      
                      

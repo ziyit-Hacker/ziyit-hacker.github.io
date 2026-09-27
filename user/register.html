@@ -281,7 +281,10 @@
     <script type="module">
         import { mount } from "https://ziyit-hacker.github.io/Human_verification/phantom.js";
 
-        const PH_API_BASE = "https://willian-unheady-rawly.ngrok-free.dev";
+        const PH_API_BASE_FALLBACK = "https://willian-unheady-rawly.ngrok-free.dev";
+        function phBase() {
+            return (window.ZIYIT_API && window.ZIYIT_API.base) ? window.ZIYIT_API.base() : PH_API_BASE_FALLBACK;
+        }
 
         function showCaptchaHint(msg) {
             const el = document.getElementById('captchaHint');
@@ -332,9 +335,15 @@
             el.style.display = 'block';
         }
 
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const handle = mount('#app', {
-            apiBase: PH_API_BASE,
+        let handle = null;
+
+        async function initPhantom() {
+            if (window.ZIYIT_API && window.ZIYIT_API.backendReady) {
+                try { await window.ZIYIT_API.backendReady(); } catch (e) { }
+            }
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            handle = mount('#app', {
+                apiBase: phBase(),
             theme: prefersDark ? 'dark' : 'light',
             onSuccess(r) {
                  
@@ -381,8 +390,11 @@
                 resetPhantomToIdle();
                 showCaptchaHint('验证服务暂不可用，请稍后再试');
             }
-        });
-         
+            });
+        }
+
+        initPhantom();
+
         window.__phantom.open = function () { if (handle) handle.open(); };
         window.__phantom.reset = function () { if (handle) handle.reset(); };
     </script>

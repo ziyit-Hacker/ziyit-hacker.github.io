@@ -665,6 +665,27 @@
   <script>
     (function () {
       var BASE_URL = 'https://willian-unheady-rawly.ngrok-free.dev';
+      var backendPromise = null;
+      function backendReady() {
+        if (backendPromise) return backendPromise;
+        backendPromise = (function () {
+          try {
+            var c = localStorage.getItem('ziyit_api_base');
+            if (c) { BASE_URL = String(c).replace(/\/+$/, ''); return Promise.resolve(BASE_URL); }
+          } catch (e) { }
+          var url;
+          try { url = new URL('backend.txt', document.baseURI).href; } catch (e) { url = 'backend.txt'; }
+          return fetch(url, { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': '1' } })
+            .then(function (r) { return r.ok ? r.text() : ''; })
+            .then(function (t) {
+              var u = String(t || '').trim().split(/\s+/)[0].replace(/\/+$/, '');
+              if (/^https?:\/\//i.test(u)) BASE_URL = u;
+              return BASE_URL;
+            })
+            .catch(function () { return BASE_URL; });
+        })();
+        return backendPromise;
+      }
 
       function showToast(message, type) {
         var existing = document.querySelector('.toast-container');
@@ -715,6 +736,7 @@
           return;
         }
         try {
+          await backendReady();
           var response = await fetch(BASE_URL + '/api-key/free', {
             method: 'POST',
             headers: {

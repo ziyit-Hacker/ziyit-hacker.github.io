@@ -7,6 +7,41 @@
  
 const TICKET_HEADER = "x-phantom-ticket";
 
+const DEFAULT_BASE = "https://willian-unheady-rawly.ngrok-free.dev";
+
+let resolvedBase = "";
+let backendPromise = null;
+
+function backendTxtUrl() {
+    try {
+        return new URL("../backend.txt", import.meta.url).href;
+    } catch (e) {
+        return "backend.txt";
+    }
+}
+
+export function backendReady() {
+    if (!backendPromise) {
+        backendPromise = fetch(backendTxtUrl(), { cache: "no-store", headers: { "ngrok-skip-browser-warning": "1" } })
+            .then((res) => (res.ok ? res.text() : ""))
+            .then((txt) => {
+                const url = String(txt || "").trim().split(/\s+/)[0].replace(/\/+$/, "");
+                if (/^https?:\/\//i.test(url)) resolvedBase = url;
+                return apiBase();
+            })
+            .catch(() => apiBase());
+    }
+    return backendPromise;
+}
+
+export function apiBase() {
+    try {
+        const c = localStorage.getItem("ziyit_api_base");
+        if (c) return String(c).replace(/\/+$/, "");
+    } catch (e) { }
+    return resolvedBase || DEFAULT_BASE;
+}
+
 let ticket = { token: "", expiresAt: 0 };
 
 function explicitApiKey() {

@@ -2190,10 +2190,8 @@
 
              
             function imgApiBase() {
-                var b = '';
-                try { b = localStorage.getItem('ziyit_api_base') || ''; } catch (e) {}
-                if (!b && window.ZIYIT_API && ZIYIT_API.BASE) b = ZIYIT_API.BASE;
-                return b;
+                try { if (window.ZIYIT_API && ZIYIT_API.base) return ZIYIT_API.base(); } catch (e) { }
+                try { return localStorage.getItem('ziyit_api_base') || ''; } catch (e) { return ''; }
             }
 
              

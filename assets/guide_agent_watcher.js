@@ -51,17 +51,18 @@
 
      
     function api(path, method, body) {
-        var bases = [];
-        try { if (window.ZIYIT_API && window.ZIYIT_API.getBases) bases = window.ZIYIT_API.getBases(); } catch (e) {}
-        var base = (bases && bases.length && bases[0]) || DEFAULT_BASE;
-        var token = getToken();
-        var opts = {
-            method: method || 'GET',
-            headers: { 'ngrok-skip-browser-warning': '1' }
-        };
-        if (token) opts.headers['Authorization'] = 'Bearer ' + token;
-        if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
-        return fetch(base + path, opts).then(function (res) {
+        var ready = (window.ZIYIT_API && window.ZIYIT_API.backendReady) ? window.ZIYIT_API.backendReady() : Promise.resolve();
+        return ready.then(function () {
+            var base = (window.ZIYIT_API && window.ZIYIT_API.base) ? window.ZIYIT_API.base() : DEFAULT_BASE;
+            var token = getToken();
+            var opts = {
+                method: method || 'GET',
+                headers: { 'ngrok-skip-browser-warning': '1' }
+            };
+            if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+            if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+            return fetch(base + path, opts);
+        }).then(function (res) {
             return res.json().catch(function () { return null; }).then(function (data) {
                 if (!res.ok) {
                     var err = new Error((data && data.detail) || ('请求失败 ' + res.status));

@@ -124,7 +124,9 @@
 
     <script>
         var USERNAME = '';
-        var BASE = (function () { try { return (localStorage.getItem('ziyit_api_base') || 'https://willian-unheady-rawly.ngrok-free.dev').replace(/\/$/, ''); } catch (e) { return 'https://willian-unheady-rawly.ngrok-free.dev'; } })();
+        function currentBase() {
+            return (window.ZIYIT_API && ZIYIT_API.base) ? ZIYIT_API.base() : 'https://willian-unheady-rawly.ngrok-free.dev';
+        }
         var MAX_SIZE = 1024 * 1024;  
 
          
@@ -181,9 +183,10 @@
         function fmtSize(n) { n = Number(n); if (n < 1024) return n + ' B'; if (n < 1048576) return (n / 1024).toFixed(1) + ' KB'; return (n / 1048576).toFixed(2) + ' MB'; }
 
          
-        function fetchDocHtml(type, id) {
+        async function fetchDocHtml(type, id) {
+            try { if (window.ZIYIT_API && ZIYIT_API.backendReady) await ZIYIT_API.backendReady(); } catch (e) { }
             var token = window.ZIYIT_API && ZIYIT_API.getToken ? ZIYIT_API.getToken() : '';
-            return fetch(BASE + ZIYIT_API.backroomsPrefix(type) + '/' + encodeURIComponent(id), {
+            return fetch(currentBase() + ZIYIT_API.backroomsPrefix(type) + '/' + encodeURIComponent(id), {
                 headers: {
                     'ngrok-skip-browser-warning': '1',
                     'Authorization': token ? 'Bearer ' + token : ''

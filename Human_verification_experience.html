@@ -279,9 +279,7 @@
 
     <script type="module">
         import { mount } from "./Human_verification/phantom.js";
-        import { consumeVerify, setExperienceChannel } from "./Human_verification/api.js";
-
-        const API_BASE = "https://willian-unheady-rawly.ngrok-free.dev";
+        import { consumeVerify, setExperienceChannel, backendReady, apiBase } from "./Human_verification/api.js";
 
         var statusCard = document.getElementById("statusCard");
         var expKeyInput = document.getElementById("expKey");
@@ -351,7 +349,8 @@
             validateKey();
         }
 
-        function loadStatus() {
+        async function loadStatus() {
+            await backendReady();
             var token = getToken();
             if (!token) {
                 alert("请先登录后再使用体验页");
@@ -360,7 +359,7 @@
             }
             statusCard.innerHTML = '<h2>体验资格</h2><div class="loading-box">正在查询体验资格…</div>';
             startBtn.disabled = true;
-            fetch(API_BASE + "/experience/status", {
+            fetch(apiBase() + "/experience/status", {
                 headers: { "Authorization": "Bearer " + token }
             }).then(function (res) {
                 if (res.status === 401) {
@@ -417,7 +416,8 @@
             handle = null;
         }
 
-        startBtn.addEventListener("click", function () {
+        startBtn.addEventListener("click", async function () {
+            await backendReady();
             var key = (expKeyInput.value || "").trim();
             if (!status || status.allowed !== true) {
                 showResult("当前账号无法开始体验：" + ((status && status.message) || "请查看上方说明"), false);
@@ -439,7 +439,7 @@
             startBtn.disabled = true;
 
             handle = mount("#app", {
-                apiBase: API_BASE,
+                apiBase: apiBase(),
                 theme: currentTheme(),
                 onSuccess: async function (r) {
                     var receipts = Array.isArray(r && r.receipts)
@@ -451,7 +451,7 @@
                         return false;
                     }
                     try {
-                        var c = await consumeVerify(API_BASE, receipts);
+                        var c = await consumeVerify(apiBase(), receipts);
                         if (c && c.valid === true) {
                             showResult("验证通过。本次消耗已按实际动作从账户点数中扣除。", true);
                             loadStatus();

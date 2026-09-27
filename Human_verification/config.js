@@ -1,3 +1,5 @@
+import { apiBase } from "./api.js";
+
 export function isMobileViewport() {
     if (typeof window === "undefined") return false;
     const coarse = typeof window.matchMedia === "function" &&
@@ -8,7 +10,9 @@ export function isMobileViewport() {
 
 export const CONFIG = {
      
-    apiBase: "https://willian-unheady-rawly.ngrok-free.dev",
+    get apiBase() {
+        return apiBase();
+    },
 
      
     canvasWidthPC: 480,
