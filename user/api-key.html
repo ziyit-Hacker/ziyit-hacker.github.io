@@ -621,6 +621,17 @@
             </div>
 
             <div class="ak-row">
+                <div class="ak-row-head">
+                    <span class="ak-row-title">今日最大消耗点数</span>
+                    <label class="chk"><input type="checkbox" id="setDailyPointsOff"> 今日不限</label>
+                </div>
+                <div class="ak-inputs">
+                    <input type="number" id="setDailyPoints" min="0" step="0.1" placeholder="当日可消耗点数上限">
+                    <span style="font-size: 13px; color: var(--ziyit-text-secondary);">当日消耗点数达到该值后，该密钥当天不再放行</span>
+                </div>
+            </div>
+
+            <div class="ak-row">
                 <div class="ak-row-head"><span class="ak-row-title">允许来源（白名单）</span></div>
                 <div class="ak-row-desc">每行一个来源，支持完整地址（https://ziyit-hacker.github.io）或裸域名（ziyit-hacker.github.io）。留空 = 不限来源。</div>
                 <textarea id="setOrigins" placeholder="https://example.com&#10;example.org" spellcheck="false"></textarea>
@@ -628,7 +639,7 @@
 
             <div class="ak-row">
                 <div class="ak-row-head"><span class="ak-row-title">计费说明</span></div>
-                <div class="ak-row-desc">旧版「今日额度 / 月度额度」已不再参与放行，验证按账户点数余额计费。余额与充值请到 <a href="points.html">我的点数</a>。</div>
+                <div class="ak-row-desc">验证按账户点数余额计费；「今日最大消耗点数」是本密钥当天的消耗上限，超出后当天不再放行。余额与充值请到 <a href="points.html">我的点数</a>。</div>
             </div>
 
             <div class="ak-actions">
@@ -718,7 +729,9 @@
                     '</div>' + badge +
                     '</div>' +
                     '<div class="key-foot">' +
-                    '<div class="meta">预警阈值：' +
+                    '<div class="meta">今日最大消耗点数：' +
+                    ((k.daily_points_limit === -1 || k.daily_points_limit == null) ? '不限' : (fmtPts(k.daily_points_limit) + ' 点')) +
+                    ' ｜ 预警阈值：' +
                     ((k.warn_limit === -1 || k.warn_limit == null) ? '已关闭' : (k.warn_limit + ' 次')) +
                     ' ｜ 来源白名单：' +
                     ((k.allowed_origins && k.allowed_origins.length) ? ('已配置 ' + k.allowed_origins.length + ' 条') : '不限') +
@@ -824,6 +837,11 @@
                 document.getElementById('setWarn').value = warnOff ? '' : (k.warn_limit != null ? k.warn_limit : '');
                 syncWarnState();
 
+                var dpOff = k.daily_points_limit === -1 || k.daily_points_limit == null;
+                document.getElementById('setDailyPointsOff').checked = dpOff;
+                document.getElementById('setDailyPoints').value = dpOff ? '' : (k.daily_points_limit != null ? k.daily_points_limit : '');
+                syncDailyPointsState();
+
                 document.getElementById('setOrigins').value = (k.allowed_origins || []).join('\n');
 
                 showMsg('', '');
@@ -839,6 +857,12 @@
                 var off = document.getElementById('setWarnOff').checked;
                 document.getElementById('setWarn').disabled = off;
                 if (off) document.getElementById('setWarn').value = '';
+            }
+
+            function syncDailyPointsState() {
+                var off = document.getElementById('setDailyPointsOff').checked;
+                document.getElementById('setDailyPoints').disabled = off;
+                if (off) document.getElementById('setDailyPoints').value = '';
             }
 
             function showMsg(text, cls) {
@@ -870,6 +894,17 @@
                         return;
                     }
                     body.warn_limit = w;
+                }
+
+                if (document.getElementById('setDailyPointsOff').checked) {
+                    body.daily_points_limit = -1;
+                } else {
+                    var dp = parseFloat(document.getElementById('setDailyPoints').value);
+                    if (isNaN(dp) || dp < 0) {
+                        showMsg('请输入有效的今日最大消耗点数（≥0），或勾选「今日不限」', 'error');
+                        return;
+                    }
+                    body.daily_points_limit = dp;
                 }
 
                 var origins = document.getElementById('setOrigins').value
@@ -904,6 +939,7 @@
             document.getElementById('refreshBtn').addEventListener('click', function () { loadKeys(true); loadPoints(); });
             document.getElementById('setStatus').addEventListener('change', syncStatusLabel);
             document.getElementById('setWarnOff').addEventListener('change', syncWarnState);
+            document.getElementById('setDailyPointsOff').addEventListener('change', syncDailyPointsState);
             document.getElementById('cancelSettings').addEventListener('click', closeSettings);
             document.getElementById('saveSettings').addEventListener('click', saveSettings);
             overlay.addEventListener('click', function (e) {

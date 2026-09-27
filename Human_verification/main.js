@@ -43,18 +43,25 @@ const KEY_MANAGE_URL =
 function detectKeyDenied(e) {
     if (!e || e.status !== 403)
         return null;
-    const raw = String(e.detail || e.message || "");
      
-    let reason = null;
-    if (/daily limit exceeded/i.test(raw)) reason = "daily";
-    else if (/limit exceeded or invalid/i.test(raw)) reason = "monthly";
-    else if (/\bdisabled\b/i.test(raw)) reason = "disabled";
-    else if (/origin not allowed/i.test(raw)) reason = "origin";
+    const d = (typeof e.detail === "object" && e.detail) ? e.detail : null;
+    let reason = (d && d.reason) || null;
+    const raw = String((d && (d.message || d.reason)) || e.detail || e.message || "");
+    if (!reason) {
+        if (/daily points limit exceeded/i.test(raw)) reason = "daily_points";
+        else if (/daily limit exceeded/i.test(raw)) reason = "daily";
+        else if (/limit exceeded or invalid/i.test(raw)) reason = "monthly";
+        else if (/\bdisabled\b/i.test(raw)) reason = "disabled";
+        else if (/origin not allowed/i.test(raw)) reason = "origin";
+        else if (/insufficient points/i.test(raw)) reason = "points";
+    }
     if (!reason)
         return null;
     const tips = {
         monthly: "该密钥本月可用次数已用完（或密钥无效）。请在「我的密钥」查看剩余额度，超额将在下个自然月自动重置。",
         daily: "该密钥今日可用次数已达上限（次日自动重置）。如需立即恢复，可在「我的密钥」中把今日额度设为不限。",
+        daily_points: "该密钥今日消耗点数已达上限（次日自动重置）。如需立即恢复，可在「我的密钥」中把今日最大消耗点数设为不限。",
+        points: "账户点数余额不足，无法发起验证。请到「我的点数」充值后再试。",
         disabled: "该密钥已被停用，无法发起验证。请到「我的密钥」中重新启用后再试。",
         origin: "当前网站域名不在该密钥的“允许来源”白名单中。密钥所有者可在「我的密钥」中添加当前来源：https://" + (location.host || location.hostname || "")
     }[reason];

@@ -696,17 +696,26 @@ class WidgetSession {
         this._streamAborted = false;
         this.status.textContent = "正在下载验证题…";
         const total = Number(ready.chunkCount || this.videoStream?.chunkCount || 0);
+        const limit = total > 0 ? total : Number.MAX_SAFE_INTEGER;
         const parts = [];
+        const win = this._chunkWindow(ready);
         let index = 0;
         let retried = 0;
-        for (;;) {
+        while (index < limit) {
             if (this._streamAborted)
                 throw new Error("视频下载已中止");
-            let chunk;
+             
+             
+            const batch = [];
+            for (let i = index; i < Math.min(limit, index + win); i++) {
+                batch.push(videoChunk(this.apiBase, this.challengeId, i, this.sessionId));
+            }
+            let list;
             try {
-                chunk = await videoChunk(this.apiBase, this.challengeId, index, this.sessionId);
+                list = await Promise.all(batch);
             }
             catch (e) {
+                 
                  
                 if (e && e.status === 409 && retried < 5) {
                     retried++;
@@ -714,18 +723,18 @@ class WidgetSession {
                 }
                 throw e;
             }
-            parts.push(this._decodeChunk(chunk.data));
-            if (chunk.final)
-                break;
-            const next = Number(chunk.nextIndex);
-            if (!Number.isFinite(next) || next <= index)
-                break;
-            index = next;
-            if (total && index >= total)
+            let done = false;
+            for (const chunk of list) {
+                parts.push(this._decodeChunk(chunk.data));
+                if (chunk.final) {
+                    done = true;
+                    break;
+                }
+            }
+            index += list.length;
+            if (done)
                 break;
         }
-        if (this._streamAborted)
-            throw new Error("视频下载已中止");
         const size = parts.reduce((n, p) => n + p.length, 0);
         if (!size)
             throw this._playbackUnsupported("视频分包为空");
@@ -787,20 +796,35 @@ class WidgetSession {
      
      
      
+     
+     
+     
+    _chunkWindow(ready) {
+        const w = Number(ready && ready.window);
+        return Number.isFinite(w) && w >= 1 ? Math.floor(w) : 1;
+    }
     async _pullChunks(ready) {
         const total = Number(ready.chunkCount || this.videoStream?.chunkCount || 0);
+        const limit = total > 0 ? total : Number.MAX_SAFE_INTEGER;
+        const win = this._chunkWindow(ready);
         let index = 0;
         let retried = 0;
         let first = true;
         const appendErrors = [];
-        for (;;) {
+        while (index < limit) {
             if (this._streamAborted)
                 return;
             if (appendErrors.length)
                 throw appendErrors[0];
-            let chunk;
+             
+             
+            const batch = [];
+            for (let i = index; i < Math.min(limit, index + win); i++) {
+                batch.push(videoChunk(this.apiBase, this.challengeId, i, this.sessionId));
+            }
+            let list;
             try {
-                chunk = await videoChunk(this.apiBase, this.challengeId, index, this.sessionId);
+                list = await Promise.all(batch);
             }
             catch (e) {
                  
@@ -811,35 +835,32 @@ class WidgetSession {
                 }
                 throw e;
             }
-            if (this._streamAborted)
-                return;
-            const appended = this._enqueueAppend(this._decodeChunk(chunk.data));
-            appended.catch((e) => appendErrors.push(e));
-            if (first) {
-                first = false;
-                 
-                appended.then(() => this._markFirstChunk?.(), (e) => this._markFirstChunk?.(e));
-            }
-            if (chunk.final) {
-                 
-                await appended.catch(() => { });
-                if (appendErrors.length)
-                    throw appendErrors[0];
-                const ms = this.mediaSource;
-                if (ms && ms.readyState === "open") {
-                    try {
-                        ms.endOfStream();
-                    }
-                    catch (e) {   }
+            for (const chunk of list) {
+                if (this._streamAborted)
+                    return;
+                const appended = this._enqueueAppend(this._decodeChunk(chunk.data));
+                appended.catch((e) => appendErrors.push(e));
+                if (first) {
+                    first = false;
+                     
+                    appended.then(() => this._markFirstChunk?.(), (e) => this._markFirstChunk?.(e));
                 }
-                return;
+                if (chunk.final) {
+                     
+                    await appended.catch(() => { });
+                    if (appendErrors.length)
+                        throw appendErrors[0];
+                    const ms = this.mediaSource;
+                    if (ms && ms.readyState === "open") {
+                        try {
+                            ms.endOfStream();
+                        }
+                        catch (e) {   }
+                    }
+                    return;
+                }
             }
-            const next = Number(chunk.nextIndex);
-            if (!Number.isFinite(next) || next <= index)
-                return;
-            index = next;
-            if (total && index >= total)
-                return;
+            index += list.length;
         }
     }
      

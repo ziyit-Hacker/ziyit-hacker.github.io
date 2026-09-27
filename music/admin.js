@@ -1506,7 +1506,12 @@ function apiKeyFields(k) {
         warn: k.warn_limit != null ? k.warn_limit : (k.warnLimit != null ? k.warnLimit : -1),
         origins: Array.isArray(k.allowed_origins) ? k.allowed_origins.slice() : (Array.isArray(k.allowedOrigins) ? k.allowedOrigins.slice() : []),
         resetMonth: k.reset_month || k.resetMonth || '',
-        created: k.created_at || k.createdAt || k.createTime || k.created || ''
+        created: k.created_at || k.createdAt || k.createTime || k.created || '',
+        // v0.3.38：点数口径——账户点数余额与「今日最大消耗点数 / 今日已消耗点数」
+        points: k.points != null ? k.points : (k.pointsBalance != null ? k.pointsBalance : 0),
+        minRequired: k.minRequired != null ? k.minRequired : (k.min_required != null ? k.min_required : 0),
+        dailyPointsLimit: k.daily_points_limit != null ? k.daily_points_limit : (k.dailyPointsLimit != null ? k.dailyPointsLimit : -1),
+        dailyPointsUsed: k.daily_points_used != null ? k.daily_points_used : (k.dailyPointsUsed != null ? k.dailyPointsUsed : 0)
     };
 }
 
@@ -1544,12 +1549,11 @@ function renderApiKeys() {
             + '<div class="user-name">' + escAdmin(f.username ? f.username + '（ID: ' + f.userId + '）' : '用户ID: ' + f.userId) + '</div>'
             + '<div class="user-email" style="font-family: monospace;">' + escAdmin(f.key) + '</div>'
             + '<div class="user-status ' + statusCls + '">' + escAdmin(f.status) + '</div>'
-            + '<div class="user-del-date">每月限制: ' + (f.limit === -1 || f.limit === '-1' ? '无限' : escAdmin(f.limit) + ' 次')
-            + ' ｜ 已用: ' + escAdmin(f.used) + ' 次'
-            + (f.resetMonth ? ' ｜ 重置月: ' + escAdmin(f.resetMonth) : '')
-            + (f.created ? ' ｜ 创建: ' + escAdmin(String(f.created).slice(0, 10)) : '')
-            + '<br>每日限制: ' + (f.daily === -1 || f.daily === '-1' ? '不限' : escAdmin(f.daily) + ' 次')
-            + ' ｜ 今日已用: ' + escAdmin(f.dailyUsed) + ' 次'
+            + '<div class="user-del-date">账户点数: ' + escAdmin(f.points) + ' 点'
+            + '（每 ' + escAdmin(f.minRequired) + ' 点起可验证）'
+            + ' ｜ 今日最大消耗点数: ' + (f.dailyPointsLimit === -1 || f.dailyPointsLimit === '-1' ? '不限' : escAdmin(f.dailyPointsLimit) + ' 点')
+            + ' ｜ 今日已消耗: ' + escAdmin(f.dailyPointsUsed) + ' 点'
+            + (f.created ? '<br>创建: ' + escAdmin(String(f.created).slice(0, 10)) : '')
             + ' ｜ 预警: ' + (f.warn === -1 || f.warn === '-1' ? '关闭' : escAdmin(f.warn))
             + ' ｜ 白名单: ' + (f.origins.length ? (f.origins.length + ' 条来源') : '不限来源')
             + '</div>'
@@ -1612,9 +1616,9 @@ function openEditApiKey(key) {
     limitInput.disabled = !canAccess(4);
 
      
-    const dailyUnlimited = !cur || cur.daily === -1 || cur.daily === '-1' || cur.daily == null;
+    const dailyUnlimited = !cur || cur.dailyPointsLimit === -1 || cur.dailyPointsLimit === '-1' || cur.dailyPointsLimit == null;
     document.getElementById('apikey-edit-daily-unlimited').checked = dailyUnlimited;
-    document.getElementById('apikey-edit-daily').value = dailyUnlimited ? '' : cur.daily;
+    document.getElementById('apikey-edit-daily').value = dailyUnlimited ? '' : cur.dailyPointsLimit;
     setEditDailyDisabled();
 
      
@@ -1660,11 +1664,11 @@ function saveApiKeyEdit() {
         return;
     }
      
-    let daily = -1;
+    let dailyPoints = -1;
     if (!document.getElementById('apikey-edit-daily-unlimited').checked) {
-        daily = parseInt(document.getElementById('apikey-edit-daily').value, 10);
-        if (isNaN(daily) || daily < 0) {
-            alert('请输入有效的每日额度（≥0），或勾选「今日不限」');
+        dailyPoints = parseFloat(document.getElementById('apikey-edit-daily').value);
+        if (isNaN(dailyPoints) || dailyPoints < 0) {
+            alert('请输入有效的今日最大消耗点数（≥0），或勾选「今日不限」');
             return;
         }
     }
@@ -1688,7 +1692,7 @@ function saveApiKeyEdit() {
         body: JSON.stringify({
             status: status,
             monthly_limit: isNaN(limit) ? -1 : limit,
-            daily_limit: daily,
+            daily_points_limit: dailyPoints,
             warn_limit: warn,
             allowed_origins: origins
         })
