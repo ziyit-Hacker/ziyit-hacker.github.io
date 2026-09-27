@@ -4,8 +4,9 @@
      
     var SCRIPT_SRC = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
 
-    var loadedBase = '';
-    var backendPromise = null;
+    var loadedBases = [];
+    var resolvedBase = '';
+    var readyBasePromise = null;
 
     function backendTxtUrl() {
         try {
@@ -14,38 +15,86 @@
         return 'backend.txt';
     }
 
-    function loadBackendBase() {
+     
+    function parseBases(txt) {
+        var out = [];
+        String(txt || '').split(/\r?\n/).forEach(function (line) {
+            var u = line.trim();
+            if (!u || u.charAt(0) === '#') return;
+            var m = u.match(/https?:\/\/[^\s]+/i);
+            if (!m) return;
+            u = m[0].replace(/\/+$/, '');
+            if (out.indexOf(u) === -1) out.push(u);
+        });
+        return out;
+    }
+
+    function loadBackendBases() {
         return new Promise(function (resolve) {
             var done = false;
-            function finish(v) { if (!done) { done = true; resolve(v || ''); } }
+            function finish() { if (!done) { done = true; resolve(loadedBases); } }
             try {
                 fetch(backendTxtUrl(), { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': '1' } })
                     .then(function (res) { return res.ok ? res.text() : ''; })
-                    .then(function (txt) {
-                        var url = String(txt || '').trim().split(/\s+/)[0].replace(/\/+$/, '');
-                        if (/^https?:\/\//i.test(url)) { loadedBase = url; finish(url); }
-                        else finish('');
-                    })
-                    .catch(function () { finish(''); });
+                    .then(function (txt) { loadedBases = parseBases(txt); finish(); })
+                    .catch(finish);
             } catch (e) {
-                finish('');
+                finish();
             }
-            setTimeout(function () { finish(''); }, 4000);
+            setTimeout(finish, 4000);
         });
     }
 
     function backendReady() {
-        if (!backendPromise) backendPromise = loadBackendBase();
-        return backendPromise;
+        if (!readyBasePromise) {
+            readyBasePromise = loadBackendBases().then(function () {
+                var bases = getBases();
+                var i = 0;
+                function next() {
+                    if (i >= bases.length) return bases[0] || DEFAULT_BASE;
+                    var b = bases[i++];
+                    return probeBase(b).then(function (ok) { return ok ? b : next(); });
+                }
+                return next();
+            }).then(function (b) {
+                if (b) resolvedBase = b;
+                return b;
+            });
+        }
+        return readyBasePromise;
+    }
+
+    function probeBase(base, timeoutMs) {
+        return new Promise(function (resolve) {
+            var done = false;
+            var timer = setTimeout(function () { if (!done) { done = true; resolve(false); } }, timeoutMs || 3000);
+            try {
+                fetch(base + '/', { method: 'GET', mode: 'no-cors', cache: 'no-store' })
+                    .then(function () { if (!done) { done = true; clearTimeout(timer); resolve(true); } })
+                    .catch(function () { if (!done) { done = true; clearTimeout(timer); resolve(false); } });
+            } catch (e) {
+                if (!done) { done = true; clearTimeout(timer); resolve(false); }
+            }
+        });
+    }
+
+    function getBases() {
+        var list = [];
+        try {
+            var custom = localStorage.getItem('ziyit_api_base');
+            if (custom) list.push(String(custom).replace(/\/+$/, ''));
+        } catch (e) {}
+        for (var i = 0; i < loadedBases.length; i++) {
+            if (list.indexOf(loadedBases[i]) === -1) list.push(loadedBases[i]);
+        }
+        if (list.indexOf(DEFAULT_BASE) === -1) list.push(DEFAULT_BASE);
+        return list;
     }
 
     function currentBase() {
-        try {
-            var c = localStorage.getItem('ziyit_api_base');
-            if (c) return String(c).replace(/\/+$/, '');
-        } catch (e) {}
-        if (loadedBase) return loadedBase;
-        return DEFAULT_BASE;
+        if (resolvedBase) return resolvedBase;
+        var bases = getBases();
+        return bases[0] || DEFAULT_BASE;
     }
 
     var REQUEST_TIMEOUT_MS = 20000;
@@ -76,17 +125,6 @@
             try { return JSON.stringify(detail); } catch (e) { return String(detail); }
         }
         return detail == null ? '' : String(detail);
-    }
-
-    function getBases() {
-        var list = [];
-        try {
-            var custom = localStorage.getItem('ziyit_api_base');
-            if (custom) list.push(String(custom).replace(/\/+$/, ''));
-        } catch (e) {}
-        if (loadedBase && list.indexOf(loadedBase) === -1) list.push(loadedBase);
-        list.push(DEFAULT_BASE);
-        return list;
     }
 
     function getCookie(name) {
@@ -302,6 +340,8 @@
             options.headers['Authorization'] = 'Bearer ' + token;
         }
         var bases = getBases();
+        var work = currentBase();
+        if (work) bases = [work].concat(bases.filter(function (b) { return b !== work; }));
         var index = baseIndex || 0;
         var base = bases[index];
         if (!base) base = DEFAULT_BASE;
@@ -675,8 +715,7 @@
      
     function guideAuthSync(token) {
         var tk = token || getToken();
-        var bases = getBases();
-        var base = bases[0] || DEFAULT_BASE;
+        var base = currentBase();
         function doSync(retried) {
             return fetchWithTimeout(base + '/guide/auth/sync', {
                 method: 'POST',
@@ -715,8 +754,7 @@
      
     function guideChat(message) {
         var token = getToken();
-        var bases = getBases();
-        var base = bases[0] || DEFAULT_BASE;
+        var base = currentBase();
         return fetchWithTimeout(base + '/guide/chat', {
             method: 'POST',
             headers: {
@@ -747,7 +785,7 @@
      
     function guideChatStream(message, onEvent) {
         var token = getToken();
-        var base = getBases()[0] || DEFAULT_BASE;
+        var base = currentBase();
         return fetch(base + '/guide/chat/stream', {
             method: 'POST',
             cache: 'no-store',
@@ -885,7 +923,7 @@
         options.headers['Content-Type'] = 'application/json';
         options.headers['ngrok-skip-browser-warning'] = '1';
         if (token) options.headers['Authorization'] = 'Bearer ' + token;
-        var base = getBases()[0] || DEFAULT_BASE;
+        var base = currentBase();
         return fetchWithTimeout(base + path, options).then(function (res) {
             return res.json().catch(function () { return null; }).then(function (data) {
                 if (!res.ok) {
@@ -925,8 +963,7 @@
      
     function userType() {
         var token = getToken();
-        var bases = getBases();
-        var base = bases[0] || DEFAULT_BASE;
+        var base = currentBase();
         return fetchWithTimeout(base + '/auth/user-type', {
             headers: {
                 'ngrok-skip-browser-warning': '1',

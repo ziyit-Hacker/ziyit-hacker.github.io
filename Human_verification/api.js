@@ -9,6 +9,7 @@ const TICKET_HEADER = "x-phantom-ticket";
 
 const DEFAULT_BASE = "https://willian-unheady-rawly.ngrok-free.dev";
 
+let loadedBases = [];
 let resolvedBase = "";
 let backendPromise = null;
 
@@ -20,16 +21,52 @@ function backendTxtUrl() {
     }
 }
 
+function parseBases(txt) {
+    const out = [];
+    String(txt || "").split(/\r?\n/).forEach((line) => {
+        const m = line.trim().match(/https?:\/\/[^\s]+/i);
+        if (!m) return;
+        const u = m[0].replace(/\/+$/, "");
+        if (!out.includes(u)) out.push(u);
+    });
+    return out;
+}
+
+function probeBase(base, timeoutMs = 3000) {
+    return new Promise((resolve) => {
+        let done = false;
+        const timer = setTimeout(() => {
+            if (!done) { done = true; resolve(false); }
+        }, timeoutMs);
+        try {
+            fetch(base + "/", { method: "GET", mode: "no-cors", cache: "no-store" })
+                .then(() => { if (!done) { done = true; clearTimeout(timer); resolve(true); } })
+                .catch(() => { if (!done) { done = true; clearTimeout(timer); resolve(false); } });
+        } catch (e) {
+            if (!done) { done = true; clearTimeout(timer); resolve(false); }
+        }
+    });
+}
+
+async function pickBase(bases) {
+    for (const b of bases) {
+        if (await probeBase(b)) return b;
+    }
+    return bases[0] || DEFAULT_BASE;
+}
+
 export function backendReady() {
     if (!backendPromise) {
         backendPromise = fetch(backendTxtUrl(), { cache: "no-store", headers: { "ngrok-skip-browser-warning": "1" } })
             .then((res) => (res.ok ? res.text() : ""))
-            .then((txt) => {
-                const url = String(txt || "").trim().split(/\s+/)[0].replace(/\/+$/, "");
-                if (/^https?:\/\//i.test(url)) resolvedBase = url;
-                return apiBase();
-            })
-            .catch(() => apiBase());
+            .then((txt) => parseBases(txt))
+            .catch(() => [])
+            .then(async (bases) => {
+                loadedBases = bases.slice();
+                if (!loadedBases.includes(DEFAULT_BASE)) loadedBases.push(DEFAULT_BASE);
+                resolvedBase = await pickBase(loadedBases);
+                return resolvedBase;
+            });
     }
     return backendPromise;
 }
@@ -39,7 +76,7 @@ export function apiBase() {
         const c = localStorage.getItem("ziyit_api_base");
         if (c) return String(c).replace(/\/+$/, "");
     } catch (e) { }
-    return resolvedBase || DEFAULT_BASE;
+    return resolvedBase || loadedBases[0] || DEFAULT_BASE;
 }
 
 let ticket = { token: "", expiresAt: 0 };

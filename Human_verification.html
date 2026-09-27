@@ -668,22 +668,53 @@
       var backendPromise = null;
       function backendReady() {
         if (backendPromise) return backendPromise;
-        backendPromise = (function () {
-          try {
-            var c = localStorage.getItem('ziyit_api_base');
-            if (c) { BASE_URL = String(c).replace(/\/+$/, ''); return Promise.resolve(BASE_URL); }
-          } catch (e) { }
-          var url;
-          try { url = new URL('backend.txt', document.baseURI).href; } catch (e) { url = 'backend.txt'; }
-          return fetch(url, { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': '1' } })
-            .then(function (r) { return r.ok ? r.text() : ''; })
-            .then(function (t) {
-              var u = String(t || '').trim().split(/\s+/)[0].replace(/\/+$/, '');
-              if (/^https?:\/\//i.test(u)) BASE_URL = u;
-              return BASE_URL;
-            })
-            .catch(function () { return BASE_URL; });
-        })();
+        var bases = [];
+        try {
+          var c = localStorage.getItem('ziyit_api_base');
+          if (c) bases.push(String(c).replace(/\/+$/, ''));
+        } catch (e) { }
+        var url;
+        try { url = new URL('backend.txt', document.baseURI).href; } catch (e) { url = 'backend.txt'; }
+        function parse(t) {
+          var out = [];
+          String(t || '').split(/\r?\n/).forEach(function (line) {
+            var m = line.trim().match(/https?:\/\/[^\s]+/i);
+            if (!m) return;
+            var u = m[0].replace(/\/+$/, '');
+            if (out.indexOf(u) === -1) out.push(u);
+          });
+          return out;
+        }
+        function probe(b) {
+          return new Promise(function (resolve) {
+            var done = false;
+            var timer = setTimeout(function () { if (!done) { done = true; resolve(false); } }, 3000);
+            try {
+              fetch(b + '/', { method: 'GET', mode: 'no-cors', cache: 'no-store' })
+                .then(function () { if (!done) { done = true; clearTimeout(timer); resolve(true); } })
+                .catch(function () { if (!done) { done = true; clearTimeout(timer); resolve(false); } });
+            } catch (e) { if (!done) { done = true; clearTimeout(timer); resolve(false); } }
+          });
+        }
+        function pick(list) {
+          var i = 0;
+          function next() {
+            if (i >= list.length) return Promise.resolve(list[0] || BASE_URL);
+            var b = list[i++];
+            return probe(b).then(function (ok) { return ok ? b : next(); });
+          }
+          return next();
+        }
+        backendPromise = fetch(url, { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': '1' } })
+          .then(function (r) { return r.ok ? r.text() : ''; })
+          .catch(function () { return ''; })
+          .then(function (t) {
+            parse(t).forEach(function (b) { if (bases.indexOf(b) === -1) bases.push(b); });
+            if (bases.indexOf(BASE_URL) === -1) bases.push(BASE_URL);
+            return pick(bases);
+          })
+          .then(function (b) { if (b) BASE_URL = b; return BASE_URL; })
+          .catch(function () { return BASE_URL; });
         return backendPromise;
       }
 
