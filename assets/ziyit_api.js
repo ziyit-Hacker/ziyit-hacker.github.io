@@ -1162,6 +1162,22 @@
         });
     }
 
+    // ---- 爱发电订单后台（Lv.3+ / 后端 require_admin_high）----
+    // 台账总览：订单（含未发货驳回记录）+ 当前 VIP 到期名单 + 汇总计数
+    function adminAfdianPurchases() {
+        return request('/admin/afdian/purchases');
+    }
+
+    // 主动查单对账：opts.outTradeNo 非空 = 精确查这一单；留空 = 扫最近 opts.pages 页。
+    // 已入账的订单会跳过（skipped），漏发的补发（granted）——用于 Webhook 通知漏收时的兜底。
+    function adminAfdianReconcile(opts) {
+        var o = opts || {};
+        var body = {};
+        if (o.outTradeNo != null && String(o.outTradeNo).trim() !== '') body.outTradeNo = String(o.outTradeNo).trim();
+        if (o.pages != null && String(o.pages).trim() !== '') body.pages = Number(o.pages);
+        return post('/admin/afdian/reconcile', body);
+    }
+
     // ---- Backrooms 文档系统：四类同构，接口前缀即类型 ----
     // 层级 levels / 实体 entities / 物品 objects / 现象 phenomena，全部走同一套路径规则，
     // 因此这里按 type 拼前缀，避免每类各写一份。既有层级专用函数保留以兼容旧页面。
@@ -1504,6 +1520,8 @@
         rcSubmitBug: rcSubmitBug,
         adminRcBugs: adminRcBugs,
         adminRcBugStatus: adminRcBugStatus,
+        adminAfdianPurchases: adminAfdianPurchases,
+        adminAfdianReconcile: adminAfdianReconcile,
         backroomsList: backroomsList,
         backroomsView: backroomsView,
         backroomsSubmit: backroomsSubmit,

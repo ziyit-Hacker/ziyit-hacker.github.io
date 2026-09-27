@@ -90,6 +90,9 @@
                     <li class="menu-item" data-section="rc-bug-management" data-level="3">
  RC BUG 管理
                     </li>
+                    <li class="menu-item" data-section="afdian-management" data-level="3">
+ 爱发电订单
+                    </li>
                     <li class="menu-item" data-section="pentest-management" data-level="1">
  渗透测试
                     </li>
@@ -460,6 +463,86 @@
                         <button class="user-btn" id="refresh-rc-bugs">刷新列表</button>
                     </div>
                     <div class="user-list" id="rc-bug-list"></div>
+                </section>
+
+                
+                <section id="afdian-management" class="content-section">
+                    <div class="section-header">
+                        <h2>爱发电订单</h2>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span id="afdian-ungranted-badge" class="user-btn danger" style="display: none;"></span>
+                            <button class="user-btn" id="refresh-afdian">刷新列表</button>
+                        </div>
+                    </div>
+                    <p style="padding: 4px 2px 10px; color: var(--ziyit-text-secondary); font-size: 13px; line-height: 1.8;">
+                        爱发电订单台账（Lv.3+）。已付款但<b>没发货</b>的订单会标出原因，可用下方「扫单补发」或「按订单号补发」处理。<br>
+                        补发是幂等的：<b>同一订单号只会发一次</b>，已入账的会跳过。
+                    </p>
+
+                    <div class="user-stats">
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="afdian-total-orders">0</div>
+                            <div class="user-stat-label">订单总数</div>
+                        </div>
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="afdian-granted-orders">0</div>
+                            <div class="user-stat-label">已发货</div>
+                        </div>
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="afdian-ungranted-orders">0</div>
+                            <div class="user-stat-label">未发货</div>
+                        </div>
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="afdian-active-vip">0</div>
+                            <div class="user-stat-label">有效 VIP</div>
+                        </div>
+                        <div class="user-stat-card">
+                            <div class="user-stat-number" id="afdian-expired-vip">0</div>
+                            <div class="user-stat-label">已过期 VIP</div>
+                        </div>
+                    </div>
+
+                    <div style="border: 1px solid var(--ziyit-border); border-radius: 10px; padding: 14px; margin: 4px 0 16px;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">查单补发（Webhook 漏收时用）</div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <input type="text" class="user-search" id="afdian-order-no" placeholder="爱发电订单号（留空则扫最近订单）" style="max-width: 300px;">
+                            <select class="user-search" id="afdian-scan-pages" style="max-width: 140px;">
+                                <option value="1">扫最近 1 页</option>
+                                <option value="3" selected>扫最近 3 页</option>
+                                <option value="5">扫最近 5 页</option>
+                                <option value="10">扫最近 10 页</option>
+                            </select>
+                            <button class="user-btn success" id="afdian-reconcile-btn">按订单号补发</button>
+                            <button class="user-btn" id="afdian-scan-btn">扫单补发</button>
+                        </div>
+                        <p id="afdian-reconcile-result" style="display: none; margin-top: 10px; font-size: 13px; line-height: 1.8;"></p>
+                    </div>
+
+                    <div class="user-controls">
+                        <input type="text" class="user-search" id="afdian-search" placeholder="搜索订单号 / 用户 / 备注 / 方案 ID...">
+                        <select class="user-search" id="afdian-filter" style="max-width: 180px;">
+                            <option value="">全部订单</option>
+                            <option value="granted">仅已发货</option>
+                            <option value="ungranted">仅未发货</option>
+                        </select>
+                    </div>
+                    <div class="user-list" id="afdian-order-list">
+                        <div class="skeleton-list">
+                            <div class="skeleton-row">
+                                <div class="sk-block sk-avatar"></div>
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                                <div class="sk-block sk-line" style="width:70%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-line" style="width:60%"></div>
+                                <div class="sk-block sk-btn"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-header" style="margin: 20px 0 10px;">
+                        <h3>VIP 到期状态（<span id="afdian-vip-count">0</span>）</h3>
+                    </div>
+                    <div class="user-list" id="afdian-vip-list"></div>
                 </section>
 
                 <section id="system-settings" class="content-section">

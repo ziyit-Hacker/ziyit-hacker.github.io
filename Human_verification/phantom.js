@@ -1,5 +1,5 @@
 import { CONFIG, isMobileViewport } from "./config.js";
-import { requestChallenge, submitVerify, submitStreamChunk, videoChunk, videoReady, } from "./api.js";
+import { requestChallenge, requestPowChallenge, submitVerify, submitStreamChunk, verifyPow, videoChunk, videoReady, } from "./api.js";
 import { decrypt, deriveSessionKey, encrypt, generateClientKeyPair, importServerPublic, } from "./crypto.js";
 import { installAntidebug } from "./antidebug.js";
 import { PhantomRenderer } from "./renderer.js";
@@ -31,6 +31,89 @@ const ALERT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
     '<path d="M12 8v5M12 16.5v.5"/>' +
     "</svg>";
  
+// ---------- v0.3.36（65.6 第 2 条）：PoW 求解的 Web Worker 桥 ----------
+// 求解必须放在 Worker 里跑：主线程要一直响应"松开即放弃"，不能被几十万次哈希卡住。
+// 用 `new URL(..., import.meta.url)` 而不是写死站点路径——本模块会被第三方页面按其
+// 自己的相对路径引入，只有 import.meta.url 才能稳定定位到同目录的 pow-worker.js。
+const POW_WORKER_URL = new URL("./pow-worker.js", import.meta.url);
+
+// 一次独立的求解任务：自己拉一个 Worker，取消时直接 terminate（连同循环与内存一起回收）。
+// 跨源兜底：第三方站点上本模块是跨源脚本，`new Worker(跨源 URL)` 会被同源策略拒绝，
+// 此时把 Worker 源码取回来塞进 Blob URL —— Blob URL 与宿主页面同源，才允许被 Worker 加载。
+class PowTask {
+    constructor() {
+        this.worker = null;
+        this.blobUrl = "";
+        this.cancelled = false;
+        this._reject = null;
+    }
+    async _spawn() {
+        try {
+            return new Worker(POW_WORKER_URL);
+        }
+        catch (e) { /* 跨源：走下面的 Blob 兜底 */ }
+        const res = await fetch(POW_WORKER_URL);
+        if (!res.ok) {
+            throw new Error(`pow worker fetch ${res.status}`);
+        }
+        const src = await res.text();
+        this.blobUrl = URL.createObjectURL(new Blob([src], { type: "application/javascript" }));
+        return new Worker(this.blobUrl);
+    }
+    async run(nonce, difficulty, onProgress) {
+        const worker = await this._spawn();
+        if (this.cancelled) {
+            try { worker.terminate(); } catch (e) { /* ignore */ }
+            throw new Error("pow cancelled");
+        }
+        this.worker = worker;
+        return new Promise((resolve, reject) => {
+            this._reject = reject;
+            worker.addEventListener("message", (ev) => {
+                const msg = ev && ev.data;
+                if (!msg || this.cancelled) {
+                    return;
+                }
+                if (msg.type === "progress") {
+                    onProgress?.(msg);
+                    return;
+                }
+                this._reject = null;
+                this._dispose();
+                if (msg.type === "solved") {
+                    resolve({ solution: String(msg.solution), hashes: msg.hashes, solveMs: msg.solveMs });
+                }
+                else {
+                    reject(new Error(msg.message || "pow solve failed"));
+                }
+            });
+            worker.addEventListener("error", (e) => {
+                this._reject = null;
+                this._dispose();
+                reject(new Error((e && e.message) || "pow worker error"));
+            });
+            worker.postMessage({ type: "solve", nonce, difficulty });
+        });
+    }
+    _dispose() {
+        if (this.worker) {
+            try { this.worker.terminate(); } catch (e) { /* ignore */ }
+            this.worker = null;
+        }
+        if (this.blobUrl) {
+            try { URL.revokeObjectURL(this.blobUrl); } catch (e) { /* ignore */ }
+            this.blobUrl = "";
+        }
+    }
+    cancel() {
+        this.cancelled = true;
+        this._dispose();
+        const reject = this._reject;
+        this._reject = null;
+        reject?.(new Error("pow cancelled"));
+    }
+}
+
 function resolveContainer(el) {
     const node = typeof el === "string" ? document.querySelector(el) : el;
     if (!(node instanceof HTMLElement)) {
@@ -289,6 +372,13 @@ class WidgetSession {
             writable: true,
             value: false
         });
+        // v0.3.36：本次验证要求哪些方法（/challenge 的 requiredMethods）。默认单套 phantom
+        // —— 老后端不带该字段时行为与改造前完全一致（65.6 第 1 条）。
+        this.requiredMethods = [];
+        this.powRequired = false;
+        // 正在跑的 PoW 求解任务（松开/销毁时要 terminate，别让 Worker 泄漏）。
+        this._powTask = null;
+        this._powAbort = null;
     }
      
     setHint(stage, text) {
@@ -314,6 +404,12 @@ class WidgetSession {
             const challenge = await requestChallenge(this.apiBase, publicJwk, this.device);
             if (challenge && challenge.sessionId)
                 this.sessionId = challenge.sessionId;
+            // v0.3.36（65.6 第 1 条）：本次要求哪些方法由服务端在 /challenge 里下发。
+            // 只有含 "pow" 时才在拖拽之后再走一次按住式 PoW；老后端不带该字段 →
+            // requiredMethods 为空 → 只做 phantom 一套，行为与改造前完全一致。
+            const methods = (challenge && Array.isArray(challenge.requiredMethods)) ? challenge.requiredMethods : [];
+            this.requiredMethods = methods;
+            this.powRequired = methods.indexOf("pow") !== -1;
             const serverPub = await importServerPublic(challenge.serverPublicJwk);
             this.sessionKey = await deriveSessionKey(privateKey, serverPub, challenge.salt);
             this.challengeId = challenge.challengeId;
@@ -865,6 +961,23 @@ class WidgetSession {
              
             result.challengeId = this.challengeId;
             result.sessionId = this.sessionId;
+            // v0.3.36（65.6 第 1~4 条）：第二套 —— 若本次 requiredMethods 含 "pow"，就在拖拽
+            // 通过之后接一段"按住按钮"的 PoW。拿到 pow receipt 后把【两套凭据一起】塞进
+            // result.receipts 交给页面；页面再把它们一起交后端 /verify/consume 兑换。
+            // 页面（以及这里）绝不自己放行 —— 判定权只在服务端。
+            if (this.powRequired && result.receipt) {
+                const powReceipt = await this._runPowPhase();
+                if (!powReceipt) {
+                    // 用户始终没做出来 / 校验通道不可用：当作本次未完成，走常规重试链路。
+                    this.renderer?.stop();
+                    this.status.textContent = "安全校验未完成，请重试";
+                    this.activateBtn.classList.add("phantom-fail");
+                    this.activateBtn.textContent = "验证未完成";
+                    this.scheduleRetry();
+                    return;
+                }
+                result.receipts = [result.receipt, powReceipt];
+            }
             // v0.3.34 严格式（64.6 第 3/4 条）：浏览器通道下 passed 恒为 null、score 恒为 0.0，
             // 通过时只回一张一次性 receipt。null 不等于失败 —— 必须拿 receipt 去
             // POST /verify/consume 兑换，"服务端给出的 valid"才是权威结论。
@@ -929,6 +1042,153 @@ class WidgetSession {
     }
     
 
+    // v0.3.36（65.6 第 2/3/6 条）：第二套人机验证（PoW）的交互与求解。
+    // ── 交互：一个「按住不放」的按钮；按住期间在 Web Worker 里迭代求 solution，界面只给
+    //    "正在校验"的推进观感，**绝不把难度数字暴露给用户**；松开即视为放弃该次尝试。
+    // ── 领题：每次尝试都重新 POST /pow/challenge（nonce 每次不同，离线预计算的解无法复用）；
+    //    解错 / 过期 / 试错过多 / 换题同样重新领题。
+    // ── 判定：求到解只去 /pow/verify 换一张 pow **receipt**，本函数绝不放行；真正的放行
+    //    由调用方把两套 receipt 一起交后端 /verify/consume 兑换。
+    // 返回值：pow receipt 字符串；用户始终没做出来 / 校验通道不可用则返回 null。
+    async _runPowPhase() {
+        const btn = this.activateBtn;
+        const label = document.createElement("span");
+        label.textContent = "按住完成安全校验";
+        const bar = document.createElement("span");
+        bar.className = "phantom-progress";
+        btn.textContent = "";
+        btn.appendChild(label);
+        btn.appendChild(bar);
+        // 复用拖拽阶段那条充能进度条：求解耗时不可预知，只给一个"在推进"的观感。
+        btn.style.setProperty("--ph-charge-duration", "8s");
+        btn.disabled = false;
+        this.renderer?.drawStaticNoise();
+        this.setHint("ready", "按住下方按钮完成安全校验");
+
+        let challenge = null;
+        const load = async () => {
+            try {
+                challenge = await requestPowChallenge(this.apiBase);
+            }
+            catch (e) {
+                challenge = null;
+            }
+            return !!challenge;
+        };
+
+        try {
+            if (!(await load())) {
+                this.status.textContent = "安全校验暂不可用，请稍后重试";
+                this.setHint("blocked", "");
+                return null;
+            }
+            for (;;) {
+                if (this._sessionClosed)
+                    return null;
+                const attempt = await this._awaitPowAttempt(challenge);
+                if (this._sessionClosed || attempt.failed)
+                    return null;
+                if (attempt.released) {
+                    // 松开 = 放弃本次尝试 → 重新领题（65.6 第 6 条），留在本阶段继续等用户按住。
+                    if (!(await load())) {
+                        this.status.textContent = "安全校验暂不可用，请稍后重试";
+                        this.setHint("blocked", "");
+                        return null;
+                    }
+                    this.status.textContent = "已放弃，请重新按住";
+                    continue;
+                }
+                try {
+                    // sessionId 必须用 /pow/challenge 自己下发的那个 —— 服务端按
+                    // sha256(sessionId) 与题记录比对（不可用拖拽那套 sessionId，会 403）。
+                    const res = await verifyPow(this.apiBase, challenge.challengeId, attempt.solution, challenge.sessionId);
+                    if (res && res.receipt) {
+                        btn.classList.remove("phantom-holding");
+                        this.status.textContent = "";
+                        return res.receipt;
+                    }
+                }
+                catch (e) {
+                    // 400=解错/题不存在/过期/已用，429=本题试错过多已作废，410=过期，网络异常……
+                    // 一律按 65.6 第 6 条处理：重新领题再来。
+                }
+                if (!(await load())) {
+                    this.status.textContent = "安全校验暂不可用，请稍后重试";
+                    this.setHint("blocked", "");
+                    return null;
+                }
+                btn.classList.remove("phantom-holding");
+                this.setHint("ready", "按住下方按钮完成安全校验");
+                this.status.textContent = "校验未通过，请再试一次";
+            }
+        }
+        finally {
+            const abort = this._powAbort;
+            this._powAbort = null;
+            abort?.();
+            this._powTask?.cancel();
+            this._powTask = null;
+        }
+    }
+    // 等一次「按住 → 求解」动作，返回 { solution } / { released: true }（松开放弃）/
+    // { failed: true }（求解器起不来）。松开时立刻 terminate Worker。
+    _awaitPowAttempt(challenge) {
+        const btn = this.activateBtn;
+        return new Promise((resolve) => {
+            const task = new PowTask();
+            this._powTask = task;
+            let solving = false;
+            let settled = false;
+            let fails = 0;
+            const finish = (out) => {
+                if (settled)
+                    return;
+                settled = true;
+                this._powAbort = null;
+                btn.removeEventListener("pointerdown", onDown);
+                window.removeEventListener("pointerup", onUp);
+                resolve(out);
+            };
+            // 让 destroy()（用户中途关掉弹窗）也能把这个 await 收掉，别留悬挂的 Promise。
+            this._powAbort = () => finish({ failed: true });
+            const onDown = (e) => {
+                if (e.button !== 0 || solving || btn.disabled)
+                    return;
+                e.preventDefault();
+                solving = true;
+                btn.classList.add("phantom-holding");
+                this.status.textContent = "正在校验…";
+                task.run(challenge.nonce, challenge.difficulty).then((out) => {
+                    if (!solving)
+                        return;   // 已被松开 / 已放弃：这个解作废
+                    solving = false;
+                    finish({ solution: out.solution });
+                }).catch(() => {
+                    if (!solving)
+                        return;
+                    solving = false;
+                    btn.classList.remove("phantom-holding");
+                    // Worker 起不来（CSP 拦了 worker-src / 断开跨源）时不要无限空转。
+                    if (++fails >= 2) {
+                        finish({ failed: true });
+                        return;
+                    }
+                    this.status.textContent = "校验失败，请重新按住";
+                });
+            };
+            const onUp = () => {
+                if (!solving)
+                    return;
+                solving = false;
+                btn.classList.remove("phantom-holding");
+                task.cancel();
+                finish({ released: true });
+            };
+            btn.addEventListener("pointerdown", onDown);
+            window.addEventListener("pointerup", onUp);
+        });
+    }
+
     scheduleRetry(delayMs, mode) {
         window.clearTimeout(this.retryTimer);
         this.retryTimer = window.setTimeout(() => {
@@ -964,6 +1224,13 @@ class WidgetSession {
     destroy() {
         this._sessionClosed = true;
         this._unbind();
+        // v0.3.36：弹窗被关掉时，若正卡在 PoW 阶段（用户还按着按钮在求解），
+        // 先把 await 收掉再 terminate Worker —— 否则会留下悬挂的 Promise 与后台循环。
+        const powAbort = this._powAbort;
+        this._powAbort = null;
+        powAbort?.();
+        this._powTask?.cancel();
+        this._powTask = null;
         window.clearTimeout(this.retryTimer);
         window.clearTimeout(this.previewTimer);
         window.clearInterval(this.streamTimer);

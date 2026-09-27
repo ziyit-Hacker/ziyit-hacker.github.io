@@ -121,6 +121,21 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('rc-bug-search').addEventListener('input', renderRcBugs);
     document.getElementById('rc-bug-filter').addEventListener('change', renderRcBugs);
 
+    // 爱发电订单：台账只读 + 查单补发，Lv.3+（后端 require_admin_high 兜底）
+    document.querySelector('[data-section="afdian-management"]').addEventListener('click', function () {
+        switchSection('afdian-management');
+        updateSystemInfo('切换到爱发电订单');
+        loadAfdian();
+    });
+    document.getElementById('refresh-afdian').addEventListener('click', function () {
+        loadAfdian();
+        updateSystemInfo('爱发电订单已刷新');
+    });
+    document.getElementById('afdian-search').addEventListener('input', renderAfdianOrders);
+    document.getElementById('afdian-filter').addEventListener('change', renderAfdianOrders);
+    document.getElementById('afdian-reconcile-btn').addEventListener('click', function () { doAfdianReconcile(true); });
+    document.getElementById('afdian-scan-btn').addEventListener('click', function () { doAfdianReconcile(false); });
+
     // 渗透测试管理：Lv.1+ 都能看，写操作按钮只给站长（更细的权限由后端 require_admin_super 兜底）
     document.querySelector('[data-section="pentest-management"]').addEventListener('click', function () {
         switchSection('pentest-management');
@@ -2112,6 +2127,201 @@ function saveRcBugStatus(bug, opts) {
         loadRcBugs();
     }).catch(function (err) {
         alert('更新失败: ' + (err.message || err));
+    });
+}
+
+// ===== 爱发电订单（Lv.3+）=====
+//  台账：GET /admin/afdian/purchases —— 订单（含未发货驳回记录）+ VIP 到期名单 + 汇总
+//  补发：POST /admin/afdian/reconcile —— 带 outTradeNo 精确查这一单，留空则扫最近几页
+//  补发幂等：同一订单号只发一次，已入账的会跳过（skip），驳回的写台账等人工排查。
+let afdianData = { orders: [], vipUsers: [], summary: {} };
+
+const AFDIAN_KIND_TEXT = { vip: 'VIP 会员', rc: 'RC 密钥', dlc: 'DLC 扩展包' };
+const AFDIAN_REASON_TEXT = {
+    granted: '已发货',
+    not_paid: '未付款',
+    plan_not_allowed: '方案未登记',
+    remark_format: '备注格式不合法',
+    dlc_not_found: '扩展包未找到',
+    user_not_found: '查不到该账号',
+    already_granted: '已入账，跳过',
+    no_out_trade_no: '订单号缺失'
+};
+const AFDIAN_SOURCE_TEXT = {
+    webhook: 'Webhook 通知',
+    self_check: '用户自助查单',
+    admin_reconcile: '管理员查单'
+};
+
+function afdianKindText(k) { return AFDIAN_KIND_TEXT[k] || (k || '-'); }
+function afdianReasonText(r) { return AFDIAN_REASON_TEXT[r] || (r || '-'); }
+function afdianSourceText(s) { return AFDIAN_SOURCE_TEXT[s] || (s || '-'); }
+
+function loadAfdian() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可访问爱发电订单'); return Promise.resolve(); }
+    document.getElementById('afdian-order-list').innerHTML = loadingHTML();
+    document.getElementById('afdian-vip-list').innerHTML = loadingHTML();
+    return ZIYIT_API.adminAfdianPurchases().then(function (data) {
+        afdianData.orders = (data && data.orders) || [];
+        afdianData.vipUsers = (data && data.vipUsers) || [];
+        afdianData.summary = (data && data.summary) || {};
+        renderAfdianSummary();
+        renderAfdianOrders();
+        renderAfdianVip();
+    }).catch(function (err) {
+        document.getElementById('afdian-order-list').innerHTML =
+            '<p style="padding: 20px; color: var(--ziyit-danger);">加载失败: ' + escAdmin(pentestErr(err, '请求失败')) + '</p>';
+        document.getElementById('afdian-vip-list').innerHTML = '';
+    });
+}
+
+function renderAfdianSummary() {
+    const s = afdianData.summary || {};
+    const total = Number(s.totalOrders || 0);
+    const granted = Number(s.grantedOrders || 0);
+    const ungranted = Math.max(0, total - granted);
+    document.getElementById('afdian-total-orders').textContent = total;
+    document.getElementById('afdian-granted-orders').textContent = granted;
+    document.getElementById('afdian-ungranted-orders').textContent = ungranted;
+    document.getElementById('afdian-active-vip').textContent = Number(s.activeVip || 0);
+    document.getElementById('afdian-expired-vip').textContent = Number(s.expiredVip || 0);
+    const badge = document.getElementById('afdian-ungranted-badge');
+    if (ungranted > 0) {
+        badge.textContent = '未发货 ' + ungranted;
+        badge.style.display = '';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function renderAfdianOrders() {
+    const search = (document.getElementById('afdian-search').value || '').trim().toLowerCase();
+    const filter = document.getElementById('afdian-filter').value;
+    const area = document.getElementById('afdian-order-list');
+    const list = afdianData.orders.filter(function (o) {
+        if (filter === 'granted' && !o.granted) return false;
+        if (filter === 'ungranted' && o.granted) return false;
+        if (!search) return true;
+        return [o.outTradeNo, o.username, o.userId, o.remark, o.planId, o.amount, o.afdianUserId]
+            .some(function (v) { return String(v == null ? '' : v).toLowerCase().indexOf(search) !== -1; });
+    });
+    if (!list.length) {
+        area.innerHTML = '<p style="padding: 20px; color: var(--ziyit-text-secondary);">暂无订单记录</p>';
+        return;
+    }
+    let html = '';
+    list.forEach(function (o) {
+        const granted = !!o.granted;
+        const badge = granted ? penBadge('ok', '已发货') : penBadge('bad', afdianReasonText(o.reason));
+        // 未发货的驳回记录没有 userId / username / days / expireAt，只有 seenAt，得分别展示
+        const who = granted
+            ? escAdmin(o.username || '-') + '（ID ' + escAdmin(o.userId) + '）'
+            : '未识别到账号';
+        const timeLabel = granted ? '发货时间' : '记录时间';
+        const timeValue = granted ? (o.grantedAt || '-') : (o.seenAt || '-');
+        html += '<div class="user-item wide-item">'
+            + '<div class="user-details">'
+            + '<div class="user-name">' + escAdmin(o.outTradeNo) + ' ' + badge
+            + (granted ? ' <span style="font-size:11px;color:var(--ziyit-text-secondary);">' + escAdmin(afdianKindText(o.kind)) + '</span>' : '')
+            + '</div>'
+            + '<div class="user-email">购买人: ' + who
+            + '｜ 金额: ' + escAdmin(o.amount || '-')
+            + (o.planId ? '｜ 方案: ' + escAdmin(o.planId) : '')
+            + (o.month ? '｜ 月数: ' + escAdmin(o.month) : '')
+            + '</div>'
+            + '<div class="user-email">' + timeLabel + ': ' + escAdmin(timeValue)
+            + '｜ 来源: ' + escAdmin(afdianSourceText(o.source))
+            + (granted && o.days ? '｜ 天数: ' + escAdmin(o.days) : '')
+            + (granted && o.expireAt ? '｜ 到期: ' + escAdmin(o.expireAt) : '')
+            + (granted && o.permission ? '｜ 权限: ' + escAdmin(o.permission) : '')
+            + (granted && o.modIds && o.modIds.length ? '｜ 扩展包: ' + escAdmin(o.modIds.join(', ')) : '')
+            + '</div>'
+            + '<div class="user-email">备注: ' + escAdmin(o.remark || '（空）')
+            + (o.remarkUsernameMismatch ? ' ' + penBadge('warn', '备注用户名与账号不一致') : '')
+            + '</div>'
+            + '</div>'
+            + '<div class="user-actions">'
+            + '<button class="action-btn" data-afdian-retry="' + escAdmin(o.outTradeNo) + '">重新查单</button>'
+            + '</div>'
+            + '</div>';
+    });
+    area.innerHTML = html;
+
+    // 列表整体重绘，所以按钮走重绘后的逐次绑定（与 RC BUG 列表同款写法）
+    area.querySelectorAll('[data-afdian-retry]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('afdian-order-no').value = btn.getAttribute('data-afdian-retry') || '';
+            doAfdianReconcile(true);
+        });
+    });
+}
+
+function renderAfdianVip() {
+    const area = document.getElementById('afdian-vip-list');
+    const list = afdianData.vipUsers || [];
+    document.getElementById('afdian-vip-count').textContent = list.length;
+    if (!list.length) {
+        area.innerHTML = '<p style="padding: 20px; color: var(--ziyit-text-secondary);">暂无 VIP 记录</p>';
+        return;
+    }
+    let html = '';
+    list.forEach(function (v) {
+        const badge = v.vipActive ? penBadge('ok', '有效') : penBadge('bad', '已过期');
+        const expire = v.vipPermanent ? '永久' : (v.vipExpireAt || '-');
+        html += '<div class="user-item wide-item">'
+            + '<div class="user-details">'
+            + '<div class="user-name">' + escAdmin(v.username || '-') + ' ' + badge + '</div>'
+            + '<div class="user-email">用户 ID: ' + escAdmin(v.userId)
+            + '｜ 角色: ' + escAdmin(v.role || '-')
+            + '｜ 到期: ' + escAdmin(expire)
+            + '｜ 来源: ' + escAdmin(v.vipSource || '-')
+            + '</div>'
+            + '</div>'
+            + '</div>';
+    });
+    area.innerHTML = html;
+}
+
+function doAfdianReconcile(exact) {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可执行补发'); return; }
+    const resultEl = document.getElementById('afdian-reconcile-result');
+    const orderNo = (document.getElementById('afdian-order-no').value || '').trim();
+    const pages = document.getElementById('afdian-scan-pages').value;
+    if (exact && !orderNo) {
+        alert('请先填写要补发的爱发电订单号');
+        return;
+    }
+    const opts = exact ? { outTradeNo: orderNo } : { pages: Number(pages) || 1 };
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '正在查单…';
+    ZIYIT_API.adminAfdianReconcile(opts).then(function (res) {
+        const data = res || {};
+        const granted = data.granted || [];
+        const skipped = data.skipped || [];
+        const rejected = data.rejected || [];
+        let html = '<div>' + escAdmin(data.message || '已完成查单') + '</div>';
+        if (granted.length) {
+            const rows = granted.map(function (o) {
+                return escAdmin(o.outTradeNo) + ' → ' + escAdmin(o.username || '-')
+                    + '（' + escAdmin(afdianKindText(o.kind)) + (o.expireAt ? '，到期 ' + escAdmin(o.expireAt) : '') + '）';
+            }).join('<br>');
+            html += '<div style="color: var(--ziyit-success);">已补发 ' + granted.length + ' 条：<br>' + rows + '</div>';
+        }
+        if (skipped.length) {
+            html += '<div style="color: var(--ziyit-text-secondary);">跳过已入账 ' + skipped.length + ' 条：'
+                + escAdmin(skipped.join(', ')) + '</div>';
+        }
+        if (rejected.length) {
+            const rows = rejected.map(function (r) {
+                return escAdmin(r.outTradeNo) + '（' + escAdmin(afdianReasonText(r.reason)) + '）';
+            }).join('<br>');
+            html += '<div style="color: var(--ziyit-warning);">未发货 ' + rejected.length + ' 条：<br>' + rows + '</div>';
+        }
+        resultEl.innerHTML = html;
+        loadAfdian();
+    }).catch(function (err) {
+        resultEl.innerHTML = '<span style="color: var(--ziyit-danger);">查单失败: '
+            + escAdmin(pentestErr(err, '请求失败')) + '</span>';
     });
 }
 

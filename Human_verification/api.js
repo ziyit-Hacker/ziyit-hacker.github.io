@@ -130,12 +130,37 @@ export function videoChunk(apiBase, challengeId, index, sessionId) {
     return postJson(apiBase, "/video/chunk", { challengeId, index, sessionId });
 }
 
+// v0.3.36（65.4）：PoW（第二套人机验证）领题。**请求体必须是空对象**——服务端不收任何
+// 客户端参数（难度由服务端按风险分 + 设备历史三段式决定，客户端无从置喙）。
+//   响应 { challengeId, sessionId, algorithm:"sha256", nonce, difficulty, expiresIn, requiredMethods }
+export function requestPowChallenge(apiBase) {
+    return postJson(apiBase, "/pow/challenge", {});
+}
+
+// v0.3.36（65.4）：交回求解结果换一张 pow receipt。
+//   { challengeId, solution, sessionId? } -> { passed:null, receipt, receiptExpiresIn, solveMs, detail }
+// ⚠ 解错 / 题目不存在 / 已过期 / 已用 都是 400「proof-of-work solution invalid」；
+//   同一题试错超过 PHANTOM_POW_MAX_ATTEMPTS 会作废本题并回 429 —— 此时必须重新领题。
+export function verifyPow(apiBase, challengeId, solution, sessionId) {
+    const body = { challengeId, solution };
+    if (sessionId) body.sessionId = sessionId;
+    return postJson(apiBase, "/pow/verify", body);
+}
+
 // v0.3.34 严格式：/verify 不再直接回判定结果，浏览器通道下 passed 恒为 null，改为签发一张
 // 一次性 receipt（明文只在 /verify 响应里出现一次）。调用方必须拿这张 receipt 到这里兑换：
-//   响应 { valid, challengeId, verifiedAt, detail }
+//   响应 { valid, challengeId, verifiedAt, methods, missing, requiredMethods, detail }
 //   valid=false 时 detail 是 receipt_invalid_or_used / receipt_owner_mismatch（故意合并口径）
 // receipt 只能用一次（服务端 GETDEL）、默认 120 秒有效、归属按 userId 校验、不含任何权限。
 // 兑换结果只对当次有效：不得写入 localStorage/sessionStorage，不得跨刷新复用。
-export function consumeVerify(apiBase, receipt) {
-    return postJson(apiBase, "/verify/consume", { receipt });
+//
+// v0.3.36：本次验证可能要求**多套**方法（如 ["phantom","pow"]），放行条件是
+// requiredMethods ⊆ 已交凭据的 methods。因此：
+//   · 单套仍发 { receipt }（老接入方零改动）；
+//   · 多套发 { receipts: [...] }（一次最多两张）；
+//   · 缺哪一套都**不销毁**已交凭据，回 valid:false + missing，引导补做后连旧的再一起重提。
+export function consumeVerify(apiBase, receipts) {
+    const list = (Array.isArray(receipts) ? receipts : [receipts]).filter(Boolean);
+    const body = list.length > 1 ? { receipts: list } : { receipt: list[0] };
+    return postJson(apiBase, "/verify/consume", body);
 }
