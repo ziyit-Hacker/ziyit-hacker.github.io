@@ -1499,15 +1499,9 @@ function apiKeyFields(k) {
         userId: k.userId != null ? k.userId : (k.user_id != null ? k.user_id : '-'),
         username: k.username || k.userName || '',
         status: k.status || 'active',
-        limit: k.monthly_limit != null ? k.monthly_limit : (k.monthlyLimit != null ? k.monthlyLimit : -1),
-        used: k.used_count != null ? k.used_count : (k.usedCount != null ? k.usedCount : 0),
-        daily: k.daily_limit != null ? k.daily_limit : (k.dailyLimit != null ? k.dailyLimit : -1),
-        dailyUsed: k.daily_count != null ? k.daily_count : (k.dailyCount != null ? k.dailyCount : 0),
-        warn: k.warn_limit != null ? k.warn_limit : (k.warnLimit != null ? k.warnLimit : -1),
         origins: Array.isArray(k.allowed_origins) ? k.allowed_origins.slice() : (Array.isArray(k.allowedOrigins) ? k.allowedOrigins.slice() : []),
-        resetMonth: k.reset_month || k.resetMonth || '',
         created: k.created_at || k.createdAt || k.createTime || k.created || '',
-        // v0.3.38：点数口径——账户点数余额与「今日最大消耗点数 / 今日已消耗点数」
+        // v0.3.38：月/日「次数额度」与预警已彻底废弃，只用点数口径展示。
         points: k.points != null ? k.points : (k.pointsBalance != null ? k.pointsBalance : 0),
         minRequired: k.minRequired != null ? k.minRequired : (k.min_required != null ? k.min_required : 0),
         dailyPointsLimit: k.daily_points_limit != null ? k.daily_points_limit : (k.dailyPointsLimit != null ? k.dailyPointsLimit : -1),
@@ -1559,7 +1553,6 @@ function renderApiKeys() {
             + ' ｜ 今日最大消耗点数: ' + (f.dailyPointsLimit === -1 || f.dailyPointsLimit === '-1' ? '不限' : escAdmin(f.dailyPointsLimit) + ' 点')
             + ' ｜ 今日已消耗: ' + escAdmin(f.dailyPointsUsed) + ' 点'
             + (f.created ? '<br>创建: ' + escAdmin(String(f.created).slice(0, 10)) : '')
-            + ' ｜ 预警: ' + (f.warn === -1 || f.warn === '-1' ? '关闭' : escAdmin(f.warn))
             + ' ｜ 白名单: ' + (f.origins.length ? (f.origins.length + ' 条来源') : '不限来源')
             + '</div>'
             + '</div><div class="user-actions">'
@@ -1624,12 +1617,6 @@ function openEditApiKey(key) {
     setEditDailyDisabled();
 
      
-    const warnOff = !cur || cur.warn === -1 || cur.warn === '-1' || cur.warn == null;
-    document.getElementById('apikey-edit-warn-off').checked = warnOff;
-    document.getElementById('apikey-edit-warn').value = warnOff ? '' : cur.warn;
-    setEditWarnDisabled();
-
-     
     document.getElementById('apikey-edit-origins').value = cur ? cur.origins.join('\n') : '';
 
     document.getElementById('api-key-edit-modal').classList.add('active');
@@ -1640,13 +1627,6 @@ function setEditDailyDisabled() {
     const input = document.getElementById('apikey-edit-daily');
     input.disabled = un;
     if (un) input.value = '';
-}
-
-function setEditWarnDisabled() {
-    const off = document.getElementById('apikey-edit-warn-off').checked;
-    const input = document.getElementById('apikey-edit-warn');
-    input.disabled = off;
-    if (off) input.value = '';
 }
 
 function saveApiKeyEdit() {
@@ -1668,15 +1648,6 @@ function saveApiKeyEdit() {
         }
     }
      
-    let warn = -1;
-    if (!document.getElementById('apikey-edit-warn-off').checked) {
-        warn = parseInt(document.getElementById('apikey-edit-warn').value, 10);
-        if (isNaN(warn) || warn < 0) {
-            alert('请输入有效的预警额度（≥0），或勾选「关闭预警」');
-            return;
-        }
-    }
-     
     const origins = document.getElementById('apikey-edit-origins').value
         .split('\n')
         .map(function (s) { return s.trim(); })
@@ -1688,7 +1659,6 @@ function saveApiKeyEdit() {
             status: status,
             points_quota: quota,
             daily_points_limit: dailyPoints,
-            warn_limit: warn,
             allowed_origins: origins
         })
     }).then(function () {
@@ -3168,8 +3138,7 @@ function adminFields(a) {
          
         username: uname || (uid !== '' && uid != null ? 'ID ' + uid : '-'),
         level: a.level != null ? Number(a.level) : 1,
-        type: a.type || a.role || a.permission || a.user_type || a.Permission || '',
-        quota: a.quota != null ? a.quota : (a.verify_quota != null ? a.verify_quota : (a.monthly_limit != null ? a.monthly_limit : ''))
+        type: a.type || a.role || a.permission || a.user_type || a.Permission || ''
     };
 }
 
@@ -3231,7 +3200,6 @@ function renderAdmins() {
             + '<div class="user-name">' + escAdmin(f.username) + '</div>'
             + '<div class="user-type ' + levelCls + '">' + adminLevelName(f.level) + '（Lv.' + f.level + '）</div>'
             + '<div class="user-del-date">ID: ' + escAdmin(f.userId)
-            + (f.quota !== '' ? ' ｜ 人机验证额度: ' + (f.quota === -1 ? '无限' : escAdmin(f.quota)) : '')
             + (f.type ? ' ｜ 类型: ' + escAdmin(f.type) : '')
             + '</div>'
             + '</div><div class="user-actions">'

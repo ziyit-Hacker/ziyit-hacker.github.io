@@ -611,17 +611,6 @@
 
             <div class="ak-row">
                 <div class="ak-row-head">
-                    <span class="ak-row-title">预警额度</span>
-                    <label class="chk"><input type="checkbox" id="setWarnOff"> 关闭预警</label>
-                </div>
-                <div class="ak-inputs">
-                    <input type="number" id="setWarn" min="0" placeholder="输入预警阈值">
-                    <span style="font-size: 13px; color: var(--ziyit-text-secondary);">用量达到阈值时邮件提醒（每月一次）</span>
-                </div>
-            </div>
-
-            <div class="ak-row">
-                <div class="ak-row-head">
                     <span class="ak-row-title">今日最大消耗点数</span>
                     <label class="chk"><input type="checkbox" id="setDailyPointsOff"> 今日不限</label>
                 </div>
@@ -700,7 +689,7 @@
                 var area = keyArea;
                 area.innerHTML = '';
                 if (!keyList.length) {
-                    area.innerHTML = '<div class="empty">暂无密钥。可前往 <a href="../Human_verification.html">人机验证体验页</a> 点击「免费获取 API Key」创建（登录后每月最多 2 把），或联系管理员开通。</div>';
+                    area.innerHTML = '<div class="empty">暂无密钥。可前往 <a href="../Human_verification.html">人机验证体验页</a> 点击「免费获取 API Key」创建（登录后最多 2 把），或联系管理员开通。</div>';
                     return;
                 }
                 keyList.forEach(function (k, idx) {
@@ -731,8 +720,6 @@
                     '<div class="key-foot">' +
                     '<div class="meta">今日最大消耗点数：' +
                     ((k.daily_points_limit === -1 || k.daily_points_limit == null) ? '不限' : (fmtPts(k.daily_points_limit) + ' 点')) +
-                    ' ｜ 预警阈值：' +
-                    ((k.warn_limit === -1 || k.warn_limit == null) ? '已关闭' : (k.warn_limit + ' 次')) +
                     ' ｜ 来源白名单：' +
                     ((k.allowed_origins && k.allowed_origins.length) ? ('已配置 ' + k.allowed_origins.length + ' 条') : '不限') +
                     '</div>' +
@@ -832,11 +819,6 @@
                 status.checked = k.status === 'active';
                 syncStatusLabel();
 
-                var warnOff = k.warn_limit === -1 || k.warn_limit == null;
-                document.getElementById('setWarnOff').checked = warnOff;
-                document.getElementById('setWarn').value = warnOff ? '' : (k.warn_limit != null ? k.warn_limit : '');
-                syncWarnState();
-
                 var dpOff = k.daily_points_limit === -1 || k.daily_points_limit == null;
                 document.getElementById('setDailyPointsOff').checked = dpOff;
                 document.getElementById('setDailyPoints').value = dpOff ? '' : (k.daily_points_limit != null ? k.daily_points_limit : '');
@@ -851,12 +833,6 @@
             function syncStatusLabel() {
                 document.getElementById('setStatusLabel').textContent =
                     document.getElementById('setStatus').checked ? '启用' : '停用';
-            }
-
-            function syncWarnState() {
-                var off = document.getElementById('setWarnOff').checked;
-                document.getElementById('setWarn').disabled = off;
-                if (off) document.getElementById('setWarn').value = '';
             }
 
             function syncDailyPointsState() {
@@ -884,17 +860,6 @@
                 var body = {
                     status: document.getElementById('setStatus').checked ? 'active' : 'disabled'
                 };
-
-                if (document.getElementById('setWarnOff').checked) {
-                    body.warn_limit = -1;
-                } else {
-                    var w = parseInt(document.getElementById('setWarn').value, 10);
-                    if (isNaN(w) || w < 0) {
-                        showMsg('请输入有效的预警额度（≥0），或勾选「关闭预警」', 'error');
-                        return;
-                    }
-                    body.warn_limit = w;
-                }
 
                 if (document.getElementById('setDailyPointsOff').checked) {
                     body.daily_points_limit = -1;
