@@ -1111,8 +1111,8 @@
 
          
         function getCurrentUser() {
-            // ZIYIT_API.getToken() 会优先给「保持登录」的永久凭证，其次才是 authToken，
-            // 所以这里直接复用，别再只看 authToken —— 否则勾了保持登录的用户回到首页会被当成未登录。
+             
+             
             return ZIYIT_API.getToken() || null;
         }
 
@@ -1186,7 +1186,7 @@
 
             if (ut > 240 && (username === 'cache' || username === 'temp')) {
                 localStorage.setItem('ut', 1024);
-                // 体验结束＝把本地凭据整个清掉（含「保持登录」的永久凭证，否则自动又登回来）
+                 
                 ZIYIT_API.clearToken();
                 location.reload();
                 return;

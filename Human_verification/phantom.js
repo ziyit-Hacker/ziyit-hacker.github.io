@@ -12,11 +12,6 @@ const VERSION = "0.1.0";
  
  
  
-const A11Y_HELP_URL =
-    (typeof window !== "undefined" && window.__phantomA11yHelpUrl) ||
-    "https://ziyit-hacker.github.io/guide.html";
-
-
 const PREVIEW_MS = CONFIG.previewSeconds * 1000;
 
 
@@ -379,6 +374,11 @@ class WidgetSession {
          
         this._powTask = null;
         this._powAbort = null;
+         
+        this._a11ySwitched = false;
+        this._powAltUnavailable = false;
+        this._powChallengeId = "";
+        this._powSessionId = "";
     }
      
     setHint(stage, text) {
@@ -404,6 +404,8 @@ class WidgetSession {
             const challenge = await requestChallenge(this.apiBase, publicJwk, this.device);
             if (challenge && challenge.sessionId)
                 this.sessionId = challenge.sessionId;
+            if (this._a11ySwitched)
+                return;
              
              
              
@@ -425,7 +427,7 @@ class WidgetSession {
             this.streamIntervalMs = Number(streamCfg.intervalMs) > 0 ? Number(streamCfg.intervalMs) : 50;
             const videoEl = await this._prepareVideo(challenge);
              
-            if (this._sessionClosed)
+            if (this._sessionClosed || this._a11ySwitched)
                 return;
              
              
@@ -490,6 +492,8 @@ class WidgetSession {
         }
     }
     bindInteraction() {
+        if (this._a11ySwitched)
+            return;
          
          
          
@@ -1050,7 +1054,7 @@ class WidgetSession {
      
      
      
-    async _runPowPhase() {
+    async _runPowPhase(a11y = false) {
         const btn = this.activateBtn;
         const label = document.createElement("span");
         label.textContent = "按住完成安全校验";
@@ -1066,12 +1070,17 @@ class WidgetSession {
         this.setHint("ready", "按住下方按钮完成安全校验");
 
         let challenge = null;
+        this._powAltUnavailable = false;
         const load = async () => {
             try {
-                challenge = await requestPowChallenge(this.apiBase);
+                challenge = await requestPowChallenge(this.apiBase, a11y);
             }
             catch (e) {
                 challenge = null;
+            }
+            if (challenge) {
+                this._powChallengeId = challenge.challengeId || "";
+                this._powSessionId = challenge.sessionId || "";
             }
             return !!challenge;
         };
@@ -1079,6 +1088,12 @@ class WidgetSession {
         try {
             if (!(await load())) {
                 this.status.textContent = "安全校验暂不可用，请稍后重试";
+                this.setHint("blocked", "");
+                return null;
+            }
+            if (a11y && Array.isArray(challenge.requiredMethods)
+                && challenge.requiredMethods.indexOf("phantom") !== -1) {
+                this._powAltUnavailable = true;
                 this.setHint("blocked", "");
                 return null;
             }
@@ -1187,6 +1202,52 @@ class WidgetSession {
             btn.addEventListener("pointerdown", onDown);
             window.addEventListener("pointerup", onUp);
         });
+    }
+
+    async switchToPow() {
+        if (this._a11ySwitched || this.finished || this._sessionClosed)
+            return false;
+        this._a11ySwitched = true;
+        this._unbind?.();
+        this._unbind = () => { };
+        this.renderer?.pause();
+        this.overlay.classList.add("phantom-hidden");
+        this.activateBtn.classList.remove("phantom-holding");
+        this.setHint("ready", "");
+        let receipt = null;
+        try {
+            receipt = await this._runPowPhase(true);
+        }
+        catch (e) {
+            receipt = null;
+        }
+        if (this._sessionClosed)
+            return true;
+        if (!receipt) {
+            this.status.textContent = this._powAltUnavailable
+                ? "当前验证暂不支持无障碍替代方式"
+                : "安全校验未完成，请重试";
+            this.turnIntoRetryButton();
+            this._a11ySwitched = false;
+            return false;
+        }
+        const result = {
+            receipt,
+            receipts: [receipt],
+            challengeId: this._powChallengeId || this.challengeId,
+            sessionId: this._powSessionId || this.sessionId,
+        };
+        const confirmed = (await this.onResult(result)) !== false;
+        this.status.textContent = "";
+        if (confirmed) {
+            this.activateBtn.classList.add("phantom-success");
+            this.activateBtn.textContent = "验证通过";
+        }
+        else {
+            this.activateBtn.classList.add("phantom-fail");
+            this.activateBtn.textContent = "验证失败";
+        }
+        return true;
     }
 
     scheduleRetry(delayMs, mode) {
@@ -1413,17 +1474,17 @@ export function mount(el, opts) {
         a11y.className = "phantom-a11y-help";
         a11y.style.cssText = "margin-top:10px;font-size:12px;line-height:1.6;text-align:center;opacity:.75;";
         a11y.appendChild(document.createTextNode("无障碍用户（低视力 / 色觉障碍 / 运动障碍）无法完成本验证？"));
-        const a11yLink = document.createElement("a");
-        a11yLink.href = A11Y_HELP_URL;
-        a11yLink.target = "_blank";
-        a11yLink.rel = "noopener";
-        a11yLink.style.cssText = "color:inherit;text-decoration:underline;";
-        a11yLink.textContent = "点此联系人工";
-        a11y.appendChild(a11yLink);
+        a11y.appendChild(document.createTextNode(" "));
+        const a11yBtn = document.createElement("button");
+        a11yBtn.type = "button";
+        a11yBtn.className = "phantom-a11y-switch";
+        a11yBtn.style.cssText = "border:0;background:transparent;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer;";
+        a11yBtn.textContent = "换一种方式验证";
+        a11y.appendChild(a11yBtn);
         body.appendChild(a11y);
         modalCard.appendChild(head);
         modalCard.appendChild(body);
-        return { hint, canvas, overlay, activateBtn, status, progress };
+        return { hint, canvas, overlay, activateBtn, status, progress, a11yBtn };
     };
      
      
@@ -1459,7 +1520,7 @@ export function mount(el, opts) {
         const modalCard = document.createElement("div");
         modalCard.className = "phantom-modal-card";
         node.appendChild(modalCard);
-        const { hint, canvas, overlay, activateBtn, status, progress } = buildModalBody(modalCard);
+        const { hint, canvas, overlay, activateBtn, status, progress, a11yBtn } = buildModalBody(modalCard);
          
         node.addEventListener("click", (e) => {
             if (e.target === node)
@@ -1481,6 +1542,17 @@ export function mount(el, opts) {
             void session.start();
         };
         let session = new WidgetSession(canvas, opts.apiBase, status, overlay, hint, activateBtn, handleResult, (e) => opts.onError?.(e), resetSession);
+        a11yBtn.addEventListener("click", () => {
+            if (a11yBtn.disabled)
+                return;
+            a11yBtn.disabled = true;
+            void session.switchToPow().then((handled) => {
+                if (!handled)
+                    a11yBtn.disabled = false;
+            }, () => {
+                a11yBtn.disabled = false;
+            });
+        });
         modal = { node, session, closing: false };
         setBarState("verifying");
         void session.start();

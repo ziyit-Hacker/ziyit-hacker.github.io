@@ -382,7 +382,7 @@
                 ZIYIT_API.afdianSelfCheck().then(function (res) {
                     box.textContent = (res && res.message) || '查询完成';
                     if (res && res.vipActive) box.style.color = 'var(--ziyit-success)';
-                    // 查询可能刚把 VIP 开通/续期，重新拉一次用户信息刷新页面状态
+                     
                     return ZIYIT_API.currentUser().then(applyUser).catch(function () { });
                 }).catch(function (err) {
                     var detail = (err && err.data && err.data.detail) || (err && err.message) || err;
@@ -395,7 +395,7 @@
             });
         });
 
-        // 统一渲染用户状态（页面初始化与查单后共用）
+         
         function applyUser(user) {
             currentVipUser = user;
             var uid = user.userId != null ? user.userId : '-';
@@ -425,7 +425,7 @@
                 mailBtn.style.pointerEvents = 'none';
                 mailBtn.style.opacity = '0.5';
             } else {
-                // 到期后要把界面恢复成"可申请"状态，否则过期用户会一直卡在禁用态
+                 
                 errorMsg.style.display = 'none';
                 copyBtn.disabled = false;
                 mailBtn.style.pointerEvents = '';

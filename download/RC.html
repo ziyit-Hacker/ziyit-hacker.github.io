@@ -3041,8 +3041,8 @@
             });
         }
 
-        // Markdown → HTML：marked 产出后必须再过 DOMPurify 白名单净化（服务端只做基础转义，
-        // Markdown 允许多种绕过写法）；净化库缺失时拒绝渲染，不直接注入原始 HTML。
+         
+         
         function renderMarkdown(md) {
             if (!window.DOMPurify || !window.marked) {
                 console.error('marked / DOMPurify 未加载，已阻止渲染 Markdown');
@@ -3237,8 +3237,8 @@
 
                 const mods = (modsData && modsData.mods) || [];
                 const dlcs = (dlcData && dlcData.dlc) || [];
-                // /mods 返回全部条目（含 DLC），/dlc 只是 DLC 子集；按 modId 去重，并以 isDLC 判定类型，
-                // 避免同一个 DLC 同时以 DLC 和 MOD 两个版本出现
+                 
+                 
                 const seen = new Set();
                 const all = [];
                 dlcs.concat(mods).forEach(function (m) {
@@ -3396,9 +3396,9 @@
             });
         })();
 
-        // ---- RC 已知 BUG / 反馈 ----
-        // 列表走公开接口 GET /rc/bugs（无需登录）；状态/等级/来源枚举与计数全部取自回包，
-        // 不在前端写死中文；Markdown 正文统一经 renderMarkdown()（marked + DOMPurify）渲染。
+         
+         
+         
         (function () {
             const listEl = document.getElementById('bug-list');
             if (!listEl) return;
@@ -3415,7 +3415,7 @@
             let statusCounts = {};
             let activeStatus = 'all';
 
-            // 仅按状态 key 取配色，文案一律用回包里的 label
+             
             const STATUS_COLORS = {
                 pending: ['rgba(245,158,11,.16)', '#f59e0b'],
                 reviewing: ['rgba(249,115,22,.16)', '#f97316'],
@@ -3457,7 +3457,7 @@
 
             function openDetail(b) {
                 detailTitle.textContent = b.code + '｜' + b.title;
-                // 报告正文由服务端成文，这里再做一次白名单净化后才注入
+                 
                 detailBody.innerHTML = renderMarkdown(b.markdown);
                 detailModal.style.display = 'flex';
             }
@@ -3551,7 +3551,7 @@
                 });
             }
 
-            // 详情弹窗
+             
             document.getElementById('bug-detail-close').addEventListener('click', function () {
                 detailModal.style.display = 'none';
             });
@@ -3559,7 +3559,7 @@
                 if (e.target === detailModal) detailModal.style.display = 'none';
             });
 
-            // 提交表单
+             
             function closeSubmitModal() { submitModal.style.display = 'none'; }
             document.getElementById('bug-submit-btn').addEventListener('click', function () {
                 if (!ZIYIT_API.getToken()) {
@@ -3590,7 +3590,7 @@
                 const oldText = btn.textContent;
                 btn.textContent = '提交中...';
                 btn.disabled = true;
-                // 提交者由服务端按 Bearer token 解析，这里只传内容
+                 
                 ZIYIT_API.rcSubmitBug({
                     title: title,
                     description: description,

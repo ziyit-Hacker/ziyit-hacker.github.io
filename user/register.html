@@ -312,8 +312,8 @@
         function resetPhantomToIdle() {
             const st = window.__phantom;
             if (!st) return;
-            // 只清「这道题的编号」，不再维护任何 verified 布尔值：页面里的变量不能当门，
-            // 真正的判定由后端在注册接口里按 challengeId / sessionId 校验。
+             
+             
             st.challengeId = '';
             st.sessionId = '';
             st.pendingSubmit = false;
@@ -371,8 +371,8 @@
                     resetPhantomToIdle();
                     return;
                 }
-                // 连「整段拼接 + Blob 播放」都走不通（64.6 第 8 条）：明确提示浏览器版本，
-                // 不静默失败、也不把用户判成「验证失败」。
+                 
+                 
                 if (e && e.code === 'PLAYBACK_UNSUPPORTED') {
                     showCaptchaHint('当前浏览器无法播放验证视频，请使用最新版 Chrome / Edge / Firefox / Safari 后重试');
                     resetPhantomToIdle();

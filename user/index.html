@@ -114,7 +114,7 @@
             margin-top: 16px;
         }
 
-        /* 次要按钮（用 Passkey 登录 / 发送验证码 / 继续验证） */
+         
         .alt-btn {
             background-color: var(--ziyit-bg-card);
             color: var(--ziyit-primary);
@@ -275,7 +275,7 @@
             <div class="field-hint">账号没开密码登录，或忘了密码时走这里：邮箱验证码 / 2FA 动态码 / 一次性恢复码 / Passkey，同样要先填好上方用户名。</div>
         </form>
 
-        <!-- 第一种因子不用密码：邮箱验证码 / 2FA / 恢复码 / Passkey -->
+        
         <div class="mfa-step" id="otherStep">
             <p class="mfa-tip" id="otherMsg"></p>
 
@@ -302,7 +302,7 @@
             <button type="button" id="otherSubmit" class="alt-btn">用这种方式登录</button>
             <button type="button" id="otherPasskey" class="alt-btn" style="display: none;">用 Passkey 完成验证</button>
 
-            <!-- 表单被隐藏后「保持登录」也会跟着不见，所以这里再放一个，与表单里那个互为镜像 -->
+            
             <div style="margin-top: 12px; display: flex; align-items: center;">
                 <input type="checkbox" id="otherRemember">
                 <label for="otherRemember" class="bt" style="margin-bottom: 0;">保持登录</label>
@@ -311,7 +311,7 @@
             <div class="field-hint"><a href="javascript:location.reload()">返回密码登录</a></div>
         </div>
 
-        <!-- 第二重验证：/auth/login 回 mfaRequired 时展开，按回包 methods 渲染可选方式 -->
+        
         <div class="mfa-step" id="mfaStep">
             <p class="mfa-tip" id="mfaMsg"></p>
 
@@ -330,7 +330,7 @@
                 <input type="text" id="mfaCode" autocomplete="one-time-code" placeholder="输入验证码">
             </div>
 
-            <!-- 第一因子不是密码时（比如邮箱码先过），第二因子也可以直接用密码 -->
+            
             <div id="mfaPasswordRow" style="display: none;">
                 <label for="mfaPassword" class="bt">登录密码</label>
                 <input type="password" id="mfaPassword" autocomplete="current-password" placeholder="输入登录密码">
@@ -356,7 +356,7 @@
         let loginFailed = false;
         let appealLink = null;
 
-        // 多因子登录：第二重验证要用的中间票据与第一因子的值
+         
         let savedMfaToken = null;
         let mfaMethods = [];
         let mfaStepFactors = [];
@@ -364,8 +364,8 @@
         let pendingPasswordMd5 = '';
         let pendingRemember = false;
 
-        // 「保持登录」：表单里一个复选框、其他方式面板里一个，两者互为镜像（见 mirrorRemember）。
-        // 提交任何一步之前都按这个读，保证面板里勾的也算数。
+         
+         
         function wantRemember() {
             const a = document.getElementById('rememberMe');
             const b = document.getElementById('otherRemember');
@@ -454,44 +454,44 @@
         }
 
          
-        // ---- 多因子登录：/auth/login 的三种回包 + 第二重验证 ----
+         
 
         function handleLoginResponse(data) {
             if (!data) {
                 showError('登录响应异常，请稍后再试');
                 return;
             }
-            // ③ 策略要求两种，可这个账号只启用了一种：先进「账号安全」绑第二方式
+             
             if (data.enrollRequired) {
                 try { sessionStorage.setItem('ziyit_enroll_token', data.enrollToken || ''); } catch (e) { }
                 showError(data.message || '该账号要求两种验证方式，请先在「账号安全」里绑定第二方式');
                 setTimeout(function () { window.location.href = 'security.html?enroll=1'; }, 1500);
                 return;
             }
-            // ② 还差第二类因子：不是失败，展开第二步 UI
+             
             if (data.mfaRequired) {
                 showMfaStep(data);
                 return;
             }
-            // ① 够了：与改造前的登录成功流程完全一致
+             
             const token = data.accessToken || data.access_token || data.token;
             if (!token) {
                 showError('登录响应异常，请稍后再试');
                 return;
             }
-            // 「保持登录」：后端会额外下发永久凭证 rememberToken（可直接当 Bearer 用，服务端也能单独吊销）。
-            // 存下它才是真正的长期登录；authToken 本身仍是 7 天有效的短期令牌。
+             
+             
             const rememberToken = data.rememberToken || data.remember_token || '';
             pendingRemember = wantRemember();
             if (rememberToken) {
                 ZIYIT_API.setRememberToken(rememberToken);
             } else {
-                // 这次没拿到永久凭证（没勾保持登录，或后端还没上线）：把上一次留下的清掉。
-                // 留着它就会顶替本次会话 —— 换个账号登录还会带着旧身份的凭证。
+                 
+                 
                 ZIYIT_API.clearRememberToken();
                 if (pendingUsername && pendingPasswordMd5) {
-                    // 令牌失效时静默重登用的本地凭据，改造前就一直是这么存的（与勾没勾「保持登录」无关，
-                    // 勾选只决定这份 Cookie 存多久）。后端下发永久凭证并且确认不再依赖它之后再删。
+                     
+                     
                     ZIYIT_API.setCredentials(pendingUsername, pendingPasswordMd5, pendingRemember);
                 }
             }
@@ -515,7 +515,7 @@
 
             savedMfaToken = data.mfaToken || savedMfaToken;
             mfaMethods = data.methods || [];
-            // 第二步可选方式：password 也能当第二因子了（首因子=邮箱 → 第二因子=密码 / 2FA / Passkey）
+             
             mfaStepFactors = mfaMethods.filter(function (m) {
                 return m === 'password' || m === 'totp' || m === 'recovery' || m === 'email';
             });
@@ -540,11 +540,11 @@
             document.getElementById('mfaPasskey').style.display = hasPasskey ? 'block' : 'none';
 
             updateMfaRows();
-            // 默认就是邮箱验证码的话，先把码发出去，省得用户再点一次
+             
             if (sel.value === 'email') sendMfaEmailCode();
         }
 
-        // 验证码框与密码框互斥：选「密码」时只显示密码框
+         
         function updateMfaRows() {
             const factor = document.getElementById('mfaFactor').value;
             const isPwd = factor === 'password';
@@ -565,7 +565,7 @@
             btn.disabled = true;
             hint.textContent = '正在发送…';
             ZIYIT_API.loginEmailStart({ mfaToken: savedMfaToken }).then(function (res) {
-                // 后端可能换一张新票据，一律覆盖本地旧的
+                 
                 if (res && res.mfaToken) savedMfaToken = res.mfaToken;
                 if (res && res.methods) mfaMethods = res.methods;
                 hint.textContent = ((res && res.message) || '验证码已发送，请查收邮箱')
@@ -598,7 +598,7 @@
                     showError('请输入登录密码');
                     return;
                 }
-                // 必须和 /auth/login 完全一致：bcrypt(base64(md5))，换成 hex 会全线 401
+                 
                 body.password = CryptoJS.MD5(pwd).toString(CryptoJS.enc.Base64);
             } else {
                 const code = document.getElementById('mfaCode').value.trim();
@@ -621,7 +621,7 @@
             });
         }
 
-        // Passkey：第一因子传 { username }，第二因子传 { mfaToken }，返回体与 /auth/login 同构
+         
         function passkeyLogin(opts, btn) {
             const original = btn.textContent;
             btn.disabled = true;
@@ -643,14 +643,14 @@
             if (hint) hint.textContent = (window.passkeyUnsupportedReason && passkeyUnsupportedReason()) || '';
         }
 
-        // ---- 不用密码的第一重验证：邮箱验证码 / 2FA 动态码 / 恢复码 / Passkey ----
-        // /auth/login/factor 现在也收 factor=password（当第二因子用），所以第二步不再过滤密码。
+         
+         
 
         function currentUsername() {
             return (document.getElementById('username').value || '').trim();
         }
 
-        // 后端没有单独的「2FA 起始」接口，2FA / 恢复码当第一因子时也走 email/start 取票据
+         
         function otherNeedsTicket(f) {
             return f === 'email' || f === 'totp' || f === 'recovery';
         }
@@ -663,7 +663,7 @@
             }
             pendingUsername = uname;
             pendingPasswordMd5 = '';
-            // 面板打开后表单会被整体隐藏，把「保持登录」的状态同步到面板里那个复选框
+             
             document.getElementById('otherRemember').checked = !!document.getElementById('rememberMe').checked;
             loginFailed = false;
             hideAppealLink();
@@ -715,7 +715,7 @@
             const hint = document.getElementById('otherPrepHint');
             btn.disabled = true;
             hint.textContent = '正在获取…';
-            // 有了票据就带着它重发，避免「60 秒冷却」把票据换成一张不绑定账号的废票
+             
             const body = savedMfaToken ? { mfaToken: savedMfaToken } : { username: uname };
             ZIYIT_API.loginEmailStart(body).then(function (res) {
                 if (res && res.mfaToken) savedMfaToken = res.mfaToken;
@@ -877,9 +877,9 @@
             checkPassword();
         });
 
-        // ---- 多因子 / Passkey 事件绑定 ----
+         
 
-        // Passkey 不支持盲找账号，必须先把用户名填上
+         
         document.getElementById('passkeyLogin').addEventListener('click', function(e) {
             e.preventDefault();
             const uname = (document.getElementById('username').value || '').trim();
@@ -900,8 +900,8 @@
             if (this.value === 'email') sendMfaEmailCode();
         });
 
-        // ---- 「保持登录」：表单里一个、其他方式面板里一个，两者互为镜像 ----
-        // （面板打开时表单被整体隐藏，不镜像的话在面板里勾了也会被表单里的旧值覆盖）
+         
+         
         function mirrorRemember(srcId, dstId) {
             const src = document.getElementById(srcId);
             const dst = document.getElementById(dstId);
@@ -911,7 +911,7 @@
         mirrorRemember('rememberMe', 'otherRemember');
         mirrorRemember('otherRemember', 'rememberMe');
 
-        // 第二步不在 form 里，回车要自己接
+         
         document.getElementById('mfaCode').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -925,7 +925,7 @@
             }
         });
 
-        // ---- 「使用其他方式登录」面板 ----
+         
         document.getElementById('otherWays').addEventListener('click', function(e) {
             e.preventDefault();
             useOtherWays();

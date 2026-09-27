@@ -985,9 +985,9 @@
 
              
              
-            // ---- 流式回复（POST /guide/chat/stream）----
-            // 六类事件：status 进度提示 / delta 增量追加 / reset 丢弃本轮已显示 /
-            //          final 清洗后的完整正文（覆盖显示）/ done 收尾元数据 / error 失败说明
+             
+             
+             
             var streamState = null;      
             var streamRendered = false;  
 
@@ -1021,9 +1021,9 @@
                 streamState = null;
             }
 
-            // 一轮流式回复结束时的收尾：final 事件已渲染完整正文则保留该气泡（只解除引用，
-            // 否则下一轮 streamChat() 开头的 streamDrop() 会把上一条已完成的回复误删）；
-            // 只收到 status/delta、未定稿的占位气泡则丢弃，正文交给 handleChatReply 渲染。
+             
+             
+             
             function finishStream() {
                 if (streamRendered) streamState = null;
                 else streamDrop();

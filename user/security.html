@@ -275,7 +275,7 @@
             border-color: var(--ziyit-danger);
         }
 
-        /* ---- 弹窗 ---- */
+         
         .modal {
             display: none;
             position: fixed;
@@ -525,7 +525,7 @@
         </div>
     </div>
 
-    <!-- 身份证明弹窗：所有「弱化」安全设置的操作都要先过这一关 -->
+    
     <div class="modal" id="proofModal">
         <div class="modal-box">
             <h3 id="proofTitle">身份验证</h3>
@@ -544,7 +544,7 @@
         </div>
     </div>
 
-    <!-- 2FA 绑定弹窗：qrPng 直接 <img src>，不需要二维码库 -->
+    
     <div class="modal" id="totpModal">
         <div class="modal-box">
             <h3>绑定 2FA（身份验证器）</h3>
@@ -564,7 +564,7 @@
         </div>
     </div>
 
-    <!-- 恢复码弹窗：后端只存 hash，只回这一次，必须让用户确认已保存 -->
+    
     <div class="modal" id="codesModal">
         <div class="modal-box">
             <h3 id="codesTitle">请立即保存这些恢复码</h3>
@@ -589,7 +589,7 @@
                 try { enrollToken = sessionStorage.getItem('ziyit_enroll_token') || ''; } catch (e) { }
             }
             if (enrollToken) {
-                // 受限票据只在安全中心接口被认，别的接口一律 401
+                 
                 ZIYIT_API.setEnrollToken(enrollToken);
             } else if (!ZIYIT_API.getToken()) {
                 alert('请先登录后再进入账号安全');
@@ -616,7 +616,7 @@
             var passkeyName = document.getElementById('passkeyName');
             var bindPasskeyBtn = document.getElementById('bindPasskeyBtn');
 
-            /* ---------- 小工具 ---------- */
+             
 
             function esc(s) {
                 return String(s == null ? '' : s)
@@ -661,7 +661,7 @@
             function openModal(el) { el.classList.add('show'); }
             function closeModal(el) { el.classList.remove('show'); }
 
-            /* ---------- 身份证明弹窗 ---------- */
+             
 
             var proofModal = document.getElementById('proofModal');
             var proofTitle = document.getElementById('proofTitle');
@@ -673,11 +673,8 @@
             var proofErr = document.getElementById('proofErr');
             var proofResolve = null;
 
-            /**
-             * 收身份证明。opts:
-             *   noPassword  true = 不接受只用密码（2FA 已启用时的「弱化」操作）
-             *   weakening   true = 弱化（已绑 2FA 时后端不收纯密码）
-             */
+            
+
             function askProof(opts) {
                 var o = opts || {};
                 return new Promise(function (resolve) {
@@ -748,7 +745,7 @@
                 }
                 var body = { factor: factor };
                 if (factor === 'password') {
-                    // 密码一律传 md5（Base64），和后端登录口径一致
+                     
                     body.password = CryptoJS.MD5(raw).toString(CryptoJS.enc.Base64);
                 } else {
                     body.code = raw.trim();
@@ -772,7 +769,7 @@
                 if (body) finishProof(body);
             });
 
-            /* ---------- 恢复码弹窗 ---------- */
+             
 
             var codesModal = document.getElementById('codesModal');
             var codesTitle = document.getElementById('codesTitle');
@@ -783,7 +780,7 @@
             var codesResolve = null;
             var codesRaw = [];
 
-            // 必须勾上「已保存」才放行关闭 —— 后端不会再给第二次
+             
             function showCodes(codes, title) {
                 return new Promise(function (resolve) {
                     codesRaw = codes || [];
@@ -821,7 +818,7 @@
                 if (r) r();
             });
 
-            /* ---------- 2FA 绑定弹窗 ---------- */
+             
 
             var totpModal = document.getElementById('totpModal');
             var totpQr = document.getElementById('totpQr');
@@ -837,7 +834,7 @@
                 if (e.target === totpModal) closeModal(totpModal);
             });
 
-            // 绑定成功后如果回包带 accessToken，说明是被强制绑定的，登录流程已算完
+             
             function afterEnroll(res) {
                 var token = res && (res.accessToken || res.access_token || res.token);
                 if (token) {
@@ -884,7 +881,7 @@
                 }
             });
 
-            /* ---------- 渲染 ---------- */
+             
 
             function renderAll() {
                 renderOverview();
@@ -936,7 +933,7 @@
             function renderPolicy() {
                 var s = state || {};
                 requiredFactorsSel.value = String(s.requiredFactors || 1);
-                // 管理员强制两种，后端也会 403，前端干脆不给改
+                 
                 requiredFactorsSel.disabled = !!s.isAdmin || s.policySource === 'admin';
                 document.getElementById('saveRequired').disabled = requiredFactorsSel.disabled;
 
@@ -946,7 +943,7 @@
 
                 var canDisable = !!s.canDisablePassword;
                 passwordEnabledChk.checked = s.passwordEnabled !== false;
-                // 已开着密码且前提不满足 → 关不掉；已经是无密码状态 → 允许开回来
+                 
                 passwordEnabledChk.disabled = !canDisable && s.passwordEnabled !== false;
                 document.getElementById('savePasswordEnabled').disabled = passwordEnabledChk.disabled;
 
@@ -1030,7 +1027,7 @@
                 }
             }
 
-            /* ---------- 动作 ---------- */
+             
 
             function load() {
                 loadingBox.style.display = 'block';
@@ -1051,7 +1048,7 @@
                 });
             }
 
-            // 改策略的统一入口：先收身份证明，再合并进请求体
+             
             function applyPolicy(body, weakening, okText) {
                 return askProof({ weakening: weakening }).then(function (proof) {
                     if (!proof) return;
@@ -1104,7 +1101,7 @@
             }
 
             function closeTotp() {
-                // 关闭 2FA 不接受只用密码，必须给 2FA 码或恢复码
+                 
                 askProof({
                     noPassword: true,
                     title: '关闭 2FA',
@@ -1189,7 +1186,7 @@
         function checkLoginStatus() {
             var navItems = document.querySelectorAll('.nav-item');
             if (!ZIYIT_API.getToken()) {
-                // 被强制绑定第二方式时用的是受限票据，拿不到 /auth/me —— 只显示公共导航
+                 
                 navItems.forEach(function (item) {
                     var show = item.getAttribute('data-role') === 'all';
                     item.classList.toggle('visible', show);

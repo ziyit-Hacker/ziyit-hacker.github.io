@@ -310,7 +310,7 @@
             var dlcArea = document.getElementById('dlcArea');
             var refreshBtn = document.getElementById('refreshBtn');
 
-            // 统一加载显示器（与 ziyit-theme.css 的 .ziyit-loading / .ziyit-loader 配套）
+             
             var LOADING_HTML = '<div class="ziyit-loading">' +
                 '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>' +
                 '<div class="ziyit-loader">' +
@@ -440,7 +440,7 @@
                 ZIYIT_API.afdianSelfCheck().then(function (res) {
                     checkResult.textContent = (res && res.message) || '查询完成';
                     checkResult.style.color = 'var(--ziyit-success)';
-                    // 查询可能刚把扩展包补发进来，重新拉一次列表
+                     
                     return load();
                 }).catch(function (err) {
                     checkResult.style.color = 'var(--ziyit-danger)';

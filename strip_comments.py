@@ -47,6 +47,9 @@ _REGEX_AFTER_KEYWORD = frozenset((
 # HTML 中属于“原始文本/RCDATA”、不解析注释、需整段保密的元素
 _RAW_TAGS = frozenset(("textarea", "title", "xmp", "noembed", "noframes", "template", "iframe", "plaintext"))
 
+# 需要进内部做 JS/CSS 去注释的标签
+_SCRIPT_STYLE_TAGS = frozenset(("script", "style"))
+
 # “功能性注释”前缀：条件注释、Knockout 虚拟元素、模板指令等。
 # 这些注释往往承载逻辑/数据，默认保留；只有 --strip-functional 才删除。
 _FUNCTIONAL_PREFIXES = (
@@ -63,15 +66,29 @@ def _is_functional_comment(inner):
     return low.startswith(_FUNCTIONAL_PREFIXES)
 
 
-def _looks_tag_start(src, i, name):
-    """src 从 i 开始是否为 <name 开标签（name 小写），边界为空白/>。"""
-    end = i + 1 + len(name)
-    if src[i:i + 1] != "<" or src[i + 1:end].lower() != name:
-        return False
-    if end >= len(src):
-        return True
-    nxt = src[end]
-    return nxt in " \t\r\n\v\f>" or nxt == "/"
+# 开标签名：只在 '<' 处做一次正则，避免对每个候选标签名各扫一遍（大文件下是性能瓶颈）。
+_TAG_NAME_RE = re.compile(r"<([a-zA-Z][a-zA-Z0-9]*)")
+
+# 闭合标签查找：用大小写不敏感的正则在原串上搜，避免对整段尾巴做 .lower() 复制。
+_CLOSE_SCRIPT_RE = re.compile(r"</script", re.IGNORECASE)
+_CLOSE_STYLE_RE = re.compile(r"</style", re.IGNORECASE)
+
+
+def _find_close(src, pos, regex):
+    """在原串 src 里从 pos 起搜闭合标签，返回相对 pos 的下标（找不到 -1）。"""
+    m = regex.search(src, pos)
+    return -1 if m is None else m.start() - pos
+
+
+def _tag_name_at(src, i, n):
+    """取 i 处 '<' 的标签名（小写）；不是合法开标签名则返回 ""。边界须为空白/'>'/'/'。"""
+    m = _TAG_NAME_RE.match(src, i)
+    if not m:
+        return ""
+    end = m.end()
+    if end < n and src[end] not in " \t\r\n\v\f>/":
+        return ""
+    return m.group(1).lower()
 
 
 def _read_tag(src, i):
@@ -100,9 +117,8 @@ def _read_tag(src, i):
 
 def _close_tag_idx(src, name):
     """从 src 中找 </name 出现位置（不区分大小写），供原始文本标签使用。"""
-    low = ("</" + name).lower()
-    pos = src.lower().find(low)
-    return pos
+    m = re.search(r"</" + re.escape(name), src, re.IGNORECASE)
+    return -1 if m is None else m.start()
 
 
 # ----------------------------- JS 注释去除 -----------------------------
@@ -410,7 +426,7 @@ def _find_script_close(body):
             stack.append("T")
             continue
         # 代码态检测闭合标签
-        if c == "<" and body[i:i + 8].lower() == "</script":
+        if c == "<" and _CLOSE_SCRIPT_RE.match(body, i):
             return i
         i += 1
     return -1
@@ -450,6 +466,15 @@ def strip_html(src, keep_functional=True):
     removed_blocks = 0
     i = 0
     while i < n:
+        # 只有 '<' 才可能是标签/注释起始：其前的整段文本直接搬过去，不再逐字符处理。
+        # （此前对每个字符都跑一遍 _looks_tag_start 扫描 + 逐字符 append，大文件下极慢，预览像卡死。）
+        nxt = src.find("<", i)
+        if nxt == -1:
+            out.append(src[i:])
+            break
+        if nxt > i:
+            out.append(src[i:nxt])
+            i = nxt
         if src.startswith("<!--", i):
             j = src.find("-->", i + 4)
             if j == -1:
@@ -466,11 +491,8 @@ def strip_html(src, keep_functional=True):
             i = j + 3
             continue
 
-        tag = None
-        for name in ("script", "style"):
-            if _looks_tag_start(src, i, name):
-                tag = name
-                break
+        name = _tag_name_at(src, i, n)
+        tag = name if name in _SCRIPT_STYLE_TAGS else None
         if tag:
             open_end = _read_tag(src, i)          # 开标签之后的下标
             open_tag = src[i:open_end]
@@ -483,20 +505,20 @@ def strip_html(src, keep_functional=True):
                     rel = _find_script_close(src[body_start:])
                     if rel == -1:
                         # 字符串未闭合等情形下漏判 → 回退到字面 </script
-                        rel = src[body_start:].lower().find("</script")
+                        rel = _find_close(src, body_start, _CLOSE_SCRIPT_RE)
                     if rel == -1:
                         # 通篇没有闭合标签：剩余内容原样保留，绝不按代码整段截断
                         out.append(src[i:])
                         break
                 else:
                     # 数据型脚本（ld+json/json…）：整段原样，不做任何 JS 解析
-                    rel = src[body_start:].lower().find("</script")
+                    rel = _find_close(src, body_start, _CLOSE_SCRIPT_RE)
                     if rel == -1:
                         out.append(src[i:])
                         break
             else:
                 # style 内为纯 CSS，只需避开字符串；找 </style 即可
-                rel = src[body_start:].lower().find("</style")
+                rel = _find_close(src, body_start, _CLOSE_STYLE_RE)
                 if rel == -1:
                     # 找不到闭合：剩余全部按 CSS 去注释，避免死循环
                     stripped, rc, rb = strip_css(src[body_start:])
@@ -532,11 +554,7 @@ def strip_html(src, keep_functional=True):
             continue
 
         # 原始文本标签：整段保密（textarea/template/…，内含的 <!-- 不应删）
-        raw_name = None
-        for name in _RAW_TAGS:
-            if _looks_tag_start(src, i, name):
-                raw_name = name
-                break
+        raw_name = name if name in _RAW_TAGS else None
         if raw_name:
             open_end = _read_tag(src, i)
             ci = _close_tag_idx(src[open_end:], raw_name)
@@ -687,6 +705,20 @@ def _selftest():
         if keep not in got:
             fails += 1
             print("FAIL-HTML:", repr(code), "=>", repr(got))
+    # 负向断言：下列内容【必须被删掉】。守住"标签名匹配"这条改动路径，
+    # 防它回归成漏删（如把 <scriptx> 误当 <script>）或误删正文。
+    html_removed_cases = [
+        ("<scriptx><!-- c -->x</scriptx>", "<!-- c -->"),      # scriptx 不是 <script>
+        ("<script>var a = 1; // c\n</script>", "// c"),         # JS 行注释要删
+        ("<SCRIPT>var a = 1; /* c */ </SCRIPT>", "/* c */"),    # 闭合标签大小写不敏感
+        ("<style>.a { /* c */ }</style>", "/* c */"),
+        ("<title>t</title><!-- c -->", "<!-- c -->"),           # title 之后再出现的注释照删
+    ]
+    for code, gone in html_removed_cases:
+        got, rc, rb, _ = strip_html(code)
+        if gone in got:
+            fails += 1
+            print("FAIL-HTML-NEG:", repr(code), "=> 仍含", repr(gone), "got=", repr(got))
     # 回归：https://、http:// 及正文里的 // 绝不能当注释删掉
     reg_cases = [
         # 纯正文里的 URL
@@ -743,7 +775,8 @@ def _selftest():
     if fails:
         print("自检未通过：%d 项" % fails)
         return 1
-    print("自检通过（%d 项 JS + %d 项 HTML）" % (len(cases), len(html_cases)))
+    print("自检通过（%d 项 JS + %d 项 HTML + %d 项 HTML 负向）"
+          % (len(cases), len(html_cases), len(html_removed_cases)))
     return 0
 
 

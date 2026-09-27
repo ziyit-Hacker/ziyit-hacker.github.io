@@ -231,7 +231,7 @@
 
          
         function checkUserPermission() {
-            // 用 ZIYIT_API.getToken()：它优先给「保持登录」的永久凭证，只看 authToken 会把这类用户挡在门外
+             
             const authToken = ZIYIT_API.getToken();
             if (!authToken) {
                 alert('请先登录以访问该页面');
@@ -319,7 +319,7 @@
             const userTypeDisplay = document.getElementById('userTypeDisplay');
 
             ZIYIT_API.currentUser().then(function (user) {
-                // 显示本人头像（/auth/me 下发的 avatarUrl；后端域名下的图要走 blob，否则拿到 ngrok 拦截页）
+                 
                 userAvatar.alt = (user.username || '用户') + ' 的头像';
                 userAvatar.style.display = 'block';
                 ZIYIT_API.applyImage(userAvatar, user.avatarUrl, './assets/ziyit.png').catch(function () { });
@@ -393,8 +393,8 @@
     <script>
         const logoutLink = document.getElementById('logoutLink');
         logoutLink.addEventListener('click', function() {
-            // 走 logout() 而不是直接 clearToken()：永久凭证（保持登录）必须在服务端吊销，
-            // 否则本地清掉了、那张凭证在别处依然能换到登录态。
+             
+             
             ZIYIT_API.logout().then(function () {
                 window.location.href = './';
             });

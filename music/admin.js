@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('rc-bug-search').addEventListener('input', renderRcBugs);
     document.getElementById('rc-bug-filter').addEventListener('change', renderRcBugs);
 
-    // 爱发电订单：台账只读 + 查单补发，Lv.3+（后端 require_admin_high 兜底）
+     
     document.querySelector('[data-section="afdian-management"]').addEventListener('click', function () {
         switchSection('afdian-management');
         updateSystemInfo('切换到爱发电订单');
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('afdian-reconcile-btn').addEventListener('click', function () { doAfdianReconcile(true); });
     document.getElementById('afdian-scan-btn').addEventListener('click', function () { doAfdianReconcile(false); });
 
-    // 渗透测试管理：Lv.1+ 都能看，写操作按钮只给站长（更细的权限由后端 require_admin_super 兜底）
+     
     document.querySelector('[data-section="pentest-management"]').addEventListener('click', function () {
         switchSection('pentest-management');
         updateSystemInfo('切换到渗透测试管理');
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('pentest-assign-btn').addEventListener('click', doPentestAssign);
     document.getElementById('pentest-pw-copy').addEventListener('click', copyPentestPassword);
     document.getElementById('pentest-pw-close').addEventListener('click', closePentestPasswordModal);
-    // 列表会整体重绘，所以按钮一律走容器上的事件委托，只绑这一次
+     
     document.getElementById('pentest-code-list').addEventListener('click', onPentestCodeClick);
     document.getElementById('pentest-app-list').addEventListener('click', onPentestAppClick);
 
@@ -251,8 +251,8 @@ function canAccess(needLevel) {
     return (currentAdminLevel || 0) >= needLevel;
 }
 
-// 401 可能来自任意一个请求（权限校验、服务器状态轮询、客服轮询……），
-// 统一从这里出去：整页只提示 + 跳转一次，不再和下面 adminMe 的 .catch 各弹一遍。
+ 
+ 
 let authRedirecting = false;
 function leaveAdminPage(message) {
     if (authRedirecting) return;
@@ -1894,8 +1894,8 @@ function deleteMod(m) {
 let rcKeyList = [];
 let keyTargetUser = null;
 
-// RC BUG 反馈（管理后台）：列表走 GET /admin/rc/bugs（带联系方式），
-// 状态枚举不写死，统一取公开接口 GET /rc/bugs 回包的 statuses
+ 
+ 
 let rcBugList = [];
 let rcBugStatuses = [];
 
@@ -1906,8 +1906,8 @@ function rcUserKeys(u) {
                 : (Array.isArray(u.keyList) ? u.keyList : [])));
 }
 
-// /admin/rc/keys 回包是 rc_key_view：给的是【明文密钥】productKey，不再是哈希
-// （服务端只落盘 AES 加密明文，校验用的 base64(md5) 哈希按需派生、不外发）
+ 
+ 
 function rcKeyFields(k) {
     if (!k) return {};
     return {
@@ -1991,9 +1991,9 @@ function renderRcKeys() {
     });
 }
 
-// ---- RC BUG 反馈管理 ----
+ 
 
-// 报告正文：marked 产出后必须再过 DOMPurify；净化库缺失就拒绝渲染，不注入原始 HTML
+ 
 function adminRenderMarkdown(md) {
     if (!window.DOMPurify || !window.marked) {
         return '<p style="color:var(--ziyit-danger);">marked / DOMPurify 未加载，已阻止渲染报告</p>';
@@ -2004,7 +2004,7 @@ function adminRenderMarkdown(md) {
 function loadRcBugs() {
     if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可访问 RC BUG 管理'); return; }
     document.getElementById('rc-bug-list').innerHTML = loadingHTML();
-    // 管理接口只在公开字段上多给 contact；状态枚举统一从公开接口的 statuses 取，避免写死中文
+     
     return Promise.all([
         ZIYIT_API.adminRcBugs(),
         ZIYIT_API.rcBugs().catch(function () { return null; })
@@ -2130,10 +2130,10 @@ function saveRcBugStatus(bug, opts) {
     });
 }
 
-// ===== 爱发电订单（Lv.3+）=====
-//  台账：GET /admin/afdian/purchases —— 订单（含未发货驳回记录）+ VIP 到期名单 + 汇总
-//  补发：POST /admin/afdian/reconcile —— 带 outTradeNo 精确查这一单，留空则扫最近几页
-//  补发幂等：同一订单号只发一次，已入账的会跳过（skip），驳回的写台账等人工排查。
+ 
+ 
+ 
+ 
 let afdianData = { orders: [], vipUsers: [], summary: {} };
 
 const AFDIAN_KIND_TEXT = { vip: 'VIP 会员', rc: 'RC 密钥', dlc: 'DLC 扩展包' };
@@ -2213,7 +2213,7 @@ function renderAfdianOrders() {
     list.forEach(function (o) {
         const granted = !!o.granted;
         const badge = granted ? penBadge('ok', '已发货') : penBadge('bad', afdianReasonText(o.reason));
-        // 未发货的驳回记录没有 userId / username / days / expireAt，只有 seenAt，得分别展示
+         
         const who = granted
             ? escAdmin(o.username || '-') + '（ID ' + escAdmin(o.userId) + '）'
             : '未识别到账号';
@@ -2247,7 +2247,7 @@ function renderAfdianOrders() {
     });
     area.innerHTML = html;
 
-    // 列表整体重绘，所以按钮走重绘后的逐次绑定（与 RC BUG 列表同款写法）
+     
     area.querySelectorAll('[data-afdian-retry]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             document.getElementById('afdian-order-no').value = btn.getAttribute('data-afdian-retry') || '';
@@ -2325,10 +2325,10 @@ function doAfdianReconcile(exact) {
     });
 }
 
-// ===== 渗透测试管理（第六十二章）=====
-//  查看：Lv.1+ 都可以；分配 / 审批 / 驳回 / 重置 / 吊销 / 派任务：仅站长。
-//  后端判站长的条件是 userId === ADMIN_USER_ID(1)（main.py require_admin_super），这里用同一判据，
-//  免得前端放开按钮、后端照样回 403。
+ 
+ 
+ 
+ 
 let pentestData = { codes: [], applications: [], pendingApplications: 0 };
 const PENTEST_TASK_LABELS = { open: '待执行', doing: '进行中', done: '已完成' };
 
@@ -2336,7 +2336,7 @@ function pentestIsSuper() {
     return !!(currentAdminInfo && Number(currentAdminInfo.userId) === 1);
 }
 
-// 后端的 detail 一律原样展示（400 / 403 / 404）
+ 
 function pentestErr(err, fallback) {
     if (err && err.data) {
         if (typeof err.data === 'string' && err.data) return err.data;
@@ -2382,7 +2382,7 @@ function loadPentest() {
     }
     codeList.innerHTML = loadingHTML();
     appList.innerHTML = loadingHTML();
-    // 站长专属控件（分配台）只管显隐，真正的写权限由后端 require_admin_super 兜底
+     
     const assignBox = document.getElementById('pentest-assign-box');
     if (assignBox) assignBox.style.display = pentestIsSuper() ? '' : 'none';
     return ZIYIT_API.adminPentest().then(function (data) {
@@ -2512,7 +2512,7 @@ function pentestPanelHTML(idx) {
     return html;
 }
 
-// 任务增删改后列表要重算进度，但把展开中的任务面板保持打开
+ 
 function reloadPentestKeepPanel(idx) {
     return loadPentest().then(function () {
         if (idx == null) return;
@@ -2740,8 +2740,8 @@ function doPentestAssign() {
     });
 }
 
-// 初始密码只显示这一次：只写进 DOM 的只读输入框，不落 localStorage / sessionStorage / URL / console，
-// 也不回传后端或任何第三方。关闭时顺手清空，免得密码继续留在页面上。
+ 
+ 
 function showPentestPassword(data) {
     document.getElementById('pentest-pw-code').value = (data && data.code) || '';
     document.getElementById('pentest-pw-username').value = (data && data.username) || '';
@@ -2792,7 +2792,7 @@ function openAddKey(u) {
 function saveKeyAdd() {
     if (!keyTargetUser) return;
     const userId = keyTargetUser.userId != null ? keyTargetUser.userId : keyTargetUser.user_id;
-    // 后端 /admin/users/{id}/keys 收的是【明文密钥】productKey，服务端自己加密落盘并派生校验哈希
+     
     const productKey = document.getElementById('key-plain').value.trim();
     if (!productKey) {
         alert('请输入明文密钥');
@@ -2813,7 +2813,7 @@ function saveKeyAdd() {
     });
 }
 
-// 同一权限至多一条记录（续期是覆盖，不叠加），所以按权限定位、不需要哈希
+ 
 function removeKey(userId, permission) {
     if (!confirm('确定移除该用户权限为 ' + permission + ' 的密钥吗？\n移除后该用户需重新获取密钥才能继续使用。')) return;
     ZIYIT_API.request('/admin/users/' + userId + '/keys/remove', {

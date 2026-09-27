@@ -137,7 +137,7 @@
             background-color: var(--ziyit-danger);
         }
 
-        /* 生成结果：明文串只在这里显示一次 */
+         
         #genResult {
             display: none;
             margin-top: 14px;
@@ -399,7 +399,7 @@
                     + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
             }
 
-            // 后端的 detail 一律原样展示：400（已有 3 个没用过的串）/ 429（生成太频繁）/ 403（账号被封禁）
+             
             function errMsg(err, fallback) {
                 if (err && err.data) {
                     if (typeof err.data === 'string' && err.data) return err.data;
@@ -507,7 +507,7 @@
                 var old = genBtn.textContent;
                 genBtn.textContent = '生成中…';
                 ZIYIT_API.rcSerialIssue(labelInput.value.trim()).then(function (data) {
-                    // 明文串只进 DOM，不写 localStorage / sessionStorage / URL / console
+                     
                     serialText.textContent = (data && data.serial) || '';
                     genNotice.textContent = (data && data.notice) || '';
                     genResult.style.display = 'block';
