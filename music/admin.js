@@ -1511,7 +1511,10 @@ function apiKeyFields(k) {
         points: k.points != null ? k.points : (k.pointsBalance != null ? k.pointsBalance : 0),
         minRequired: k.minRequired != null ? k.minRequired : (k.min_required != null ? k.min_required : 0),
         dailyPointsLimit: k.daily_points_limit != null ? k.daily_points_limit : (k.dailyPointsLimit != null ? k.dailyPointsLimit : -1),
-        dailyPointsUsed: k.daily_points_used != null ? k.daily_points_used : (k.dailyPointsUsed != null ? k.dailyPointsUsed : 0)
+        dailyPointsUsed: k.daily_points_used != null ? k.daily_points_used : (k.dailyPointsUsed != null ? k.dailyPointsUsed : 0),
+        // v0.3.38：「额度」= 该密钥累计可消耗点数上限（-1 = 无限）与累计已消耗点数
+        quota: k.points_quota != null ? k.points_quota : (k.pointsQuota != null ? k.pointsQuota : -1),
+        pointsUsed: k.points_used != null ? k.points_used : (k.pointsUsed != null ? k.pointsUsed : 0)
     };
 }
 
@@ -1551,6 +1554,8 @@ function renderApiKeys() {
             + '<div class="user-status ' + statusCls + '">' + escAdmin(f.status) + '</div>'
             + '<div class="user-del-date">账户点数: ' + escAdmin(f.points) + ' 点'
             + '（每 ' + escAdmin(f.minRequired) + ' 点起可验证）'
+            + '<br>额度: ' + (f.quota === -1 || f.quota === '-1' ? '无限' : escAdmin(f.quota) + ' 点')
+            + ' ｜ 已消耗: ' + escAdmin(f.pointsUsed) + ' 点'
             + ' ｜ 今日最大消耗点数: ' + (f.dailyPointsLimit === -1 || f.dailyPointsLimit === '-1' ? '不限' : escAdmin(f.dailyPointsLimit) + ' 点')
             + ' ｜ 今日已消耗: ' + escAdmin(f.dailyPointsUsed) + ' 点'
             + (f.created ? '<br>创建: ' + escAdmin(String(f.created).slice(0, 10)) : '')
@@ -1609,11 +1614,8 @@ function openEditApiKey(key) {
         if (f.key === key) cur = f;
     });
     document.getElementById('apikey-edit-status').value = cur && String(cur.status).toLowerCase() === 'disabled' ? 'disabled' : 'active';
-    document.getElementById('apikey-edit-limit').value = cur ? cur.limit : -1;
-     
-    const limitInput = document.getElementById('apikey-edit-limit');
-    limitInput.title = canAccess(4) ? '每月限制（-1 = 无限）' : '仅 4 级超级管理员可设置无限额度（-1）';
-    limitInput.disabled = !canAccess(4);
+    // v0.3.38：额度 = 该密钥累计可消耗点数上限（-1 = 无限）；Lv.3+ 均可修改
+    document.getElementById('apikey-edit-quota').value = cur ? cur.quota : -1;
 
      
     const dailyUnlimited = !cur || cur.dailyPointsLimit === -1 || cur.dailyPointsLimit === '-1' || cur.dailyPointsLimit == null;
@@ -1650,17 +1652,10 @@ function setEditWarnDisabled() {
 function saveApiKeyEdit() {
     if (!editingApiKey) return;
     const status = document.getElementById('apikey-edit-status').value;
-    const limitRaw = document.getElementById('apikey-edit-limit').value;
-    const limit = parseInt(limitRaw, 10);
-     
-    const maxQuota = currentAdminLevel === 4 ? Infinity : (currentAdminLevel === 3 ? 10 : 5);
-    if (isNaN(limit) || limit === -1) {
-        if (!canAccess(4)) {
-            alert('仅 4 级超级管理员可设置无限额度（-1）');
-            return;
-        }
-    } else if (limit > maxQuota) {
-        alert('当前等级额度上限为 ' + (maxQuota === Infinity ? '无限' : maxQuota) + '，不能设置更高额度');
+    // v0.3.38：额度（该密钥累计可消耗点数上限）；-1 = 无限；Lv.3+ 均可设置
+    const quota = parseFloat(document.getElementById('apikey-edit-quota').value);
+    if (isNaN(quota) || quota < -1) {
+        alert('请输入有效的额度（-1 表示无限，其余 ≥0）');
         return;
     }
      
@@ -1691,7 +1686,7 @@ function saveApiKeyEdit() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             status: status,
-            monthly_limit: isNaN(limit) ? -1 : limit,
+            points_quota: quota,
             daily_points_limit: dailyPoints,
             warn_limit: warn,
             allowed_origins: origins
