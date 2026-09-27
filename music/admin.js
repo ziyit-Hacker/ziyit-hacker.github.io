@@ -1548,7 +1548,7 @@ function renderApiKeys() {
             + '<div class="user-status ' + statusCls + '">' + escAdmin(f.status) + '</div>'
             + '<div class="user-del-date">账户点数: ' + escAdmin(f.points) + ' 点'
             + '（每 ' + escAdmin(f.minRequired) + ' 点起可验证）'
-            + '<br>额度: ' + (f.quota === -1 || f.quota === '-1' ? '无限' : escAdmin(f.quota) + ' 点')
+            + '<br>密钥点数: ' + (f.quota === -1 || f.quota === '-1' ? '无限' : escAdmin(f.quota) + ' 点')
             + ' ｜ 已消耗: ' + escAdmin(f.pointsUsed) + ' 点'
             + ' ｜ 今日最大消耗点数: ' + (f.dailyPointsLimit === -1 || f.dailyPointsLimit === '-1' ? '不限' : escAdmin(f.dailyPointsLimit) + ' 点')
             + ' ｜ 今日已消耗: ' + escAdmin(f.dailyPointsUsed) + ' 点'
@@ -1632,10 +1632,10 @@ function setEditDailyDisabled() {
 function saveApiKeyEdit() {
     if (!editingApiKey) return;
     const status = document.getElementById('apikey-edit-status').value;
-    // v0.3.38：额度（该密钥累计可消耗点数上限）；-1 = 无限；Lv.3+ 均可设置
+    // v0.3.38：点数（该密钥可消耗的点数上限）；-1 = 无限；Lv.3+ 均可设置
     const quota = parseFloat(document.getElementById('apikey-edit-quota').value);
     if (isNaN(quota) || quota < -1) {
-        alert('请输入有效的额度（-1 表示无限，其余 ≥0）');
+        alert('请输入有效的点数（-1 表示无限，其余 ≥0）');
         return;
     }
      
