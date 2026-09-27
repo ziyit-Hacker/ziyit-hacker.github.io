@@ -68,22 +68,45 @@ async function authHeaders(base) {
     return { [TICKET_HEADER]: await currentTicket(base) };
 }
 
+ 
+ 
+let expChannel = null;
+
+export function setExperienceChannel(cfg) {
+    if (!cfg) {
+        expChannel = null;
+        return;
+    }
+    const headerName = String(cfg.headerName || "").trim();
+    const key = String(cfg.key || "").trim();
+    const token = String(cfg.token || "").trim();
+    expChannel = (headerName && key) ? { headerName, key, token } : null;
+}
+
+function expHeaders() {
+    if (!expChannel) return null;
+    const h = { [expChannel.headerName]: expChannel.key };
+    if (expChannel.token) h["Authorization"] = "Bearer " + expChannel.token;
+    return h;
+}
+
 async function postJson(apiBase, path, body) {
     const base = apiBase.replace(/\/+$/, "");
+    const exp = expHeaders();
     for (let attempt = 0; attempt < 2; attempt++) {
         const res = await fetch(`${base}${path}`, {
             method: "POST",
              
              
             credentials: "include",
-            headers: { "Content-Type": "application/json", ...(await authHeaders(base)) },
+            headers: { "Content-Type": "application/json", ...(exp || (await authHeaders(base))) },
             body: JSON.stringify(body),
         });
         if (res.ok) {
             return res.json();
         }
          
-        if (res.status === 401 && !explicitApiKey() && attempt === 0) {
+        if (res.status === 401 && !exp && !explicitApiKey() && attempt === 0) {
             ticket = { token: "", expiresAt: 0 };
             continue;
         }
@@ -133,8 +156,8 @@ export function videoChunk(apiBase, challengeId, index, sessionId) {
  
  
  
-export function requestPowChallenge(apiBase) {
-    return postJson(apiBase, "/pow/challenge", {});
+export function requestPowChallenge(apiBase, a11y = false) {
+    return postJson(apiBase, "/pow/challenge", { a11y: !!a11y });
 }
 
  

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人机验证体验 - ZIYIT</title>
+    <meta name="description" content="ZIYIT 人机验证体验页：登录后输入任意格式合法的 API 密钥即可试用，按账户点数计费。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/Human_verification_experience.html">
+    <link rel="icon" href="./assets/logo.ico" type="image/x-icon">
+    <script type="importmap">
+    {
+      "imports": {
+        "@noble/curves/nist.js": "https://cdn.jsdelivr.net/npm/@noble/curves@2.2.0/nist.js",
+        "@noble/hashes/sha2.js": "https://cdn.jsdelivr.net/npm/@noble/hashes@2.2.0/sha2.js",
+        "@noble/hashes/hkdf.js": "https://cdn.jsdelivr.net/npm/@noble/hashes@2.2.0/hkdf.js",
+        "@noble/hashes/hmac.js": "https://cdn.jsdelivr.net/npm/@noble/hashes@2.2.0/hmac.js",
+        "@noble/hashes/utils.js": "https://cdn.jsdelivr.net/npm/@noble/hashes@2.2.0/utils.js",
+        "@noble/ciphers/aes.js": "https://cdn.jsdelivr.net/npm/@noble/ciphers@2.2.0/aes.js"
+      }
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: default !important;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--ziyit-primary);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: var(--ziyit-bg);
+        }
+
+        .page {
+            max-width: 720px;
+            margin: 20px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .page h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            margin: 6px 0 16px;
+            line-height: 1.7;
+        }
+
+        .back-link {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .card {
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: var(--ziyit-bg);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            margin-bottom: 12px;
+        }
+
+        .status-line {
+            font-size: 14px;
+            line-height: 2;
+            color: var(--ziyit-text-primary);
+        }
+
+        .status-line .lbl {
+            color: var(--ziyit-text-secondary);
+        }
+
+        .crit {
+            margin-top: 10px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .crit.ok {
+            display: block;
+            background: rgba(39, 174, 96, .14);
+            color: var(--ziyit-success);
+            border: 1px solid var(--ziyit-success);
+        }
+
+        .crit.bad {
+            display: block;
+            background: rgba(231, 76, 60, .14);
+            color: var(--ziyit-danger);
+            border: 1px solid var(--ziyit-danger);
+        }
+
+        .field {
+            margin-bottom: 12px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            font-family: Consolas, 'Courier New', monospace;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 6px;
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            cursor: text !important;
+        }
+
+        .field input:focus {
+            outline: none;
+            border-color: var(--ziyit-primary);
+        }
+
+        .field .hint {
+            font-size: 12px;
+            margin-top: 6px;
+            line-height: 1.6;
+            color: var(--ziyit-text-secondary);
+        }
+
+        .field .hint.err {
+            color: var(--ziyit-danger);
+        }
+
+        .field .hint.ok {
+            color: var(--ziyit-success);
+        }
+
+        .btn {
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        .btn:disabled {
+            background-color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        .result {
+            display: none;
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .result.ok {
+            display: block;
+            background: rgba(39, 174, 96, .14);
+            color: var(--ziyit-success);
+            border: 1px solid var(--ziyit-success);
+        }
+
+        .result.bad {
+            display: block;
+            background: rgba(231, 76, 60, .14);
+            color: var(--ziyit-danger);
+            border: 1px solid var(--ziyit-danger);
+        }
+
+        .widget-box {
+            display: flex;
+            justify-content: center;
+            padding: 8px 0 4px;
+        }
+
+        .loading-box,
+        .error-box {
+            padding: 16px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--ziyit-text-secondary);
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 10px;
+        }
+
+        .error-box {
+            color: var(--ziyit-danger);
+            border-color: var(--ziyit-danger);
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="./assets/ziyit-theme.css">
+</head>
+
+<body>
+
+    <div class="page">
+        <h1>人机验证体验</h1>
+        <a href="javascript:history.back()" class="back-link">返回</a>
+        <p class="page-sub">
+            登录后输入<b>任意格式合法</b>的 API 密钥即可试用（密钥只做格式校验，不代表授权）。
+            扣点按<b>当前登录账号</b>的点数余额结算，密钥本体不会被校验、也不会花到别人的点数。
+        </p>
+
+        <div class="card" id="statusCard">
+            <h2>体验资格</h2>
+            <div class="loading-box">正在查询体验资格…</div>
+        </div>
+
+        <div class="card">
+            <h2>开始验证</h2>
+            <div class="field">
+                <label for="expKey">API 密钥（体验用）</label>
+                <input type="text" id="expKey" spellcheck="false" autocomplete="off"
+                    placeholder="请输入一个格式合法的密钥">
+                <div class="hint" id="keyHint"></div>
+            </div>
+            <button type="button" class="btn" id="startBtn" disabled>开始验证</button>
+        </div>
+
+        <div class="result" id="resultBox"></div>
+
+        <div class="widget-box">
+            <div id="app"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { mount } from "./Human_verification/phantom.js";
+        import { consumeVerify, setExperienceChannel } from "./Human_verification/api.js";
+
+        const API_BASE = "https://willian-unheady-rawly.ngrok-free.dev";
+
+        var statusCard = document.getElementById("statusCard");
+        var expKeyInput = document.getElementById("expKey");
+        var keyHint = document.getElementById("keyHint");
+        var startBtn = document.getElementById("startBtn");
+        var resultBox = document.getElementById("resultBox");
+
+        var status = null;
+        var handle = null;
+
+        function getToken() {
+            var m = document.cookie.match(/(?:^|;\s*)authToken=([^;]*)/);
+            if (m && m[1]) {
+                try { return decodeURIComponent(m[1]); } catch (e) { return m[1]; }
+            }
+            return localStorage.getItem("authToken") || "";
+        }
+
+        function esc(s) {
+            return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function fmtPts(n) {
+            if (n == null || n === "") return "-";
+            var v = Number(n);
+            if (isNaN(v)) return String(n);
+            if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+            return String(Math.round(v * 100) / 100);
+        }
+
+        function currentTheme() {
+            var pref = document.documentElement.getAttribute("data-theme-pref") || "auto";
+            if (pref === "dark") return "dark";
+            if (pref === "light") return "light";
+            return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+        }
+
+        function showResult(text, ok) {
+            resultBox.className = "result " + (ok ? "ok" : "bad");
+            resultBox.textContent = text;
+        }
+
+        function renderStatus() {
+            var d = status || {};
+            var allowed = d.allowed === true;
+            var pts = d.points;
+            var minRequired = d.minRequired;
+            var msg = d.message || (allowed ? "" : "当前账号暂时无法体验验证");
+            statusCard.innerHTML =
+                '<h2>体验资格</h2>' +
+                '<div class="status-line">' +
+                '<div><span class="lbl">点数余额：</span>' + esc(fmtPts(pts)) + ' 点</div>' +
+                '<div><span class="lbl">最低要求：</span>' + esc(fmtPts(minRequired)) + ' 点</div>' +
+                '<div><span class="lbl">名下密钥：</span>' + (d.hasKey ? "可用" : "无可用密钥") + '</div>' +
+                '</div>' +
+                '<div class="crit ' + (allowed ? "ok" : "bad") + '">' +
+                (allowed ? "可以开始体验。" : "无法开始体验：" + esc(msg)) +
+                '</div>' +
+                '<div class="page-sub" style="margin:12px 0 0;">' +
+                '<a href="./user/points.html">我的点数（余额与充值） ›</a> ｜ ' +
+                '<a href="./user/api-key.html">我的密钥 ›</a>' +
+                '</div>';
+
+            if (!allowed && !enough && !d.hasKey) { }
+            startBtn.disabled = !allowed;
+            validateKey();
+        }
+
+        function loadStatus() {
+            var token = getToken();
+            if (!token) {
+                alert("请先登录后再使用体验页");
+                window.location.href = "./user/";
+                return;
+            }
+            statusCard.innerHTML = '<h2>体验资格</h2><div class="loading-box">正在查询体验资格…</div>';
+            startBtn.disabled = true;
+            fetch(API_BASE + "/experience/status", {
+                headers: { "Authorization": "Bearer " + token }
+            }).then(function (res) {
+                if (res.status === 401) {
+                    alert("登录已失效，请重新登录");
+                    window.location.href = "./user/";
+                    return null;
+                }
+                if (res.status === 404) {
+                    statusCard.innerHTML = '<h2>体验资格</h2><div class="error-box">体验模式当前已关闭。</div>';
+                    return null;
+                }
+                return res.json().then(function (data) {
+                    if (!res.ok) {
+                        var detail = (data && data.detail) || ("查询失败 " + res.status);
+                        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+                    }
+                    return data;
+                });
+            }).then(function (data) {
+                if (!data) return;
+                status = data;
+                if (data.apiKeyPattern) {
+                    try { keyPattern = new RegExp(data.apiKeyPattern); } catch (e) { keyPattern = null; }
+                }
+                renderStatus();
+            }).catch(function (err) {
+                statusCard.innerHTML = '<h2>体验资格</h2><div class="error-box">查询失败：' +
+                    esc((err && err.message) || err) + '</div>';
+            });
+        }
+
+        var keyPattern = null;
+
+        function validateKey() {
+            var val = (expKeyInput.value || "").trim();
+            var allowed = status && status.allowed === true;
+            if (!val) {
+                keyHint.className = "hint";
+                keyHint.textContent = keyPattern ? ("格式示例：" + keyPattern.source) : "";
+                if (!allowed) startBtn.disabled = true;
+                return false;
+            }
+            var okFmt = keyPattern ? keyPattern.test(val) : true;
+            keyHint.className = "hint " + (okFmt ? "ok" : "err");
+            keyHint.textContent = okFmt ? "格式合法，可以开始验证。" : "密钥格式不正确，请检查后重试。";
+            startBtn.disabled = !(allowed && okFmt);
+            return okFmt;
+        }
+
+        expKeyInput.addEventListener("input", validateKey);
+
+        function destroyWidget() {
+            try { handle && handle.destroy(); } catch (e) { }
+            handle = null;
+        }
+
+        startBtn.addEventListener("click", function () {
+            var key = (expKeyInput.value || "").trim();
+            if (!status || status.allowed !== true) {
+                showResult("当前账号无法开始体验：" + ((status && status.message) || "请查看上方说明"), false);
+                return;
+            }
+            if (!validateKey()) {
+                showResult("请先输入一个格式合法的 API 密钥。", false);
+                return;
+            }
+            resultBox.className = "result";
+            resultBox.textContent = "";
+
+            var headerName = status.expKeyHeader || "x-phantom-exp-key";
+            setExperienceChannel({ headerName: headerName, key: key, token: getToken() });
+
+            destroyWidget();
+            var app = document.getElementById("app");
+            app.innerHTML = "";
+            startBtn.disabled = true;
+
+            handle = mount("#app", {
+                apiBase: API_BASE,
+                theme: currentTheme(),
+                onSuccess: async function (r) {
+                    var receipts = Array.isArray(r && r.receipts)
+                        ? r.receipts.filter(Boolean)
+                        : (r && r.receipt ? [r.receipt] : []);
+                    if (!receipts.length) {
+                        showResult("验证结束，但未拿到凭据。", false);
+                        startBtn.disabled = false;
+                        return false;
+                    }
+                    try {
+                        var c = await consumeVerify(API_BASE, receipts);
+                        if (c && c.valid === true) {
+                            showResult("验证通过。本次消耗已按实际动作从账户点数中扣除。", true);
+                            loadStatus();
+                            startBtn.disabled = false;
+                            return true;
+                        }
+                        showResult("验证未通过。", false);
+                    } catch (e) {
+                        showResult("验证结果兑换失败：" + ((e && (e.detail || e.message)) || e), false);
+                    }
+                    startBtn.disabled = false;
+                    return false;
+                },
+                onFail: function (r) {
+                    showResult("验证未通过：" + ((r && r.detail) || "请重试"), false);
+                    startBtn.disabled = false;
+                },
+                onError: function (e) {
+                    var detail = (e && (e.detail || e.message)) || String(e);
+                    showResult("验证出错：" + detail, false);
+                    startBtn.disabled = false;
+                }
+            });
+        });
+
+        loadStatus();
+    </script>
+    <script src="./assets/ziyit-theme.js"></script>
+</body>
+
+</html>

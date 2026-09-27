@@ -392,6 +392,26 @@
         return request('/mods/free');
     }
 
+    function pointsBalance() {
+        return request('/points/balance');
+    }
+
+    function pointsLedger(limit, offset) {
+        var l = parseInt(limit, 10);
+        var o = parseInt(offset, 10);
+        if (isNaN(l) || l <= 0) l = 20;
+        if (isNaN(o) || o < 0) o = 0;
+        l = Math.min(l, 100);
+        return request('/points/ledger?limit=' + l + '&offset=' + o);
+    }
+
+    function pointsPurchase(units) {
+        var u = parseInt(units, 10);
+        if (isNaN(u) || u < 1) u = 1;
+        u = Math.min(u, 1000);
+        return post('/points/purchase', { units: u });
+    }
+
      
     function submitMod(payload) {
         return post('/mods/submit', payload);
@@ -1428,6 +1448,9 @@
         getDlc: getDlc,
         myDlc: myDlc,
         getFreeMods: getFreeMods,
+        pointsBalance: pointsBalance,
+        pointsLedger: pointsLedger,
+        pointsPurchase: pointsPurchase,
         submitMod: submitMod,
         sendVerifyEmail: sendVerifyEmail,
         downloadMod: downloadMod,

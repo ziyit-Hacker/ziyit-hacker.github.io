@@ -571,8 +571,10 @@
     <div class="page">
         <h1>我的密钥</h1>
         <a href="javascript:history.back()" class="back-link">返回</a>
-        <p class="page-sub">ZIYIT 人机验证（Phantom）API 密钥的用量与设置。验证只有通过才扣次数，失败重试不计费。</p>
-        <p class="page-sub">相关：<a href="file-keys.html">我的文件密钥（RC 加密密钥与云加密用量） ›</a></p>
+        <p class="page-sub">ZIYIT 人机验证（Phantom）API 密钥的设置。验证<b>按真实发生的动作扣点</b>（领题握手、视频分包、实时流、判定等），<b>不是按结果计费</b>，失败时已发生的动作同样扣点；账户点数余额低于最低要求时无法发起验证。</p>
+        <p class="page-sub">相关：<a href="points.html">我的点数（余额与充值） ›</a> ｜ <a href="file-keys.html">我的文件密钥（RC 加密密钥与云加密用量） ›</a></p>
+
+        <div id="pointsArea" style="margin-bottom: 16px;"></div>
 
         <div class="toolbar">
             <span id="listTip" style="font-size: 13px; color: var(--ziyit-text-secondary);"></span>
@@ -609,23 +611,12 @@
 
             <div class="ak-row">
                 <div class="ak-row-head">
-                    <span class="ak-row-title">今日额度</span>
-                    <label class="chk"><input type="checkbox" id="setDailyUnlimited"> 今日不限</label>
-                </div>
-                <div class="ak-inputs">
-                    <input type="number" id="setDaily" min="0" placeholder="输入每日可验证次数">
-                    <span style="font-size: 13px; color: var(--ziyit-text-secondary);">次 / 天（0 = 今天暂停验证）</span>
-                </div>
-            </div>
-
-            <div class="ak-row">
-                <div class="ak-row-head">
                     <span class="ak-row-title">预警额度</span>
                     <label class="chk"><input type="checkbox" id="setWarnOff"> 关闭预警</label>
                 </div>
                 <div class="ak-inputs">
                     <input type="number" id="setWarn" min="0" placeholder="输入预警阈值">
-                    <span style="font-size: 13px; color: var(--ziyit-text-secondary);">本月用量达到阈值时邮件提醒（每月一次）</span>
+                    <span style="font-size: 13px; color: var(--ziyit-text-secondary);">用量达到阈值时邮件提醒（每月一次）</span>
                 </div>
             </div>
 
@@ -636,8 +627,8 @@
             </div>
 
             <div class="ak-row">
-                <div class="ak-row-head"><span class="ak-row-title">月度额度（只读）</span></div>
-                <div class="month-info" id="setMonthInfo">-</div>
+                <div class="ak-row-head"><span class="ak-row-title">计费说明</span></div>
+                <div class="ak-row-desc">旧版「今日额度 / 月度额度」已不再参与放行，验证按账户点数余额计费。余额与充值请到 <a href="points.html">我的点数</a>。</div>
             </div>
 
             <div class="ak-actions">
@@ -660,6 +651,7 @@
             var editingIdx = -1;
 
             var keyArea = document.getElementById('keyArea');
+            var pointsArea = document.getElementById('pointsArea');
             var refreshBtn = document.getElementById('refreshBtn');
             var listTip = document.getElementById('listTip');
             var overlay = document.getElementById('settingsOverlay');
@@ -676,13 +668,12 @@
                 return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             }
 
-            function fmtNum(n) {
-                if (n === -1 || n === '-1' || n == null) return '不限';
-                return String(n);
-            }
-
-            function remText(n) {
-                return (n === -1 || n === '-1') ? '不限' : (String(n) + ' 次');
+            function fmtPts(n) {
+                if (n == null || n === '') return '-';
+                var v = Number(n);
+                if (isNaN(v)) return esc(n);
+                if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+                return String(Math.round(v * 100) / 100);
             }
 
             function setLoading() {
@@ -707,34 +698,17 @@
             }
 
             function statusOf(k) {
-                var active = k.status === 'active';
-                var reason = '';
-                if (active) {
-                    var mok = k.monthly_limit == null || k.monthly_limit === -1 || (k.used || 0) < k.monthly_limit;
-                    var dok = k.daily_limit == null || k.daily_limit === -1 || (k.daily_count || 0) < k.daily_limit;
-                    if (!mok) reason = '月额度已用完';
-                    else if (!dok) reason = '今日额度已用完';
-                }
-                return { active: active, reason: reason };
+                return { active: k.status === 'active' };
             }
 
             function buildCard(k, idx) {
                 var st = statusOf(k);
-                var monthlyUnlimited = k.monthly_limit === -1 || k.monthly_limit == null;
-                var dailyUnlimited = k.daily_limit === -1 || k.daily_limit == null;
-                var used = k.used || 0;
-                var dcount = k.daily_count || 0;
                 var card = document.createElement('div');
                 card.className = 'key-card' + (st.active ? '' : ' disabled');
 
-                var mPct = 0, dPct = 0;
-                if (!monthlyUnlimited && k.monthly_limit > 0) mPct = Math.min(100, Math.round(used / k.monthly_limit * 100));
-                if (!dailyUnlimited && k.daily_limit > 0) dPct = Math.min(100, Math.round(dcount / k.daily_limit * 100));
-
-                var badge = '';
-                if (!st.active) badge = '<span class="badge off">已停用</span>';
-                else if (st.reason) badge = '<span class="badge warn">' + esc(st.reason) + '</span>';
-                else badge = '<span class="badge ok">可用</span>';
+                var badge = st.active
+                    ? '<span class="badge ok">可用</span>'
+                    : '<span class="badge off">已停用</span>';
 
                 card.innerHTML =
                     '<div class="key-head">' +
@@ -743,30 +717,15 @@
                     '<button type="button" class="key-copy" data-act="copy">复制</button>' +
                     '</div>' + badge +
                     '</div>' +
-                    '<div class="metrics">' +
-                    '<div class="metric">' +
-                    '<div class="metric-title">本月用量</div>' +
-                    '<div class="metric-top"><span>已用 <b>' + used + '</b> 次</span>' +
-                    '<span>' + (monthlyUnlimited ? '月度不限' : '限额 ' + k.monthly_limit + ' 次') + '</span></div>' +
-                    (monthlyUnlimited ? '' : '<div class="progress"><i style="width:' + mPct + '%"' + (mPct >= 100 ? ' class="full"' : '') + '></i></div>') +
-                    '<div class="metric-sub">月度剩余：' + remText(k.month_remaining) + '</div>' +
-                    '</div>' +
-                    '<div class="metric">' +
-                    '<div class="metric-title">今日用量</div>' +
-                    '<div class="metric-top"><span>今日 <b>' + dcount + '</b> 次</span>' +
-                    '<span>' + (dailyUnlimited ? '今日不限' : '限 ' + k.daily_limit + ' 次') + '</span></div>' +
-                    (dailyUnlimited ? '' : '<div class="progress"><i style="width:' + dPct + '%"' + (dPct >= 100 ? ' class="full"' : '') + '></i></div>') +
-                    '<div class="metric-sub">今日剩余：' + remText(k.day_remaining) + '</div>' +
-                    '</div>' +
-                    '</div>' +
                     '<div class="key-foot">' +
-                    '<div class="meta">预警额度：' + fmtNum(k.warn_limit) + ' ｜ 来源白名单：' +
+                    '<div class="meta">预警阈值：' +
+                    ((k.warn_limit === -1 || k.warn_limit == null) ? '已关闭' : (k.warn_limit + ' 次')) +
+                    ' ｜ 来源白名单：' +
                     ((k.allowed_origins && k.allowed_origins.length) ? ('已配置 ' + k.allowed_origins.length + ' 条') : '不限') +
                     '</div>' +
                     '<div class="actions"><button type="button" class="btn-plain" data-act="edit">设置</button></div>' +
                     '</div>';
 
-                var valueEl = card.querySelector('.key-value');
                 card.querySelector('[data-act="copy"]').addEventListener('click', function () {
                     copyText(k.api_key);
                 });
@@ -817,6 +776,39 @@
                 });
             }
 
+            function renderPoints(data) {
+                var points = data && data.points;
+                var minRequired = data && data.minRequired;
+                var pointsPerUnit = data && data.pointsPerUnit;
+                var vip = data && data.vip;
+                var enough = Number(points || 0) >= Number(minRequired || 0);
+                pointsArea.innerHTML =
+                    '<div class="key-card" style="border-color:var(--ziyit-primary);">' +
+                    '<div class="key-head">' +
+                    '<div class="key-line"><span style="font-size:15px;font-weight:600;color:var(--ziyit-text-primary);">点数余额</span></div>' +
+                    (vip ? '<span class="badge ok">VIP</span>' : '') +
+                    '</div>' +
+                    '<div style="font-size:30px;font-weight:700;color:var(--ziyit-primary);line-height:1.2;">' + esc(fmtPts(points)) +
+                    ' <span style="font-size:14px;font-weight:400;color:var(--ziyit-text-secondary);">点</span></div>' +
+                    '<div style="margin-top:10px;font-size:13px;line-height:1.9;color:var(--ziyit-text-secondary);">' +
+                    '最低可开始要求 ' + esc(fmtPts(minRequired)) + ' 点 ｜ 1 元 = ' + esc(fmtPts(pointsPerUnit)) + ' 点' +
+                    '</div>' +
+                    '<div style="margin-top:12px;">' +
+                    '<span style="font-size:13px;color:' + (enough ? 'var(--ziyit-success)' : 'var(--ziyit-danger)') + ';">' +
+                    (enough ? '余额充足，可以发起验证。' : '余额不足，无法发起验证。') + '</span>' +
+                    ' <a href="points.html" style="font-weight:600;">去充值 ›</a>' +
+                    '</div>' +
+                    '</div>';
+            }
+
+            function loadPoints() {
+                pointsArea.innerHTML = '<div class="empty" style="padding:14px;text-align:center;font-size:13px;color:var(--ziyit-text-secondary);">点数余额加载中…</div>';
+                return ZIYIT_API.pointsBalance().then(renderPoints).catch(function (err) {
+                    pointsArea.innerHTML = '<div class="error-box">点数余额加载失败：' +
+                        esc((err && err.data && err.data.detail) || (err && err.message) || err) + '</div>';
+                });
+            }
+
              
             function openSettings(idx) {
                 var k = keyList[idx];
@@ -827,22 +819,12 @@
                 status.checked = k.status === 'active';
                 syncStatusLabel();
 
-                var dUnlimited = k.daily_limit === -1 || k.daily_limit == null;
-                document.getElementById('setDailyUnlimited').checked = dUnlimited;
-                document.getElementById('setDaily').value = dUnlimited ? '' : (k.daily_limit != null ? k.daily_limit : '');
-                syncDailyState();
-
                 var warnOff = k.warn_limit === -1 || k.warn_limit == null;
                 document.getElementById('setWarnOff').checked = warnOff;
                 document.getElementById('setWarn').value = warnOff ? '' : (k.warn_limit != null ? k.warn_limit : '');
                 syncWarnState();
 
                 document.getElementById('setOrigins').value = (k.allowed_origins || []).join('\n');
-
-                var mu = k.monthly_limit === -1 || k.monthly_limit == null;
-                var info = mu ? '月度无限（已用 ' + (k.used || 0) + ' 次）' :
-                    ('月度限额 ' + k.monthly_limit + ' 次，已用 ' + (k.used || 0) + ' 次，剩余 ' + fmtNum(k.month_remaining) + ' 次（由系统/管理员决定，不可在此修改）');
-                document.getElementById('setMonthInfo').textContent = info;
 
                 showMsg('', '');
                 overlay.classList.add('active');
@@ -851,12 +833,6 @@
             function syncStatusLabel() {
                 document.getElementById('setStatusLabel').textContent =
                     document.getElementById('setStatus').checked ? '启用' : '停用';
-            }
-
-            function syncDailyState() {
-                var un = document.getElementById('setDailyUnlimited').checked;
-                document.getElementById('setDaily').disabled = un;
-                if (un) document.getElementById('setDaily').value = '';
             }
 
             function syncWarnState() {
@@ -884,17 +860,6 @@
                 var body = {
                     status: document.getElementById('setStatus').checked ? 'active' : 'disabled'
                 };
-
-                if (document.getElementById('setDailyUnlimited').checked) {
-                    body.daily_limit = -1;
-                } else {
-                    var d = parseInt(document.getElementById('setDaily').value, 10);
-                    if (isNaN(d) || d < 0) {
-                        showMsg('请输入有效的今日额度（≥0），或勾选「今日不限」', 'error');
-                        return;
-                    }
-                    body.daily_limit = d;
-                }
 
                 if (document.getElementById('setWarnOff').checked) {
                     body.warn_limit = -1;
@@ -936,9 +901,8 @@
                 });
             }
 
-            document.getElementById('refreshBtn').addEventListener('click', function () { loadKeys(true); });
+            document.getElementById('refreshBtn').addEventListener('click', function () { loadKeys(true); loadPoints(); });
             document.getElementById('setStatus').addEventListener('change', syncStatusLabel);
-            document.getElementById('setDailyUnlimited').addEventListener('change', syncDailyState);
             document.getElementById('setWarnOff').addEventListener('change', syncWarnState);
             document.getElementById('cancelSettings').addEventListener('click', closeSettings);
             document.getElementById('saveSettings').addEventListener('click', saveSettings);
@@ -947,6 +911,7 @@
             });
 
             loadKeys(true);
+            loadPoints();
         });
     </script>
     <script>

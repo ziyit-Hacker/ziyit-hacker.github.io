@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的点数 - ZIYIT</title>
+    <meta name="description" content="查看 ZIYIT 点数余额、购买点数与点数流水（人机验证按真实动作扣点）。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/points.html">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: default !important;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--ziyit-primary);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: var(--ziyit-bg);
+        }
+
+        .page {
+            max-width: 860px;
+            margin: 20px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .page h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            margin: 6px 0 16px;
+            line-height: 1.7;
+        }
+
+        .back-link {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar button,
+        .toolbar .btn-link {
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .toolbar .btn-link {
+            background-color: var(--ziyit-success);
+        }
+
+        .toolbar button:hover,
+        .toolbar .btn-link:hover {
+            background-color: var(--ziyit-primary-dark);
+            text-decoration: none;
+        }
+
+        .toolbar button:disabled {
+            background-color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        .balance-card {
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, rgba(0, 120, 212, .10), rgba(39, 174, 96, .10));
+        }
+
+        .balance-main {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .balance-num {
+            font-size: 40px;
+            font-weight: 700;
+            color: var(--ziyit-primary);
+            line-height: 1.1;
+        }
+
+        .balance-unit {
+            font-size: 15px;
+            color: var(--ziyit-text-secondary);
+        }
+
+        .balance-meta {
+            margin-top: 12px;
+            font-size: 13px;
+            line-height: 2;
+            color: var(--ziyit-text-primary);
+        }
+
+        .balance-meta .lbl {
+            color: var(--ziyit-text-secondary);
+        }
+
+        .crit-hint {
+            margin-top: 10px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .crit-hint.ok {
+            background: rgba(39, 174, 96, .14);
+            color: var(--ziyit-success);
+            border: 1px solid var(--ziyit-success);
+        }
+
+        .crit-hint.bad {
+            background: rgba(231, 76, 60, .14);
+            color: var(--ziyit-danger);
+            border: 1px solid var(--ziyit-danger);
+        }
+
+        .block {
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: var(--ziyit-bg);
+        }
+
+        .block h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            margin-bottom: 12px;
+        }
+
+        .buy-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .buy-row label {
+            font-size: 14px;
+            color: var(--ziyit-text-primary);
+        }
+
+        .buy-row input {
+            width: 110px;
+            padding: 8px 10px;
+            font-size: 14px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 6px;
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            cursor: text !important;
+        }
+
+        .pay-guide {
+            margin-top: 14px;
+            border-top: 1px dashed var(--ziyit-border);
+            padding-top: 14px;
+        }
+
+        .remark-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 6px 0;
+        }
+
+        .remark-val {
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--ziyit-text-primary);
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 6px;
+            padding: 7px 10px;
+            word-break: break-all;
+            user-select: all;
+        }
+
+        .mini-btn {
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .mini-btn:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        .ledger-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--ziyit-border);
+        }
+
+        .ledger-item:last-child {
+            border-bottom: none;
+        }
+
+        .ledger-left {
+            min-width: 0;
+        }
+
+        .ledger-reason {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .ledger-sub {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+            margin-top: 3px;
+            word-break: break-all;
+        }
+
+        .ledger-right {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .ledger-delta {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .ledger-delta.plus {
+            color: var(--ziyit-success);
+        }
+
+        .ledger-delta.minus {
+            color: var(--ziyit-danger);
+        }
+
+        .ledger-after {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+            margin-top: 3px;
+        }
+
+        .pager {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .pager button {
+            padding: 7px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .pager button:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        .pager button:disabled {
+            background-color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        .pager .pager-info {
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+        }
+
+        .loading,
+        .error-box,
+        .empty-box {
+            padding: 18px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--ziyit-text-secondary);
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 10px;
+        }
+
+        .error-box {
+            color: var(--ziyit-danger);
+            border-color: var(--ziyit-danger);
+        }
+
+        #checkResult {
+            display: none;
+            margin-bottom: 16px;
+            line-height: 1.6;
+            font-size: 13px;
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <script src="../assets/blacklist.js"></script>
+</head>
+
+<body>
+
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/rc-key.html">我的RC密钥</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/rc-serial.html">RC授权管理</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/dlc.html">我的扩展包</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/points.html">我的点数</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/file-keys.html">我的文件密钥</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/pentest.html">渗透测试</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page">
+        <h1>我的点数</h1>
+        <a href="javascript:history.back()" class="back-link">返回</a>
+        <p class="page-sub">
+            ZIYIT 人机验证（Phantom）<b>按真实发生的动作扣点</b>：领题握手、视频分包、实时流、判定、PoW 追加等都会消耗点数，
+            <b>不是按结果计费</b>，验证失败时已发生的动作同样扣点。余额低于最低可开始要求时无法开始验证，请先充值。
+        </p>
+
+        <div class="toolbar">
+            <button type="button" id="refreshBtn">刷新</button>
+            <button type="button" id="checkPurchaseBtn">我已购买，立即查询</button>
+            <a class="btn-link" href="https://afdian.com/a/ziyit_studio" target="_blank" rel="noopener noreferrer">前往爱发电购买</a>
+        </div>
+
+        <div id="checkResult"></div>
+
+        <div id="balanceArea">
+            <div class="ziyit-loading">
+                <button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>
+                <div class="ziyit-loader">
+                    <div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>
+                    <div class="loader-bar"><div class="loader-fill"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="block">
+            <h2>购买点数</h2>
+            <div class="buy-row">
+                <label for="unitsInput">购买份数</label>
+                <input type="number" id="unitsInput" min="1" max="1000" step="1" value="1">
+                <button type="button" id="buyBtn">生成下单指引</button>
+            </div>
+            <div class="page-sub" style="margin: 10px 0 0;">1 份 = 1 元 = <span id="perUnitHint">-</span> 点（以服务端返回为准）。</div>
+            <div id="payGuide" class="pay-guide" style="display: none;"></div>
+        </div>
+
+        <div class="block">
+            <h2>点数流水</h2>
+            <div id="ledgerArea">
+                <div class="empty-box">加载中…</div>
+            </div>
+            <div class="pager" id="ledgerPager" style="display: none;">
+                <button type="button" id="prevBtn">上一页</button>
+                <span class="pager-info" id="pagerInfo"></span>
+                <button type="button" id="nextBtn">下一页</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!ZIYIT_API.getToken()) {
+                alert('请先登录后再查看点数');
+                window.location.href = './';
+                return;
+            }
+
+            var PAGE_SIZE = 20;
+            var ledgerOffset = 0;
+            var ledgerTotal = 0;
+
+            var balanceArea = document.getElementById('balanceArea');
+            var refreshBtn = document.getElementById('refreshBtn');
+            var unitsInput = document.getElementById('unitsInput');
+            var buyBtn = document.getElementById('buyBtn');
+            var payGuide = document.getElementById('payGuide');
+            var perUnitHint = document.getElementById('perUnitHint');
+            var ledgerArea = document.getElementById('ledgerArea');
+            var ledgerPager = document.getElementById('ledgerPager');
+            var pagerInfo = document.getElementById('pagerInfo');
+            var prevBtn = document.getElementById('prevBtn');
+            var nextBtn = document.getElementById('nextBtn');
+
+            var LOADING_HTML = '<div class="ziyit-loading">' +
+                '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>' +
+                '<div class="ziyit-loader">' +
+                '<div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>' +
+                '<div class="loader-bar"><div class="loader-fill"></div></div>' +
+                '</div></div>';
+
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            function fmtTime(t) {
+                if (!t) return '-';
+                var d = new Date(t);
+                if (isNaN(d.getTime())) return esc(t);
+                var p = function (x) { return (x < 10 ? '0' : '') + x; };
+                return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+            }
+
+            function fmtNum(n) {
+                if (n == null || n === '') return '-';
+                var v = Number(n);
+                if (isNaN(v)) return esc(n);
+                if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+                return String(Math.round(v * 100) / 100);
+            }
+
+            function errMsg(err, fallback) {
+                if (err && err.data) {
+                    if (typeof err.data === 'string' && err.data) return err.data;
+                    if (err.data.detail) return typeof err.data.detail === 'string' ? err.data.detail : JSON.stringify(err.data.detail);
+                    if (err.data.message) return err.data.message;
+                }
+                if (err && err.status === 401) return '登录状态已失效，请重新登录';
+                return fallback || '请求失败，请稍后再试';
+            }
+
+            function reasonText(r) {
+                if (r === 'points_initial') return '新用户初始点数';
+                if (r === 'points_purchase') return '购买到账';
+                if (r === 'points_vip_gift') return 'VIP 升级赠送';
+                if (r === 'points_consume') return '人机验证消耗';
+                return r || '点数变动';
+            }
+
+            function renderBalance(data) {
+                var points = data && data.points;
+                var minRequired = data && data.minRequired;
+                var pointsPerUnit = data && data.pointsPerUnit;
+                var vip = data && data.vip;
+                if (pointsPerUnit != null) perUnitHint.textContent = fmtNum(pointsPerUnit);
+
+                var enough = Number(points || 0) >= Number(minRequired || 0);
+                var html = '<div class="balance-card">'
+                    + '<div class="balance-main">'
+                    + '<span class="balance-num">' + esc(fmtNum(points)) + '</span>'
+                    + '<span class="balance-unit">点' + (vip ? ' · VIP' : '') + '</span>'
+                    + '</div>'
+                    + '<div class="balance-meta">'
+                    + '<div><span class="lbl">最低可开始要求：</span>' + esc(fmtNum(minRequired)) + ' 点</div>'
+                    + '<div><span class="lbl">兑换比例：</span>1 元 = ' + esc(fmtNum(pointsPerUnit)) + ' 点</div>'
+                    + '</div>'
+                    + '<div class="crit-hint ' + (enough ? 'ok' : 'bad') + '">'
+                    + (enough ? '余额充足，可以开始人机验证。' : '余额不足，无法开始人机验证，请先充值。')
+                    + '</div>'
+                    + '</div>';
+                balanceArea.innerHTML = html;
+            }
+
+            function loadBalance() {
+                balanceArea.innerHTML = LOADING_HTML;
+                return ZIYIT_API.pointsBalance().then(renderBalance).catch(function (err) {
+                    balanceArea.innerHTML = '<div class="error-box">加载失败：' + esc(errMsg(err)) + '</div>';
+                });
+            }
+
+            function renderLedger(data) {
+                var entries = (data && data.entries) || [];
+                ledgerTotal = (data && data.total) || 0;
+                ledgerOffset = (data && data.offset) || 0;
+
+                if (!entries.length) {
+                    ledgerArea.innerHTML = '<div class="empty-box">暂无点数流水。</div>';
+                    ledgerPager.style.display = 'none';
+                    return;
+                }
+
+                ledgerArea.innerHTML = entries.map(function (e) {
+                    var delta = Number(e.delta || 0);
+                    var plus = delta >= 0;
+                    var sub = fmtTime(e.at);
+                    if (e.orderNo) sub += ' · 订单 ' + esc(e.orderNo);
+                    if (e.challengeId) sub += ' · 验证 ' + esc(e.challengeId);
+                    if (e.note) sub += ' · ' + esc(e.note);
+                    return '<div class="ledger-item">'
+                        + '<div class="ledger-left">'
+                        + '<div class="ledger-reason">' + esc(reasonText(e.reason)) + '</div>'
+                        + '<div class="ledger-sub">' + sub + '</div>'
+                        + '</div>'
+                        + '<div class="ledger-right">'
+                        + '<div class="ledger-delta ' + (plus ? 'plus' : 'minus') + '">' + (plus ? '+' : '') + esc(fmtNum(delta)) + '</div>'
+                        + '<div class="ledger-after">余额 ' + esc(fmtNum(e.balanceAfter)) + '</div>'
+                        + '</div>'
+                        + '</div>';
+                }).join('');
+
+                var from = ledgerTotal === 0 ? 0 : ledgerOffset + 1;
+                var to = Math.min(ledgerOffset + PAGE_SIZE, ledgerTotal);
+                pagerInfo.textContent = from + '-' + to + ' / 共 ' + ledgerTotal + ' 条';
+                ledgerPager.style.display = 'flex';
+                prevBtn.disabled = ledgerOffset <= 0;
+                nextBtn.disabled = ledgerOffset + PAGE_SIZE >= ledgerTotal;
+            }
+
+            function loadLedger() {
+                ledgerArea.innerHTML = '<div class="empty-box">加载中…</div>';
+                return ZIYIT_API.pointsLedger(PAGE_SIZE, ledgerOffset).then(renderLedger).catch(function (err) {
+                    ledgerArea.innerHTML = '<div class="error-box">加载失败：' + esc(errMsg(err)) + '</div>';
+                    ledgerPager.style.display = 'none';
+                });
+            }
+
+            function renderPayGuide(res) {
+                var shopUrl = res && res.shopUrl;
+                var remark = res && res.remark;
+                payGuide.style.display = 'block';
+                payGuide.innerHTML = '<div class="line" style="font-size:14px;line-height:2;color:var(--ziyit-text-primary);">'
+                    + '<div><b>应付金额：</b>' + esc(fmtNum(res && res.amountYuan)) + ' 元</div>'
+                    + '<div><b>预计到账：</b>' + esc(fmtNum(res && res.points)) + ' 点（' + esc(fmtNum(res && res.units)) + ' 份 × ' + esc(fmtNum(res && res.pointsPerUnit)) + ' 点）</div>'
+                    + '</div>'
+                    + '<div style="margin-top:10px;font-size:13px;color:var(--ziyit-text-secondary);line-height:1.7;">下单时订单备注请<b>原样填写</b>下面这串：</div>'
+                    + '<div class="remark-box"><span class="remark-val" id="remarkVal">' + esc(remark) + '</span>'
+                    + '<button type="button" class="mini-btn" id="copyRemarkBtn">复制备注</button></div>'
+                    + (res && res.remarkHint ? '<div style="font-size:12px;color:var(--ziyit-warning);line-height:1.7;">' + esc(res.remarkHint) + '</div>' : '')
+                    + (res && res.afterPay ? '<div style="font-size:12px;color:var(--ziyit-text-secondary);line-height:1.7;margin-top:4px;">' + esc(res.afterPay) + '</div>' : '')
+                    + (shopUrl ? '<div style="margin-top:10px;"><a class="mini-btn" style="text-decoration:none;" href="' + esc(shopUrl) + '" target="_blank" rel="noopener noreferrer">前往爱发电下单</a></div>' : '');
+
+                var copyBtn = document.getElementById('copyRemarkBtn');
+                if (copyBtn) {
+                    copyBtn.addEventListener('click', function () {
+                        var text = String(remark == null ? '' : remark);
+                        function done() {
+                            copyBtn.textContent = '已复制';
+                            setTimeout(function () { copyBtn.textContent = '复制备注'; }, 1500);
+                        }
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(text).then(done, function () { alert('复制失败，请手动选中复制：' + text); });
+                        } else {
+                            alert('请手动选中复制：' + text);
+                        }
+                    });
+                }
+            }
+
+            buyBtn.addEventListener('click', function () {
+                var units = parseInt(unitsInput.value, 10);
+                if (isNaN(units) || units < 1) units = 1;
+                if (units > 1000) units = 1000;
+                unitsInput.value = units;
+                buyBtn.disabled = true;
+                buyBtn.textContent = '生成中…';
+                ZIYIT_API.pointsPurchase(units).then(function (res) {
+                    renderPayGuide(res || {});
+                }).catch(function (err) {
+                    payGuide.style.display = 'block';
+                    payGuide.innerHTML = '<div class="error-box">生成下单指引失败：' + esc(errMsg(err)) + '</div>';
+                }).finally(function () {
+                    buyBtn.disabled = false;
+                    buyBtn.textContent = '生成下单指引';
+                });
+            });
+
+            function loadAll() {
+                return Promise.all([loadBalance(), loadLedger()]);
+            }
+
+            refreshBtn.addEventListener('click', function () {
+                ledgerOffset = 0;
+                loadAll();
+            });
+
+            prevBtn.addEventListener('click', function () {
+                if (ledgerOffset <= 0) return;
+                ledgerOffset = Math.max(0, ledgerOffset - PAGE_SIZE);
+                loadLedger();
+            });
+
+            nextBtn.addEventListener('click', function () {
+                if (ledgerOffset + PAGE_SIZE >= ledgerTotal) return;
+                ledgerOffset = ledgerOffset + PAGE_SIZE;
+                loadLedger();
+            });
+
+            var checkBtn = document.getElementById('checkPurchaseBtn');
+            var checkResult = document.getElementById('checkResult');
+            checkBtn.addEventListener('click', function () {
+                checkBtn.disabled = true;
+                checkBtn.textContent = '查询中…';
+                checkResult.style.display = 'block';
+                checkResult.style.color = '';
+                checkResult.textContent = '正在向爱发电查询您的订单，请稍候…';
+                ZIYIT_API.afdianSelfCheck().then(function (res) {
+                    checkResult.textContent = (res && res.message) || '查询完成';
+                    checkResult.style.color = 'var(--ziyit-success)';
+                    return loadBalance();
+                }).catch(function (err) {
+                    checkResult.style.color = 'var(--ziyit-danger)';
+                    checkResult.textContent = '查询失败：' + errMsg(err);
+                }).finally(function () {
+                    checkBtn.disabled = false;
+                    checkBtn.textContent = '我已购买，立即查询';
+                });
+            });
+
+            loadAll();
+        });
+    </script>
+
+    <script>
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(function (item) {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(function (item) {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                const loginLink = document.getElementById('loginLink');
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(function (item) {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>

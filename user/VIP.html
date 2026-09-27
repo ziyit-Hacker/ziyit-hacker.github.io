@@ -238,6 +238,7 @@
                 </li>
                 <li class="line nav-item" data-role="admin"></li>
                 <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/points.html">我的点数</a></li>
                 <li class="nav-item" data-role="all"><a href="../user/rc-serial.html">RC授权管理</a></li>
                 <li class="nav-item" data-role="all"><a href="../user/file-keys.html">我的文件密钥</a></li>
                 <li class="nav-item" data-role="all"><a href="../user/pentest.html">渗透测试</a></li>
@@ -382,6 +383,10 @@
                 ZIYIT_API.afdianSelfCheck().then(function (res) {
                     box.textContent = (res && res.message) || '查询完成';
                     if (res && res.vipActive) box.style.color = 'var(--ziyit-success)';
+                    var ptsLink = document.createElement('a');
+                    ptsLink.href = './points.html';
+                    ptsLink.textContent = ' 我的点数 ›';
+                    box.appendChild(ptsLink);
                      
                     return ZIYIT_API.currentUser().then(applyUser).catch(function () { });
                 }).catch(function (err) {
