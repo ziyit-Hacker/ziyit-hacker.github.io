@@ -20,7 +20,7 @@ function rotr(x, n) {
 
 var POW_W = new Uint32Array(64);
 
-// 压缩函数：block = 64 字节，h = 8 个 uint32 状态（原地更新）。
+ 
 function compress(block, h) {
     var W = POW_W;
     for (var i = 0; i < 16; i++) {
@@ -57,8 +57,8 @@ function compress(block, h) {
     h[7] = (h[7] + H) >>> 0;
 }
 
-// 通用实现（任意长度，多块），返回 8 个 uint32 摘要字。
-// 单块快路径只在解 <= 22 位十进制时才成立（见 solve），超出时回退到这里保证正确性。
+ 
+ 
 function sha256Words(bytes) {
     var len = bytes.length;
     var total = (((len + 9 + 63) >> 6) << 6);
@@ -75,7 +75,7 @@ function sha256Words(bytes) {
     return h;
 }
 
-// 数摘要的二进制前导零 bit 数（0~256）。与后端 crypto.count_leading_zero_bits 同义。
+ 
 function leadingZeroBits(h) {
     for (var i = 0; i < 8; i++) {
         if (h[i] !== 0) {
@@ -85,18 +85,18 @@ function leadingZeroBits(h) {
     return 256;
 }
 
-// 单块快路径用的复用缓冲：前缀（"<nonce>:"）+ 数字串 + 0x80 + 零填充 + 8 字节长度。
-// 前缀只写一次；每次迭代只改数字串、0x80 位置与末尾长度。
-// 注意：数字串后一位每轮都会被 0x80 覆盖，而解的位数随 i 单调不减，所以不需要清理残留字节。
+ 
+ 
+ 
 var POW_BLOCK = new Uint8Array(64);
 var POW_BLOCK_VIEW = new DataView(POW_BLOCK.buffer);
 
-// 迭代求解：solution 取十进制自增（后端不限制格式，只认前导零 bit 数；数字自增最快）。
-// onProgress(hashes, solveMs) 仅用于界面"正在推进"的反馈，不含任何难度信息。
+ 
+ 
 function solve(nonce, difficulty, onProgress) {
     var prefix = String(nonce) + ":";
     var base = prefix.length;
-    // 单块能容纳的最大解位数：前缀 + 数字 + 1 字节 0x80 + 8 字节长度 <= 64。
+     
     var maxDigits = 55 - base;
     POW_BLOCK.fill(0);
     for (var k = 0; k < base; k++) {
@@ -115,7 +115,7 @@ function solve(nonce, difficulty, onProgress) {
             }
             end = base + n;
             POW_BLOCK[end] = 0x80;
-            // 长度高位恒为 0（消息远小于 2^32 bit），低位 = 字节数 * 8。
+             
             POW_BLOCK_VIEW.setUint32(56, 0, false);
             POW_BLOCK_VIEW.setUint32(60, end * 8, false);
             h = POW_IV.slice();
@@ -126,8 +126,8 @@ function solve(nonce, difficulty, onProgress) {
             }
         }
         else {
-            // 只有非标准超长 nonce 才会走到这里（正常 nonce 是 32 位 hex）。
-            // 不追求速度，只保证正确：退回通用多块实现。
+             
+             
             h = sha256Words(new TextEncoder().encode(prefix + s));
             hashes++;
             if (leadingZeroBits(h) >= difficulty) {
@@ -140,7 +140,7 @@ function solve(nonce, difficulty, onProgress) {
     }
 }
 
-// ---- Worker 入口（仅在 Worker 环境生效；Node 下 typeof self === "undefined" 会跳过）----
+ 
 if (typeof self !== "undefined" && typeof self.postMessage === "function" && typeof self.importScripts === "function") {
     self.onmessage = function (ev) {
         var msg = ev && ev.data;

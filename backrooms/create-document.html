@@ -1531,19 +1531,19 @@
                 exitIntro: '[NO DATA]',
                 exitItems: ['[NO DATA]'],
                 footerCode: '',
-                // 非层级文档专用：顶部表格里的值 + 正文章节
+                 
                 objLevel: '[NO DATA]',
                 objNote1: '[NO DATA]',
                 objNote2: '[NO DATA]',
                 sections: [],
-                // 实体专用：IETS（危险程度 0–5 / 智能水平 A–E，可加 + 或 -）、分类与性质多选
+                 
                 entityClass: '',
                 ietsDanger: '',
                 ietsIntel: '',
                 ietsIntelMod: '',
                 entityProps: [],
                 hazardProps: [],
-                // 实体栖息地：多选已有层级，元素形如 { key, num, name, href }
+                 
                 habitats: [],
                  
                 type: 'levels'
@@ -1654,11 +1654,11 @@
                     two: NODATA,
                     three: NODATA
                 };
-                // 三类非层级文档的顶部表格 / 分类块里的可编辑值
+                 
                 doc.objLevel = NODATA;
                 doc.objNote1 = NODATA;
                 doc.objNote2 = NODATA;
-                // 实体分类 / IETS / 性质默认未选：分类与 IETS 显示 NODATA，性质容器输出 X（不显示任何标签）
+                 
                 doc.entityClass = '';
                 doc.ietsDanger = '';
                 doc.ietsIntel = '';
@@ -1666,7 +1666,7 @@
                 doc.entityProps = [];
                 doc.hazardProps = [];
                 doc.habitats = [];
-                // 正文按"章节"组织，章节随类型不同
+                 
                 doc.sections = buildTypeSections(doc.type);
             }
 
@@ -1687,7 +1687,7 @@
                 LEVEL_ONLY_PANELS.forEach(function (id) { setPanelVisible(id, isLevel); });
                 setPanelVisible('sec-sections', !isLevel);
                 setPanelVisible('sec-objmeta', doc.type === 'item');
-                // 实体与现象共用「分类 + 评级」区：现象无 CECS 分类与性质，只有 IPTS。
+                 
                 setPanelVisible('sec-entitymeta', isEntity || isPhenomenon);
                 setPanelVisible('sec-habitat', isEntity);
                 setPanelVisible('cecs-class-only', isEntity);
@@ -1702,7 +1702,7 @@
                 var lblMod = $('lbl-iets-mod');
                 if (lblMod) lblMod.textContent = sc.modLabel;
                 if (isEntity) loadHabitats();
-                // 自定义区块（页顶说明等）所有类型都能用；「在描述与基地之间插入」只对层级有意义。
+                 
                 setPanelVisible('sec-block', true);
                 setPanelVisible('btn-block-insert-panel', isLevel);
                 var lb = $('level-body');
@@ -1716,7 +1716,7 @@
             var ENTITY_TAGS = ['HVM', 'VRL-A', 'VRL-B', 'NCR', 'MCH', 'CBR', 'SYN', 'DMN', 'SSV', 'CVL', 'RLA', 'UNQ', 'AGR', 'BNV'];
             var ENTITY_HAZARDS = ['RAD', 'NRO', 'TXC', 'PYR'];
             var ENTITY_CLASSES = ['Spectrous', 'Itemic', 'Bactal', 'Floral', 'Zoophoid', 'Chimeric', 'Anthropoid', 'Enigmatic', '虚灵', '物品', '微生物', '植物', '动物', '诞妄', '类人', '神秘'];
-            // 分类（CECS）单选项：中/英名为同一图标，输出中文名（与现有实体文档一致）
+             
             var ENTITY_CLASS_OPTS = [
                 { v: '虚灵', t: '虚灵 / Spectrous' },
                 { v: '物品', t: '物品 / Itemic' },
@@ -1727,21 +1727,21 @@
                 { v: '类人', t: '类人 / Anthropoid' },
                 { v: '神秘', t: '神秘 / Enigmatic' }
             ];
-            // 性质中文名（与样式里的 tooltip 文案一致，作为多选项的提示）
+             
             var ENTITY_TAG_NAMES = {
                 'HVM': '蜂巢思维', 'VRL-A': 'A型病毒', 'VRL-B': 'B型病毒', 'NCR': '坏死',
                 'MCH': '机械', 'CBR': '网络', 'SYN': '合成', 'DMN': '支配', 'SSV': '卑顺',
                 'CVL': '开化', 'RLA': '现实扭曲', 'UNQ': '独特', 'AGR': '敌意', 'BNV': '善意'
             };
             var ENTITY_HAZARD_NAMES = { 'RAD': '放射性', 'NRO': '神经损害', 'TXC': '毒性', 'PYR': '烧灼' };
-            // 性质互斥表（对称对）。前四组直接取自 CECS 官方定义，其余为按定义补充的形态/来源冲突：
-            //   VRL-A 以人类躯体为宿主 / VRL-B 无法感染人类
-            //   CVL 开化的定义明确排除蜂巢思维
-            //   HVM 蜂巢思维无独立思维 / SSV 卑顺具备独立思维
-            //   DMN 支配 / SSV 卑顺；AGR 敌意 / BNV 善意
-            //   机械形态不可能源自死亡生物、也无法以人类躯体为宿主
-            //   完全存在于电子系统者与实体机械、坏死体、寄生于人类躯体的病毒互斥
-            // 危险性质（RAD/NRO/TXC/PYR）不设互斥，可任意多选。
+             
+             
+             
+             
+             
+             
+             
+             
             var PROP_CONFLICTS = [
                 ['VRL-A', 'VRL-B'],
                 ['HVM', 'CVL'],
@@ -1762,7 +1762,7 @@
                 });
                 return map;
             })();
-            // IETS 危险程度 / 智能水平的说明文案（取自 IETS 规则页）
+             
             var IETS_DANGER_DESC = {
                 '0': '对人类友好或有益，有时两者都有。',
                 '1': '对人类无害。这并不意味着该实体是友好的。',
@@ -1778,8 +1778,8 @@
                 'D': '拥有动物水平的高智力（相当于海豚、老鼠或狗）。',
                 'E': '拥有动物水平的低智力（相当于昆虫、鸟类或两栖动物）。'
             };
-            // IPTS（现象）与 IETS（实体）结构相同：第一栏 0–5，第二栏字母 + 可选 +/-，
-            // 差别只在文案、字母集（多一个 S）与说明页，故统一成一份配置。
+             
+             
             var IPTS_DANGER_DESC = {
                 '0': '对人类有利，只不过很难出现。',
                 '1': '具有双面性，但绝大多数情况下都具有传播性。',
@@ -1814,13 +1814,13 @@
                 }
             };
 
-            // 当前类型的评级系统：实体 IETS，现象 IPTS（层级与物品没有）。
+             
             function scaleOf() {
                 return doc.type === 'phenomenon' ? SCALES.ipts : SCALES.iets;
             }
 
-            // 栖息地候选：静态层级列表（normal-levels/index.html）与后端已收录层级合并去重。
-            // 每项 { key, num, name, href }，key 为去掉 "Level" 前缀后的编号，用于去重与回填。
+             
+             
             var HABITAT_OPTIONS = [];
             var HABITAT_MAP = {};
             var HABITAT_LOADED = false;
@@ -1857,7 +1857,7 @@
                 });
             }
 
-            // 静态列表形如：<li><a href="levels/level-5.html">Level 5</a> - “恐怖旅馆”</li>
+             
             function parseStaticLevels(html) {
                 var p = new DOMParser().parseFromString(html, 'text/html');
                 var links = p.querySelectorAll('a[href]');
@@ -1921,7 +1921,7 @@
                 var kw = (($('f-habitat-search') || {}).value || '').trim().toLowerCase();
                 var picked = {};
                 (doc.habitats || []).forEach(function (h) { picked[h.key] = true; });
-                // 候选与选中集都未变时跳过重建，避免每次输入都重刷上百个复选框。
+                 
                 var sig = HABITAT_OPTIONS.length + '|' + kw + '|' + Object.keys(picked).join(',');
                 if (box.getAttribute('data-sig') === sig) return;
                 box.setAttribute('data-sig', sig);
@@ -1933,7 +1933,7 @@
                     box.innerHTML = '<div class="hint">无匹配层级。</div>';
                     return;
                 }
-                // 未搜索时只列前 N 项（已选项始终保留），避免上千条一次性铺开。
+                 
                 var shown = matched.filter(function (o, i) { return kw || i < HABITAT_SHOW_LIMIT || picked[o.key]; });
                 box.innerHTML = shown.map(function (o) {
                     return '<label><input type="checkbox" value="' + escHtml(o.key) + '"' + (picked[o.key] ? ' checked' : '') + '>'
@@ -1953,7 +1953,7 @@
                     : '未选择栖息地，预览与导出显示 [NO DATA]。';
             }
 
-            // 栖息地输出：多个层级用「、」连接，指向该层级页面。
+             
             function habitatHtml(forPreview) {
                 var hs = doc.habitats || [];
                 var inner = hs.length
@@ -1979,8 +1979,8 @@
                     + '  </div>\n';
             }
 
-            // IETS / IPTS 取值：第一栏 0–5 + 第二栏字母（可加 + / -），如 4C、3B+、2S+。
-            // 类名 danger-N / intel-X 控制配色，文本为「数字+字母+修饰」；未选时显示 NODATA。
+             
+             
             function ietsValHtml(forPreview) {
                 var sc = scaleOf();
                 var d = (doc.ietsDanger === '' || doc.ietsDanger == null) ? '' : String(doc.ietsDanger);
@@ -1998,15 +1998,15 @@
                     + '      ' + val + '</div></div>\n';
             }
 
-            // 性质容器类名：选中项逐一作为类名（CSS 用它决定显示哪些标签）；未选输出 X。
+             
             function propsCls(selected) {
                 var s = selected || [];
                 return s.length ? s.join(' ') : 'X';
             }
 
              
-            // 非层级文档的正文按"章节"组织：{ key, title, strong?, sub?, list?, paras:[] }
-            // sub=true → 渲染成 <h3>（如行为准则下的「应当 / 不应」）；list=true → 渲染成 <ul><li>。
+             
+             
             var TYPE_SECTIONS = {
                 item: [
                     { key: 'desc', title: '描述：', strong: true },
@@ -2056,14 +2056,14 @@
             }
 
              
-            // 顶部表格 / 分类块里的值：预览下可点开编辑，导出时转义输出。
+             
             function fieldHtml(field, forPreview) {
                 var t = doc[field] == null ? '' : String(doc[field]);
                 if (!forPreview) return escHtml(t);
                 return '<span class="editable" data-field="' + field + '" style="cursor:pointer;">' + escHtml(t) + '</span>';
             }
 
-            // 预览下给「多选类」元素挂上可点击标记（点击跳到左侧面板对应区块）。
+             
             function previewAttr(forPreview, field) {
                 return forPreview ? ' data-field="' + field + '" style="cursor:pointer;"' : '';
             }
@@ -2096,7 +2096,7 @@
             }
 
              
-            // 顶部「说明」：层级里对应 intro 字段，非层级也一样可编辑。
+             
             function introHtml(forPreview) {
                 return forPreview
                     ? '<div class="editable html-field" data-field="intro">' + (doc.intro == null ? '' : String(doc.intro)) + '</div>\n'
@@ -2109,7 +2109,7 @@
                 var sections = sectionsHtml(forPreview);
 
                 if (doc.type === 'entity') {
-                    // 编号 = 页面编号（标题前半段）去掉 "Entity " 前缀
+                     
                     var numHtml = forPreview
                         ? '<span class="editable" data-field="titlePrefix" style="cursor:pointer;">' + escHtml(entityNumber()) + '</span>'
                         : escHtml(entityNumber());
@@ -2939,8 +2939,8 @@
             }
 
              
-            // 非层级文档导入：还原 CECS / 顶部表格 / 正文章节。
-            // 层级另有 sd-container 与正文状态机（collectTopBlocks / parseBodyLoop），不适用。
+             
+             
             function parseTypeBody(pc) {
                 if (!pc) return;
                 parseTypeIntro(pc);
@@ -2950,7 +2950,7 @@
             }
 
              
-            // 顶部「说明」：导出为独立 <div>，位于分类块 / 表格之后、第一个章节标题之前，按原文 HTML 还原。
+             
             function parseTypeIntro(pc) {
                 var nodes = Array.prototype.slice.call(pc.children);
                 for (var i = 0; i < nodes.length; i++) {
@@ -2965,7 +2965,7 @@
             }
 
              
-            // 统合实体 / 异常分类系统：编号取自 #page-title，这里还原栖息地 / IETS·IPTS / 分类 / 性质。
+             
             function parseCecs(pc) {
                  
                 var box = pc.querySelector('.cecs-wrapper .text-box');
@@ -3005,7 +3005,7 @@
             }
 
              
-            // 性质容器：类名即选中项（未选时类名为 X），按对应标签池过滤以防误读。
+             
             function propsFromEl(el) {
                 if (!el) return [];
                 var cls = String(el.getAttribute('class') || '');
@@ -3018,7 +3018,7 @@
             }
 
              
-            // 物品顶部两行表格：Entity [编号]: [名称] / 等级 / 备注 1 / 备注 2
+             
             function parseObjectTop(pc) {
                 var tbs = pc.querySelectorAll('table');
                 if (tbs[0]) {
@@ -3039,8 +3039,8 @@
             }
 
              
-            // 章节：标题 <h1>/<h3> 对应 doc.sections 的 title，
-            // 正文为 <div><p>…</p></div>，列表章节为 <ul><li><p>…</p></li></ul>。
+             
+             
             function parseTypeSections(pc) {
                 var list = doc.sections || [];
                 if (!list.length) return;
@@ -3367,7 +3367,7 @@
             }
 
              
-            // 非层级正文的章节编辑器：按 doc.sections 动态生成每节的段落/条目列表。
+             
             function renderSectionEditors() {
                 var box = $('section-list');
                 if (!box) return;
@@ -3421,7 +3421,7 @@
             }
 
              
-            // 实体 IETS 与性质编辑器：只在内容变化时重建 DOM，每次都按 doc 回填选中状态。
+             
             function fillSelect(sel, items) {
                 var sig = items.map(function (o) { return o.v; }).join('\u0001');
                 if (sel.getAttribute('data-sig') !== sig) {
@@ -3432,7 +3432,7 @@
                 }
             }
 
-            // conflicts：可选的互斥表（tag -> [冲突 tag]）；命中已选项的复选框会被置灰，无法勾选。
+             
             function renderTagChecks(boxId, tags, names, selected, conflicts) {
                 var box = $(boxId);
                 if (!box) return;
@@ -3472,7 +3472,7 @@
                 }
             }
 
-            // 去掉与已选项互斥的项（保留先出现的那个），用于兜底修正外部带入的数据。
+             
             function sanitizeProps(list, conflicts) {
                 var kept = [];
                 (list || []).forEach(function (t) {
@@ -3765,7 +3765,7 @@
                     if (!a || !a.hasAttribute('data-field')) return;
                     var field = a.getAttribute('data-field');
                     var m = String(field).split(':');
-                    // 分类 / IETS / 性质是下拉与多选控件，点预览直接跳到左侧对应区块。
+                     
                     if (m[0] === 'entityClass' || m[0] === 'iets' || m[0] === 'props' || m[0] === 'hazard' || m[0] === 'habitat') {
                         var secId = m[0] === 'habitat' ? 'sec-habitat' : 'sec-entitymeta';
                         var meta = $(secId);
@@ -3776,7 +3776,7 @@
                         return;
                     }
                     var val = '', title = '编辑内容', opts = {};
-                    // 列表型字段（入口/出口条目、行为准则条目）用单行输入框
+                     
                     var kind = (m[0] === 'entryItem' || m[0] === 'exitItem') ? 'list' : null;
                     switch (m[0]) {
                         case 'titlePrefix': val = doc.titlePrefix; title = '编辑页面编号'; break;
@@ -3849,7 +3849,7 @@
                 bindInput('f-obj-level', function (v) { doc.objLevel = v; render(); });
                 bindInput('f-obj-note1', function (v) { doc.objNote1 = v; render(); });
                 bindInput('f-obj-note2', function (v) { doc.objNote2 = v; render(); });
-                // 实体分类 / IETS / 性质
+                 
                 $('f-entity-class').addEventListener('change', function () { doc.entityClass = this.value; render(); });
                 $('f-iets-danger').addEventListener('change', function () { doc.ietsDanger = this.value; render(); });
                 $('f-iets-intel').addEventListener('change', function () { doc.ietsIntel = this.value; render(); });
@@ -3862,7 +3862,7 @@
                     doc.hazardProps = checkedValues($('hazard-list'));
                     render();
                 });
-                // 栖息地：搜索过滤 + 多选（按候选顺序回填，保证导出稳定）
+                 
                 $('f-habitat-search').addEventListener('input', function () { renderHabitatList(); });
                 $('habitat-list').addEventListener('change', function () {
                     var box = $('habitat-list');

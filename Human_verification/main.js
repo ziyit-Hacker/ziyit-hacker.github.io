@@ -119,19 +119,19 @@ function mountWidget(mode) {
         apiBase,
         theme: resolvedTheme(mode),
         onSuccess: async (r) => {
-            // v0.3.34 严格式（64.6 第 1/2/3/4 条）：
-            //  · 不再写 window.__phantomVerified / __phantomChallengeId / __phantomSessionId
-            //    这类「客户端旗帜」—— 页面里的变量永远不能当门，任何脚本都能自己写出来。
-            //  · 判定只认服务端出口：拿 /verify 回的一次性 receipt 去 POST /verify/consume，
-            //    服务端回的 valid 才是权威结论。
-            //  · 兑换结果只对当次有效：不落 localStorage / sessionStorage，不做「已通过」长期标记，
-            //    也不跨刷新复用（receipt 本身一次即废）。
-            // 兼容模式（PHANTOM_RECEIPT_STRICT=0）下服务端仍回真实判定、但没有 receipt，
-            // 此时只按 UX 提示处理，绝不写任何本地标记。
-            //
-            // v0.3.36（65.6 第 4 条）：本次可能要求多套方法（如 ["phantom","pow"]），
-            // phantom.js 已按 requiredMethods 把每一套的 receipt 收齐放进 r.receipts ——
-            // 这里**一起**交后端兑换（放行条件是 requiredMethods ⊆ 已交凭据的 methods）。
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
             const receipts = Array.isArray(r && r.receipts)
                 ? r.receipts.filter(Boolean)
                 : (r && r.receipt ? [r.receipt] : []);
@@ -141,19 +141,19 @@ function mountWidget(mode) {
             try {
                 const c = await consumeVerify(apiBase, receipts);
                 if (c && c.valid === true) {
-                    // 服务端已确认通过并消费掉这些凭据。这里派发的事件仅供 UI 提示使用
-                    // （例如隐藏验证遮罩、显示「验证完成」），不是授权信号。
+                     
+                     
                     window.dispatchEvent(new CustomEvent("phantom:verified", {
                         detail: { challengeId: c.challengeId },
                     }));
                     return true;
                 }
-                // 缺哪一套都不销毁已交凭据：后端回 valid:false + missing 引导补做。
-                // 正常流程下 phantom.js 已按 requiredMethods 收齐，走到这里即异常，交回未通过。
+                 
+                 
                 console.warn("receipt 兑换未通过:", (c && (c.detail || c.missing)) || "");
             }
             catch (e) {
-                // 凭据机制被关掉时 /verify/consume 会 404：退回真实判定（若可得）。
+                 
                 if (e && e.status === 404 && r.passed === true) {
                     window.dispatchEvent(new CustomEvent("phantom:verified", {
                         detail: { challengeId: r.challengeId },

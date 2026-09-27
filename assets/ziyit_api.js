@@ -58,11 +58,11 @@
         document.cookie = name + '=' + encodeURIComponent(value) + expires + '; path=/';
     }
 
-    // ---- 「保持登录」的永久凭证 ----
-    // 勾选保持登录时，后端会随登录回包额外下发 rememberToken：真·永久，
-    // 只有用户登出 / 改密码 / 管理员吊销才失效。它可以直接当 Bearer 用，
-    // 所以存下来之后所有请求都优先带上它；后端据此判断
-    // 「该用户最近 2 分钟内是否用过这个凭证访问后端」= 在线。
+     
+     
+     
+     
+     
     var REMEMBER_COOKIE = 'ziyit_remember';
     var REMEMBER_KEY = 'ziyit_remember_token';
 
@@ -72,11 +72,11 @@
 
     function setRememberToken(token) {
         if (!token) return;
-        setCookie(REMEMBER_COOKIE, token, 3650);   // 本地给足 10 年，真正什么时候失效由服务端说了算
+        setCookie(REMEMBER_COOKIE, token, 3650);    
         localStorage.setItem(REMEMBER_KEY, token);
-        // 站内还有上千个自动生成的历史页面（Backrooms 静态页、管理员后台引的 blacklist.js 等）
-        // 只会读 authToken 这个老键来判断登录态、拼 Bearer 头，所以把永久凭证同时镜像进去，
-        // 它们就自动用上长期登录，不必逐个文件去改。
+         
+         
+         
         setCookie('authToken', token, 3650);
         localStorage.setItem('authToken', token);
     }
@@ -84,7 +84,7 @@
     function clearRememberToken() {
         document.cookie = REMEMBER_COOKIE + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         localStorage.removeItem(REMEMBER_KEY);
-        // 老键里存的是这张凭证的镜像，不同步清掉的话 getToken() 会从那里又把它捞回来
+         
         clearLegacyTokenKeys();
     }
 
@@ -93,8 +93,8 @@
     }
 
     function setToken(token, remember) {
-        // 手里已经有永久凭证时，authToken 这个老键必须留给它（见 setRememberToken 的镜像），
-        // 再往里面塞 7 天有效的短期 JWT 会把长期登录顶掉。
+         
+         
         if (getRememberToken()) return;
         var days = remember ? 60 : null;
         if (days) {
@@ -105,7 +105,7 @@
         localStorage.setItem('authToken', token);
     }
 
-    // 清掉「老键」authToken（永久凭证会镜像进这两个键，见 setRememberToken，所以清的时候必须一起清）
+     
     function clearLegacyTokenKeys() {
         document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/ziyit/;';
@@ -141,11 +141,11 @@
         document.cookie = 'ziyit_cred=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     }
 
-    // ---- 后端域名下的图片（头像 / 文档配图）----
-    // ngrok 免费版会给浏览器请求插一页拦截页（ERR_NGROK_6024，Content-Type 是 text/html），
-    // 而 <img src> 带不上 ngrok-skip-browser-warning 头，直接引用必定显示不出来（拿到的是那段 HTML）。
-    // 所以后端域名下的图片统一先 fetch 成 blob，再把 blob: 地址交给 <img>。
-    // （backroomsTypeOpen 里打开正文用的是同一套办法）
+     
+     
+     
+     
+     
     function isBackendUrl(url) {
         var u = String(url || '');
         if (!u) return false;
@@ -157,7 +157,7 @@
         return false;
     }
 
-    // 后端域名的图片 → blob: 地址；外部图片原样返回
+     
     function imageBlobUrl(url) {
         if (!url) return Promise.resolve('');
         if (!isBackendUrl(url)) return Promise.resolve(url);
@@ -169,7 +169,7 @@
         });
     }
 
-    // 把图片塞进 <img>：内部会释放上一个 blob 地址；取不到图就用 fallback（默认占位图）
+     
     function applyImage(el, url, fallback) {
         if (!el) return Promise.reject(new Error('缺少图片元素'));
         function set(u) {
@@ -188,8 +188,8 @@
 
      
      
-    // 受限票据（enrollToken）：被强制要求第二种验证方式时，它只能在安全中心接口用，
-    // 别的接口一律 401，所以只在 security.html?enroll=1 期间设置。
+     
+     
     var enrollToken = null;
     function setEnrollToken(t) { enrollToken = t || null; }
 
@@ -198,15 +198,15 @@
         var cred = getCredentials();
         if (!cred) return Promise.reject(new Error('no credentials'));
         if (reloginPromise) return reloginPromise;
-        // 必须带 remember=true：不带的话静默重登只换回 7 天有效的短期 JWT，后端一重启它就作废，
-        // 「保持登录」等于白勾，用户会被反复判成「登录已过期」。
+         
+         
         reloginPromise = post('/auth/login', {
             username: cred.username,
             password: cred.password,
             remember: true
         }).then(function (data) {
-            // 账号要求第二重验证时这里拿不到 token（回包里是 mfaRequired）：静默重登没法凭空
-            // 完成验证码/指纹，交给调用方去引导用户重新登录，别当成凭证失效处理。
+             
+             
             if (data && data.mfaRequired) throw new Error('mfa required');
             var token = data && (data.accessToken || data.access_token || data.token);
             if (!token) throw new Error('login failed');
@@ -265,18 +265,18 @@
         }).catch(function (err) {
             if (err && err.status) {
                 var isLoginPath = path.indexOf('/auth/login') === 0;
-                // 401 ≠ 登录态失效：后端还有一堆业务性 401（改密码时旧密码填错、验证码不对、
-                // RC 软件密钥校验失败……），只有「后端明确说这枚令牌不认」才算会话失效。
+                 
+                 
                 var isAuthRejected = /invalid or expired token|user not found|user deleted|invalid authorization header|missing authorization header|authorization required/i.test(String(err.message || ''));
-                // 判决只能针对「这次请求真正带出去的那枚令牌」。以前是看 catch 这一刻「有没有永久凭证」，
-                // 并发请求、刚登录完凭证还没写进 Cookie 的竞态都会让它误判，一误判就把「保持登录」的
-                // 永久凭证销毁了，用户此后每次打开管理员页都被判「登录已过期」。
+                 
+                 
+                 
                 var sentToken = String((options.headers && options.headers['Authorization']) || '').replace(/^Bearer\s+/i, '');
                 var rememberNow = getRememberToken();
                 if (err.status === 401 && isAuthRejected && !retried && !enrollToken && !isLoginPath
                     && rememberNow && sentToken === rememberNow) {
-                    // 带出去的就是这枚永久凭证，后端明确不认 → 它确实失效了（在别处登出 / 改过密码 /
-                    // 管理员吊销），静默重登也救不回来，清干净并广播登录态失效。
+                     
+                     
                     clearToken();
                     handleUnauthorized();
                     throw err;
@@ -330,7 +330,7 @@
         });
     }
 
-    // remember=true → 让后端在登录回包里额外下发永久凭证 rememberToken（「保持登录」）
+     
     function login(username, md5Password, remember) {
         return post('/auth/login', { username: username, password: md5Password, remember: !!remember });
     }
@@ -368,9 +368,9 @@
         return put('/users/email', { email: newEmail });
     }
 
-    // 头像：请求体 { avatar: "<图片ID>" }，传空串表示清除。
-    // 图片 ID 必须是【当前用户自己上传过】的图片（64 位 hex），否则 403。
-    // 回包带 avatar 与 avatarUrl；设置后所有文档上的头像会立刻同步。
+     
+     
+     
     function updateAvatar(avatarId) {
         return put('/users/avatar', { avatar: avatarId || '' });
     }
@@ -383,7 +383,7 @@
         return request('/dlc');
     }
 
-    // 当前登录用户已拥有的 DLC（扩展包）清单 —— 服务端只认登录身份，不接受用户ID参数
+     
     function myDlc() {
         return request('/dlc/mine');
     }
@@ -429,7 +429,7 @@
     }
 
     function logout() {
-        // 永久凭证必须显式上报给后端才会被吊销 —— 否则「退出登录」之后它依然是有效的
+         
         var remember = getRememberToken();
         if (!getToken()) return Promise.resolve();
         return post('/auth/logout', { rememberToken: remember }).catch(function () { }).then(function () {
@@ -665,12 +665,12 @@
         });
     }
 
-    // 流式对话：POST /guide/chat/stream（SSE）。
-    // EventSource 只发 GET 且无法携带 Authorization 头，所以这里用 fetch + ReadableStream 手工读帧，
-    // 每帧形如 `data: {json}\n\n`。onEvent 依次收到六类事件：
-    //   status 进度提示（同时是心跳） / delta 增量片段 / reset 丢弃本轮已显示
-    //   final  清洗后的完整正文（覆盖显示） / done 收尾元数据 / error 失败说明
-    // 返回的 Promise 在流结束或失败时 settle（不 resolve 事件本身）。
+     
+     
+     
+     
+     
+     
     function guideChatStream(message, onEvent) {
         var token = getToken();
         var base = getBases()[0] || DEFAULT_BASE;
@@ -686,8 +686,8 @@
             body: JSON.stringify({ message: message })
         }).then(function (res) {
             if (!res.ok) {
-                // 还没开始推流就失败（如 401/403/429）：按普通错误抛出，
-                // 调用方看到 404/405 说明该后端没有流式路由，可降级到非流式接口
+                 
+                 
                 return res.json().catch(function () { return null; }).then(function (data) {
                     var err = new Error(errorText(data && data.detail) || ('请求失败 ' + res.status));
                     err.status = res.status;
@@ -719,7 +719,7 @@
 
             function drain() {
                 var frames = buf.split(/\r?\n\r?\n/);
-                buf = frames.pop();      // 末段可能被切断，留到下一块再拼
+                buf = frames.pop();       
                 frames.forEach(parseFrame);
             }
 
@@ -907,41 +907,41 @@
         return role === 'zc' || role === 'admin' || role === 'vip' || role === 'vip用户' || role === 'isztg' || role === 'ztg';
     }
 
-    // ---- 账号安全：多因子登录与安全中心（WebAuthn / TOTP / 邮箱验证码）----
-    // 登录第二步的三种形态统一由后端返回：accessToken（够了）/ mfaRequired + mfaToken（还差因子）
-    // / enrollRequired + enrollToken（被强制要求两种，必须先绑第二方式）。
+     
+     
+     
 
-    // 往已验证邮箱发一次性验证码：带 mfaToken = 当第二因子；带 username = 当第一因子
+     
     function loginEmailStart(body) {
         return post('/auth/login/email/start', body || {});
     }
 
-    // 补齐因子：factor = totp（动态码）/ recovery（一次性恢复码）/ email（邮箱验证码）
+     
     function loginFactor(body) {
         return post('/auth/login/factor', body || {});
     }
 
-    // Passkey 登录第一步：回 challengeId + 可直接喂 navigator.credentials.get() 的 publicKey
+     
     function passkeyLoginStart(body) {
         return post('/auth/login/passkey/start', body || {});
     }
 
-    // Passkey 登录第二步：把 navigator.credentials.get() 的结果原样回传
+     
     function passkeyLoginFinish(body) {
         return post('/auth/login/passkey/finish', body || {});
     }
 
-    // 安全中心总览：含 passkeys[]、canDisablePassword、availableFactors 等
+     
     function securityOverview() {
         return request('/auth/security');
     }
 
-    // 改策略：requiredFactors / emailFactor / passwordEnabled，必须带身份证明（factor + code|password）
+     
     function securityPolicy(body) {
         return post('/auth/security/policy', body || {});
     }
 
-    // 2FA：setup 拿密钥 + qrPng（可直接 <img src>）→ enable 输码启用，此刻一次性下发恢复码
+     
     function totpSetup() {
         return post('/auth/security/totp/setup', {});
     }
@@ -950,98 +950,98 @@
         return post('/auth/security/totp/enable', { code: code });
     }
 
-    // 关闭 2FA：不接受只用密码，须 factor=totp|recovery + code
+     
     function totpDisable(body) {
         return post('/auth/security/totp/disable', body || {});
     }
 
-    // 重新生成恢复码：旧的立刻作废，新码只回这一次
+     
     function regenerateRecoveryCodes(body) {
         return post('/auth/security/recovery-codes', body || {});
     }
 
-    // Passkey 绑定第一步：回 ticketId + 可直接喂 navigator.credentials.create() 的 publicKey
+     
     function passkeySetup() {
         return post('/auth/security/passkey/setup', {});
     }
 
-    // Passkey 绑定第二步：把 navigator.credentials.create() 的结果原样回传（别自己拼 authenticatorData）
+     
     function passkeyEnable(body) {
         return post('/auth/security/passkey/enable', body || {});
     }
 
-    // 删除某个 Passkey：需要身份证明（factor=password|totp|recovery + password|code）
+     
     function passkeyDelete(body) {
         return post('/auth/security/passkey/delete', body || {});
     }
 
-    // ---- RC 文件加密：恢复密钥托管 / 云加密用量 ----
+     
     function rcFiles() {
         return request('/rc/files');
     }
 
-    // 查看某个文件的恢复密钥（需二次验证登录密码，md5Password 为 MD5 的 Base64）
+     
     function rcRevealRecoveryKey(fileId, md5Password) {
         return post('/rc/files/' + encodeURIComponent(fileId) + '/recovery-key', { password: md5Password });
     }
 
-    // 删除某条托管记录（同时销毁服务端保存的恢复密钥）
+     
     function rcDeleteFile(fileId) {
         return request('/rc/files/' + encodeURIComponent(fileId), { method: 'DELETE' });
     }
 
-    // RC 许可证密钥：查询当前登录用户名下密钥（含明文）
+     
     function rcMyKeys() {
         return request('/rc/keys/mine');
     }
 
-    // 爱发电自助查单：服务端主动拉最近订单，补发 VIP / RC 密钥 / DLC 扩展包
+     
     function afdianSelfCheck() {
         return post('/afdian/self-check', {});
     }
 
-    // ---- RC 长期授权串（六十三章）：网页生成串 → RC 端兑换 → 长期 Token ----
+     
 
-    // 生成一张 RC 授权串。回包里的 serial 是**明文、只在这一次响应里出现**，落盘只存 sha256；
-    // 调用方必须直接展示给用户，绝不能写进 localStorage / sessionStorage / URL / console。
-    // opts = { label }：可选备注（一般填设备名）。
+     
+     
+     
     function rcSerialIssue(label) {
         return post('/rc/serial', { label: label == null ? '' : String(label) });
     }
 
-    // 我名下：授权串列表（只回显末 4 位 serialTail，不含明文）+ RC 长期凭据列表（不含明文）
+     
     function rcSerialMine() {
         return request('/rc/serial/mine');
     }
 
-    // 撤销一张还没兑换掉的授权串；404 = 不存在 / 已兑换 / 已过期 / 不属于我
+     
     function rcSerialRevoke(serialId) {
         return request('/rc/serial/mine/' + encodeURIComponent(serialId), { method: 'DELETE' });
     }
 
-    // 只查 RC 长期凭据（与 rcSerialMine 的 tokens[] 同源）
+     
     function rcTokensMine() {
         return request('/rc/tokens/mine');
     }
 
-    // 吊销自己名下的一张 RC 长期凭据。只影响 RC，不会把网页端登录态踢掉。
+     
     function rcTokenRevoke(tokenId) {
         return request('/rc/tokens/mine/' + encodeURIComponent(tokenId), { method: 'DELETE' });
     }
 
-    // ---- 渗透测试账号（六十二章）----
-    // 任何登录用户都能申请，理由可选；后端限同 IP 10 分钟 3 次，
-    // 重复申请回 400（"你已有一个待审批的申请" / "你名下已有生效中的渗透测试编号"），detail 原样展示。
+     
+     
+     
     function pentestApply(reason) {
         return post('/pentest/apply', { reason: reason == null ? '' : String(reason) });
     }
 
-    // 用户侧视图：isPentest / code（本人编号 + 站长派的任务）/ applications（自己提交过的申请）
+     
     function pentestMy() {
         return request('/pentest/my');
     }
 
-    // 测试者更新**自己**编号下某个任务的进度；opts = { status: 'open|doing|done', note }
+     
     function pentestUpdateMyTask(taskId, opts) {
         var o = opts || {};
         var body = {};
@@ -1054,17 +1054,17 @@
         });
     }
 
-    // 吊销自己的编号：账号立即被物理删除，当前凭据随之失效，调用方要按"已登出"处理。
+     
     function pentestRevoke(reason) {
         return post('/pentest/revoke', { reason: reason == null ? '' : String(reason) });
     }
 
-    // 重置自己的编号：回包带新的 username 与**只显示一次**的 password，当前凭据随即失效。
+     
     function pentestReset() {
         return post('/pentest/reset', {});
     }
 
-    // ---- 渗透测试账号：后台（Lv.1+ 可读；下面这些写操作仅站长，非站长会被后端挡 403）----
+     
     function adminPentest() {
         return request('/admin/pentest');
     }
@@ -1077,7 +1077,7 @@
         });
     }
 
-    // 回包带新的 username + 只显示一次的 password
+     
     function adminPentestApprove(applicationId, note) {
         return post('/admin/pentest/applications/' + encodeURIComponent(applicationId) + '/approve', {
             note: note == null ? '' : String(note)
@@ -1090,7 +1090,7 @@
         });
     }
 
-    // 重置编号（编号悬空 accountExists=false 时也直接调它）；回包带新 username + 只显示一次的 password
+     
     function adminPentestReset(code) {
         return post('/admin/pentest/' + encodeURIComponent(code) + '/reset', {});
     }
@@ -1108,7 +1108,7 @@
         });
     }
 
-    // 后端只接受 status / note（标题与说明不可改）
+     
     function adminPentestTaskUpdate(code, taskId, opts) {
         var o = opts || {};
         var body = {};
@@ -1127,27 +1127,27 @@
         });
     }
 
-    // ---- RC BUG 反馈 ----
-    // 公开已知 BUG 列表：含提交者、状态枚举（statuses 按 statusCounts 计数）
-    // 与 Markdown 正文；正文渲染前必须再过一次白名单净化
+     
+     
+     
     function rcBugs() {
         return request('/rc/bugs');
     }
 
-    // 提交反馈：需登录凭据，提交者由服务端从 Bearer token 解析，客户端不能自称身份
+     
     function rcSubmitBug(payload) {
         return post('/rc/bugs', payload);
     }
 
-    // 管理员视图：在公开字段基础上多带联系方式（contact）
+     
     function adminRcBugs() {
         return request('/admin/rc/bugs');
     }
 
-    // 管理员改状态 / 填版本：可选值取 /rc/bugs 回包的 statuses，不要在前端写死。
-    // opts = { status, note, appearedVersion, fixedVersion }；空字段一律不传 ——
-    // 后端对未传字段保持原值，而传了空白 fixedVersion 会把已编号的反馈挡下（400）。
-    // 填了 fixedVersion 后由后端分配 RCVE 漏洞编号并把 [编号] 加在标题前，回包 message 里有。
+     
+     
+     
+     
     function adminRcBugStatus(bugId, opts) {
         var o = opts || {};
         var body = {};
@@ -1162,14 +1162,14 @@
         });
     }
 
-    // ---- 爱发电订单后台（Lv.3+ / 后端 require_admin_high）----
-    // 台账总览：订单（含未发货驳回记录）+ 当前 VIP 到期名单 + 汇总计数
+     
+     
     function adminAfdianPurchases() {
         return request('/admin/afdian/purchases');
     }
 
-    // 主动查单对账：opts.outTradeNo 非空 = 精确查这一单；留空 = 扫最近 opts.pages 页。
-    // 已入账的订单会跳过（skipped），漏发的补发（granted）——用于 Webhook 通知漏收时的兜底。
+     
+     
     function adminAfdianReconcile(opts) {
         var o = opts || {};
         var body = {};
@@ -1178,9 +1178,9 @@
         return post('/admin/afdian/reconcile', body);
     }
 
-    // ---- Backrooms 文档系统：四类同构，接口前缀即类型 ----
-    // 层级 levels / 实体 entities / 物品 objects / 现象 phenomena，全部走同一套路径规则，
-    // 因此这里按 type 拼前缀，避免每类各写一份。既有层级专用函数保留以兼容旧页面。
+     
+     
+     
     var BACKROOMS_PREFIX = {
         level: '/backrooms/levels',
         entity: '/backrooms/entities',
@@ -1200,24 +1200,24 @@
         return request('/backrooms/levels/' + encodeURIComponent(id));
     }
 
-    // 列表：层级回包同时带 levels 与 items（内容相同），其余三类只有 items；
-    // 另带 total / type / typeLabel，分类名一律取回包值，前端不写死。
+     
+     
     function backroomsTypeList(type) {
         return request(backroomsPrefix(type));
     }
 
-    // 元数据：多带 fileName / aiReview / advancedReview；不可见返回 404
+     
     function backroomsTypeMeta(type, id) {
         return request(backroomsPrefix(type) + '/' + encodeURIComponent(id) + '/meta');
     }
 
-    // 正文（HTML）：非 approved 的稿件仅作者本人与管理员可见，且页面会被注入状态提示条
+     
     function backroomsTypeView(type, id) {
         return request(backroomsPrefix(type) + '/' + encodeURIComponent(id));
     }
 
-    // 提交 / 修改：接口前缀即类型，表单不传 type。
-    // ID 字段名：层级仍为 levelId（兼容既有前端），其余三类为 docId。
+     
+     
     function backroomsTypeSubmit(type, docId, name, file) {
         var fd = new FormData();
         fd.append(type === 'level' ? 'levelId' : 'docId', docId);
@@ -1237,7 +1237,7 @@
         return request(backroomsPrefix(type) + '/' + encodeURIComponent(docId), { method: 'DELETE' });
     }
 
-    // 管理员重写：下架 + 保留原文件 + 列表带 rew 标记（Lv.2+）
+     
     function backroomsTypeRewrite(type, docId) {
         return request(backroomsPrefix(type) + '/' + encodeURIComponent(docId) + '/rewrite', {
             method: 'PUT',
@@ -1246,12 +1246,12 @@
         });
     }
 
-    // 管理员删除：连同 versions/ 下的历史备份一并删除（Lv.2+）
+     
     function backroomsTypeAdminDelete(type, docId) {
         return request(backroomsPrefix(type) + '/' + encodeURIComponent(docId) + '/admin', { method: 'DELETE' });
     }
 
-    // 取正文并新窗口打开（内容为后端返回的完整 HTML，按原文渲染）
+     
     function backroomsTypeOpen(type, id) {
         var base = (localStorage.getItem('ziyit_api_base') || DEFAULT_BASE).replace(/\/$/, '');
         var token = getToken();
@@ -1373,17 +1373,17 @@
         });
     }
 
-    // ---- 在线心跳 ----
-    // 后端把「最近 2 分钟内用凭证访问过后端」算作在线（见 /stats/online、/admin/online），
-    // 页面开着就每分钟报一次到，免得用户只是停在页面上读文档就被算成离线。
+     
+     
+     
     var HEARTBEAT_MS = 60000;
     var heartbeatTimer = null;
 
     function startHeartbeat() {
         if (heartbeatTimer || typeof setInterval === 'undefined') return;
         heartbeatTimer = setInterval(function () {
-            if (document.hidden) return;          // 页面在后台标签页里就不算在线
-            if (enrollToken) return;              // 受限票据只能打安全中心那几个接口，别去触发 401
+            if (document.hidden) return;           
+            if (enrollToken) return;               
             if (!getToken()) return;
             request('/auth/me').catch(function () { });
         }, HEARTBEAT_MS);

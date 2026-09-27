@@ -147,7 +147,7 @@
             applyAvatars();
         }
 
-        // 后端域名下的头像要走 blob（ngrok 免费版会给 <img> 请求插一页拦截 HTML），渲染后异步补上
+         
         function applyAvatars() {
             var imgs = $('list').querySelectorAll('img.avatar[data-avatar]');
             for (var i = 0; i < imgs.length; i++) {

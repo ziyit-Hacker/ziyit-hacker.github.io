@@ -9,9 +9,9 @@ import { injectStyles } from "./styles.js";
 import { collectEnvEvidence } from "./env.js";
 const VERSION = "0.1.0";
 
-// v0.3.34 无障碍去向（64.6 第 9 条）：视觉引导类验证对低视力 / 色觉障碍 / 运动障碍用户
-// 不友好，且当前没有等价替代通道。至少在验证界面给出明确的说明与求助入口，指向在线客服。
-// 接入方可用 window.__phantomA11yHelpUrl 覆盖成自己的客服地址。
+ 
+ 
+ 
 const A11Y_HELP_URL =
     (typeof window !== "undefined" && window.__phantomA11yHelpUrl) ||
     "https://ziyit-hacker.github.io/guide.html";
@@ -31,15 +31,15 @@ const ALERT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
     '<path d="M12 8v5M12 16.5v.5"/>' +
     "</svg>";
  
-// ---------- v0.3.36（65.6 第 2 条）：PoW 求解的 Web Worker 桥 ----------
-// 求解必须放在 Worker 里跑：主线程要一直响应"松开即放弃"，不能被几十万次哈希卡住。
-// 用 `new URL(..., import.meta.url)` 而不是写死站点路径——本模块会被第三方页面按其
-// 自己的相对路径引入，只有 import.meta.url 才能稳定定位到同目录的 pow-worker.js。
+ 
+ 
+ 
+ 
 const POW_WORKER_URL = new URL("./pow-worker.js", import.meta.url);
 
-// 一次独立的求解任务：自己拉一个 Worker，取消时直接 terminate（连同循环与内存一起回收）。
-// 跨源兜底：第三方站点上本模块是跨源脚本，`new Worker(跨源 URL)` 会被同源策略拒绝，
-// 此时把 Worker 源码取回来塞进 Blob URL —— Blob URL 与宿主页面同源，才允许被 Worker 加载。
+ 
+ 
+ 
 class PowTask {
     constructor() {
         this.worker = null;
@@ -51,7 +51,7 @@ class PowTask {
         try {
             return new Worker(POW_WORKER_URL);
         }
-        catch (e) { /* 跨源：走下面的 Blob 兜底 */ }
+        catch (e) {   }
         const res = await fetch(POW_WORKER_URL);
         if (!res.ok) {
             throw new Error(`pow worker fetch ${res.status}`);
@@ -63,7 +63,7 @@ class PowTask {
     async run(nonce, difficulty, onProgress) {
         const worker = await this._spawn();
         if (this.cancelled) {
-            try { worker.terminate(); } catch (e) { /* ignore */ }
+            try { worker.terminate(); } catch (e) {   }
             throw new Error("pow cancelled");
         }
         this.worker = worker;
@@ -97,11 +97,11 @@ class PowTask {
     }
     _dispose() {
         if (this.worker) {
-            try { this.worker.terminate(); } catch (e) { /* ignore */ }
+            try { this.worker.terminate(); } catch (e) {   }
             this.worker = null;
         }
         if (this.blobUrl) {
-            try { URL.revokeObjectURL(this.blobUrl); } catch (e) { /* ignore */ }
+            try { URL.revokeObjectURL(this.blobUrl); } catch (e) {   }
             this.blobUrl = "";
         }
     }
@@ -235,8 +235,8 @@ class WidgetSession {
             writable: true,
             value: 0
         });
-        // 起手提示段时长（毫秒）：由 /challenge 的加密 params 下发（视频开头就是这段，
-        // 前端按住即从 0 秒整段播、按同一时长切"提示 → 跟随"）。默认取本地 CONFIG 兜底。
+         
+         
         Object.defineProperty(this, "previewMs", {
             enumerable: true,
             configurable: true,
@@ -283,7 +283,7 @@ class WidgetSession {
             writable: true,
             value: ""
         });
-        // v0.3.19 分包视频：/challenge 不再下发整段 video，改用 videoStream 描述 + 逐包拉取。
+         
         Object.defineProperty(this, "videoStream", {
             enumerable: true,
             configurable: true,
@@ -302,7 +302,7 @@ class WidgetSession {
             writable: true,
             value: null
         });
-        // v0.3.3 实时流：开关与节奏由 /challenge 的加密 params 下发（阈值在后端）。
+         
         Object.defineProperty(this, "streamEnabled", {
             enumerable: true,
             configurable: true,
@@ -333,7 +333,7 @@ class WidgetSession {
             writable: true,
             value: 0
         });
-        // v0.3.20 实时拉流：不等整段收完，后台逐包 append，首包落地即可开播。
+         
         Object.defineProperty(this, "_streamAborted", {
             enumerable: true,
             configurable: true,
@@ -352,14 +352,14 @@ class WidgetSession {
             writable: true,
             value: null
         });
-        // 会话已关闭（关弹窗/重挂载）：start() 的异步步骤据此提前退出，不再动已销毁的 DOM。
+         
         Object.defineProperty(this, "_sessionClosed", {
             enumerable: true,
             configurable: true,
             writable: true,
             value: false
         });
-        // v0.3.21 流水线：拉包循环只等网络，分片进队列由 append 泵按 updateend 逐个消化。
+         
         Object.defineProperty(this, "_appendQueue", {
             enumerable: true,
             configurable: true,
@@ -372,11 +372,11 @@ class WidgetSession {
             writable: true,
             value: false
         });
-        // v0.3.36：本次验证要求哪些方法（/challenge 的 requiredMethods）。默认单套 phantom
-        // —— 老后端不带该字段时行为与改造前完全一致（65.6 第 1 条）。
+         
+         
         this.requiredMethods = [];
         this.powRequired = false;
-        // 正在跑的 PoW 求解任务（松开/销毁时要 terminate，别让 Worker 泄漏）。
+         
         this._powTask = null;
         this._powAbort = null;
     }
@@ -404,9 +404,9 @@ class WidgetSession {
             const challenge = await requestChallenge(this.apiBase, publicJwk, this.device);
             if (challenge && challenge.sessionId)
                 this.sessionId = challenge.sessionId;
-            // v0.3.36（65.6 第 1 条）：本次要求哪些方法由服务端在 /challenge 里下发。
-            // 只有含 "pow" 时才在拖拽之后再走一次按住式 PoW；老后端不带该字段 →
-            // requiredMethods 为空 → 只做 phantom 一套，行为与改造前完全一致。
+             
+             
+             
             const methods = (challenge && Array.isArray(challenge.requiredMethods)) ? challenge.requiredMethods : [];
             this.requiredMethods = methods;
             this.powRequired = methods.indexOf("pow") !== -1;
@@ -420,15 +420,15 @@ class WidgetSession {
              
             const streamCfg = raw.stream || {};
             this.streamEnabled = !!streamCfg.enabled;
-            // v0.3.19：上报间隔按后端下发值（当前 50ms）。不要为"抗抖动"自行放大间隔——
-            // 间隔变大→批次数不足，反而会被否决。
+             
+             
             this.streamIntervalMs = Number(streamCfg.intervalMs) > 0 ? Number(streamCfg.intervalMs) : 50;
             const videoEl = await this._prepareVideo(challenge);
-            // 拉流期间用户关掉了弹窗/重挂了组件：直接收工，别再去动已销毁的 DOM。
+             
             if (this._sessionClosed)
                 return;
-            // previewSeconds 由后端下发且与"视频里真实存在的提示段长度"同源，
-            // 不用本地 CONFIG 硬编码，避免前后端漂移导致切割点落在提示段中间。
+             
+             
             const previewSeconds = Number(raw.previewSeconds) > 0
                 ? Number(raw.previewSeconds)
                 : CONFIG.previewSeconds;
@@ -458,8 +458,8 @@ class WidgetSession {
             this.onError(e);
             const code = (e && e.status) || 0;
             if (e && e.code === "PLAYBACK_UNSUPPORTED") {
-                // 连「整段拼接 + Blob 播放」也走不通：明确提示浏览器版本并给出重试按钮，
-                // 既不静默失败，也不把用户判成「验证失败」（64.6 第 8 条）。
+                 
+                 
                 this.status.textContent = "当前浏览器无法播放验证视频。请使用最新版 Chrome / Edge / Firefox / Safari 后重试。";
                 this.setHint("blocked", "");
                 this.turnIntoRetryButton();
@@ -470,15 +470,15 @@ class WidgetSession {
                 this.scheduleRetry(60000);
             }
             else if (code === 401) {
-                // 401 = 票据过期/被吊销。api 层已经自动重取票据重试过一次，仍然 401 就重新取题
-                // 再走一遍 —— 绝不能当作「验证失败」（64.6 第 6 条）。
+                 
+                 
                 this.status.textContent = "会话已刷新，正在重新取题…";
                 this.scheduleRetry(800, "auto-restart");
             }
             else if (code === 403 || code === 410) {
-                // 口径（64.6 第 7 条）：403 现在主要是环境证据拒绝（UA 自动化特征 / UA 与 Client
-                // Hints 矛盾）或票据绑定不符；IP / UA 漂移不再产生 403。410 = 题目或分包已过期。
-                // 两者都无法在当前这道题上继续，只能重新取题 —— 与验证失败共用同一条自动重来链路。
+                 
+                 
+                 
                 this.status.textContent = code === 403
                     ? "环境校验未通过，正在重新取题…"
                     : "验证已过期，正在重新取题…";
@@ -499,15 +499,15 @@ class WidgetSession {
             e.preventDefault();
             if (this.collecting || this.previewing || this.finished)
                 return;
-            // v0.3.8 行为留证：按下必须在这里记——起手提示段结束才调 tracker.start()，
-            // 等那时再挂监听已经错过了这次按下（真人会被误判"没按压"）。
+             
+             
             this.tracker?.notePress(e);
              
             this.previewing = true;
             this.overlay.classList.add("phantom-hidden");
             this.setHint("preview", "手指/鼠标拖动到闪烁的方块等待");
-            // v0.3.5：视频【自带头 previewMs 的起手提示段】，按住即从 0 秒整段播 ——
-            // 闪烁方块、随后移动的簇、整段的静止诱饵块全在视频里，前端只负责垫噪声。
+             
+             
             this.renderer?.start((_center, t) => {
                 if (t >= 1)
                     this.setHint("stopped", "请松手");
@@ -517,7 +517,7 @@ class WidgetSession {
          
          
          
-        // 提示段结束：从这一刻起才真正开始记轨迹（视频仍在继续播跟随段）。
+         
         const beginCollect = () => {
             if (!this.previewing || this.finished)
                 return;
@@ -526,7 +526,7 @@ class WidgetSession {
             this.status.textContent = "";
             this.setHint("collect", "按住跟随方块移动");
             this.tracker?.start();
-            // v0.3.3：从开始采集（≈视频进入跟随段）起，按后端下发的节奏持续上报采样点。
+             
             this._startStream();
              
             this.activateBtn.classList.add("phantom-holding");
@@ -534,15 +534,15 @@ class WidgetSession {
         const onUp = async () => {
             if (this.finished)
                 return;
-            // v0.3.8 行为留证：抬起也要先记——下面 collect 分支里会先调 tracker.stop()
-            // （它解绑监听并把 active 置 false），挂在 window 上的 pointerup 就轮不到了。
+             
+             
             this.tracker?.noteRelease();
              
             if (this.previewing) {
                 window.clearTimeout(this.previewTimer);
                 this.previewing = false;
-                // 提示段就松手：暂停视频（停在当前帧）并画回静态噪声，等用户重新按住——
-                // 下次按下会从 0 秒重新播，起点提示重来一遍。
+                 
+                 
                 this.renderer?.pause();
                 this.status.textContent = "";
                 this.setHint("ready", "按住下方按钮并马上拖动到方块");
@@ -555,8 +555,8 @@ class WidgetSession {
             this.activateBtn.classList.remove("phantom-holding");
             this.renderer?.pause();
             this.setHint("done", "");
-            // 先停采集（此后不再有新点），再补发最后一批流，最后才提交完整轨迹——
-            // 保证流覆盖到轨迹末尾，且流批次一定先于 /verify 到达服务端。
+             
+             
             const samples = this.tracker?.stop() ?? [];
             await this._stopStream();
             void this.verifyAndFinish(samples);
@@ -577,10 +577,10 @@ class WidgetSession {
             document.removeEventListener("dragstart", onSelectStart, { capture: true });
         };
     }
-    // v0.3.19：视频改为「分包下发 + MediaSource 播放」。
-    // /challenge 的 video 已恒为 null，改读 videoStream；拉包前必须先 POST /video/ready
-    // 握手（服务端把分包游标归零），且只能严格串行逐包拉 —— 并发预取 / 跳号都会被 409 拒。
-    // v0.3.20：拉包不再阻塞开播 —— 首包 append 完就返回，剩下的在后台继续边到边 append。
+     
+     
+     
+     
     async _prepareVideo(challenge) {
         const vs = challenge && challenge.videoStream;
         if (!vs || !vs.chunkCount) {
@@ -588,16 +588,16 @@ class WidgetSession {
         }
         this.videoStream = vs;
         const mime = vs.mime || challenge.videoMime || "video/mp4";
-        // codec 由后端从码流的 avcC box 读出，必须原样用；自己拼错会导致 isTypeSupported 失败、黑屏。
+         
         const type = vs.codec ? `${mime}; codecs="${vs.codec}"` : mime;
-        // 握手：确认后端就绪并把游标归零（握手之前任何 /video/chunk 都会被拒）。
-        // 降级路径同样要先握手，所以这一步提到 MSE 判定之前。
+         
+         
         const ready = await videoReady(this.apiBase, this.challengeId, this.sessionId);
         if (!ready || ready.ready !== true) {
             throw new Error("视频尚未就绪，请重试");
         }
-        // v0.3.34 降级路径（64.6 第 8 条）：MediaSource 不存在、或明确不支持该编码时，
-        // 不报错、不判失败 —— 改走「整段串行拉包 → 拼完整 MP4 → Blob 播放」。
+         
+         
         let mseOk = false;
         try {
             mseOk = typeof MediaSource !== "undefined" && !!MediaSource.isTypeSupported(type);
@@ -616,8 +616,8 @@ class WidgetSession {
         v.playsInline = true;
         v.setAttribute("playsinline", "");
         v.preload = "auto";
-        // 挂进 DOM（透明且不接收事件）：部分移动端浏览器要求视频在文档内才允许
-        // canvas.drawImage 取帧；关闭弹窗时随节点一并销毁。
+         
+         
         v.style.cssText = "position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
         this.canvas.parentElement?.appendChild(v);
         this.videoEl = v;
@@ -630,11 +630,11 @@ class WidgetSession {
                 ms.addEventListener("sourceopen", () => resolve(), { once: true });
                 window.setTimeout(() => reject(new Error("MediaSource 打开超时")), 5000);
             });
-            // SourceBuffer.mode 保持默认的 "segments"：每包都以 IDR 关键帧开头，依序 append 即可无缝播放
+             
             this.sourceBuffer = ms.addSourceBuffer(type);
         }
         catch (e) {
-            // addSourceBuffer 抛错 / MediaSource 打不开：同样降级，不把用户判成验证失败。
+             
             v.remove();
             URL.revokeObjectURL(url);
             this.videoEl = null;
@@ -643,15 +643,15 @@ class WidgetSession {
             this.sourceBuffer = null;
             return await this._prepareVideoFallback(mime, ready);
         }
-        // v0.3.20 实时拉流：不再"整段收完再组合"——首包 append 落地就能开播，其余分包
-        // 由 _pullChunks 在后台按 0,1,2… 继续取，到一包 append 一包（仍严格串行，不预取）。
+         
+         
         this._streamAborted = false;
         let markFirst, failFirst;
         const firstChunk = new Promise((resolve, reject) => {
             markFirst = resolve;
             failFirst = reject;
         });
-        // 首包落地 → resolve（可开播）；首包之前就失败 → reject（交给 start() 的重来链路）。
+         
         this._markFirstChunk = (err) => {
             const fn = err ? failFirst : markFirst;
             this._markFirstChunk = null;
@@ -662,16 +662,16 @@ class WidgetSession {
             this._markFirstChunk?.(e);
             if (this._streamAborted)
                 return;
-            // 后台拉流中断：已缓冲的片段仍可播，但后续帧永远到不了——上报错误。
+             
             this.status.textContent = "视频流中断，请重新验证";
             this.onError(e);
         });
-        // 等首包（初始化段 + 第 1 个分片）落地：play() 才有数据，元数据才会就绪。
+         
         await Promise.race([
             firstChunk,
             new Promise((resolve) => window.setTimeout(resolve, 5000)),
         ]);
-        // 等元数据：readyState >= 1 才有 videoWidth，渲染器才会合成视频前景。
+         
         await new Promise((resolve) => {
             if (v.readyState >= 1)
                 return resolve();
@@ -683,11 +683,11 @@ class WidgetSession {
         });
         return v;
     }
-    // v0.3.34 降级播放（64.6 第 8 条）：浏览器没有 MediaSource（或 addSourceBuffer 抛错）时，
-    // 仍然严格串行按 index = 0,1,2… 拉完所有分包，base64 解码后按序拼成完整 MP4，
-    // 用 Blob + createObjectURL 交给普通 <video> 播放。采集与实时上报逻辑完全不变
-    // （降级只是"不能边下边播"）。连拼接播放也不可用时抛 PLAYBACK_UNSUPPORTED，
-    // 由 start() 明确提示浏览器版本 + 重试，不静默失败、也不判为验证失败。
+     
+     
+     
+     
+     
     async _prepareVideoFallback(mime, ready) {
         this._streamAborted = false;
         this.status.textContent = "正在下载验证题…";
@@ -703,7 +703,7 @@ class WidgetSession {
                 chunk = await videoChunk(this.apiBase, this.challengeId, index, this.sessionId);
             }
             catch (e) {
-                // 与 MSE 路径同口径：409 = 本地序号与服务端游标不同步，重取当前游标指的那一包。
+                 
                 if (e && e.status === 409 && retried < 5) {
                     retried++;
                     continue;
@@ -742,14 +742,14 @@ class WidgetSession {
             v.playsInline = true;
             v.setAttribute("playsinline", "");
             v.preload = "auto";
-            // 与 MSE 路径一致：透明且不接收事件，挂进 DOM 才有帧可 drawImage，销毁时随节点移除。
+             
             v.style.cssText = "position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
             this.canvas.parentElement?.appendChild(v);
             this.videoEl = v;
             this.videoUrl = url;
             this.mediaSource = null;
             this.sourceBuffer = null;
-            // 必须等元数据落地：渲染器靠 videoWidth 才合成视频前景，靠 duration 才算跟随段进度。
+             
             await new Promise((resolve, reject) => {
                 if (v.readyState >= 1)
                     return resolve();
@@ -780,9 +780,9 @@ class WidgetSession {
         err.code = "PLAYBACK_UNSUPPORTED";
         return err;
     }
-    // 严格串行拉包：拿到第 n 包就立刻发第 n+1 包（服务端游标只认单包，不能并发/跳号）。
-    // v0.3.20：改成"边拉边播"的后台任务——每包 append 完就立刻可用（不再攒齐再拼）。
-    // v0.3.21：append 不再挡住下一包请求（否则主线程忙时 updateend 被拖后，拉包跟不上播放）。
+     
+     
+     
     async _pullChunks(ready) {
         const total = Number(ready.chunkCount || this.videoStream?.chunkCount || 0);
         let index = 0;
@@ -799,8 +799,8 @@ class WidgetSession {
                 chunk = await videoChunk(this.apiBase, this.challengeId, index, this.sessionId);
             }
             catch (e) {
-                // 409 = 本地序号与服务端游标不同步：重取当前游标指向的那一包
-                // （同一包的重复请求幂等、不推进游标），不要往后跳。
+                 
+                 
                 if (e && e.status === 409 && retried < 5) {
                     retried++;
                     continue;
@@ -813,11 +813,11 @@ class WidgetSession {
             appended.catch((e) => appendErrors.push(e));
             if (first) {
                 first = false;
-                // 首包 append 落地：通知 _prepareVideo 可以开播了（失败则把错误抛回去）。
+                 
                 appended.then(() => this._markFirstChunk?.(), (e) => this._markFirstChunk?.(e));
             }
             if (chunk.final) {
-                // 最后一包 append 完才 endOfStream：否则 duration 定不下来、末尾会被截断。
+                 
                 await appended.catch(() => { });
                 if (appendErrors.length)
                     throw appendErrors[0];
@@ -826,7 +826,7 @@ class WidgetSession {
                     try {
                         ms.endOfStream();
                     }
-                    catch (e) { /* ignore */ }
+                    catch (e) {   }
                 }
                 return;
             }
@@ -838,10 +838,10 @@ class WidgetSession {
                 return;
         }
     }
-    // v0.3.21：append 不再阻塞拉包 —— 拉包循环只等网络，分片进队列由 append 泵按 updateend
-    // 逐个消化。原先是"请求 → append → 等 updateend → 再请求"，每包周期 = RTT + append 耗时；
-    // 主线程忙于逐帧合成（getImageData/像素循环）时 updateend 会被拖后，拉包速率掉到播放
-    // 速率以下，播到缓冲末尾就停一下 → 验证时卡顿。
+     
+     
+     
+     
     _enqueueAppend(bytes) {
         return new Promise((resolve, reject) => {
             this._appendQueue.push({ bytes, resolve, reject });
@@ -881,10 +881,10 @@ class WidgetSession {
         }
         return bytes;
     }
-    // ---- v0.3.3 实时流上报 ----
-    // 目的：把"松手后一次性提交整段轨迹"改成"边画边报"。服务端只信每批次的【到达
-    // 墙钟时刻】与"流内容确是最终轨迹的保序子序列"，因此离线抠帧→拟合→一次性回放
-    // 的路径被堵死，对手必须真做实时 CV。批次内不含任何自报时间戳（不采信）。
+     
+     
+     
+     
     _startStream() {
         if (!this.streamEnabled || !this.sessionKey || !this.challengeId)
             return;
@@ -899,7 +899,7 @@ class WidgetSession {
         if (!this.streamEnabled || !this.sessionKey || !this.challengeId)
             return;
         const points = this.tracker?.takeSince(this.streamCursor) ?? [];
-        // 游标推进必须在 await 之前（同步完成），否则并发批次会重复取点。
+         
         this.streamCursor += points.length;
         if (!points.length)
             return;
@@ -910,7 +910,7 @@ class WidgetSession {
             await submitStreamChunk(this.apiBase, this.challengeId, this.sessionId, iv, ciphertext);
         }
         catch (e) {
-            // 实时流只作"留证"：丢一批不影响用户继续验证，静默忽略。
+             
         }
     }
     async _stopStream() {
@@ -945,8 +945,8 @@ class WidgetSession {
             points: samples,
             lastPointT_ms: Date.now(),
             env: (envEvidence && envEvidence.env) || undefined,
-            // v0.3.8 多维行为特征：指针进出画布 / 失焦 / 按压起止 / 多点触控 /
-            // 合并事件数。后端只做"硬矛盾否决 + 轻权重"，未上报（老浏览器）按中性处理。
+             
+             
             beh: this.tracker?.getBehavior() || undefined,
         };
         const plaintext = new TextEncoder().encode(JSON.stringify(payload));
@@ -961,14 +961,14 @@ class WidgetSession {
              
             result.challengeId = this.challengeId;
             result.sessionId = this.sessionId;
-            // v0.3.36（65.6 第 1~4 条）：第二套 —— 若本次 requiredMethods 含 "pow"，就在拖拽
-            // 通过之后接一段"按住按钮"的 PoW。拿到 pow receipt 后把【两套凭据一起】塞进
-            // result.receipts 交给页面；页面再把它们一起交后端 /verify/consume 兑换。
-            // 页面（以及这里）绝不自己放行 —— 判定权只在服务端。
+             
+             
+             
+             
             if (this.powRequired && result.receipt) {
                 const powReceipt = await this._runPowPhase();
                 if (!powReceipt) {
-                    // 用户始终没做出来 / 校验通道不可用：当作本次未完成，走常规重试链路。
+                     
                     this.renderer?.stop();
                     this.status.textContent = "安全校验未完成，请重试";
                     this.activateBtn.classList.add("phantom-fail");
@@ -978,14 +978,14 @@ class WidgetSession {
                 }
                 result.receipts = [result.receipt, powReceipt];
             }
-            // v0.3.34 严格式（64.6 第 3/4 条）：浏览器通道下 passed 恒为 null、score 恒为 0.0，
-            // 通过时只回一张一次性 receipt。null 不等于失败 —— 必须拿 receipt 去
-            // POST /verify/consume 兑换，"服务端给出的 valid"才是权威结论。
-            // 这里把判定权交给页面：页面拿 receipt 去兑换，只有明确回 false 才算未通过。
+             
+             
+             
+             
             if (result.passed === null || result.passed === undefined) {
                 this.status.textContent = result.receipt ? "验证完成，正在确认结果…" : "正在确认验证结果…";
             }
-            // 只有页面明确回 false 才算未通过（第三方页面的 onSuccess 习惯不返回值）。
+             
             const confirmed = (await this.onResult(result)) !== false;
             this.status.textContent = "";
             if (confirmed) {
@@ -1018,15 +1018,15 @@ class WidgetSession {
                 this.scheduleRetry(800, "auto-restart");
             }
             else if (code === 401) {
-                // 票据过期/被吊销：api 层已自动重取票据重试过一次，仍 401 就重新取题，
-                // 不当作「验证失败」（64.6 第 6 条）。
+                 
+                 
                 this.status.textContent = "会话已刷新，正在重新验证…";
                 this.activateBtn.textContent = "正在重试";
                 this.scheduleRetry(800, "auto-restart");
             }
             else if (code === 403) {
-                // 403 = 环境证据拒绝（UA 自动化特征 / UA 与 Client Hints 矛盾）或票据绑定不符；
-                // 与网络 / IP 漂移无关（64.6 第 7 条）。只能重新取题。
+                 
+                 
                 this.status.textContent = "环境校验未通过，正在重新取题…";
                 this.activateBtn.textContent = "正在重新取题";
                 this.scheduleRetry(800, "auto-restart");
@@ -1042,14 +1042,14 @@ class WidgetSession {
     }
     
 
-    // v0.3.36（65.6 第 2/3/6 条）：第二套人机验证（PoW）的交互与求解。
-    // ── 交互：一个「按住不放」的按钮；按住期间在 Web Worker 里迭代求 solution，界面只给
-    //    "正在校验"的推进观感，**绝不把难度数字暴露给用户**；松开即视为放弃该次尝试。
-    // ── 领题：每次尝试都重新 POST /pow/challenge（nonce 每次不同，离线预计算的解无法复用）；
-    //    解错 / 过期 / 试错过多 / 换题同样重新领题。
-    // ── 判定：求到解只去 /pow/verify 换一张 pow **receipt**，本函数绝不放行；真正的放行
-    //    由调用方把两套 receipt 一起交后端 /verify/consume 兑换。
-    // 返回值：pow receipt 字符串；用户始终没做出来 / 校验通道不可用则返回 null。
+     
+     
+     
+     
+     
+     
+     
+     
     async _runPowPhase() {
         const btn = this.activateBtn;
         const label = document.createElement("span");
@@ -1059,7 +1059,7 @@ class WidgetSession {
         btn.textContent = "";
         btn.appendChild(label);
         btn.appendChild(bar);
-        // 复用拖拽阶段那条充能进度条：求解耗时不可预知，只给一个"在推进"的观感。
+         
         btn.style.setProperty("--ph-charge-duration", "8s");
         btn.disabled = false;
         this.renderer?.drawStaticNoise();
@@ -1089,7 +1089,7 @@ class WidgetSession {
                 if (this._sessionClosed || attempt.failed)
                     return null;
                 if (attempt.released) {
-                    // 松开 = 放弃本次尝试 → 重新领题（65.6 第 6 条），留在本阶段继续等用户按住。
+                     
                     if (!(await load())) {
                         this.status.textContent = "安全校验暂不可用，请稍后重试";
                         this.setHint("blocked", "");
@@ -1099,8 +1099,8 @@ class WidgetSession {
                     continue;
                 }
                 try {
-                    // sessionId 必须用 /pow/challenge 自己下发的那个 —— 服务端按
-                    // sha256(sessionId) 与题记录比对（不可用拖拽那套 sessionId，会 403）。
+                     
+                     
                     const res = await verifyPow(this.apiBase, challenge.challengeId, attempt.solution, challenge.sessionId);
                     if (res && res.receipt) {
                         btn.classList.remove("phantom-holding");
@@ -1109,8 +1109,8 @@ class WidgetSession {
                     }
                 }
                 catch (e) {
-                    // 400=解错/题不存在/过期/已用，429=本题试错过多已作废，410=过期，网络异常……
-                    // 一律按 65.6 第 6 条处理：重新领题再来。
+                     
+                     
                 }
                 if (!(await load())) {
                     this.status.textContent = "安全校验暂不可用，请稍后重试";
@@ -1130,8 +1130,8 @@ class WidgetSession {
             this._powTask = null;
         }
     }
-    // 等一次「按住 → 求解」动作，返回 { solution } / { released: true }（松开放弃）/
-    // { failed: true }（求解器起不来）。松开时立刻 terminate Worker。
+     
+     
     _awaitPowAttempt(challenge) {
         const btn = this.activateBtn;
         return new Promise((resolve) => {
@@ -1149,7 +1149,7 @@ class WidgetSession {
                 window.removeEventListener("pointerup", onUp);
                 resolve(out);
             };
-            // 让 destroy()（用户中途关掉弹窗）也能把这个 await 收掉，别留悬挂的 Promise。
+             
             this._powAbort = () => finish({ failed: true });
             const onDown = (e) => {
                 if (e.button !== 0 || solving || btn.disabled)
@@ -1160,7 +1160,7 @@ class WidgetSession {
                 this.status.textContent = "正在校验…";
                 task.run(challenge.nonce, challenge.difficulty).then((out) => {
                     if (!solving)
-                        return;   // 已被松开 / 已放弃：这个解作废
+                        return;    
                     solving = false;
                     finish({ solution: out.solution });
                 }).catch(() => {
@@ -1168,7 +1168,7 @@ class WidgetSession {
                         return;
                     solving = false;
                     btn.classList.remove("phantom-holding");
-                    // Worker 起不来（CSP 拦了 worker-src / 断开跨源）时不要无限空转。
+                     
                     if (++fails >= 2) {
                         finish({ failed: true });
                         return;
@@ -1224,8 +1224,8 @@ class WidgetSession {
     destroy() {
         this._sessionClosed = true;
         this._unbind();
-        // v0.3.36：弹窗被关掉时，若正卡在 PoW 阶段（用户还按着按钮在求解），
-        // 先把 await 收掉再 terminate Worker —— 否则会留下悬挂的 Promise 与后台循环。
+         
+         
         const powAbort = this._powAbort;
         this._powAbort = null;
         powAbort?.();
@@ -1235,41 +1235,41 @@ class WidgetSession {
         window.clearTimeout(this.previewTimer);
         window.clearInterval(this.streamTimer);
         this.streamTimer = 0;
-        // 中止后台拉流：置标志后拉包循环在下一个检查点退出（在飞的那次 append 由下方释放兜住）。
+         
         this._streamAborted = true;
         this._markFirstChunk?.();
         this._markFirstChunk = null;
         this._pullDone = null;
-        // 丢弃还没消化的 append 队列，别让这些 promise 永远挂着。
+         
         const pending = this._appendQueue.splice(0, this._appendQueue.length);
         this._appending = false;
         pending.forEach((it) => it.reject(new Error("session destroyed")));
         this.renderer?.stop();
         this.tracker?.stop();
-        // 释放 MSE：先摘掉 SourceBuffer（会中止仍在飞的 append），再结束并丢弃 MediaSource。
+         
         if (this.mediaSource && this.sourceBuffer) {
             try {
                 if (this.mediaSource.readyState === "open") {
                     this.mediaSource.removeSourceBuffer(this.sourceBuffer);
                 }
             }
-            catch (e) { /* ignore */ }
+            catch (e) {   }
         }
         this.sourceBuffer = null;
         if (this.mediaSource && this.mediaSource.readyState === "open") {
             try {
                 this.mediaSource.endOfStream();
             }
-            catch (e) { /* ignore */ }
+            catch (e) {   }
         }
         this.mediaSource = null;
         this.videoStream = null;
-        // 释放前端侧视频资源：暂停 + 脱离 DOM + 撤销 Blob URL，避免内存泄漏。
+         
         if (this.videoEl) {
             try {
                 this.videoEl.pause();
             }
-            catch (e) { /* ignore */ }
+            catch (e) {   }
             this.videoEl.removeAttribute("src");
             this.videoEl.remove();
             this.videoEl = null;
@@ -1407,8 +1407,8 @@ export function mount(el, opts) {
         body.appendChild(stageWrap);
         body.appendChild(activateBtn);
         body.appendChild(status);
-        // 无障碍去向（64.6 第 9 条）：本验证是视觉引导类（看闪烁方块 + 拖动跟随），对低视力 /
-        // 色觉障碍 / 运动障碍用户不友好，当前没有等价替代通道。至少在界面上把求助入口给出来。
+         
+         
         const a11y = document.createElement("div");
         a11y.className = "phantom-a11y-help";
         a11y.style.cssText = "margin-top:10px;font-size:12px;line-height:1.6;text-align:center;opacity:.75;";
@@ -1425,14 +1425,14 @@ export function mount(el, opts) {
         modalCard.appendChild(body);
         return { hint, canvas, overlay, activateBtn, status, progress };
     };
-    // v0.3.34 严格式（64.6 第 1/2/3/4 条）：浏览器通道下 /verify 的 passed 恒为 null ——
-    // 通过时回一张一次性 receipt，未通过 / 未验证则 receipt 也为 null（两者在客户端看来
-    // 完全一样，这是有意设计，防调参自我放行）。判定规则：
-    //   passed === false                  → 未通过
-    //   passed 为 null 且没有 receipt     → 未通过
-    //   其余（passed === true，或 null 但带 receipt）→ 交给页面，页面拿 receipt 去
-    //     POST /verify/consume 兑换，服务端回的 valid 才是权威结论。
-    // 注意：这里绝不产生任何「客户端旗帜」，也不会把 null 当成通过。
+     
+     
+     
+     
+     
+     
+     
+     
     const dispatch = async (r) => {
         if (r.passed === false || (!r.receipt && r.passed !== true)) {
             opts.onFail?.(r);

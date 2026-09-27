@@ -634,8 +634,7 @@
           </div>
           <div class="demo-card-body">
             <div id="app"></div>
-            <!-- 无障碍去向（64.6 第 9 条）：本验证为视觉引导类（看闪烁方块 + 拖动跟随），
-                 对低视力 / 色觉障碍 / 运动障碍用户不友好，当前没有等价替代通道。 -->
+            
             <p style="margin-top:12px;font-size:12px;line-height:1.7;opacity:.75;">
               无障碍用户（低视力 / 色觉障碍 / 运动障碍）无法完成本验证？
               <a href="https://ziyit-hacker.github.io/guide.html" target="_blank" rel="noopener">点此联系人工</a>。
@@ -756,8 +755,8 @@
         getFreeApiKey();
       }
 
-      // v0.3.7：控件默认走 /session 短期票据，无需 API Key，故不再自动弹窗索要密钥；
-      // 想用自己的密钥（独立配额/统计）时点页面上的"免费获取 API Key"按钮即可。
+       
+       
 
       var style = document.createElement('style');
       style.textContent = '.api-key-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:var(--radius-full);background:var(--card);color:var(--fg);font-size:0.85rem;cursor:pointer;transition:all 150ms ease;font-family:var(--font-body);}.api-key-btn:hover{border-color:var(--accent);background:var(--muted);}.api-key-btn svg{width:16px;height:16px;}';

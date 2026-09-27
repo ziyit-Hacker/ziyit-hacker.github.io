@@ -186,7 +186,7 @@ function getCurrentUser() {
     
      
     const userData = getCookie('authToken') || localStorage.getItem('authToken');
-    // 不要打印 userData 本身：可能是「保持登录」的永久凭证，控制台里能看到的 token 会被同页脚本顺走
+     
 
     if (!userData) {
         console.log('未找到任何用户数据');
@@ -195,8 +195,8 @@ function getCurrentUser() {
     
     try {
          
-        // 别把 parts 打进控制台：现在 authToken 里镜像的就是「保持登录」的永久凭证，
-        // 它不含 '-'，打出来等于把完整凭证公开在控制台里（上一处日志已删，这里是补漏）。
+         
+         
         const parts = userData.split('-');
         
         if (parts.length >= 2) {
