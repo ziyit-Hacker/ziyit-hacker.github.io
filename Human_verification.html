@@ -664,15 +664,67 @@
   <script type="module" src="https://ziyit-hacker.github.io/Human_verification/main.js"></script>
   <script>
     (function () {
-      var BASE_URL = 'https://willian-unheady-rawly.ngrok-free.dev';
+      var DEFAULT_BASE = 'https://willian-unheady-rawly.ngrok-free.dev';
+      var BASE_COOKIE = 'ziyit_api_base_ok';
+      var BASE_URL = DEFAULT_BASE;
+      var FILE_BASES = [];
       var backendPromise = null;
-      function backendReady() {
-        if (backendPromise) return backendPromise;
-        var bases = [];
+
+      function readCookie(name) {
+        try {
+          var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+          return m ? decodeURIComponent(m[1]) : '';
+        } catch (e) { return ''; }
+      }
+      function writeCookie(name, value) {
+        try {
+          var d = new Date();
+          d.setTime(d.getTime() + 7 * 86400000);
+          document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + d.toUTCString() + '; path=/';
+        } catch (e) { }
+      }
+      function clearCookie(name) {
+        try { document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; } catch (e) { }
+      }
+      function customBase() {
         try {
           var c = localStorage.getItem('ziyit_api_base');
-          if (c) bases.push(String(c).replace(/\/+$/, ''));
+          if (c) return String(c).replace(/\/+$/, '');
         } catch (e) { }
+        return '';
+      }
+      function baseCookie() {
+        var v = readCookie(BASE_COOKIE).replace(/\/+$/, '');
+        return /^https?:\/\//i.test(v) ? v : '';
+      }
+      function rememberBase(b) {
+        if (!b) return;
+        BASE_URL = b;
+        if (b === customBase()) return;
+        writeCookie(BASE_COOKIE, b);
+      }
+      function invalidateBase() {
+        BASE_URL = DEFAULT_BASE;
+        backendPromise = null;
+        clearCookie(BASE_COOKIE);
+      }
+      function baseCandidates() {
+        var list = [];
+        function add(u) {
+          if (!u) return;
+          var v = String(u).replace(/\/+$/, '');
+          if (list.indexOf(v) === -1) list.push(v);
+        }
+        add(BASE_URL);
+        FILE_BASES.forEach(add);
+        add(baseCookie());
+        add(DEFAULT_BASE);
+        return list;
+      }
+
+      function backendReady() {
+        if (backendPromise) return backendPromise;
+        var cached = customBase() || baseCookie();
         var url;
         try { url = new URL('backend.txt', document.baseURI).href; } catch (e) { url = 'backend.txt'; }
         function parse(t) {
@@ -699,21 +751,30 @@
         function pick(list) {
           var i = 0;
           function next() {
-            if (i >= list.length) return Promise.resolve(list[0] || BASE_URL);
+            if (i >= list.length) return Promise.resolve(list[0] || DEFAULT_BASE);
             var b = list[i++];
             return probe(b).then(function (ok) { return ok ? b : next(); });
           }
           return next();
         }
-        backendPromise = fetch(url, { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': '1' } })
+        var loadList = fetch(url, { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': '1' } })
           .then(function (r) { return r.ok ? r.text() : ''; })
           .catch(function () { return ''; })
           .then(function (t) {
-            parse(t).forEach(function (b) { if (bases.indexOf(b) === -1) bases.push(b); });
-            if (bases.indexOf(BASE_URL) === -1) bases.push(BASE_URL);
-            return pick(bases);
+            FILE_BASES = parse(t);
+            return FILE_BASES.slice();
+          });
+        if (cached) {
+          rememberBase(cached);
+          backendPromise = loadList.then(function () { return BASE_URL; });
+          return backendPromise;
+        }
+        backendPromise = loadList
+          .then(function (list) {
+            if (list.indexOf(DEFAULT_BASE) === -1) list.push(DEFAULT_BASE);
+            return pick(list);
           })
-          .then(function (b) { if (b) BASE_URL = b; return BASE_URL; })
+          .then(function (b) { rememberBase(b || DEFAULT_BASE); return BASE_URL; })
           .catch(function () { return BASE_URL; });
         return backendPromise;
       }
@@ -768,14 +829,24 @@
         }
         try {
           await backendReady();
-          var response = await fetch(BASE_URL + '/api-key/free', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + token
+          var list = baseCandidates();
+          var response = null, data = null;
+          for (var i = 0; i < list.length; i++) {
+            try {
+              response = await fetch(list[i] + '/api-key/free', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer ' + token
+                }
+              });
+              data = await response.json();
+              rememberBase(list[i]);
+              break;
+            } catch (e) {
+              if (i + 1 >= list.length) { invalidateBase(); throw e; }
             }
-          });
-          var data = await response.json();
+          }
           if (!response.ok) {
             var detail = data.detail || data.message || '请重试';
             if (Array.isArray(detail)) detail = detail.map(function (d) { return d.msg || JSON.stringify(d); }).join('; ');

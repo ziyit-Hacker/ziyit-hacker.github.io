@@ -8,6 +8,8 @@
 const TICKET_HEADER = "x-phantom-ticket";
 
 const DEFAULT_BASE = "https://willian-unheady-rawly.ngrok-free.dev";
+const BASE_COOKIE = "ziyit_api_base_ok";
+const BASE_COOKIE_DAYS = 7;
 
 let loadedBases = [];
 let resolvedBase = "";
@@ -19,6 +21,72 @@ function backendTxtUrl() {
     } catch (e) {
         return "backend.txt";
     }
+}
+
+function readCookie(name) {
+    try {
+        const m = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+        return m ? decodeURIComponent(m[1]) : "";
+    } catch (e) {
+        return "";
+    }
+}
+
+function writeCookie(name, value, days) {
+    try {
+        const d = new Date();
+        d.setTime(d.getTime() + days * 86400000);
+        document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + d.toUTCString() + "; path=/";
+    } catch (e) { }
+}
+
+function clearCookie(name) {
+    try { document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"; } catch (e) { }
+}
+
+function customBase() {
+    try {
+        const c = localStorage.getItem("ziyit_api_base");
+        if (c) return String(c).replace(/\/+$/, "");
+    } catch (e) { }
+    return "";
+}
+
+function baseCookie() {
+    const v = readCookie(BASE_COOKIE).replace(/\/+$/, "");
+    return /^https?:\/\//i.test(v) ? v : "";
+}
+
+function cachedBase() {
+    return customBase() || baseCookie();
+}
+
+function rememberBase(base) {
+    if (!base) return;
+    resolvedBase = base;
+    ticket = { token: "", expiresAt: 0 };
+    if (base === customBase()) return;
+    writeCookie(BASE_COOKIE, base, BASE_COOKIE_DAYS);
+}
+
+function invalidateBase() {
+    resolvedBase = "";
+    backendPromise = null;
+    clearCookie(BASE_COOKIE);
+}
+
+function baseCandidates(primary) {
+    const list = [];
+    const add = (u) => {
+        if (!u) return;
+        const v = String(u).replace(/\/+$/, "");
+        if (list.indexOf(v) === -1) list.push(v);
+    };
+    add(primary);
+    add(baseCookie());
+    loadedBases.forEach(add);
+    add(DEFAULT_BASE);
+    return list;
 }
 
 function parseBases(txt) {
@@ -57,26 +125,40 @@ async function pickBase(bases) {
 
 export function backendReady() {
     if (!backendPromise) {
-        backendPromise = fetch(backendTxtUrl(), { cache: "no-store", headers: { "ngrok-skip-browser-warning": "1" } })
-            .then((res) => (res.ok ? res.text() : ""))
-            .then((txt) => parseBases(txt))
-            .catch(() => [])
-            .then(async (bases) => {
-                loadedBases = bases.slice();
-                if (!loadedBases.includes(DEFAULT_BASE)) loadedBases.push(DEFAULT_BASE);
-                resolvedBase = await pickBase(loadedBases);
-                return resolvedBase;
-            });
+        const cached = cachedBase();
+        if (cached) {
+             
+            resolvedBase = cached;
+            backendPromise = fetch(backendTxtUrl(), { cache: "no-store", headers: { "ngrok-skip-browser-warning": "1" } })
+                .then((res) => (res.ok ? res.text() : ""))
+                .then((txt) => parseBases(txt))
+                .catch(() => [])
+                .then((bases) => {
+                    loadedBases = bases.slice();
+                    if (!loadedBases.includes(DEFAULT_BASE)) loadedBases.push(DEFAULT_BASE);
+                    return cached;
+                });
+        } else {
+            backendPromise = fetch(backendTxtUrl(), { cache: "no-store", headers: { "ngrok-skip-browser-warning": "1" } })
+                .then((res) => (res.ok ? res.text() : ""))
+                .then((txt) => parseBases(txt))
+                .catch(() => [])
+                .then(async (bases) => {
+                    loadedBases = bases.slice();
+                    if (!loadedBases.includes(DEFAULT_BASE)) loadedBases.push(DEFAULT_BASE);
+                    const picked = await pickBase(loadedBases);
+                    rememberBase(picked);
+                    return picked;
+                });
+        }
     }
     return backendPromise;
 }
 
 export function apiBase() {
-    try {
-        const c = localStorage.getItem("ziyit_api_base");
-        if (c) return String(c).replace(/\/+$/, "");
-    } catch (e) { }
-    return resolvedBase || loadedBases[0] || DEFAULT_BASE;
+    const custom = customBase();
+    if (custom) return custom;
+    return resolvedBase || baseCookie() || loadedBases[0] || DEFAULT_BASE;
 }
 
 let ticket = { token: "", expiresAt: 0 };
@@ -162,9 +244,7 @@ function expHeaders() {
     return h;
 }
 
-async function postJson(apiBase, path, body) {
-    const base = apiBase.replace(/\/+$/, "");
-    const exp = expHeaders();
+async function postToBase(base, path, body, exp) {
     for (let attempt = 0; attempt < 2; attempt++) {
         const res = await fetch(`${base}${path}`, {
             method: "POST",
@@ -185,6 +265,29 @@ async function postJson(apiBase, path, body) {
         throw await readError(res);
     }
     throw new Error("请求失败：票据重取后仍未通过");
+}
+
+async function postJson(apiBaseArg, path, body) {
+    const exp = expHeaders();
+    const list = baseCandidates(apiBaseArg);
+    let lastErr = null;
+    for (let i = 0; i < list.length; i++) {
+        try {
+            const data = await postToBase(list[i], path, body, exp);
+            rememberBase(list[i]);
+            return data;
+        } catch (err) {
+            lastErr = err;
+             
+            if (err && err.status) throw err;
+            if (i + 1 >= list.length) {
+                 
+                invalidateBase();
+                throw err;
+            }
+        }
+    }
+    throw lastErr;
 }
 
 export function requestChallenge(apiBase, clientPublicJwk, device) {

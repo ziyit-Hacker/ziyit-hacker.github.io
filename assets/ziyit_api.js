@@ -2,6 +2,10 @@
     var DEFAULT_BASE = 'https://willian-unheady-rawly.ngrok-free.dev';
 
      
+    var BASE_COOKIE = 'ziyit_api_base_ok';
+    var BASE_COOKIE_DAYS = 7;
+
+     
     var SCRIPT_SRC = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
 
     var loadedBases = [];
@@ -47,19 +51,26 @@
 
     function backendReady() {
         if (!readyBasePromise) {
-            readyBasePromise = loadBackendBases().then(function () {
-                var bases = getBases();
-                var i = 0;
-                function next() {
-                    if (i >= bases.length) return bases[0] || DEFAULT_BASE;
-                    var b = bases[i++];
-                    return probeBase(b).then(function (ok) { return ok ? b : next(); });
-                }
-                return next();
-            }).then(function (b) {
-                if (b) resolvedBase = b;
-                return b;
-            });
+            var cached = cachedBase();
+            if (cached) {
+                 
+                resolvedBase = cached;
+                readyBasePromise = loadBackendBases().then(function () { return cached; });
+            } else {
+                readyBasePromise = loadBackendBases().then(function () {
+                    var bases = getBases();
+                    var i = 0;
+                    function next() {
+                        if (i >= bases.length) return bases[0] || DEFAULT_BASE;
+                        var b = bases[i++];
+                        return probeBase(b).then(function (ok) { return ok ? b : next(); });
+                    }
+                    return next();
+                }).then(function (b) {
+                    if (b) rememberBase(b);
+                    return b;
+                });
+            }
         }
         return readyBasePromise;
     }
@@ -84,6 +95,8 @@
             var custom = localStorage.getItem('ziyit_api_base');
             if (custom) list.push(String(custom).replace(/\/+$/, ''));
         } catch (e) {}
+        var cookie = getBaseCookie();
+        if (cookie && list.indexOf(cookie) === -1) list.push(cookie);
         for (var i = 0; i < loadedBases.length; i++) {
             if (list.indexOf(loadedBases[i]) === -1) list.push(loadedBases[i]);
         }
@@ -91,10 +104,68 @@
         return list;
     }
 
+     
+    function getBaseCookie() {
+        try {
+            var v = getCookie(BASE_COOKIE);
+            if (!v) return '';
+            v = String(v).replace(/\/+$/, '');
+            return /^https?:\/\//i.test(v) ? v : '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function setBaseCookie(base) {
+        if (!base) return;
+        try { setCookie(BASE_COOKIE, base, BASE_COOKIE_DAYS); } catch (e) {}
+    }
+
+    function clearBaseCookie() {
+        try { document.cookie = BASE_COOKIE + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; } catch (e) {}
+    }
+
+     
+    function customBase() {
+        try {
+            var c = localStorage.getItem('ziyit_api_base');
+            if (c) return String(c).replace(/\/+$/, '');
+        } catch (e) {}
+        return '';
+    }
+
+    function cachedBase() {
+        return customBase() || getBaseCookie();
+    }
+
+     
+    function rememberBase(base) {
+        if (!base) return;
+        resolvedBase = base;
+        if (base === customBase()) return;     
+        setBaseCookie(base);
+    }
+
+     
+    function invalidateBase() {
+        resolvedBase = '';
+        readyBasePromise = null;
+        clearBaseCookie();
+    }
+
     function currentBase() {
         if (resolvedBase) return resolvedBase;
         var bases = getBases();
         return bases[0] || DEFAULT_BASE;
+    }
+
+    function orderedBases() {
+        var bases = getBases();
+        var work = currentBase();
+        if (work && bases.indexOf(work) !== 0) {
+            bases = [work].concat(bases.filter(function (b) { return b !== work; }));
+        }
+        return bases;
     }
 
     var REQUEST_TIMEOUT_MS = 20000;
@@ -339,73 +410,86 @@
         if (token) {
             options.headers['Authorization'] = 'Bearer ' + token;
         }
-        var bases = getBases();
-        var work = currentBase();
-        if (work) bases = [work].concat(bases.filter(function (b) { return b !== work; }));
-        var index = baseIndex || 0;
-        var base = bases[index];
-        if (!base) base = DEFAULT_BASE;
-        return fetchWithTimeout(base + path, options).then(function (res) {
-            return res.json().catch(function () { return null; }).then(function (data) {
-                if (!res.ok) {
-                    var err = new Error(errorText(data && data.detail) || ('请求失败 ' + res.status));
-                    err.status = res.status;
-                    err.data = data;
-                    throw err;
-                }
-                 
-                return withMeta ? { data: data, date: res.headers.get('date') } : data;
-            });
-        }).catch(function (err) {
-            if (err && err.status) {
-                var isLoginPath = path.indexOf('/auth/login') === 0;
-                 
-                 
-                var isAuthRejected = /invalid or expired token|user not found|user deleted|invalid authorization header|missing authorization header|authorization required/i.test(String(err.message || ''));
-                 
-                 
-                 
-                var sentToken = String((options.headers && options.headers['Authorization']) || '').replace(/^Bearer\s+/i, '');
-                var rememberNow = getRememberToken();
-                if (err.status === 401 && isAuthRejected && !retried && !enrollToken && !isLoginPath
-                    && rememberNow && sentToken === rememberNow) {
+        var bases = orderedBases();
+        var start = baseIndex || 0;
+        if (start >= bases.length) start = 0;
+
+        return attempt(start);
+
+        function attempt(i) {
+            return fetchWithTimeout(bases[i] + path, options).then(function (res) {
+                return res.json().catch(function () { return null; }).then(function (data) {
+                    if (!res.ok) {
+                        var err = new Error(errorText(data && data.detail) || ('请求失败 ' + res.status));
+                        err.status = res.status;
+                        err.data = data;
+                        throw err;
+                    }
+                     
+                    return withMeta ? { data: data, date: res.headers.get('date') } : data;
+                });
+            }).catch(function (err) {
+                if (err && err.status) {
+                    var isLoginPath = path.indexOf('/auth/login') === 0;
                      
                      
-                    clearToken();
-                    handleUnauthorized();
-                    throw err;
-                }
-                if (err.status === 401 && isAuthRejected && !retried && !isLoginPath && !rememberNow && getCredentials() && !enrollToken) {
-                    return loginWithCredentials().then(function () {
-                        return request(path, options, 0, true, withMeta);
-                    }, function (loginErr) {
+                    var isAuthRejected = /invalid or expired token|user not found|user deleted|invalid authorization header|missing authorization header|authorization required/i.test(String(err.message || ''));
+                     
+                     
+                     
+                    var sentToken = String((options.headers && options.headers['Authorization']) || '').replace(/^Bearer\s+/i, '');
+                    var rememberNow = getRememberToken();
+                    if (err.status === 401 && isAuthRejected && !retried && !enrollToken && !isLoginPath
+                        && rememberNow && sentToken === rememberNow) {
                          
-                        if (loginErr && loginErr.status === 429) throw loginErr;
                          
                         clearToken();
                         handleUnauthorized();
                         throw err;
+                    }
+                    if (err.status === 401 && isAuthRejected && !retried && !isLoginPath && !rememberNow && getCredentials() && !enrollToken) {
+                        return loginWithCredentials().then(function () {
+                            return request(path, options, 0, true, withMeta);
+                        }, function (loginErr) {
+                             
+                            if (loginErr && loginErr.status === 429) throw loginErr;
+                             
+                            clearToken();
+                            handleUnauthorized();
+                            throw err;
+                        });
+                    }
+                    if (err.status === 401 && isAuthRejected && !retried && !getCredentials() && !getRememberToken()) {
+                         
+                        clearToken();
+                        handleUnauthorized();
+                    }
+                    if (err.status >= 500 && i + 1 < bases.length) return switchTo(i);
+                    throw err;
+                }
+                 
+                if (i + 1 < bases.length) return switchTo(i);
+                 
+                 
+                invalidateBase();
+                 
+                var netRetries = (options.__netRetries || 0) + 1;
+                options.__netRetries = netRetries;
+                if (netRetries <= 2) {
+                    return new Promise(function (resolve) { setTimeout(resolve, 300); }).then(function () {
+                        return request(path, options, 0, retried, withMeta);
                     });
                 }
-                if (err.status === 401 && isAuthRejected && !retried && !getCredentials() && !getRememberToken()) {
-                     
-                    clearToken();
-                    handleUnauthorized();
-                }
                 throw err;
-            }
-             
-            if (index + 1 < bases.length) return request(path, options, index + 1, retried, withMeta);
-             
-            var netRetries = (options.__netRetries || 0) + 1;
-            options.__netRetries = netRetries;
-            if (netRetries <= 2) {
-                return new Promise(function (resolve) { setTimeout(resolve, 300); }).then(function () {
-                    return request(path, options, index, retried, withMeta);
-                });
-            }
-            throw err;
-        });
+            });
+        }
+
+        function switchTo(i) {
+            return attempt(i + 1).then(function (res) {
+                rememberBase(bases[i + 1]);
+                return res;
+            });
+        }
     }
 
     function post(path, body) {
