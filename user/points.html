@@ -441,6 +441,8 @@
             </div>
         </div>
 
+        <div id="pricingArea" style="margin-bottom: 16px;"></div>
+
         <div class="block">
             <h2>购买点数</h2>
             <div class="buy-row">
@@ -478,6 +480,7 @@
             var ledgerTotal = 0;
 
             var balanceArea = document.getElementById('balanceArea');
+            var pricingArea = document.getElementById('pricingArea');
             var refreshBtn = document.getElementById('refreshBtn');
             var unitsInput = document.getElementById('unitsInput');
             var buyBtn = document.getElementById('buyBtn');
@@ -661,8 +664,17 @@
                 });
             });
 
+            // 当前定价（公开接口 /points/pricing）：展示「大约一次验证多少点」与分步详情
+            function loadPricing() {
+                return ZIYIT_API.pointsPricing().then(function (pricing) {
+                    pricingArea.innerHTML = ZIYIT_API.pricingHtml(pricing) || '';
+                }).catch(function () {
+                    pricingArea.innerHTML = '';
+                });
+            }
+
             function loadAll() {
-                return Promise.all([loadBalance(), loadLedger()]);
+                return Promise.all([loadBalance(), loadLedger(), loadPricing()]);
             }
 
             refreshBtn.addEventListener('click', function () {

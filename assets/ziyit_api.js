@@ -590,6 +590,11 @@
         return post('/points/purchase', { units: u });
     }
 
+    // 当前点单价目表（公开接口）：管理员在后台改价后立刻生效，前端不缓存、不硬编码价格。
+    function pointsPricing() {
+        return request('/points/pricing');
+    }
+
      
     function submitMod(payload) {
         return post('/mods/submit', payload);
@@ -1593,6 +1598,109 @@
         }
     }
 
+    // ------------------------------------------------------------
+    // 定价视图渲染（v0.3.39）
+    // 把服务端 pricing 视图渲染成「概况（大约一次验证多少点）+ 分步详情」。
+    // 所有单价一律来自入参（/points/pricing 或 /api-key/mine 的 pricing 字段），
+    // 这里不写任何单价常量。
+    // ------------------------------------------------------------
+    function _prEsc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function _prFmt(n) {
+        if (n == null || n === '') return '-';
+        var v = Number(n);
+        if (isNaN(v)) return _prEsc(n);
+        if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+        return String(Math.round(v * 100) / 100);
+    }
+
+    function _prTier(k) {
+        if (k === 'phantom') return '纯 Phantom';
+        if (k === 'pow') return '纯 PoW';
+        return 'Phantom + PoW';
+    }
+
+    function _prRow(label, path, note, price) {
+        return '<div style="display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px dashed var(--ziyit-border);font-size:13px;">' +
+            '<span style="flex:1;min-width:0;color:var(--ziyit-text-primary);">' + _prEsc(label) +
+            (path ? ' <span style="font-size:12px;color:var(--ziyit-text-secondary);font-family:Consolas,monospace;">' + _prEsc(path) + '</span>' : '') +
+            (note ? ' <span style="color:var(--ziyit-text-secondary);">（' + _prEsc(note) + '）</span>' : '') +
+            '</span>' +
+            '<span style="white-space:nowrap;color:var(--ziyit-primary);font-weight:600;">' + _prFmt(price) + ' 点</span>' +
+            '</div>';
+    }
+
+    function pricingHtml(pricing) {
+        if (!pricing) return '';
+        var perReq = pricing.mode === 'per_request';
+        var prices = (pricing.verifyPlan && pricing.verifyPlan.prices) || pricing.per_verification || {};
+        var tiers = ['phantom', 'pow', 'both'].map(function (k) {
+            return { label: _prTier(k), v: prices[k] };
+        }).filter(function (t) { return t.v != null && t.v !== '' && !isNaN(Number(t.v)); });
+
+        var estLine = '—';
+        var tierLine = '';
+        if (tiers.length) {
+            var vals = tiers.map(function (t) { return Number(t.v); });
+            var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+            estLine = (lo === hi ? _prFmt(lo) : (_prFmt(lo) + ' ~ ' + _prFmt(hi))) + ' 点';
+            tierLine = tiers.map(function (t) { return _prEsc(t.label) + ' ' + _prFmt(t.v) + ' 点'; }).join(' ｜ ');
+        }
+
+        var vip = pricing.vip || {};
+        var vipLine = '';
+        if (vip.mode === 'free') vipLine = 'VIP 用户免费';
+        else if (vip.mode === 'discount') vipLine = 'VIP 用户按 ' + _prFmt(Number(vip.discount) * 10) + ' 折收取';
+
+        var rows = '';
+        var pr = pricing.per_request || {};
+        if (perReq) {
+            if (pr.all_requests) {
+                rows += _prRow('所有请求（统一价）', '', '', pr.all_price);
+            } else {
+                var labels = pricing.endpointLabels || {};
+                var eps = pr.endpoints || {};
+                Object.keys(labels).forEach(function (p) {
+                    var it = eps[p];
+                    if (it && it.charge) rows += _prRow(labels[p], p, '', it.price);
+                });
+            }
+            var vr = pr.verify || {};
+            var vlabels = pricing.verifyEndpointLabels || {};
+            var vname = (vlabels['/verify'] || '/verify') + ' / ' + (vlabels['/pow/verify'] || '/pow/verify');
+            if (vr.mode === 'flat') {
+                rows += _prRow(vname, '', '固定价', vr.flat);
+            } else {
+                var c = vr.complexity || {};
+                rows += _prRow(vname, '', '纯 Phantom', c.phantom);
+                rows += _prRow(vname, '', '纯 PoW', c.pow);
+                rows += _prRow(vname, '', 'Phantom + PoW', c.both);
+            }
+        } else {
+            rows = '<div style="padding:7px 0;font-size:13px;color:var(--ziyit-text-secondary);line-height:1.8;">' +
+                '当前为「按单次验证」口径：整条验证链路只按上面三档中的<b>一档</b>收取，不逐步计费。</div>';
+        }
+
+        return '<div style="border:1px solid var(--ziyit-border);border-radius:10px;padding:16px;background:var(--ziyit-bg);">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">' +
+            '<span style="font-size:15px;font-weight:600;color:var(--ziyit-text-primary);">当前定价</span>' +
+            '<span style="font-size:12px;padding:2px 10px;border-radius:10px;background:var(--ziyit-primary);color:#ffffff;">' +
+            (perReq ? '按请求计费' : '按单次验证') + '</span></div>' +
+            '<div style="margin-top:10px;font-size:14px;color:var(--ziyit-text-primary);">大约一次人机验证：' +
+            '<b style="color:var(--ziyit-primary);font-size:16px;">' + estLine + '</b></div>' +
+            (tierLine ? '<div style="margin-top:6px;font-size:13px;color:var(--ziyit-text-secondary);">' + tierLine + '</div>' : '') +
+            (vipLine ? '<div style="margin-top:6px;font-size:13px;color:var(--ziyit-text-secondary);">' + _prEsc(vipLine) + '</div>' : '') +
+            '<details style="margin-top:10px;">' +
+            '<summary style="cursor:pointer;font-size:13px;color:var(--ziyit-primary);">价格详情（每个步骤多少点）</summary>' +
+            '<div style="margin-top:8px;">' + rows + '</div></details>' +
+            '<div style="margin-top:10px;font-size:12px;color:var(--ziyit-text-secondary);">价格由管理员在后台配置，此处仅展示当前口径；实际扣点按真实发生的动作结算。</div>' +
+            '</div>';
+    }
+
     window.ZIYIT_API = {
         BASE: DEFAULT_BASE,
         backendReady: backendReady,
@@ -1629,6 +1737,8 @@
         pointsBalance: pointsBalance,
         pointsLedger: pointsLedger,
         pointsPurchase: pointsPurchase,
+        pointsPricing: pointsPricing,
+        pricingHtml: pricingHtml,
         submitMod: submitMod,
         sendVerifyEmail: sendVerifyEmail,
         downloadMod: downloadMod,
