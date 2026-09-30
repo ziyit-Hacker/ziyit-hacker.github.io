@@ -919,10 +919,10 @@
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">点数（-1 = 无限）</label>
-                <input type="number" class="form-input" id="apikey-edit-quota" placeholder="修改该密钥可消耗的点数，-1 表示无限" step="0.1" min="-1">
+                <label class="form-label">账户点数（该用户的点数余额）</label>
+                <input type="number" class="form-input" id="apikey-edit-points" placeholder="该用户的点数余额，保存后直接设为该值" step="0.1" min="0">
                 <div style="margin-top:6px;font-size:12px;color:var(--ziyit-text-secondary);">
-                    这是该密钥累计可消耗的点数上限（-1 = 无限），与「账户点数」（该用户名下的点数余额）无关；改它不会增减用户余额。
+                    这里直接读取并修改该用户名下的点数余额（与「我的点数」页的余额是同一个值）；保存后会真的加减该用户的点数。
                 </div>
             </div>
             <div class="form-group">

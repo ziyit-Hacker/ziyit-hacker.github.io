@@ -1511,6 +1511,8 @@ function fmtPoints(n) {
  
 let apiKeyList = [];
 let editingApiKey = null;
+let editingApiKeyOwner = null;    // 正在编辑的密钥所属用户 ID（用于改「账户点数」）
+let editingApiKeyPoints = 0;      // 打开弹窗时该用户的账户点数（用于判断是否变更）
 
 function apiKeyFields(k) {
     if (!k) return {};
@@ -1526,8 +1528,7 @@ function apiKeyFields(k) {
         minRequired: k.minRequired != null ? k.minRequired : (k.min_required != null ? k.min_required : 0),
         dailyPointsLimit: k.daily_points_limit != null ? k.daily_points_limit : (k.dailyPointsLimit != null ? k.dailyPointsLimit : -1),
         dailyPointsUsed: k.daily_points_used != null ? k.daily_points_used : (k.dailyPointsUsed != null ? k.dailyPointsUsed : 0),
-        // v0.3.38：「额度」= 该密钥累计可消耗点数上限（-1 = 无限）与累计已消耗点数
-        quota: k.points_quota != null ? k.points_quota : (k.pointsQuota != null ? k.pointsQuota : -1),
+        // v0.3.39：密钥上的「点数上限」已取消，点数一律以「账户点数」（该用户余额）为准
         pointsUsed: k.points_used != null ? k.points_used : (k.pointsUsed != null ? k.pointsUsed : 0)
     };
 }
@@ -1568,9 +1569,8 @@ function renderApiKeys() {
             + '<div class="user-status ' + statusCls + '">' + escAdmin(f.status) + '</div>'
             + '<div class="user-del-date">账户点数: ' + escAdmin(fmtPoints(f.points)) + ' 点'
             + '（每 ' + escAdmin(fmtPoints(f.minRequired)) + ' 点起可验证）'
-            + '<br>密钥点数: ' + (f.quota === -1 || f.quota === '-1' ? '无限' : escAdmin(fmtPoints(f.quota)) + ' 点')
-            + ' ｜ 已消耗: ' + escAdmin(fmtPoints(f.pointsUsed)) + ' 点'
-            + ' ｜ 今日最大消耗点数: ' + (f.dailyPointsLimit === -1 || f.dailyPointsLimit === '-1' ? '不限' : escAdmin(fmtPoints(f.dailyPointsLimit)) + ' 点')
+            + ' ｜ 本密钥累计消耗: ' + escAdmin(fmtPoints(f.pointsUsed)) + ' 点'
+            + '<br>今日最大消耗点数: ' + (f.dailyPointsLimit === -1 || f.dailyPointsLimit === '-1' ? '不限' : escAdmin(fmtPoints(f.dailyPointsLimit)) + ' 点')
             + ' ｜ 今日已消耗: ' + escAdmin(fmtPoints(f.dailyPointsUsed)) + ' 点'
             + (f.created ? '<br>创建: ' + escAdmin(String(f.created).slice(0, 10)) : '')
             + ' ｜ 白名单: ' + (f.origins.length ? (f.origins.length + ' 条来源') : '不限来源')
@@ -1627,8 +1627,11 @@ function openEditApiKey(key) {
         if (f.key === key) cur = f;
     });
     document.getElementById('apikey-edit-status').value = cur && String(cur.status).toLowerCase() === 'disabled' ? 'disabled' : 'active';
-    // v0.3.38：额度 = 该密钥累计可消耗点数上限（-1 = 无限）；Lv.3+ 均可修改
-    document.getElementById('apikey-edit-quota').value = cur ? cur.quota : -1;
+    // v0.3.39：「账户点数」= 该用户名下的点数余额（直接读改余额，不再是密钥上限）
+    editingApiKeyOwner = cur ? cur.userId : null;
+    editingApiKeyPoints = cur ? parseFloat(cur.points) : 0;
+    if (!isFinite(editingApiKeyPoints)) editingApiKeyPoints = 0;
+    document.getElementById('apikey-edit-points').value = cur ? fmtPoints(cur.points) : '0';
 
      
     const dailyUnlimited = !cur || cur.dailyPointsLimit === -1 || cur.dailyPointsLimit === '-1' || cur.dailyPointsLimit == null;
@@ -1652,10 +1655,10 @@ function setEditDailyDisabled() {
 function saveApiKeyEdit() {
     if (!editingApiKey) return;
     const status = document.getElementById('apikey-edit-status').value;
-    // v0.3.38：点数（该密钥可消耗的点数上限）；-1 = 无限；Lv.3+ 均可设置
-    const quota = parseFloat(document.getElementById('apikey-edit-quota').value);
-    if (isNaN(quota) || quota < -1) {
-        alert('请输入有效的点数（-1 表示无限，其余 ≥0）');
+    // v0.3.39：账户点数 = 该用户名下的点数余额（保存即把余额设为该值，不是密钥上限）
+    const userPoints = parseFloat(document.getElementById('apikey-edit-points').value);
+    if (isNaN(userPoints) || userPoints < 0) {
+        alert('请输入有效的账户点数（≥0）');
         return;
     }
      
@@ -1672,16 +1675,26 @@ function saveApiKeyEdit() {
         .split('\n')
         .map(function (s) { return s.trim(); })
         .filter(function (s) { return s; });
-    ZIYIT_API.request('/admin/api-keys/' + encodeURIComponent(editingApiKey), {
+
+    const jobs = [];
+    jobs.push(ZIYIT_API.request('/admin/api-keys/' + encodeURIComponent(editingApiKey), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             status: status,
-            points_quota: quota,
             daily_points_limit: dailyPoints,
             allowed_origins: origins
         })
-    }).then(function () {
+    }));
+    // 账户点数有变动才调「改用户点数」接口（PUT /admin/users/{userId}/points）
+    if (editingApiKeyOwner != null && Math.abs(userPoints - editingApiKeyPoints) > 1e-9) {
+        jobs.push(ZIYIT_API.request('/admin/users/' + encodeURIComponent(editingApiKeyOwner) + '/points', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ points: userPoints })
+        }));
+    }
+    Promise.all(jobs).then(function () {
         alert('API Key 已更新');
         document.getElementById('api-key-edit-modal').classList.remove('active');
         loadApiKeys();
