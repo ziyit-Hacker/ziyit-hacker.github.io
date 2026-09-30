@@ -69,6 +69,19 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
      
+    document.querySelector('[data-section="pricing-management"]').addEventListener('click', function () {
+        switchSection('pricing-management');
+        updateSystemInfo('切换到定价管理');
+        loadPricing();
+    });
+    document.getElementById('refresh-pricing').addEventListener('click', function () {
+        loadPricing();
+        updateSystemInfo('价目表已刷新');
+    });
+    document.getElementById('save-pricing').addEventListener('click', savePricing);
+    document.getElementById('reset-pricing').addEventListener('click', resetPricing);
+
+     
     document.querySelector('[data-section="mod-management"]').addEventListener('click', function () {
         switchSection('mod-management');
         updateSystemInfo('切换到 MOD/DLC 管理');
@@ -1681,6 +1694,198 @@ function deleteApiKey(key) {
 }
 
  
+// ------------------------------------------------------------
+// 定价管理（v0.3.39）
+//   GET  /admin/pricing        → 读价目表（含 endpointLabels / verifyPlan）
+//   PUT  /admin/pricing        → 保存，**必须整份回传**（缺项会落回默认值）
+//   POST /admin/pricing/reset  → 恢复默认
+// 所有单价一律来自后端返回值，前端不硬编码任何价格。
+// ------------------------------------------------------------
+let pricingCache = null;
+
+function pricingModeName(m) {
+    return m === 'per_request' ? '按请求计费' : '按单次验证';
+}
+
+function pricingNum(id) {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    const v = parseFloat(el.value);
+    return isNaN(v) ? 0 : v;
+}
+
+function pricingField(id, label, val) {
+    return '<div><label class="form-label">' + escAdmin(label) + '</label>' +
+        '<input type="number" class="form-input" id="' + id + '" step="0.01" min="0" value="' +
+        escAdmin(val != null ? val : '') + '"></div>';
+}
+
+function loadPricing() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可访问定价管理'); return; }
+    const panel = document.getElementById('pricing-panel');
+    panel.innerHTML = loadingHTML();
+    return ZIYIT_API.request('/admin/pricing').then(function (cfg) {
+        renderPricingForm(cfg);
+    }).catch(function (err) {
+        panel.innerHTML = '<p style="padding:20px;color:var(--ziyit-danger);">加载失败: ' +
+            escAdmin((err && err.data && err.data.detail) || (err && err.message) || err) + '</p>';
+    });
+}
+
+function renderPricingForm(cfg) {
+    pricingCache = cfg || {};
+    const pv = pricingCache.per_verification || {};
+    const pr = pricingCache.per_request || {};
+    const eps = pr.endpoints || {};
+    const vr = pr.verify || {};
+    const vrCplx = vr.complexity || {};
+    const vip = pricingCache.vip || {};
+    const labels = pricingCache.endpointLabels || {};
+    const vlabels = pricingCache.verifyEndpointLabels || {};
+    const isPV = pricingCache.mode !== 'per_request';
+    const activeTag = ' <span style="font-size:12px;font-weight:400;color:var(--ziyit-success);">（当前生效）</span>';
+
+    // 逐端点行：端点清单与中文名都取自后端 endpointLabels，不写死价格
+    let rows = '';
+    const paths = Object.keys(labels).length ? Object.keys(labels) : Object.keys(eps);
+    paths.forEach(function (path) {
+        const item = eps[path] || {};
+        rows += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;">' +
+            '<label style="display:inline-flex;align-items:center;gap:6px;min-width:220px;">' +
+            '<input type="checkbox" class="pr-charge" data-path="' + escAdmin(path) + '"' + (item.charge ? ' checked' : '') + '> ' +
+            escAdmin(labels[path] || path) +
+            ' <span style="color:var(--ziyit-text-secondary);font-size:12px;">' + escAdmin(path) + '</span></label>' +
+            '<input type="number" class="form-input pr-price" data-path="' + escAdmin(path) + '" step="0.01" min="0" style="max-width:160px;" value="' +
+            escAdmin(item.price != null ? item.price : '') + '">' +
+            '<span style="color:var(--ziyit-text-secondary);font-size:13px;">点 / 次</span></div>';
+    });
+
+    function radio(mode, label) {
+        return '<label style="display:block;margin-bottom:6px;"><input type="radio" name="pricing-mode" value="' + mode + '"' +
+            (pricingCache.mode === mode ? ' checked' : '') + '> ' + label + '</label>';
+    }
+    function opt(value, label, cur) {
+        return '<option value="' + value + '"' + (cur === value ? ' selected' : '') + '>' + label + '</option>';
+    }
+
+    document.getElementById('pricing-panel').innerHTML =
+        '<div class="form-group"><label class="form-label">收费模式</label>' +
+        radio('per_verification', '按单次验证（一次验证只收一档固定价）') +
+        radio('per_request', '按请求（逐个请求计费）') + '</div>' +
+
+        '<div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">' +
+        '<h3 style="margin:0 0 12px;color:var(--primary-color);">按单次验证 · 三档价（点）' + (isPV ? activeTag : '') + '</h3>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">' +
+        pricingField('pv-phantom', '纯 Phantom', pv.phantom) +
+        pricingField('pv-pow', '纯 PoW', pv.pow) +
+        pricingField('pv-both', 'Phantom + PoW', pv.both) + '</div></div>' +
+
+        '<div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">' +
+        '<h3 style="margin:0 0 12px;color:var(--primary-color);">按请求' + (isPV ? '' : activeTag) + '</h3>' +
+        '<div class="form-group"><label style="display:inline-flex;align-items:center;gap:6px;">' +
+        '<input type="checkbox" id="pr-all"' + (pr.all_requests ? ' checked' : '') + '> 所有请求统一价（含验证类请求；启用后下方逐端点与验证段不参与）</label></div>' +
+        '<div style="max-width:220px;"><label class="form-label">统一单价（点 / 次）</label>' +
+        '<input type="number" class="form-input" id="pr-all-price" step="0.01" min="0" value="' + escAdmin(pr.all_price != null ? pr.all_price : '') + '"></div>' +
+        '<h4 style="margin:16px 0 10px;">逐端点（勾选 = 收费）</h4>' +
+        (rows || '<p style="color:var(--ziyit-text-secondary);">后端未返回端点清单</p>') +
+        '<h4 style="margin:16px 0 10px;">验证类请求（' + escAdmin(vlabels['/verify'] || '/verify') + ' / ' +
+        escAdmin(vlabels['/pow/verify'] || '/pow/verify') + '）</h4>' +
+        '<div class="form-group" style="max-width:260px;"><label class="form-label">计费方式</label>' +
+        '<select class="form-input" id="pr-verify-mode">' +
+        opt('complexity', '按复杂度分档（增量补差）', vr.mode) +
+        opt('flat', '固定一个价', vr.mode) + '</select></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">' +
+        pricingField('pr-verify-flat', '固定价（点）', vr.flat) +
+        pricingField('vc-phantom', '分档 · 纯 Phantom', vrCplx.phantom) +
+        pricingField('vc-pow', '分档 · 纯 PoW', vrCplx.pow) +
+        pricingField('vc-both', '分档 · Phantom + PoW', vrCplx.both) + '</div></div>' +
+
+        '<div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;">' +
+        '<h3 style="margin:0 0 12px;color:var(--primary-color);">VIP 分档</h3>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">' +
+        '<div><label class="form-label">模式</label><select class="form-input" id="vip-mode">' +
+        opt('off', '不分档', vip.mode) +
+        opt('discount', '按折扣率', vip.mode) +
+        opt('free', 'VIP 免费', vip.mode) + '</select></div>' +
+        pricingField('vip-discount', '折扣率（0~1）', vip.discount) + '</div></div>';
+
+    const meta = document.getElementById('pricing-meta');
+    const when = pricingCache.updatedAt ? new Date(Number(pricingCache.updatedAt)).toLocaleString() : '从未修改';
+    const who = (pricingCache.updatedBy != null && pricingCache.updatedBy !== '') ? pricingCache.updatedBy : '—';
+    meta.textContent = '当前生效口径：' + pricingModeName(pricingCache.mode) +
+        ' ｜ 最近修改：' + when + ' ｜ 修改人：' + who;
+}
+
+function savePricing() {
+    if (!pricingCache) { alert('价目表尚未加载完成'); return; }
+    const modeEl = document.querySelector('input[name="pricing-mode"]:checked');
+    // 以 GET 回来的一份为底**整份回传**：先深拷贝，再覆盖表单里改过的叶子。
+    const payload = JSON.parse(JSON.stringify(pricingCache));
+    delete payload.endpointLabels;
+    delete payload.verifyEndpointLabels;
+    delete payload.verifyPlan;
+    delete payload.updatedAt;
+    delete payload.updatedBy;
+    payload.mode = modeEl ? modeEl.value : 'per_verification';
+    payload.per_verification = {
+        phantom: pricingNum('pv-phantom'),
+        pow: pricingNum('pv-pow'),
+        both: pricingNum('pv-both')
+    };
+    const endpoints = {};
+    document.querySelectorAll('#pricing-panel .pr-charge').forEach(function (cb) {
+        const path = cb.getAttribute('data-path');
+        const priceEl = document.querySelector('#pricing-panel .pr-price[data-path="' + path + '"]');
+        endpoints[path] = {
+            charge: cb.checked,
+            price: priceEl ? (parseFloat(priceEl.value) || 0) : 0
+        };
+    });
+    payload.per_request = {
+        all_requests: document.getElementById('pr-all').checked,
+        all_price: pricingNum('pr-all-price'),
+        endpoints: endpoints,
+        verify: {
+            mode: document.getElementById('pr-verify-mode').value,
+            flat: pricingNum('pr-verify-flat'),
+            complexity: {
+                phantom: pricingNum('vc-phantom'),
+                pow: pricingNum('vc-pow'),
+                both: pricingNum('vc-both')
+            }
+        }
+    };
+    payload.vip = {
+        mode: document.getElementById('vip-mode').value,
+        discount: pricingNum('vip-discount')
+    };
+
+    const btn = document.getElementById('save-pricing');
+    btn.disabled = true;
+    ZIYIT_API.request('/admin/pricing', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(function (cfg) {
+        renderPricingForm(cfg);
+        updateSystemInfo('价目表已保存');
+    }).catch(function (err) {
+        alert('保存失败: ' + ((err && err.data && err.data.detail) || (err && err.message) || err));
+    }).finally(function () { btn.disabled = false; });
+}
+
+function resetPricing() {
+    if (!confirm('确定恢复默认价目表吗？当前自定义价格会被覆盖。')) return;
+    const btn = document.getElementById('reset-pricing');
+    btn.disabled = true;
+    ZIYIT_API.request('/admin/pricing/reset', { method: 'POST' }).then(function (cfg) {
+        renderPricingForm(cfg);
+        updateSystemInfo('已恢复默认价目表');
+    }).catch(function (err) {
+        alert('恢复失败: ' + ((err && err.data && err.data.detail) || (err && err.message) || err));
+    }).finally(function () { btn.disabled = false; });
+}
+
 let modList = [];
 let editingMod = null;
 

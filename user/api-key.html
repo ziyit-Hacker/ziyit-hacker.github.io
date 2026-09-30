@@ -576,6 +576,8 @@
 
         <div id="pointsArea" style="margin-bottom: 16px;"></div>
 
+        <div id="pricingArea" style="margin-bottom: 16px;"></div>
+
         <div class="toolbar">
             <span id="listTip" style="font-size: 13px; color: var(--ziyit-text-secondary);"></span>
             <button type="button" id="refreshBtn">刷新</button>
@@ -652,6 +654,7 @@
 
             var keyArea = document.getElementById('keyArea');
             var pointsArea = document.getElementById('pointsArea');
+            var pricingArea = document.getElementById('pricingArea');
             var refreshBtn = document.getElementById('refreshBtn');
             var listTip = document.getElementById('listTip');
             var overlay = document.getElementById('settingsOverlay');
@@ -768,12 +771,69 @@
                 return ZIYIT_API.request('/api-key/mine').then(function (data) {
                     keyList = (data && data.keys) || [];
                     keyList = keyList.map(function (v) { return v || {}; });
+                    renderPricingCard(data && data.pricing);
                     renderKeys();
                     refreshBtn.disabled = false;
                 }).catch(function (err) {
                     refreshBtn.disabled = false;
                     setError('加载失败：' + (((err && err.data && err.data.detail)) || (err && err.message) || err));
                 });
+            }
+
+             
+            var PRICING_TIER_LABELS = { phantom: '纯 Phantom', pow: '纯 PoW', both: 'Phantom + PoW' };
+
+            function renderPricingCard(pricing) {
+                if (!pricing) { pricingArea.innerHTML = ''; return; }
+                var mode = pricing.mode === 'per_request' ? 'per_request' : 'per_verification';
+                var lines = [];
+                if (mode === 'per_verification') {
+                    var pv = pricing.per_verification || {};
+                    ['phantom', 'pow', 'both'].forEach(function (k) {
+                        lines.push(PRICING_TIER_LABELS[k] + '：' + fmtPts(pv[k]) + ' 点 / 次');
+                    });
+                } else {
+                    var pr = pricing.per_request || {};
+                    if (pr.all_requests) {
+                        lines.push('所有请求统一价：' + fmtPts(pr.all_price) + ' 点 / 次');
+                    } else {
+                        var eps = pr.endpoints || {};
+                        var labels = pricing.endpointLabels || {};
+                        Object.keys(labels).forEach(function (path) {
+                            var item = eps[path];
+                            if (item && item.charge) {
+                                lines.push(labels[path] + '：' + fmtPts(item.price) + ' 点 / 次');
+                            }
+                        });
+                        var vr = pr.verify || {};
+                        var vlabels = pricing.verifyEndpointLabels || {};
+                        var vname = (vlabels['/verify'] || '/verify') + ' / ' + (vlabels['/pow/verify'] || '/pow/verify');
+                        if (vr.mode === 'flat') {
+                            lines.push(vname + '：' + fmtPts(vr.flat) + ' 点 / 次');
+                        } else {
+                            var cplx = vr.complexity || {};
+                            lines.push(vname + '：纯 Phantom ' + fmtPts(cplx.phantom) + ' 点 / 纯 PoW ' +
+                                fmtPts(cplx.pow) + ' 点 / 两者都做 ' + fmtPts(cplx.both) + ' 点');
+                        }
+                    }
+                }
+                var vip = pricing.vip || {};
+                var vipText = '';
+                if (vip.mode === 'free') vipText = 'VIP 用户免费';
+                else if (vip.mode === 'discount') vipText = 'VIP 用户按 ' + fmtPts(Number(vip.discount) * 10) + ' 折收取';
+
+                pricingArea.innerHTML =
+                    '<div class="key-card">' +
+                    '<div class="key-head">' +
+                    '<div class="key-line"><span style="font-size:15px;font-weight:600;color:var(--ziyit-text-primary);">当前定价</span></div>' +
+                    '<span class="badge ok">' + (mode === 'per_request' ? '按请求' : '按单次验证') + '</span>' +
+                    '</div>' +
+                    '<div style="margin-top:10px;font-size:13px;line-height:1.9;color:var(--ziyit-text-secondary);">' +
+                    esc(lines.join(' ｜ ')) +
+                    '</div>' +
+                    (vipText ? '<div style="margin-top:8px;font-size:13px;color:var(--ziyit-text-secondary);">' + esc(vipText) + '</div>' : '') +
+                    '<div style="margin-top:8px;font-size:12px;color:var(--ziyit-text-secondary);">价格由管理员在后台配置，此处仅展示当前口径；实际扣点按真实发生的动作结算。</div>' +
+                    '</div>';
             }
 
             function renderPoints(data) {

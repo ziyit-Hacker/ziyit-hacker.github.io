@@ -81,6 +81,9 @@
                     <li class="menu-item" data-section="api-key-management" data-level="3">
  API Key 管理
                     </li>
+                    <li class="menu-item" data-section="pricing-management" data-level="3">
+ 定价管理
+                    </li>
                     <li class="menu-item" data-section="mod-management" data-level="3">
  MOD / DLC 管理
                     </li>
@@ -343,6 +346,29 @@
                                 <div class="sk-block sk-line" style="width:60%"></div>
                                 <div class="sk-block sk-line" style="width:60%"></div>
                                 <div class="sk-block sk-btn"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                
+                <section id="pricing-management" class="content-section">
+                    <div class="section-header">
+                        <h2>定价管理</h2>
+                        <div style="display:flex;gap:10px;">
+                            <button class="user-btn" id="refresh-pricing">刷新</button>
+                            <button class="user-btn danger" id="reset-pricing">恢复默认</button>
+                            <button class="user-btn success" id="save-pricing">保存</button>
+                        </div>
+                    </div>
+                    <p class="user-del-date" id="pricing-meta" style="display:block;margin-bottom:16px;"></p>
+                    <div id="pricing-panel">
+                        <div class="skeleton-list">
+                            <div class="skeleton-row">
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
                             </div>
                         </div>
                     </div>
