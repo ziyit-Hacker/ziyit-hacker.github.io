@@ -1502,6 +1502,13 @@ function escAdmin(str) {
 }
 
  
+function fmtPoints(n) {
+    const v = parseFloat(n);
+    if (!isFinite(v)) return String(n == null ? '' : n);
+    return String(Math.round(v * 100) / 100);
+}
+
+ 
 let apiKeyList = [];
 let editingApiKey = null;
 
@@ -1559,12 +1566,12 @@ function renderApiKeys() {
             + '<div class="user-name">' + escAdmin(f.username ? f.username + '（ID: ' + f.userId + '）' : '用户ID: ' + f.userId) + '</div>'
             + '<div class="user-email" style="font-family: monospace;">' + escAdmin(f.key) + '</div>'
             + '<div class="user-status ' + statusCls + '">' + escAdmin(f.status) + '</div>'
-            + '<div class="user-del-date">账户点数: ' + escAdmin(f.points) + ' 点'
-            + '（每 ' + escAdmin(f.minRequired) + ' 点起可验证）'
-            + '<br>密钥点数: ' + (f.quota === -1 || f.quota === '-1' ? '无限' : escAdmin(f.quota) + ' 点')
-            + ' ｜ 已消耗: ' + escAdmin(f.pointsUsed) + ' 点'
-            + ' ｜ 今日最大消耗点数: ' + (f.dailyPointsLimit === -1 || f.dailyPointsLimit === '-1' ? '不限' : escAdmin(f.dailyPointsLimit) + ' 点')
-            + ' ｜ 今日已消耗: ' + escAdmin(f.dailyPointsUsed) + ' 点'
+            + '<div class="user-del-date">账户点数: ' + escAdmin(fmtPoints(f.points)) + ' 点'
+            + '（每 ' + escAdmin(fmtPoints(f.minRequired)) + ' 点起可验证）'
+            + '<br>密钥点数: ' + (f.quota === -1 || f.quota === '-1' ? '无限' : escAdmin(fmtPoints(f.quota)) + ' 点')
+            + ' ｜ 已消耗: ' + escAdmin(fmtPoints(f.pointsUsed)) + ' 点'
+            + ' ｜ 今日最大消耗点数: ' + (f.dailyPointsLimit === -1 || f.dailyPointsLimit === '-1' ? '不限' : escAdmin(fmtPoints(f.dailyPointsLimit)) + ' 点')
+            + ' ｜ 今日已消耗: ' + escAdmin(fmtPoints(f.dailyPointsUsed)) + ' 点'
             + (f.created ? '<br>创建: ' + escAdmin(String(f.created).slice(0, 10)) : '')
             + ' ｜ 白名单: ' + (f.origins.length ? (f.origins.length + ' 条来源') : '不限来源')
             + '</div>'
