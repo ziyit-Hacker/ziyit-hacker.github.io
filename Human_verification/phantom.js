@@ -685,7 +685,44 @@ class WidgetSession {
             v.addEventListener("error", done, { once: true });
             window.setTimeout(done, 5000);
         });
+         
+        await this._waitBuffered(ready);
         return v;
+    }
+     
+     
+    _waitBuffered(ready) {
+        const sb = this.sourceBuffer;
+        if (!sb || this._streamAborted)
+            return Promise.resolve();
+        const totalMs = Number((ready && ready.durationMs) || (this.videoStream && this.videoStream.durationMs) || 0);
+        const target = totalMs > 0 ? Math.min(3, totalMs / 1000) : 3;
+        return new Promise((resolve) => {
+            const started = performance.now();
+            const tick = () => {
+                if (this._streamAborted)
+                    return resolve();
+                let buffered = 0;
+                try {
+                    if (sb.buffered.length)
+                        buffered = sb.buffered.end(sb.buffered.length - 1);
+                }
+                catch (e) {   }
+                if (buffered >= target)
+                    return resolve();
+                if (performance.now() - started >= 8000)
+                    return resolve();
+                window.setTimeout(tick, 60);
+            };
+            tick();
+        });
+    }
+     
+     
+    _backoff(attempt, isConflict) {
+        const base = isConflict ? 60 : 200;
+        const ms = Math.min(base * Math.pow(2, Math.max(0, attempt - 1)), 2000);
+        return new Promise((resolve) => window.setTimeout(resolve, ms));
     }
      
      
@@ -717,12 +754,14 @@ class WidgetSession {
             catch (e) {
                  
                  
-                if (e && e.status === 409 && retried < 5) {
+                if (retried < 6) {
                     retried++;
+                    await this._backoff(retried, e && e.status === 409);
                     continue;
                 }
                 throw e;
             }
+            retried = 0;
             let done = false;
             for (const chunk of list) {
                 parts.push(this._decodeChunk(chunk.data));
@@ -829,12 +868,14 @@ class WidgetSession {
             catch (e) {
                  
                  
-                if (e && e.status === 409 && retried < 5) {
+                if (retried < 6) {
                     retried++;
+                    await this._backoff(retried, e && e.status === 409);
                     continue;
                 }
                 throw e;
             }
+            retried = 0;
             for (const chunk of list) {
                 if (this._streamAborted)
                     return;

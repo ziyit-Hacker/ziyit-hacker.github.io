@@ -95,6 +95,9 @@ export class PhantomRenderer {
             throw new Error("Canvas 2D 不可用");
         this.ctx = ctx;
          
+        this._img = null;
+        this._lastVideoTime = -1;
+        this._videoPixels = null;
     }
     
 
@@ -149,7 +152,7 @@ export class PhantomRenderer {
      
      
      
-    _videoFramePixels(w, h) {
+    _videoFramePixels(v, w, h) {
         if (!this.videoFrameCanvas) {
             this.videoFrameCanvas = document.createElement("canvas");
             this.videoFrameCanvas.width = w;
@@ -162,34 +165,31 @@ export class PhantomRenderer {
         const octx = this.videoFrameCtx;
         if (!octx)
             return null;
-        octx.drawImage(this.video, 0, 0, w, h);
-        return octx.getImageData(0, 0, w, h).data;
+        if (this._videoPixels && this._lastVideoTime === v.currentTime)
+            return this._videoPixels;
+        octx.drawImage(v, 0, 0, w, h);
+        const px = octx.getImageData(0, 0, w, h).data;
+        this._lastVideoTime = v.currentTime;
+        this._videoPixels = px;
+        return px;
     }
      
     renderFrame(t) {
         const { ctx } = this;
-         
-         
         const w = this.canvas.width;
         const h = this.canvas.height;
-         
-        const img = ctx.createImageData(w, h);
+        let img = this._img;
+        if (!img || img.width !== w || img.height !== h) {
+            img = ctx.createImageData(w, h);
+            this._img = img;
+            this._lastVideoTime = -1;
+            this._videoPixels = null;
+        }
         const data = img.data;
-         
-         
         this.paintFullNoise(data);
-         
-         
-         
-         
-         
-         
-         
-         
-         
         const v = this.video;
         if (v && v.readyState >= 2 && v.videoWidth) {
-            const vd = this._videoFramePixels(w, h);
+            const vd = this._videoFramePixels(v, w, h);
             if (vd) {
                 const len = data.length;
                 for (let i = 0; i < len; i += 4) {
@@ -209,9 +209,11 @@ export class PhantomRenderer {
         const { ctx, canvas } = this;
         const w = canvas.width;
         const h = canvas.height;
-        const img = ctx.createImageData(w, h);
-        this.paintFullNoise(img.data);
-        ctx.putImageData(img, 0, 0);
+        if (!this._img || this._img.width !== w || this._img.height !== h) {
+            this._img = ctx.createImageData(w, h);
+        }
+        this.paintFullNoise(this._img.data);
+        ctx.putImageData(this._img, 0, 0);
     }
      
     pause() {
