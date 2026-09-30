@@ -173,8 +173,10 @@ function explicitApiKey() {
 
 async function readError(res) {
     let detail = "";
+    let body = null;
     try {
         const data = await res.json();
+        body = data;
         detail = typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail ?? data);
     } catch (e) {
         detail = await res.text().catch(() => "");
@@ -182,6 +184,7 @@ async function readError(res) {
     const err = new Error(`${res.status} ${res.statusText} ${detail}`.trim());
     err.status = res.status;
     err.detail = detail;
+    err.body = body;
     return err;
 }
 

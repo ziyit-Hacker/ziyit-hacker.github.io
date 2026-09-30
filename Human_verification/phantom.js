@@ -311,6 +311,8 @@ class WidgetSession {
             value: 50
         });
         this._readyAt = 0;
+        this._autoRestarts = 0;
+        this._autoRestarting = false;
         Object.defineProperty(this, "streamTimer", {
             enumerable: true,
             configurable: true,
@@ -478,13 +480,19 @@ class WidgetSession {
                 this.status.textContent = "会话已刷新，正在重新取题…";
                 this.scheduleRetry(800, "auto-restart");
             }
-            else if (code === 403 || code === 410) {
+            else if (code === 403) {
+                const cls = this._classify403(e);
+                this.status.textContent = cls.text;
+                if (cls.kind === "env" || cls.kind === "points") {
+                    this.turnIntoRetryButton();
+                }
+                else {
+                    this.scheduleRetry(800, "auto-restart");
+                }
+            }
+            else if (code === 410) {
                  
-                 
-                 
-                this.status.textContent = code === 403
-                    ? "环境校验未通过，正在重新取题…"
-                    : "验证已过期，正在重新取题…";
+                this.status.textContent = "验证已过期，正在重新取题…";
                 this.scheduleRetry(800, "auto-restart");
             }
             else {
@@ -1112,11 +1120,17 @@ class WidgetSession {
                 this.scheduleRetry(800, "auto-restart");
             }
             else if (code === 403) {
-                 
-                 
-                this.status.textContent = "环境校验未通过，正在重新取题…";
-                this.activateBtn.textContent = "正在重新取题";
-                this.scheduleRetry(800, "auto-restart");
+                const cls = this._classify403(e);
+                this.status.textContent = cls.text;
+                this.activateBtn.textContent = cls.kind === "points"
+                    ? "点数不足"
+                    : (cls.kind === "env" ? "环境校验未通过" : "正在重新取题");
+                if (cls.kind === "env" || cls.kind === "points") {
+                    this.turnIntoRetryButton();
+                }
+                else {
+                    this.scheduleRetry(800, "auto-restart");
+                }
             }
             else {
                  
@@ -1333,12 +1347,56 @@ class WidgetSession {
         return true;
     }
 
+    _classify403(e) {
+        let d = e && e.body ? e.body.detail : undefined;
+        if (d == null && e)
+            d = e.detail;
+        if (typeof d === "string") {
+            const s = d.trim();
+            if (s.charAt(0) === "{" || s.charAt(0) === "[") {
+                try {
+                    d = JSON.parse(s);
+                }
+                catch (err) {
+                    d = s;
+                }
+            }
+        }
+        if (d && typeof d === "object") {
+            const points = Number(d.points);
+            const need = Number(d.minRequired);
+            if (Number.isFinite(points) || Number.isFinite(need)) {
+                const fmt = (n) => Number.isFinite(n) ? String(Math.round(n * 100) / 100) : "?";
+                return { kind: "points", text: `点数不足（当前 ${fmt(points)} / 需要 ${fmt(need)} 点）` };
+            }
+            d = String(d.reason || d.detail || d.error || "");
+        }
+        const s = String(d == null ? "" : d);
+        if (/binding\s*mismatch/i.test(s))
+            return { kind: "binding", text: "网络环境变化，正在重新验证…" };
+        if (/environment/i.test(s))
+            return { kind: "env", text: "浏览器环境校验未通过，请更换浏览器后重试" };
+        if (/insufficient|点数不足|quota|balance/i.test(s))
+            return { kind: "points", text: "点数不足，请先补充点数后重试" };
+        return { kind: "unknown", text: "环境校验未通过，正在重新取题…" };
+    }
     scheduleRetry(delayMs, mode) {
         window.clearTimeout(this.retryTimer);
+        const auto = mode === "auto-restart";
+        if (auto) {
+            this._autoRestarts = (this._autoRestarts || 0) + 1;
+            if (this._autoRestarts > 3) {
+                this.turnIntoRetryButton();
+                this.status.textContent = "验证暂时不可用，请点击刷新重试";
+                return;
+            }
+        }
         this.retryTimer = window.setTimeout(() => {
-            if (mode === "auto-restart") {
+            if (auto) {
+                this._autoRestarting = true;
                 this.turnIntoRetryButton();
                 this.activateBtn.click();  
+                this._autoRestarting = false;
             }
             else {
                 this.turnIntoRetryButton();
@@ -1356,6 +1414,8 @@ class WidgetSession {
         this.activateBtn.disabled = false;
         const onClick = () => {
             this.activateBtn.removeEventListener("click", onClick);
+            if (!this._autoRestarting)
+                this._autoRestarts = 0;
             this.onRetry();
         };
         this.activateBtn.addEventListener("click", onClick);
