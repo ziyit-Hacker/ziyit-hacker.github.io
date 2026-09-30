@@ -623,6 +623,23 @@
             </div>
 
             <div class="ak-row">
+                <div class="ak-row-head"><span class="ak-row-title">允许的验证项目（至少选一个）</span></div>
+                <div class="ak-inputs" style="gap:16px;">
+                    <label class="chk"><input type="checkbox" id="setAllowPhantom"> Phantom（视觉拖拽）</label>
+                    <label class="chk"><input type="checkbox" id="setAllowPow"> PoW（工作量证明）</label>
+                </div>
+                <div class="ak-row-desc">该密钥允许使用的验证方式；「默认验证方式」只能从勾选项里选。</div>
+            </div>
+
+            <div class="ak-row">
+                <div class="ak-row-head"><span class="ak-row-title">默认验证方式</span></div>
+                <div class="ak-inputs">
+                    <select id="setHumanMode" style="flex:1;min-width:180px;padding:8px 10px;border:1px solid var(--ziyit-border);border-radius:6px;background:var(--ziyit-bg);color:var(--ziyit-text-primary);font-size:14px;"></select>
+                </div>
+                <div class="ak-row-desc">不特别指定时默认跑哪一套；高风险请求仍会被强制升级为「两套都过」。</div>
+            </div>
+
+            <div class="ak-row">
                 <div class="ak-row-head"><span class="ak-row-title">允许来源（白名单）</span></div>
                 <div class="ak-row-desc">每行一个来源，支持完整地址（https://ziyit-hacker.github.io）或裸域名（ziyit-hacker.github.io）。留空 = 不限来源。</div>
                 <textarea id="setOrigins" placeholder="https://example.com&#10;example.org" spellcheck="false"></textarea>
@@ -679,6 +696,44 @@
                 return String(Math.round(v * 100) / 100);
             }
 
+             
+            var HUMAN_MODE_LABELS = {
+                phantom: 'phantom（视觉拖拽）',
+                pow: 'pow（工作量证明）',
+                both: 'both（两套都过）'
+            };
+
+            function normalizeHumanMode(v) {
+                var s = String(v == null ? '' : v).trim().toLowerCase();
+                return (s === 'pow' || s === 'both') ? s : 'phantom';
+            }
+
+            function allowedModesOf(k) {
+                var raw = k ? (k.allowed_modes != null ? k.allowed_modes : k.allowedModes) : null;
+                if (Object.prototype.toString.call(raw) === '[object Array]') {
+                    var out = raw.map(function (m) { return String(m).trim().toLowerCase(); })
+                        .filter(function (m) { return m === 'phantom' || m === 'pow'; });
+                    if (out.length) return out;
+                }
+                var hm = normalizeHumanMode(k && (k.human_mode != null ? k.human_mode : k.humanMode));
+                return hm === 'both' ? ['phantom', 'pow'] : [hm];
+            }
+
+            function syncSetHumanModeOptions() {
+                var allowP = document.getElementById('setAllowPhantom').checked;
+                var allowW = document.getElementById('setAllowPow').checked;
+                var sel = document.getElementById('setHumanMode');
+                var prev = sel.value;
+                var opts = [];
+                if (allowP) opts.push('phantom');
+                if (allowW) opts.push('pow');
+                if (allowP && allowW) opts.push('both');
+                sel.innerHTML = opts.map(function (m) {
+                    return '<option value="' + m + '">' + HUMAN_MODE_LABELS[m] + '</option>';
+                }).join('');
+                sel.value = opts.indexOf(prev) !== -1 ? prev : (opts[0] || '');
+            }
+
             function setLoading() {
                 keyArea.innerHTML = LOADING_HTML;
             }
@@ -725,6 +780,7 @@
                     ((k.daily_points_limit === -1 || k.daily_points_limit == null) ? '不限' : (fmtPts(k.daily_points_limit) + ' 点')) +
                     ' ｜ 来源白名单：' +
                     ((k.allowed_origins && k.allowed_origins.length) ? ('已配置 ' + k.allowed_origins.length + ' 条') : '不限') +
+                    '<br>验证：允许 ' + esc(allowedModesOf(k).join(' / ')) + '，默认 ' + esc(normalizeHumanMode(k.human_mode != null ? k.human_mode : k.humanMode)) +
                     '</div>' +
                     '<div class="actions"><button type="button" class="btn-plain" data-act="edit">设置</button></div>' +
                     '</div>';
@@ -836,6 +892,15 @@
 
                 document.getElementById('setOrigins').value = (k.allowed_origins || []).join('\n');
 
+                // v0.3.39：允许的验证项目（多选，至少一个）+ 默认验证方式（单选）
+                var modes = allowedModesOf(k);
+                document.getElementById('setAllowPhantom').checked = modes.indexOf('phantom') !== -1;
+                document.getElementById('setAllowPow').checked = modes.indexOf('pow') !== -1;
+                syncSetHumanModeOptions();
+                var hm = normalizeHumanMode(k.human_mode != null ? k.human_mode : k.humanMode);
+                var hmSel = document.getElementById('setHumanMode');
+                if (Array.prototype.some.call(hmSel.options, function (o) { return o.value === hm; })) hmSel.value = hm;
+
                 showMsg('', '');
                 overlay.classList.add('active');
             }
@@ -888,6 +953,22 @@
                     .filter(function (s) { return s; });
                 body.allowed_origins = origins;
 
+                // v0.3.39：允许的验证项目（多选，至少一个）+ 默认验证方式（单选，必须落在允许项内）
+                var allowModes = [];
+                if (document.getElementById('setAllowPhantom').checked) allowModes.push('phantom');
+                if (document.getElementById('setAllowPow').checked) allowModes.push('pow');
+                if (!allowModes.length) {
+                    showMsg('「允许的验证项目」至少要选一个', 'error');
+                    return;
+                }
+                var humanMode = document.getElementById('setHumanMode').value;
+                if (humanMode === 'both' ? allowModes.length !== 2 : allowModes.indexOf(humanMode) === -1) {
+                    showMsg('「默认验证方式」必须从已允许的验证项目里选', 'error');
+                    return;
+                }
+                body.allowed_modes = allowModes;
+                body.human_mode = humanMode;
+
                 var btn = document.getElementById('saveSettings');
                 btn.disabled = true;
                 showMsg('', '');
@@ -914,6 +995,8 @@
             document.getElementById('refreshBtn').addEventListener('click', function () { loadKeys(true); loadPoints(); });
             document.getElementById('setStatus').addEventListener('change', syncStatusLabel);
             document.getElementById('setDailyPointsOff').addEventListener('change', syncDailyPointsState);
+            document.getElementById('setAllowPhantom').addEventListener('change', syncSetHumanModeOptions);
+            document.getElementById('setAllowPow').addEventListener('change', syncSetHumanModeOptions);
             document.getElementById('cancelSettings').addEventListener('click', closeSettings);
             document.getElementById('saveSettings').addEventListener('click', saveSettings);
             overlay.addEventListener('click', function (e) {

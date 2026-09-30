@@ -896,6 +896,21 @@
                 <label class="form-label">用户ID</label>
                 <input type="number" class="form-input" id="apikey-userid" placeholder="为用户创建 API Key 的用户ID" required>
             </div>
+            <div class="form-group">
+                <label class="form-label">允许的验证项目（多选，至少选一个）</label>
+                <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+                    <label style="display:inline-flex;gap:6px;align-items:center;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="apikey-new-allow-phantom"> Phantom（视觉拖拽）
+                    </label>
+                    <label style="display:inline-flex;gap:6px;align-items:center;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="apikey-new-allow-pow"> PoW（工作量证明）
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">默认验证方式（单选）</label>
+                <select class="form-select" id="apikey-new-human-mode"></select>
+            </div>
             <div class="modal-actions">
                 <button type="button" class="user-btn danger" id="cancel-api-key">取消</button>
                 <button type="button" class="user-btn success" id="confirm-api-key">创建</button>
@@ -933,6 +948,24 @@
                         <input type="checkbox" id="apikey-edit-daily-unlimited"> 今日不限（-1）
                     </label>
                 </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">允许的验证项目（多选，至少选一个）</label>
+                <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+                    <label style="display:inline-flex;gap:6px;align-items:center;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="apikey-edit-allow-phantom"> Phantom（视觉拖拽）
+                    </label>
+                    <label style="display:inline-flex;gap:6px;align-items:center;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="apikey-edit-allow-pow"> PoW（工作量证明）
+                    </label>
+                </div>
+                <div style="margin-top:6px;font-size:12px;color:var(--ziyit-text-secondary);">
+                    该密钥允许客户端使用的验证方式；「默认验证方式」只能从勾选项里选，两者都不勾则不允许保存。
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">默认验证方式（单选）</label>
+                <select class="form-select" id="apikey-edit-human-mode"></select>
             </div>
             <div class="form-group">
                 <label class="form-label">允许来源（白名单，每行一个；留空 = 不限来源）</label>

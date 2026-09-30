@@ -98,6 +98,11 @@ document.addEventListener('DOMContentLoaded', function () {
      
     document.getElementById('add-api-key-btn').addEventListener('click', function () {
         document.getElementById('apikey-userid').value = '';
+        // v0.3.43：默认允许两种验证方式、默认 phantom（等价于"不做额外限制"）
+        document.getElementById('apikey-new-allow-phantom').checked = true;
+        document.getElementById('apikey-new-allow-pow').checked = true;
+        syncNewHumanModeOptions();
+        document.getElementById('apikey-new-human-mode').value = 'phantom';
         document.getElementById('api-key-modal').classList.add('active');
     });
     document.getElementById('refresh-api-keys').addEventListener('click', function () {
@@ -1509,6 +1514,61 @@ function fmtPoints(n) {
 }
 
  
+const HUMAN_MODE_LABELS = {
+    phantom: 'phantom（视觉拖拽）',
+    pow: 'pow（工作量证明）',
+    both: 'both（两套都过）'
+};
+
+function normalizeHumanMode(v) {
+    const s = String(v == null ? '' : v).trim().toLowerCase();
+    return (s === 'pow' || s === 'both') ? s : 'phantom';
+}
+
+function allowedModesOf(k) {
+    const raw = k ? (k.allowed_modes != null ? k.allowed_modes : k.allowedModes) : null;
+    if (Array.isArray(raw)) {
+        const out = raw.map(function (m) { return String(m).trim().toLowerCase(); })
+            .filter(function (m) { return m === 'phantom' || m === 'pow'; });
+        if (out.length) return out;
+    }
+    // 旧密钥没有该字段：按 human_mode 推断（both → 两者都允许）
+    const hm = normalizeHumanMode(k && (k.human_mode != null ? k.human_mode : k.humanMode));
+    return hm === 'both' ? ['phantom', 'pow'] : [hm];
+}
+
+function syncHumanModeOptionsFor(prefix) {
+    const allowP = document.getElementById(prefix + '-allow-phantom').checked;
+    const allowW = document.getElementById(prefix + '-allow-pow').checked;
+    const sel = document.getElementById(prefix + '-human-mode');
+    const prev = sel.value;
+    const opts = [];
+    if (allowP) opts.push('phantom');
+    if (allowW) opts.push('pow');
+    if (allowP && allowW) opts.push('both');
+    sel.innerHTML = opts.map(function (m) {
+        return '<option value="' + m + '">' + HUMAN_MODE_LABELS[m] + '</option>';
+    }).join('');
+    sel.value = opts.indexOf(prev) !== -1 ? prev : (opts[0] || '');
+}
+
+function syncHumanModeOptions() { syncHumanModeOptionsFor('apikey-edit'); }
+function syncNewHumanModeOptions() { syncHumanModeOptionsFor('apikey-new'); }
+
+// 读取并校验「允许的验证项目（≥1）+ 默认验证方式（必须落在允许项内）」
+function readModeFields(prefix) {
+    const allowed = [];
+    if (document.getElementById(prefix + '-allow-phantom').checked) allowed.push('phantom');
+    if (document.getElementById(prefix + '-allow-pow').checked) allowed.push('pow');
+    if (!allowed.length) return { error: '「允许的验证项目」至少要选一个' };
+    const humanMode = document.getElementById(prefix + '-human-mode').value;
+    if (humanMode === 'both' ? allowed.length !== 2 : allowed.indexOf(humanMode) === -1) {
+        return { error: '「默认验证方式」必须从已允许的验证项目里选' };
+    }
+    return { allowed: allowed, humanMode: humanMode };
+}
+
+ 
 let apiKeyList = [];
 let editingApiKey = null;
 let editingApiKeyOwner = null;    // 正在编辑的密钥所属用户 ID（用于改「账户点数」）
@@ -1529,7 +1589,10 @@ function apiKeyFields(k) {
         dailyPointsLimit: k.daily_points_limit != null ? k.daily_points_limit : (k.dailyPointsLimit != null ? k.dailyPointsLimit : -1),
         dailyPointsUsed: k.daily_points_used != null ? k.daily_points_used : (k.dailyPointsUsed != null ? k.dailyPointsUsed : 0),
         // v0.3.39：密钥上的「点数上限」已取消，点数一律以「账户点数」（该用户余额）为准
-        pointsUsed: k.points_used != null ? k.points_used : (k.pointsUsed != null ? k.pointsUsed : 0)
+        pointsUsed: k.points_used != null ? k.points_used : (k.pointsUsed != null ? k.pointsUsed : 0),
+        // v0.3.39：允许的验证项目（多选，至少一个）与默认验证方式（单选）
+        allowedModes: allowedModesOf(k),
+        humanMode: normalizeHumanMode(k.human_mode != null ? k.human_mode : k.humanMode)
     };
 }
 
@@ -1572,6 +1635,7 @@ function renderApiKeys() {
             + ' ｜ 本密钥累计消耗: ' + escAdmin(fmtPoints(f.pointsUsed)) + ' 点'
             + '<br>今日最大消耗点数: ' + (f.dailyPointsLimit === -1 || f.dailyPointsLimit === '-1' ? '不限' : escAdmin(fmtPoints(f.dailyPointsLimit)) + ' 点')
             + ' ｜ 今日已消耗: ' + escAdmin(fmtPoints(f.dailyPointsUsed)) + ' 点'
+            + '<br>验证: 允许 ' + escAdmin(f.allowedModes.join(' / ')) + '，默认 ' + escAdmin(f.humanMode)
             + (f.created ? '<br>创建: ' + escAdmin(String(f.created).slice(0, 10)) : '')
             + ' ｜ 白名单: ' + (f.origins.length ? (f.origins.length + ' 条来源') : '不限来源')
             + '</div>'
@@ -1599,13 +1663,23 @@ function createApiKey() {
         alert('请输入用户ID');
         return;
     }
+    // v0.3.43：建密钥时一并设置验证方式
+    const modeFields = readModeFields('apikey-new');
+    if (modeFields.error) {
+        alert(modeFields.error);
+        return;
+    }
     const btn = document.getElementById('confirm-api-key');
     btn.disabled = true;
      
     ZIYIT_API.request('/admin/api-keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: userId })
+        body: JSON.stringify({
+            userId: userId,
+            allowed_modes: modeFields.allowed,
+            human_mode: modeFields.humanMode
+        })
     }).then(function (data) {
         alert('创建成功' + (data && data.api_key ? '：' + data.api_key : ''));
         document.getElementById('api-key-modal').classList.remove('active');
@@ -1638,6 +1712,15 @@ function openEditApiKey(key) {
     document.getElementById('apikey-edit-daily-unlimited').checked = dailyUnlimited;
     document.getElementById('apikey-edit-daily').value = dailyUnlimited ? '' : cur.dailyPointsLimit;
     setEditDailyDisabled();
+
+    // v0.3.39：允许的验证项目（多选，至少一个）+ 默认验证方式（单选，只能是允许项）
+    const modes = cur ? cur.allowedModes : ['phantom'];
+    document.getElementById('apikey-edit-allow-phantom').checked = modes.indexOf('phantom') !== -1;
+    document.getElementById('apikey-edit-allow-pow').checked = modes.indexOf('pow') !== -1;
+    syncHumanModeOptions();
+    const hm = cur ? cur.humanMode : 'phantom';
+    const hmSel = document.getElementById('apikey-edit-human-mode');
+    if (Array.prototype.some.call(hmSel.options, function (o) { return o.value === hm; })) hmSel.value = hm;
 
      
     document.getElementById('apikey-edit-origins').value = cur ? cur.origins.join('\n') : '';
@@ -1676,6 +1759,13 @@ function saveApiKeyEdit() {
         .map(function (s) { return s.trim(); })
         .filter(function (s) { return s; });
 
+    // v0.3.43：允许的验证项目（多选，至少一个）+ 默认验证方式（单选，必须落在允许项内）
+    const modeFields = readModeFields('apikey-edit');
+    if (modeFields.error) {
+        alert(modeFields.error);
+        return;
+    }
+
     const jobs = [];
     jobs.push(ZIYIT_API.request('/admin/api-keys/' + encodeURIComponent(editingApiKey), {
         method: 'PUT',
@@ -1683,7 +1773,9 @@ function saveApiKeyEdit() {
         body: JSON.stringify({
             status: status,
             daily_points_limit: dailyPoints,
-            allowed_origins: origins
+            allowed_origins: origins,
+            allowed_modes: modeFields.allowed,
+            human_mode: modeFields.humanMode
         })
     }));
     // 账户点数有变动才调「改用户点数」接口（PUT /admin/users/{userId}/points）
@@ -3199,7 +3291,10 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('api-key-edit-modal').classList.remove('active');
     });
     document.getElementById('apikey-edit-daily-unlimited').addEventListener('change', setEditDailyDisabled);
-    document.getElementById('apikey-edit-warn-off').addEventListener('change', setEditWarnDisabled);
+    document.getElementById('apikey-edit-allow-phantom').addEventListener('change', syncHumanModeOptions);
+    document.getElementById('apikey-edit-allow-pow').addEventListener('change', syncHumanModeOptions);
+    document.getElementById('apikey-new-allow-phantom').addEventListener('change', syncNewHumanModeOptions);
+    document.getElementById('apikey-new-allow-pow').addEventListener('change', syncNewHumanModeOptions);
 
      
     document.getElementById('confirm-mod').addEventListener('click', saveMod);
