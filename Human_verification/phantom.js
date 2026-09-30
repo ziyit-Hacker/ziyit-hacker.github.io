@@ -310,6 +310,7 @@ class WidgetSession {
             writable: true,
             value: 50
         });
+        this._readyAt = 0;
         Object.defineProperty(this, "streamTimer", {
             enumerable: true,
             configurable: true,
@@ -597,6 +598,7 @@ class WidgetSession {
          
          
         const ready = await videoReady(this.apiBase, this.challengeId, this.sessionId);
+        this._readyAt = performance.now();
         if (!ready || ready.ready !== true) {
             throw new Error("视频尚未就绪，请重试");
         }
@@ -696,7 +698,10 @@ class WidgetSession {
         if (!sb || this._streamAborted)
             return Promise.resolve();
         const totalMs = Number((ready && ready.durationMs) || (this.videoStream && this.videoStream.durationMs) || 0);
-        const target = totalMs > 0 ? Math.min(3, totalMs / 1000) : 3;
+        const want = Number(ready && ready.minPrefetch);
+        const target = Number.isFinite(want) && want > 0
+            ? Math.min(want, totalMs > 0 ? totalMs / 1000 : want)
+            : (totalMs > 0 ? Math.min(3, totalMs / 1000) : 3);
         return new Promise((resolve) => {
             const started = performance.now();
             const tick = () => {
@@ -720,7 +725,7 @@ class WidgetSession {
      
      
     _backoff(attempt, isConflict) {
-        const base = isConflict ? 60 : 200;
+        const base = isConflict ? 300 : 200;
         const ms = Math.min(base * Math.pow(2, Math.max(0, attempt - 1)), 2000);
         return new Promise((resolve) => window.setTimeout(resolve, ms));
     }
@@ -736,11 +741,13 @@ class WidgetSession {
         const limit = total > 0 ? total : Number.MAX_SAFE_INTEGER;
         const parts = [];
         const win = this._chunkWindow(ready);
+        const waitFor = this._chunkGate(ready);
         let index = 0;
         let retried = 0;
         while (index < limit) {
             if (this._streamAborted)
                 throw new Error("视频下载已中止");
+            await waitFor(index);
              
              
             const batch = [];
@@ -842,10 +849,23 @@ class WidgetSession {
         const w = Number(ready && ready.window);
         return Number.isFinite(w) && w >= 1 ? Math.floor(w) : 1;
     }
+     
+    _chunkGate(ready) {
+        const chunkMs = Number(ready && ready.chunkDurationMs)
+            || (Number(ready && ready.durationMs) / Math.max(1, Number(ready && ready.chunkCount))) || 33;
+        const leadMs = Math.max(0, Number((ready && ready.minPrefetch) ?? 3) * 1000);
+        const readyAt = this._readyAt || performance.now();
+        return (idx) => {
+            const due = readyAt + idx * chunkMs - leadMs;
+            const ms = due - performance.now();
+            return ms > 0 ? new Promise((resolve) => window.setTimeout(resolve, ms)) : Promise.resolve();
+        };
+    }
     async _pullChunks(ready) {
         const total = Number(ready.chunkCount || this.videoStream?.chunkCount || 0);
         const limit = total > 0 ? total : Number.MAX_SAFE_INTEGER;
         const win = this._chunkWindow(ready);
+        const waitFor = this._chunkGate(ready);
         let index = 0;
         let retried = 0;
         let first = true;
@@ -855,6 +875,7 @@ class WidgetSession {
                 return;
             if (appendErrors.length)
                 throw appendErrors[0];
+            await waitFor(index);
              
              
             const batch = [];
