@@ -1,5 +1,5 @@
 import { CONFIG, isMobileViewport } from "./config.js";
-import { requestChallenge, requestPowChallenge, sessionInfo, submitPowStream, submitVerify, submitStreamChunk, verifyPow, videoChunk, videoReady, } from "./api.js";
+import { isMethodNotAllowed, requestChallenge, requestPowChallenge, sessionInfo, submitPowStream, submitVerify, submitStreamChunk, verifyPow, videoChunk, videoReady, } from "./api.js";
 import { decrypt, deriveSessionKey, encrypt, generateClientKeyPair, importServerPublic, } from "./crypto.js";
 import { installAntidebug } from "./antidebug.js";
 import { PhantomRenderer } from "./renderer.js";
@@ -442,7 +442,21 @@ class WidgetSession {
                     return;
             }
             const { privateKey, publicJwk } = await generateClientKeyPair();
-            const challenge = await requestChallenge(this.apiBase, publicJwk, this.device);
+            let challenge;
+            try {
+                challenge = await requestChallenge(this.apiBase, publicJwk, this.device);
+            }
+            catch (e) {
+                // v0.3.55：该密钥的允许集合里没有 phantom → 后端硬拒 /challenge（不回落成
+                // 密钥默认方式）。api-key / 体验页通道领题前拿不到白名单，只能据这条 403
+                // 改道到 /pow/challenge；其余错误照常抛出。
+                if (!isMethodNotAllowed(e))
+                    throw e;
+                const handled = await this._runPowFirst();
+                if (handled || this._sessionClosed)
+                    return;
+                throw e;
+            }
             if (challenge && challenge.sessionId)
                 this.sessionId = challenge.sessionId;
             if (this._a11ySwitched)
@@ -530,7 +544,7 @@ class WidgetSession {
             else if (code === 403) {
                 const cls = this._classify403(e);
                 this.status.textContent = cls.text;
-                if (cls.kind === "env" || cls.kind === "points") {
+                if (cls.kind === "env" || cls.kind === "points" || cls.kind === "method") {
                     this.turnIntoRetryButton();
                 }
                 else {
@@ -1638,6 +1652,8 @@ class WidgetSession {
         const s = String(d == null ? "" : d);
         if (/binding\s*mismatch/i.test(s))
             return { kind: "binding", text: "网络环境变化，正在重新验证…" };
+        if (/not allowed for this key/i.test(s))
+            return { kind: "method", text: "该密钥的「验证方式」设置不允许本次验证，请到「我的密钥」检查后重试" };
         if (/environment/i.test(s))
             return { kind: "env", text: "浏览器环境校验未通过，请更换浏览器后重试" };
         if (/insufficient|点数不足|quota|balance/i.test(s))

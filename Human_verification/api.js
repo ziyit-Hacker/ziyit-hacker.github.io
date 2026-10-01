@@ -161,6 +161,15 @@ async function readError(res) {
     return err;
 }
 
+// v0.3.55：领题端点与密钥允许的验证方式冲突时，后端**硬拒**（不再静默回落成密钥默认
+// 方式），回 403 "requested verification method not allowed for this key"。
+// api-key / 体验页通道在领题前拿不到密钥白名单，只能据这条 403 改道到另一个领题接口。
+export function isMethodNotAllowed(e) {
+    if (!e || e.status !== 403)
+        return false;
+    return String(e.detail || e.message || "").indexOf("not allowed for this key") !== -1;
+}
+
 async function fetchTicket(base) {
      
      
