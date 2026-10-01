@@ -295,7 +295,7 @@
             </div>
 
             <div id="otherCodeRow">
-                <label for="otherCode" class="bt">验证码</label>
+                <label for="otherCode" class="bt" id="otherCodeLabel">验证码</label>
                 <input type="text" id="otherCode" autocomplete="one-time-code" placeholder="输入验证码">
             </div>
 
@@ -326,7 +326,7 @@
             </div>
 
             <div id="mfaCodeRow">
-                <label for="mfaCode" class="bt">验证码</label>
+                <label for="mfaCode" class="bt" id="mfaCodeLabel">验证码</label>
                 <input type="text" id="mfaCode" autocomplete="one-time-code" placeholder="输入验证码">
             </div>
 
@@ -551,10 +551,22 @@
             document.getElementById('mfaCodeRow').style.display = (factor && !isPwd) ? 'block' : 'none';
             document.getElementById('mfaPasswordRow').style.display = isPwd ? 'block' : 'none';
 
+            // 标签跟着因子走：避免用户分不清这里该填邮箱验证码、2FA 动态码还是登录密码
+            const label = document.getElementById('mfaCodeLabel');
             const input = document.getElementById('mfaCode');
-            if (factor === 'recovery') input.placeholder = '输入 10 位一次性恢复码';
-            else if (factor === 'email') input.placeholder = '输入邮箱收到的 6 位验证码';
-            else input.placeholder = '输入 6 位动态码';
+            if (factor === 'recovery') {
+                label.textContent = '一次性恢复码';
+                input.placeholder = '输入 10 位一次性恢复码';
+            } else if (factor === 'email') {
+                label.textContent = '邮箱验证码';
+                input.placeholder = '输入邮箱收到的 6 位验证码';
+            } else if (factor === 'totp') {
+                label.textContent = '2FA 动态码';
+                input.placeholder = '输入 6 位动态码';
+            } else {
+                label.textContent = '验证码';
+                input.placeholder = '输入验证码';
+            }
             input.value = '';
             document.getElementById('mfaPassword').value = '';
         }
@@ -569,7 +581,7 @@
                 if (res && res.mfaToken) savedMfaToken = res.mfaToken;
                 if (res && res.methods) mfaMethods = res.methods;
                 hint.textContent = ((res && res.message) || '验证码已发送，请查收邮箱')
-                    + '（有效期内重复发送是同一封邮件里的同一个码）';
+                    + '有效期内重复点「发送」不会发新邮件，直接用收到的那封邮件里的码即可；没收到请查收垃圾邮件。';
                 let left = 60;
                 const timer = setInterval(function () {
                     left--;
@@ -583,8 +595,11 @@
                 }, 1000);
             }).catch(function (err) {
                 btn.disabled = false;
+                btn.textContent = '发送验证码到邮箱';
                 hint.textContent = '';
-                showError(loginErrDetail(err) || '发送失败，请稍后再试');
+                showError(err && err.status === 429
+                    ? '发送太频繁，请等几分钟再试（同一 IP 5 分钟内最多 5 条）'
+                    : (loginErrDetail(err) || '发送失败，请稍后再试'));
             });
         }
 
@@ -603,7 +618,14 @@
             } else {
                 const code = document.getElementById('mfaCode').value.trim();
                 if (!code) {
-                    showError('请输入验证码');
+                    showError(factor === 'email' ? '请输入邮箱收到的 6 位验证码' : '请输入验证码');
+                    return;
+                }
+                // 验证码一律是数字：先把「登录密码填进了验证码框」拦在前端，别让它当成验证码发给后端
+                if (factor !== 'recovery' && !/^\d{6}$/.test(code)) {
+                    showError(factor === 'email'
+                        ? '邮箱验证码是 6 位数字，请核对后重新输入（不要把登录密码填进「邮箱验证码」框）'
+                        : '2FA 动态码是 6 位数字，请核对后重新输入');
                     return;
                 }
                 body.code = code;
@@ -613,9 +635,7 @@
                 if (data && data.mfaToken) savedMfaToken = data.mfaToken;
                 handleLoginResponse(data);
             }).catch(function (err) {
-                showError(loginErrDetail(err) || (err && err.status === 401
-                    ? '验证码或密码不正确，或票据已过期，请重新登录'
-                    : '验证失败，请稍后再试'));
+                showError(factorErrorText(err, factor));
             }).finally(function () {
                 btn.disabled = false;
             });
@@ -697,10 +717,18 @@
                     : '后端没有单独的 2FA 起始接口，点「继续」先取一张验证票据；若该账号开了邮箱验证，你还会收到一封验证码邮件，忽略即可。');
 
             const codeInput = document.getElementById('otherCode');
+            const codeLabel = document.getElementById('otherCodeLabel');
             codeInput.value = '';
-            if (f === 'recovery') codeInput.placeholder = '输入 10 位一次性恢复码';
-            else if (f === 'totp') codeInput.placeholder = '输入 6 位动态码';
-            else codeInput.placeholder = '输入邮箱收到的 6 位验证码';
+            if (f === 'recovery') {
+                codeLabel.textContent = '一次性恢复码';
+                codeInput.placeholder = '输入 10 位一次性恢复码';
+            } else if (f === 'totp') {
+                codeLabel.textContent = '2FA 动态码';
+                codeInput.placeholder = '输入 6 位动态码';
+            } else {
+                codeLabel.textContent = '邮箱验证码';
+                codeInput.placeholder = '输入邮箱收到的 6 位验证码';
+            }
         }
 
         function otherPrep() {
@@ -721,7 +749,7 @@
                 if (res && res.mfaToken) savedMfaToken = res.mfaToken;
                 hint.textContent = f === 'email'
                     ? (((res && res.message) || '验证码已发送，请查收邮箱')
-                        + '（有效期内重复发送是同一封邮件里的同一个码）')
+                        + '有效期内重复点「发送」不会发新邮件，直接用收到的那封邮件里的码即可；没收到请查收垃圾邮件。')
                     : '票据已取到，请输入验证码。';
                 btn.textContent = f === 'email' ? '重新获取' : '重新取票据';
                 btn.disabled = false;
@@ -729,7 +757,9 @@
             }).catch(function (err) {
                 hint.textContent = '';
                 btn.disabled = false;
-                showError(loginErrDetail(err) || '获取失败，请稍后再试');
+                showError(err && err.status === 429
+                    ? '发送太频繁，请等几分钟再试（同一 IP 5 分钟内最多 5 条）'
+                    : (loginErrDetail(err) || '获取失败，请稍后再试'));
             });
         }
 
@@ -738,7 +768,14 @@
             if (!otherNeedsTicket(f)) return;
             const code = document.getElementById('otherCode').value.trim();
             if (!code) {
-                showError(f === 'recovery' ? '请输入一次性恢复码' : '请输入验证码');
+                showError(f === 'recovery' ? '请输入一次性恢复码'
+                    : (f === 'email' ? '请输入邮箱收到的 6 位验证码' : '请输入 6 位动态码'));
+                return;
+            }
+            if (f !== 'recovery' && !/^\d{6}$/.test(code)) {
+                showError(f === 'email'
+                    ? '邮箱验证码是 6 位数字，请核对后重新输入（不要把登录密码填进「邮箱验证码」框）'
+                    : '2FA 动态码是 6 位数字，请核对后重新输入');
                 return;
             }
             if (!savedMfaToken) {
@@ -751,7 +788,7 @@
                 if (data && data.mfaToken) savedMfaToken = data.mfaToken;
                 handleLoginResponse(data);
             }).catch(function (err) {
-                showError(loginErrDetail(err) || '验证失败，请重新获取票据后再试');
+                showError(factorErrorText(err, f));
             }).finally(function () {
                 btn.disabled = false;
             });
@@ -776,6 +813,32 @@
                 if (typeof d.error === 'string' && d.error) return d.error;
             }
             return '';
+        }
+
+        // 第二步 / 其他方式登录失败的统一文案：后端 detail 是英文（"Verification code is invalid or
+        // expired" 之类），直接显示既看不懂又会被误当成「码过期了」，这里按状态码 + 因子翻成人话。
+        function factorErrorText(err, factor) {
+            const detail = loginErrDetail(err);
+            const status = err && err.status;
+            if (status === 429) {
+                return '操作过于频繁：同一 IP 15 秒内最多 2 次登录，请等十几秒再试';
+            }
+            if (status === 400) {
+                if (/already completed/i.test(detail)) return '这个验证方式刚才已经通过了，请换另一种方式继续';
+                if (/Two-factor authentication is not enabled/i.test(detail)) return '该账号还没有绑定 2FA，请换用邮箱验证码或密码';
+            }
+            if (status === 401) {
+                if (/session/i.test(detail) && /(expired|changed)/i.test(detail)) {
+                    return '验证会话已失效（超过 5 分钟，或换了网络 / 浏览器），请点「返回重新登录」重新走一遍';
+                }
+                if (factor === 'email') {
+                    return '邮箱验证码不正确或已经失效：请点「发送验证码到邮箱」重新获取，只用最新一封邮件里的 6 位码（有效 5 分钟，用过一次即作废）';
+                }
+                if (factor === 'password') return '登录密码不正确（连续错 5 次会锁定 15 分钟）';
+                if (factor === 'recovery') return '一次性恢复码不正确，或这张码已经用过了';
+                return '验证码不正确，或已经失效';
+            }
+            return detail || '验证失败，请稍后再试';
         }
 
          
