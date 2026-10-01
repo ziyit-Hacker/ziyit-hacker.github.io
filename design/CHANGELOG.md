@@ -3,6 +3,17 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.29 — 2026-10-01
+### 更新
+- **人机验证对接后端 v0.3.55 的「验证方式」新契约**（`Human_verification/api.js`、`Human_verification/phantom.js`）：
+  - `POST /session` 新增的 `allowedMethods` / `defaultMethod` / `canSwitch` 三字段落地到 `api.js`（随票据一起缓存、换后端或票据失效时一并复位），并新增 `sessionInfo()` 供上层读取；缺字段的老后端按"两套都允许、默认拖拽那套"回落，行为与升级前一致。
+  - **"换一种方式验证"入口按能力渲染**：只有 `canSwitch === true` 且 `defaultMethod === "phantom"` 时才渲染该入口；`canSwitch === false` 时**不渲染**入口、也不显示"当前验证暂不支持无障碍替代方式"之类提示。
+  - **默认方式直达**：`defaultMethod === "pow"` 的密钥直接进 PoW 流程，不再先出拖拽题；若权威预告 `requiredMethods` 仍含 `phantom`（双验证），PoW 通过后自动续跑拖拽那套，两套凭据一并交给接入方。
+  - **`preferredMethod` 接上两个领题接口**：`POST /challenge`、`POST /pow/challenge` 支持 `"phantom"` / `"pow"`；仅在取值合法时带上，双验证场景由后端忽略（此时如实提示换不掉），非法值静默回落由后端处理。原先发送已被后端移除的 `a11y` 字段的逻辑删除。
+  - `requiredMethods` 仍是判断"要不要走双套"的唯一依据。
+### 说明
+- 只改前端；后端未改动。
+
 ## v1.28 — 2026-10-01
 ### 修复
 - **后端地址解析不再读 `backend.txt`**：`assets/ziyit_api.js`、`Human_verification/api.js`、`Human_verification.html` 三处各自的 `<repo>/backend.txt` 拉取 + 解析逻辑（`backendTxtUrl()` / `parseBases()` / `loadBackendBases()` / `FILE_BASES`）全部删除，改为「Cookie `ziyit_api_base_ok` → `localStorage['ziyit_api_base']` → 兜底常量」一条链；兜底常量统一为 `https://ziyitstudio.ccwu.cc`（原为 ngrok 临时域名）。

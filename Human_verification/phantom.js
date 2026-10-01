@@ -1,5 +1,5 @@
 import { CONFIG, isMobileViewport } from "./config.js";
-import { requestChallenge, requestPowChallenge, submitPowStream, submitVerify, submitStreamChunk, verifyPow, videoChunk, videoReady, } from "./api.js";
+import { requestChallenge, requestPowChallenge, sessionInfo, submitPowStream, submitVerify, submitStreamChunk, verifyPow, videoChunk, videoReady, } from "./api.js";
 import { decrypt, deriveSessionKey, encrypt, generateClientKeyPair, importServerPublic, } from "./crypto.js";
 import { installAntidebug } from "./antidebug.js";
 import { PhantomRenderer } from "./renderer.js";
@@ -118,7 +118,7 @@ function resolveContainer(el) {
 }
  
 class WidgetSession {
-    constructor(canvas, apiBase, status, overlay, hint, activateBtn, onResult, onError, onRetry) {
+    constructor(canvas, apiBase, status, overlay, hint, activateBtn, onResult, onError, onRetry, onSessionInfo) {
         Object.defineProperty(this, "canvas", {
             enumerable: true,
             configurable: true,
@@ -172,6 +172,12 @@ class WidgetSession {
             configurable: true,
             writable: true,
             value: onRetry
+        });
+        Object.defineProperty(this, "onSessionInfo", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: onSessionInfo
         });
         Object.defineProperty(this, "renderer", {
             enumerable: true,
@@ -381,6 +387,25 @@ class WidgetSession {
         this._powAltUnavailable = false;
         this._powChallengeId = "";
         this._powSessionId = "";
+        // v0.3.55：/session 回传的密钥能力（默认方式 / 能否换一种方式）。
+        this._sessionCaps = { allowedMethods: ["phantom", "pow"], defaultMethod: "phantom", canSwitch: true };
+        // 默认方式是 PoW 时先做完的 PoW 凭据，等拖拽那套做后续跑时一起交给接入方。
+        this._preReceipts = [];
+        this._powDone = false;
+    }
+    // 取 /session 的密钥能力，并把它交给上层决定要不要渲染"换一种方式验证"入口。
+    async loadSessionCaps() {
+        try {
+            this._sessionCaps = await sessionInfo();
+        }
+        catch (e) {
+            // 取不到就按宽松默认（两套都可试），后面 /challenge 的失败会走正常错误提示。
+        }
+        try {
+            this.onSessionInfo?.(this._sessionCaps);
+        }
+        catch (e) { }
+        return this._sessionCaps;
     }
      
     setHint(stage, text) {
@@ -401,7 +426,17 @@ class WidgetSession {
         this.setHint("loading", "");
         this.activateBtn.disabled = true;
         try {
-             
+            // v0.3.55：先问 /session 要这把密钥的能力，决定默认走哪一套、要不要渲染切换入口。
+            const caps = await this.loadSessionCaps();
+            if (this._sessionClosed)
+                return;
+            if (caps.defaultMethod === "pow") {
+                // 默认（或只允许）PoW：直接进 PoW，不出现拖拽题；若预告里还要求拖拽
+                // 那套（双验证场景）则返回 false，继续走下面的拖拽流程补齐。
+                const handled = await this._runPowFirst();
+                if (handled)
+                    return;
+            }
             const { privateKey, publicJwk } = await generateClientKeyPair();
             const challenge = await requestChallenge(this.apiBase, publicJwk, this.device);
             if (challenge && challenge.sessionId)
@@ -1202,7 +1237,7 @@ class WidgetSession {
              
              
              
-            if (this.powRequired && result.receipt) {
+            if (this.powRequired && result.receipt && !this._powDone) {
                 const powReceipt = await this._runPowPhase();
                 if (!powReceipt) {
                      
@@ -1213,7 +1248,11 @@ class WidgetSession {
                     this.scheduleRetry();
                     return;
                 }
-                result.receipts = [result.receipt, powReceipt];
+                result.receipts = [...this._preReceipts, result.receipt, powReceipt];
+            }
+            else if (this._preReceipts.length) {
+                // 默认方式是 PoW：PoW 已先做完，这里只把它和拖拽凭据一起交出去。
+                result.receipts = [...this._preReceipts, result.receipt];
             }
              
              
@@ -1293,7 +1332,10 @@ class WidgetSession {
      
      
      
-    async _runPowPhase(a11y = false) {
+    // preferredMethod：领题时在密钥允许集合内改选（"phantom" / "pow"）。
+    // stopOnDual：仅"用户主动换一种方式"时置真——双验证场景后端会忽略该偏好，
+    // 那就别把 PoW 真解一遍（会白扣点数），领到题就停手。
+    async _runPowPhase(preferredMethod, stopOnDual = false) {
         const btn = this.activateBtn;
         const label = document.createElement("span");
         label.textContent = "按住完成安全校验";
@@ -1312,7 +1354,7 @@ class WidgetSession {
         this._powAltUnavailable = false;
         const load = async () => {
             try {
-                challenge = await requestPowChallenge(this.apiBase, a11y);
+                challenge = await requestPowChallenge(this.apiBase, preferredMethod);
             }
             catch (e) {
                 challenge = null;
@@ -1320,6 +1362,10 @@ class WidgetSession {
             if (challenge) {
                 this._powChallengeId = challenge.challengeId || "";
                 this._powSessionId = challenge.sessionId || "";
+                // requiredMethods 是权威预告：双验证场景后端会忽略 preferredMethod，
+                // 这里必须以它为准来决定还要不要再补拖拽那套。
+                if (Array.isArray(challenge.requiredMethods))
+                    this.requiredMethods = challenge.requiredMethods;
             }
             return !!challenge;
         };
@@ -1330,8 +1376,8 @@ class WidgetSession {
                 this.setHint("blocked", "");
                 return null;
             }
-            if (a11y && Array.isArray(challenge.requiredMethods)
-                && challenge.requiredMethods.indexOf("phantom") !== -1) {
+            if (stopOnDual && this.requiredMethods.indexOf("phantom") !== -1) {
+                // 双验证：后端忽略 preferredMethod，换也换不掉。
                 this._powAltUnavailable = true;
                 this.setHint("blocked", "");
                 return null;
@@ -1456,6 +1502,8 @@ class WidgetSession {
         });
     }
 
+    // 领题时带 preferredMethod="pow"（在密钥允许集合内改选）。后端判出双验证时
+    // 一律忽略该偏好，此时如实告知用户换不掉，并让他重试拖拽那一套。
     async switchToPow() {
         if (this._a11ySwitched || this.finished || this._sessionClosed)
             return false;
@@ -1468,7 +1516,7 @@ class WidgetSession {
         this.setHint("ready", "");
         let receipt = null;
         try {
-            receipt = await this._runPowPhase(true);
+            receipt = await this._runPowPhase("pow", true);
         }
         catch (e) {
             receipt = null;
@@ -1483,12 +1531,58 @@ class WidgetSession {
             this._a11ySwitched = false;
             return false;
         }
-        const result = {
+        await this._finalize({
             receipt,
             receipts: [receipt],
             challengeId: this._powChallengeId || this.challengeId,
             sessionId: this._powSessionId || this.sessionId,
-        };
+        });
+        return true;
+    }
+
+    // 默认方式是 PoW：先做 PoW 并把它留作前置凭据；若权威预告里还要拖拽那套，
+    // 返回 false 让 start() 继续走拖拽流程，两套凭据最后由 verifyAndFinish 合并。
+    async _runPowFirst() {
+        const stage = this.canvas.parentElement;
+        if (stage)
+            stage.style.display = "none";
+        const receipt = await this._runPowPhase("pow");
+        if (this._sessionClosed)
+            return true;
+        if (!receipt) {
+            this.status.textContent = "安全校验未完成，请重试";
+            this.turnIntoRetryButton();
+            return true;
+        }
+        this._powDone = true;
+        this._preReceipts = [receipt];
+        if (this.requiredMethods.indexOf("phantom") !== -1) {
+            if (stage)
+                stage.style.display = "";
+            this._resetActivateBtn();
+            return false;
+        }
+        await this._finalize({
+            receipt,
+            receipts: [receipt],
+            challengeId: this._powChallengeId || this.challengeId,
+            sessionId: this._powSessionId || this.sessionId,
+        });
+        return true;
+    }
+
+    // PoW 阶段会把按钮文字换成"按住完成安全校验"并占掉子节点，续跑拖拽前还原外观。
+    _resetActivateBtn() {
+        const btn = this.activateBtn;
+        btn.textContent = "按住并跟随方块";
+        const bar = document.createElement("span");
+        bar.className = "phantom-progress";
+        btn.appendChild(bar);
+        btn.classList.remove("phantom-holding", "phantom-success", "phantom-fail", "phantom-retry");
+        btn.disabled = true;
+    }
+
+    async _finalize(result) {
         const confirmed = (await this.onResult(result)) !== false;
         this.status.textContent = "";
         if (confirmed) {
@@ -1499,7 +1593,7 @@ class WidgetSession {
             this.activateBtn.classList.add("phantom-fail");
             this.activateBtn.textContent = "验证失败";
         }
-        return true;
+        return confirmed;
     }
 
     _classify403(e) {
@@ -1779,10 +1873,10 @@ export function mount(el, opts) {
         a11yBtn.style.cssText = "border:0;background:transparent;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer;";
         a11yBtn.textContent = "换一种方式验证";
         a11y.appendChild(a11yBtn);
-        body.appendChild(a11y);
+        // 入口是否插入由 /session 的 canSwitch 决定（见 applySessionCaps），这里先不挂。
         modalCard.appendChild(head);
         modalCard.appendChild(body);
-        return { hint, canvas, overlay, activateBtn, status, progress, a11yBtn };
+        return { hint, canvas, overlay, activateBtn, status, progress, a11yWrap: a11y, a11yBtn, body };
     };
      
      
@@ -1818,7 +1912,20 @@ export function mount(el, opts) {
         const modalCard = document.createElement("div");
         modalCard.className = "phantom-modal-card";
         node.appendChild(modalCard);
-        const { hint, canvas, overlay, activateBtn, status, progress, a11yBtn } = buildModalBody(modalCard);
+        const { hint, canvas, overlay, activateBtn, status, progress, a11yWrap, a11yBtn, body } = buildModalBody(modalCard);
+        // v0.3.55：只有「密钥允许两套」（canSwitch）且「默认是拖拽那套」时才把
+        // "换一种方式验证"入口插进来；只允许一套时不渲染该入口，也不显示任何
+        // "不支持无障碍替代方式"之类提示，直接按 defaultMethod 走那一套。
+        const applySessionCaps = (caps) => {
+            const show = !!(caps && caps.canSwitch && caps.defaultMethod === "phantom");
+            if (show) {
+                if (!a11yWrap.parentNode)
+                    body.appendChild(a11yWrap);
+            }
+            else if (a11yWrap.parentNode) {
+                a11yWrap.parentNode.removeChild(a11yWrap);
+            }
+        };
          
         node.addEventListener("click", (e) => {
             if (e.target === node)
@@ -1840,17 +1947,18 @@ export function mount(el, opts) {
             activateBtn.textContent = "按住并跟随方块";
             activateBtn.appendChild(progress);
             activateBtn.disabled = true;
+            a11yBtn.disabled = false;
             status.textContent = "正在准备验证题…";
             session = new WidgetSession(canvas, opts.apiBase, status, overlay, hint, activateBtn, 
              
-            handleResult, (e) => opts.onError?.(e), resetSession);
+            handleResult, (e) => opts.onError?.(e), resetSession, applySessionCaps);
             // 同步 modal.session 指向新会话：closeModal 用的是 modal.session，若不同步，
             // 关闭弹窗时销毁的仍是旧会话，而当前会话的拉流 / 定时器会继续跑下去。
             if (modal)
                 modal.session = session;
             void session.start();
         };
-        let session = new WidgetSession(canvas, opts.apiBase, status, overlay, hint, activateBtn, handleResult, (e) => opts.onError?.(e), resetSession);
+        let session = new WidgetSession(canvas, opts.apiBase, status, overlay, hint, activateBtn, handleResult, (e) => opts.onError?.(e), resetSession, applySessionCaps);
         a11yBtn.addEventListener("click", () => {
             if (a11yBtn.disabled)
                 return;

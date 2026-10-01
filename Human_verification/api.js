@@ -56,6 +56,7 @@ function rememberBase(base) {
     if (base === resolvedBase) return;
     resolvedBase = base;
     ticket = { token: "", expiresAt: 0 };
+    sessionCaps = { ...PERMISSIVE_CAPS };
     if (base === customBase()) return;
     writeCookie(BASE_COOKIE, base, BASE_COOKIE_DAYS);
 }
@@ -129,6 +130,12 @@ export function apiBase() {
 let ticket = { token: "", expiresAt: 0 };
 let ticketPromise = null;
 
+// POST /session 回传的「该密钥能力」：allowedMethods 允许的验证方式集合、
+// defaultMethod 默认走哪一套、canSwitch 能否换一种方式。老后端没有这几个字段时
+// 按"两套都允许、默认 phantom"处理，保持升级前的行为。
+const PERMISSIVE_CAPS = { allowedMethods: ["phantom", "pow"], defaultMethod: "phantom", canSwitch: true };
+let sessionCaps = { ...PERMISSIVE_CAPS };
+
 function explicitApiKey() {
     try {
         return window.PHANTOM_API_KEY || localStorage.getItem("phantom_api_key") || "";
@@ -170,7 +177,19 @@ async function fetchTicket(base) {
     if (!data || !data.ticket) {
         throw new Error("session 响应缺少 ticket");
     }
-     
+    // v0.3.55：后端同时回「允许的验证方式 / 默认方式 / 能否切换」。只在白名单里取值，
+    // 缺字段（老后端）或取值非法时按"两套都允许、默认 phantom"回落，与升级前一致。
+    const allowed = Array.isArray(data.allowedMethods)
+        ? data.allowedMethods.filter((m) => m === "phantom" || m === "pow")
+        : [];
+    const allowedMethods = allowed.length ? allowed : PERMISSIVE_CAPS.allowedMethods;
+    const defaultMethod = allowedMethods.indexOf(data.defaultMethod) !== -1
+        ? data.defaultMethod
+        : allowedMethods[0];
+    const canSwitch = typeof data.canSwitch === "boolean"
+        ? data.canSwitch
+        : allowedMethods.length > 1;
+    sessionCaps = { allowedMethods, defaultMethod, canSwitch };
     const ttl = Number(data.expiresIn) > 0 ? Number(data.expiresIn) : 300;
     ticket = { token: data.ticket, expiresAt: Date.now() + Math.max(ttl - 10, 5) * 1000 };
     return ticket.token;
@@ -194,6 +213,21 @@ async function authHeaders(base) {
         return { "api-key": key };
     }
     return { [TICKET_HEADER]: await currentTicket(base) };
+}
+
+// 取「该密钥的验证能力」。票据通道下顺便把 /session 拉一次（结果会被 /challenge
+// 复用同一张票据，不会多打一次接口）；显式密钥 / 体验页通道不走票据，拿不到密钥
+// 配置，保持"两套都可试"的旧行为。
+export async function sessionInfo() {
+    if (!explicitApiKey() && !expChannel) {
+        const base = await backendReady();
+        try {
+            await currentTicket(base);
+        } catch (e) {
+            // 拿不到就按宽松默认处理；随后 /challenge 失败会走正常的错误提示。
+        }
+    }
+    return { ...sessionCaps };
 }
 
  
@@ -234,6 +268,7 @@ async function postToBase(base, path, body, exp) {
          
         if (res.status === 401 && !exp && !explicitApiKey() && attempt === 0) {
             ticket = { token: "", expiresAt: 0 };
+            sessionCaps = { ...PERMISSIVE_CAPS };
             continue;
         }
         throw await readError(res);
@@ -264,9 +299,12 @@ async function postJson(apiBaseArg, path, body) {
     throw lastErr;
 }
 
-export function requestChallenge(apiBase, clientPublicJwk, device) {
+// preferredMethod（可选）："phantom" / "pow"。只在密钥允许的集合内改选，双验证场景
+// 后端一律忽略、非法值静默回落，因此这里只在取值合法时才带上，其余交给后端默认。
+export function requestChallenge(apiBase, clientPublicJwk, device, preferredMethod) {
     const body = { clientPublicJwk };
     if (device) body.device = device;
+    if (preferredMethod === "phantom" || preferredMethod === "pow") body.preferredMethod = preferredMethod;
     return postJson(apiBase, "/challenge", body);
 }
 
@@ -305,8 +343,12 @@ export function videoChunk(apiBase, challengeId, index, sessionId) {
  
  
  
-export function requestPowChallenge(apiBase, a11y = false) {
-    return postJson(apiBase, "/pow/challenge", { a11y: !!a11y });
+// v0.3.53 起后端已移除 a11y 自助降级字段，改用 preferredMethod（"phantom" / "pow"）；
+// 语义与 /challenge 一致：双验证忽略、非法值静默回落。
+export function requestPowChallenge(apiBase, preferredMethod) {
+    const body = {};
+    if (preferredMethod === "phantom" || preferredMethod === "pow") body.preferredMethod = preferredMethod;
+    return postJson(apiBase, "/pow/challenge", body);
 }
 
  
