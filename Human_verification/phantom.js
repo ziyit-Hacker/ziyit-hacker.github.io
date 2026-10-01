@@ -661,6 +661,10 @@ class WidgetSession {
          
          
         const ready = await videoReady(this.apiBase, this.challengeId, this.sessionId);
+        // v0.3.49：记下【收到 /video/ready 回包的时刻】，作为取片闸门的本地基准。
+        // 它天然晚于服务端的 video_ready_ms（服务端是在处理该请求时就记的），因此本端
+        // 由此换算出的"最早可取时刻"必然晚于服务端闸门 → 永远不会撞 409。
+        this._readyRespAt = performance.now();
         if (!ready || ready.ready !== true) {
             throw new Error("视频尚未就绪，请重试");
         }
@@ -799,8 +803,8 @@ class WidgetSession {
             return Promise.resolve();
         const totalMs = Number((ready && ready.durationMs) || (this.videoStream && this.videoStream.durationMs) || 0);
         // v0.3.48：开播门槛从「minPrefetch（默认 3 秒）」降到【1 包】—— 首包到手就放行
-        // 开播，后续由 _chunkGate 按播放水位滚动补给。minPrefetch 仍是后端取片闸门的
-        // "允许超前量"，但不再作为前端的等待目标（它越大只会越拖慢起播）。
+        // 开播，后续由 _chunkGate 按「服务端闸门节奏 + 缓冲上限 4 包」滚动补给。
+        // minPrefetch 是后端取片闸门的"允许超前量"，不是前端的等待目标（等它只会拖慢起播）。
         const chunkMs = Number(ready && ready.chunkDurationMs)
             || (Number(ready && ready.durationMs) / Math.max(1, Number(ready && ready.chunkCount))) || 1000;
         const totalS = totalMs > 0 ? totalMs / 1000 : chunkMs / 1000;
@@ -955,35 +959,53 @@ class WidgetSession {
      
     _chunkGate(ready) {
         const chunkMs = Number(ready && ready.chunkDurationMs)
-            || (Number(ready && ready.durationMs) / Math.max(1, Number(ready && ready.chunkCount))) || 33;
-        // v0.3.48：由「固定 minPrefetch 秒前视」改为【播放水位】驱动 ——
-        //   取第 i 包前，等「已经取到的那 i 包时长」被播过 2/3，并保底领先 1 包防抖动：
-        //     release = min(已取时长 × 2/3, 已取时长 − 1 包)
-        // 作用：首包到手即可开播，之后随播放进度滚动补给 —— 既不把整段一把拉走（安全），
-        // 也不会因前视不足被网络抖动卡死（流畅）。
-        // 后端闸门（第 i 包 ≥ ready + i×包时长 − minPrefetch）只是"最早可取时刻"，本策略
-        // 天然晚于它，不会撞 409；那条闸门仍在拦"不播只拿"的离线抠帧。
-        const floorMs = Math.max(1, chunkMs);
+            || (Number(ready && ready.durationMs) / Math.max(1, Number(ready && ready.chunkCount))) || 1000;
+        // v0.3.49：修「预览一播完就卡死 / 冻一帧 / 提前结束」。旧版按【播放位置】放行下一包
+        // （release = 已取时长 × 2/3），但拉流循环在用户按下按钮【之前】就已启动，此时视频
+        // 是暂停的、currentTime 恒为 0 → 门槛永远到不了，每包只能干等 6 秒兜底超时；初始
+        // 缓冲因此只有 2~3 包，而预览段正好 2 秒 —— 预览一结束缓冲就饿死、视频 stall（浏
+        // 览器表现为黑屏 / 冻在最后一帧），stall 后 currentTime 更不动 → 越卡越死。
+        //
+        // 现在改成两条与"播放位置"无关的约束，同时满足即放行，任何情况下都不会饿死：
+        //   1) 服务端闸门节奏：第 i 包 ≥ base + i×包时长 − minPrefetch。base 取【本端收到
+        //      /video/ready 回包的时刻】（见 _prepareVideo），它天然晚于服务端的
+        //      video_ready_ms，故本端算出的最早时刻必然晚于服务端 → 不会撞 409，也就不必
+        //      靠 409 退避去试探（那会污染服务端的 video_gate_blocks 留证计数）。
+        //   2) 缓冲上限 CAP：已缓冲 − 播放位置 < CAP 包才继续取。视频暂停时缓冲涨到 CAP 即
+        //      停（用户还没按按钮时不会把整段提前提走）；一旦饿死（领先变小）立刻放行 ——
+        //      所以"卡住"不再需要干等 6 秒。
+        // 安全性 = 服务端闸门（抢跑上限）+ 这里的 CAP（前端最多领先 4 包），都不允许"一次
+        // 把整段提走"；流畅性 = 最多 4 秒前视缓冲，足以扛住公网抖动。
+        const leadMs = Math.max(1, Number(ready && ready.minPrefetch) || 3) * 1000;
+        const base = Number(this._readyRespAt) || 0;
+        const capMs = Math.max(2000, 4 * chunkMs);
+        // 一次并发取 win 包，本地闸门必须按这批里【最后一包】的服务端最早时刻放行，
+        // 否则第 2 包会比服务端闸门早到 → 撞 409（虽然会退避重试，但白白污染留证计数）。
+        const win = Math.max(1, this._chunkWindow(ready));
+        const bufferedEndMs = () => {
+            try {
+                const sb = this.sourceBuffer;
+                return sb && sb.buffered.length ? sb.buffered.end(sb.buffered.length - 1) * 1000 : 0;
+            }
+            catch (e) {
+                return 0;
+            }
+        };
         return (idx) => new Promise((resolve) => {
-            // 还在整段兜底下载（MSE 不可用、videoEl 尚未建立）时没有播放进度可依，
-            // 直接放行，交给调用方按窗口取完。
-            if (!this.videoEl)
-                return resolve();
-            const fetchedMs = Math.max(0, Number(idx) || 0) * chunkMs;
-            if (fetchedMs <= 0)
-                return resolve();
-            const releaseMs = Math.min((fetchedMs * 2) / 3, fetchedMs - floorMs);
-            const startedAt = performance.now();
+            const i = Math.max(0, Number(idx) || 0);
+            // 按本批最后一包（i + win - 1）的服务端最早时刻放行。
+            const earliest = base > 0 ? base + (i + win - 1) * chunkMs - leadMs : 0;
             const tick = () => {
                 if (this._streamAborted)
                     return resolve();
-                const playedMs = this.videoEl ? this.videoEl.currentTime * 1000 : 0;
-                if (playedMs >= releaseMs)
+                const schedOk = base <= 0 || performance.now() >= earliest;
+                const ahead = this.videoEl ? bufferedEndMs() - this.videoEl.currentTime * 1000 : 0;
+                const capOk = !this.videoEl || ahead < capMs;
+                if (schedOk && capOk)
                     return resolve();
-                // 兜底：视频被暂停（用户在提示段松手）或播放异常时，不把拉流永久挂死。
-                // 正常节奏下每次等待约 1.3~2.7 秒，远够不着这个上限。
-                if (performance.now() - startedAt >= 6000)
-                    return resolve();
+                // 不加"超时兜底"：两个条件都必然会被满足 —— schedOk 随墙钟到期，capOk 随
+                // 播放消耗缓冲而打开。若视频一直暂停且缓冲已满，等下去【正是本意】（别趁
+                // 用户没按按钮就把整段提走）。会话销毁时 _streamAborted 会把这里放行。
                 window.setTimeout(tick, 60);
             };
             tick();

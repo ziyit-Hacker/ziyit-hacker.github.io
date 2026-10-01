@@ -88,9 +88,13 @@ export class PhantomRenderer {
             if (!this.running)
                 return;
              
-            const elapsed = v && v.duration
-                ? v.currentTime
-                : (performance.now() - this.startTime) / 1000;
+            // v0.3.49：只要存在 video 元素就一律用 currentTime 计时，【不再】用墙钟兜底。
+            // 旧写法 `v && v.duration ? v.currentTime : 墙钟` 有致命副作用：fMP4 用
+            // empty_moov 打包，endOfStream() 之前 video.duration 常为 NaN（falsy）→ 退回
+            // 墙钟计时 → 视频一旦缓冲饿死卡住，墙钟仍会走满总时长、t 照样到 1 → 提示
+            // "请松手"，用户一松手验证就提前结束（表现就是"卡几秒后自动结束"）。
+            // 改用 currentTime 后，视频卡住则进度同步停住，不会再提前收卷。
+            const elapsed = v ? v.currentTime : (performance.now() - this.startTime) / 1000;
             const t = Math.max(0, Math.min((elapsed - preview) / dur, 1));
             this.renderFrame(t);
             onTick?.(null, t);
