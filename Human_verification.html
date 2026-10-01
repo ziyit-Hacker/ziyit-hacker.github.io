@@ -684,10 +684,11 @@
   <script type="module" src="https://ziyit-hacker.github.io/Human_verification/main.js"></script>
   <script>
     (function () {
-      var DEFAULT_BASE = 'https://willian-unheady-rawly.ngrok-free.dev';
+      // 后端地址只从 cookie（ziyit_api_base_ok）读，其次 localStorage 覆盖，最后才用这条兜底；
+      // 不再读 backend.txt 去探测“哪一条才是后端”。
+      var DEFAULT_BASE = 'https://ziyitstudio.ccwu.cc';
       var BASE_COOKIE = 'ziyit_api_base_ok';
       var BASE_URL = DEFAULT_BASE;
-      var FILE_BASES = [];
       var backendPromise = null;
 
       function readCookie(name) {
@@ -736,7 +737,6 @@
           if (list.indexOf(v) === -1) list.push(v);
         }
         add(BASE_URL);
-        FILE_BASES.forEach(add);
         add(baseCookie());
         add(DEFAULT_BASE);
         return list;
@@ -745,18 +745,6 @@
       function backendReady() {
         if (backendPromise) return backendPromise;
         var cached = customBase() || baseCookie();
-        var url;
-        try { url = new URL('backend.txt', document.baseURI).href; } catch (e) { url = 'backend.txt'; }
-        function parse(t) {
-          var out = [];
-          String(t || '').split(/\r?\n/).forEach(function (line) {
-            var m = line.trim().match(/https?:\/\/[^\s]+/i);
-            if (!m) return;
-            var u = m[0].replace(/\/+$/, '');
-            if (out.indexOf(u) === -1) out.push(u);
-          });
-          return out;
-        }
         function probe(b) {
           return new Promise(function (resolve) {
             var done = false;
@@ -771,29 +759,21 @@
         function pick(list) {
           var i = 0;
           function next() {
-            if (i >= list.length) return Promise.resolve(list[0] || DEFAULT_BASE);
+            if (i >= list.length) return Promise.resolve(list[list.length - 1] || DEFAULT_BASE);
             var b = list[i++];
+            // 已经是最后一条（兜底地址）：no-cors 探测连 530 / 404 错误页也算“通”，探了没意义
+            if (i >= list.length) return Promise.resolve(b);
             return probe(b).then(function (ok) { return ok ? b : next(); });
           }
           return next();
         }
-        var loadList = fetch(url, { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': '1' } })
-          .then(function (r) { return r.ok ? r.text() : ''; })
-          .catch(function () { return ''; })
-          .then(function (t) {
-            FILE_BASES = parse(t);
-            return FILE_BASES.slice();
-          });
         if (cached) {
           rememberBase(cached);
-          backendPromise = loadList.then(function () { return BASE_URL; });
+          backendPromise = Promise.resolve(BASE_URL);
           return backendPromise;
         }
-        backendPromise = loadList
-          .then(function (list) {
-            if (list.indexOf(DEFAULT_BASE) === -1) list.push(DEFAULT_BASE);
-            return pick(list);
-          })
+        var list = baseCandidates();
+        backendPromise = pick(list)
           .then(function (b) { rememberBase(b || DEFAULT_BASE); return BASE_URL; })
           .catch(function () { return BASE_URL; });
         return backendPromise;

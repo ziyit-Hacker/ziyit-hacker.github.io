@@ -118,8 +118,12 @@
 
     <script>
         var ME = null, LEVEL = 0;
+        // 后端地址统一由 ZIYIT_API 解析（cookie 优先）；这里不再硬编码兜底地址
         function currentBase() {
-            return (window.ZIYIT_API && ZIYIT_API.base) ? ZIYIT_API.base() : 'https://willian-unheady-rawly.ngrok-free.dev';
+            if (window.ZIYIT_API && ZIYIT_API.base) return ZIYIT_API.base();
+            var m = document.cookie.match(/(?:^|; )ziyit_api_base_ok=([^;]*)/);
+            var c = m ? decodeURIComponent(m[1]).replace(/\/+$/, '') : '';
+            return /^https?:\/\//i.test(c) ? c : '';
         }
 
          

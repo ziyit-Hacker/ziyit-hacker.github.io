@@ -3,6 +3,16 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.28 — 2026-10-01
+### 修复
+- **后端地址解析不再读 `backend.txt`**：`assets/ziyit_api.js`、`Human_verification/api.js`、`Human_verification.html` 三处各自的 `<repo>/backend.txt` 拉取 + 解析逻辑（`backendTxtUrl()` / `parseBases()` / `loadBackendBases()` / `FILE_BASES`）全部删除，改为「Cookie `ziyit_api_base_ok` → `localStorage['ziyit_api_base']` → 兜底常量」一条链；兜底常量统一为 `https://ziyitstudio.ccwu.cc`（原为 ngrok 临时域名）。
+- **在线客服连接失败**：`guideAuthSync` / `guideChat` / `guideChatStream` 原本直接用 `currentBase()` 取址，绕过了 `backendReady()` 的地址就绪与探测，缓存里留着旧地址时就会直连失败。现统一走新增的 `fetchApi()` / `fetchApiRaw()`（先 `backendReady()` 再取址），并在连接层失败（非后端回包）时清缓存地址、按 cookie / 兜底重解析重试一次。`authFetch`（申诉）、`userType`、`backroomsTypeOpen`、`backroomsDownloadStandard`、`backroomsOpenLevel` 同类问题一并收敛。
+- **Passkey 验证对不上后端**：地址不再靠 `backend.txt` 探测乱切，`passkey/setup → enable`、`login/passkey/start → finish` 固定落在同一个后端实例上，避免票据（Redis 里的一次性 challenge / ticket）因为换后端而失效。
+- **去掉散落的硬编码后端地址**：`assets/guide_agent_watcher.js`、`user/register.html`、`backrooms/review.html`、`backrooms/submit.html` 各自写死的 ngrok 地址删除，改为调用 `ZIYIT_API.base()`（cookie 优先），取不到时直接读 cookie。
+### 说明
+- 只改前端；后端 `main.py` 未改动。
+- `backend.txt` 文件本身保留，但已无任何代码读取它。
+
 ## v1.27 — 2026-10-01
 ### 修复
 - **`user/index.html` 两步登录第二步的可读性**：验证码输入框的 `label` 随所选因子切换（邮箱验证码 / 2FA 动态码 / 一次性恢复码），不再是笼统的「验证码」，避免用户分不清该填邮箱验证码还是登录密码；「使用其他方式登录」分支的验证码标签同步处理。

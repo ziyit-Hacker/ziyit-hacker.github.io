@@ -281,9 +281,12 @@
     <script type="module">
         import { mount } from "https://ziyit-hacker.github.io/Human_verification/phantom.js";
 
-        const PH_API_BASE_FALLBACK = "https://willian-unheady-rawly.ngrok-free.dev";
+        // 后端地址统一由 ZIYIT_API 解析（cookie 优先）；这里不再硬编码兜底地址
         function phBase() {
-            return (window.ZIYIT_API && window.ZIYIT_API.base) ? window.ZIYIT_API.base() : PH_API_BASE_FALLBACK;
+            if (window.ZIYIT_API && window.ZIYIT_API.base) return window.ZIYIT_API.base();
+            const m = document.cookie.match(/(?:^|; )ziyit_api_base_ok=([^;]*)/);
+            const c = m ? decodeURIComponent(m[1]).replace(/\/+$/, '') : '';
+            return /^https?:\/\//i.test(c) ? c : '';
         }
 
         function showCaptchaHint(msg) {

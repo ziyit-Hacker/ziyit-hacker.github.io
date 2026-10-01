@@ -1,20 +1,13 @@
 const TICKET_HEADER = "x-phantom-ticket";
 
-const DEFAULT_BASE = "https://willian-unheady-rawly.ngrok-free.dev";
+// 后端地址只从 cookie（ziyit_api_base_ok）读，其次 localStorage 覆盖，最后才用这条兜底；
+// 不再读 backend.txt 去探测“哪一条才是后端”。
+const DEFAULT_BASE = "https://ziyitstudio.ccwu.cc";
 const BASE_COOKIE = "ziyit_api_base_ok";
 const BASE_COOKIE_DAYS = 7;
 
-let loadedBases = [];
 let resolvedBase = "";
 let backendPromise = null;
-
-function backendTxtUrl() {
-    try {
-        return new URL("../backend.txt", import.meta.url).href;
-    } catch (e) {
-        return "backend.txt";
-    }
-}
 
 function readCookie(name) {
     try {
@@ -82,20 +75,8 @@ function baseCandidates(primary) {
     };
     add(primary);
     add(baseCookie());
-    loadedBases.forEach(add);
     add(DEFAULT_BASE);
     return list;
-}
-
-function parseBases(txt) {
-    const out = [];
-    String(txt || "").split(/\r?\n/).forEach((line) => {
-        const m = line.trim().match(/https?:\/\/[^\s]+/i);
-        if (!m) return;
-        const u = m[0].replace(/\/+$/, "");
-        if (!out.includes(u)) out.push(u);
-    });
-    return out;
 }
 
 function probeBase(base, timeoutMs = 3000) {
@@ -115,39 +96,25 @@ function probeBase(base, timeoutMs = 3000) {
 }
 
 async function pickBase(bases) {
-    for (const b of bases) {
-        if (await probeBase(b)) return b;
+    for (let i = 0; i < bases.length; i++) {
+        // 已经是最后一条（兜底地址）：no-cors 探测连 530 / 404 错误页也算“通”，探了没意义
+        if (i === bases.length - 1) return bases[i];
+        if (await probeBase(bases[i])) return bases[i];
     }
-    return bases[0] || DEFAULT_BASE;
+    return DEFAULT_BASE;
 }
 
 export function backendReady() {
     if (!backendPromise) {
         const cached = cachedBase();
         if (cached) {
-             
             resolvedBase = cached;
-            backendPromise = fetch(backendTxtUrl(), { cache: "no-store", headers: { "ngrok-skip-browser-warning": "1" } })
-                .then((res) => (res.ok ? res.text() : ""))
-                .then((txt) => parseBases(txt))
-                .catch(() => [])
-                .then((bases) => {
-                    loadedBases = bases.slice();
-                    if (!loadedBases.includes(DEFAULT_BASE)) loadedBases.push(DEFAULT_BASE);
-                    return cached;
-                });
+            backendPromise = Promise.resolve(cached);
         } else {
-            backendPromise = fetch(backendTxtUrl(), { cache: "no-store", headers: { "ngrok-skip-browser-warning": "1" } })
-                .then((res) => (res.ok ? res.text() : ""))
-                .then((txt) => parseBases(txt))
-                .catch(() => [])
-                .then(async (bases) => {
-                    loadedBases = bases.slice();
-                    if (!loadedBases.includes(DEFAULT_BASE)) loadedBases.push(DEFAULT_BASE);
-                    const picked = await pickBase(loadedBases);
-                    rememberBase(picked);
-                    return picked;
-                });
+            backendPromise = pickBase(baseCandidates("")).then((picked) => {
+                rememberBase(picked);
+                return picked;
+            });
         }
     }
     return backendPromise;
@@ -156,7 +123,7 @@ export function backendReady() {
 export function apiBase() {
     const custom = customBase();
     if (custom) return custom;
-    return resolvedBase || baseCookie() || loadedBases[0] || DEFAULT_BASE;
+    return resolvedBase || baseCookie() || DEFAULT_BASE;
 }
 
 let ticket = { token: "", expiresAt: 0 };

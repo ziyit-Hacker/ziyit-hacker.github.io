@@ -8,7 +8,6 @@
     if (/guide\.html/i.test(location.pathname)) return;
 
     var POLL_MS = 10000;
-    var DEFAULT_BASE = 'https://willian-unheady-rawly.ngrok-free.dev';
     var notifiedKey = 'ziyit_guide_notified';   
     var pendingKey = 'ziyit_guide_pending';     
     var notified = {};
@@ -51,9 +50,8 @@
 
      
     function api(path, method, body) {
-        var ready = (window.ZIYIT_API && window.ZIYIT_API.backendReady) ? window.ZIYIT_API.backendReady() : Promise.resolve();
-        return ready.then(function () {
-            var base = (window.ZIYIT_API && window.ZIYIT_API.base) ? window.ZIYIT_API.base() : DEFAULT_BASE;
+        return window.ZIYIT_API.backendReady().then(function () {
+            var base = window.ZIYIT_API.base();
             var token = getToken();
             var opts = {
                 method: method || 'GET',

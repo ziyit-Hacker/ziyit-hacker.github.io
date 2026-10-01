@@ -1,92 +1,23 @@
 (function () {
-    var DEFAULT_BASE = 'https://willian-unheady-rawly.ngrok-free.dev';
+    // 后端地址只从 cookie（ziyit_api_base_ok）读，其次 localStorage 覆盖，最后才用这条兜底；
+    // 不再读 backend.txt 去探测“哪一条才是后端”。
+    var DEFAULT_BASE = 'https://ziyitstudio.ccwu.cc';
 
      
     var BASE_COOKIE = 'ziyit_api_base_ok';
     var BASE_COOKIE_DAYS = 7;
 
      
-    var SCRIPT_SRC = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
-
-    var loadedBases = [];
     var resolvedBase = '';
     var readyBasePromise = null;
 
-    function backendTxtUrl() {
-        try {
-            if (SCRIPT_SRC) return new URL('../backend.txt', SCRIPT_SRC).href;
-        } catch (e) {}
-        return 'backend.txt';
-    }
-
-     
-    function parseBases(txt) {
-        var out = [];
-        String(txt || '').split(/\r?\n/).forEach(function (line) {
-            var u = line.trim();
-            if (!u || u.charAt(0) === '#') return;
-            var m = u.match(/https?:\/\/[^\s]+/i);
-            if (!m) return;
-            u = m[0].replace(/\/+$/, '');
-            if (out.indexOf(u) === -1) out.push(u);
-        });
-        return out;
-    }
-
-    function loadBackendBases() {
-        return new Promise(function (resolve) {
-            var done = false;
-            function finish() { if (!done) { done = true; resolve(loadedBases); } }
-            try {
-                fetch(backendTxtUrl(), { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': '1' } })
-                    .then(function (res) { return res.ok ? res.text() : ''; })
-                    .then(function (txt) { loadedBases = parseBases(txt); finish(); })
-                    .catch(finish);
-            } catch (e) {
-                finish();
-            }
-            setTimeout(finish, 4000);
-        });
-    }
-
     function backendReady() {
-        if (!readyBasePromise) {
-            var cached = cachedBase();
-            if (cached) {
-                 
-                resolvedBase = cached;
-                readyBasePromise = loadBackendBases().then(function () { return cached; });
-            } else {
-                readyBasePromise = loadBackendBases().then(function () {
-                    var bases = getBases();
-                    var i = 0;
-                    function next() {
-                        if (i >= bases.length) return bases[0] || DEFAULT_BASE;
-                        var b = bases[i++];
-                        return probeBase(b).then(function (ok) { return ok ? b : next(); });
-                    }
-                    return next();
-                }).then(function (b) {
-                    if (b) rememberBase(b);
-                    return b;
-                });
-            }
-        }
+        if (readyBasePromise) return readyBasePromise;
+        // 地址只认 cookie / localStorage 覆盖；都没有时用兜底地址，并立刻写回 cookie 供后续直接读取
+        resolvedBase = cachedBase() || DEFAULT_BASE;
+        rememberBase(resolvedBase);
+        readyBasePromise = Promise.resolve(resolvedBase);
         return readyBasePromise;
-    }
-
-    function probeBase(base, timeoutMs) {
-        return new Promise(function (resolve) {
-            var done = false;
-            var timer = setTimeout(function () { if (!done) { done = true; resolve(false); } }, timeoutMs || 3000);
-            try {
-                fetch(base + '/', { method: 'GET', mode: 'no-cors', cache: 'no-store' })
-                    .then(function () { if (!done) { done = true; clearTimeout(timer); resolve(true); } })
-                    .catch(function () { if (!done) { done = true; clearTimeout(timer); resolve(false); } });
-            } catch (e) {
-                if (!done) { done = true; clearTimeout(timer); resolve(false); }
-            }
-        });
     }
 
     function getBases() {
@@ -97,9 +28,6 @@
         } catch (e) {}
         var cookie = getBaseCookie();
         if (cookie && list.indexOf(cookie) === -1) list.push(cookie);
-        for (var i = 0; i < loadedBases.length; i++) {
-            if (list.indexOf(loadedBases[i]) === -1) list.push(loadedBases[i]);
-        }
         if (list.indexOf(DEFAULT_BASE) === -1) list.push(DEFAULT_BASE);
         return list;
     }
@@ -183,6 +111,28 @@
         }, function (err) {
             clearTimeout(timer);
             throw err;
+        });
+    }
+
+    // 绕开 request() 的直连接口（客服 / 申诉 / 用户类型 / backrooms 下载等）统一走这里取址：
+    // 先等 backendReady() 定好地址，否则会拿缓存里的旧地址硬连，表现就是“连接失败”。
+    function fetchApi(path, options) {
+        return backendReady().then(function () {
+            return fetchWithTimeout(currentBase() + path, options);
+        }).catch(function (err) {
+            // 连不上（不是后端回的错）：清掉缓存地址按 cookie / 兜底重新解析一次
+            if (err && err.status) throw err;
+            invalidateBase();
+            return backendReady().then(function () {
+                return fetchWithTimeout(currentBase() + path, options);
+            });
+        });
+    }
+
+    // 同上，但用裸 fetch（流式 SSE 不能套 20 秒整体超时）。
+    function fetchApiRaw(path, options) {
+        return backendReady().then(function () {
+            return fetch(currentBase() + path, options);
         });
     }
 
@@ -804,9 +754,8 @@
      
     function guideAuthSync(token) {
         var tk = token || getToken();
-        var base = currentBase();
         function doSync(retried) {
-            return fetchWithTimeout(base + '/guide/auth/sync', {
+            return fetchApi('/guide/auth/sync', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -843,8 +792,7 @@
      
     function guideChat(message) {
         var token = getToken();
-        var base = currentBase();
-        return fetchWithTimeout(base + '/guide/chat', {
+        return fetchApi('/guide/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -874,8 +822,7 @@
      
     function guideChatStream(message, onEvent) {
         var token = getToken();
-        var base = currentBase();
-        return fetch(base + '/guide/chat/stream', {
+        return fetchApiRaw('/guide/chat/stream', {
             method: 'POST',
             cache: 'no-store',
             headers: {
@@ -1012,8 +959,7 @@
         options.headers['Content-Type'] = 'application/json';
         options.headers['ngrok-skip-browser-warning'] = '1';
         if (token) options.headers['Authorization'] = 'Bearer ' + token;
-        var base = currentBase();
-        return fetchWithTimeout(base + path, options).then(function (res) {
+        return fetchApi(path, options).then(function (res) {
             return res.json().catch(function () { return null; }).then(function (data) {
                 if (!res.ok) {
                     var err = new Error(errorText(data && data.detail) || ('请求失败 ' + res.status));
@@ -1052,8 +998,7 @@
      
     function userType() {
         var token = getToken();
-        var base = currentBase();
-        return fetchWithTimeout(base + '/auth/user-type', {
+        return fetchApi('/auth/user-type', {
             headers: {
                 'ngrok-skip-browser-warning': '1',
                 'Authorization': token ? 'Bearer ' + token : ''
@@ -1453,9 +1398,8 @@
 
      
     function backroomsTypeOpen(type, id) {
-        var base = currentBase();
         var token = getToken();
-        return fetchWithTimeout(base + backroomsPrefix(type) + '/' + encodeURIComponent(id), {
+        return fetchApi(backroomsPrefix(type) + '/' + encodeURIComponent(id), {
             headers: {
                 'ngrok-skip-browser-warning': '1',
                 'Authorization': token ? 'Bearer ' + token : ''
@@ -1527,8 +1471,7 @@
 
      
     function backroomsDownloadStandard() {
-        var base = currentBase();
-        return fetchWithTimeout(base + '/backrooms/normal-levels/slyq.md')
+        return fetchApi('/backrooms/normal-levels/slyq.md')
             .then(function (r) {
                 if (!r.ok) { var e = new Error('下载失败 ' + r.status); e.status = r.status; throw e; }
                 return r.blob();
@@ -1550,15 +1493,12 @@
      
      
     function backroomsOpenLevel(id) {
-        return backendReady().then(function () {
-            var base = currentBase();
-            var token = getToken();
-            return fetchWithTimeout(base + '/backrooms/levels/' + encodeURIComponent(id), {
-                headers: {
-                    'ngrok-skip-browser-warning': '1',
-                    'Authorization': token ? 'Bearer ' + token : ''
-                }
-            });
+        var token = getToken();
+        return fetchApi('/backrooms/levels/' + encodeURIComponent(id), {
+            headers: {
+                'ngrok-skip-browser-warning': '1',
+                'Authorization': token ? 'Bearer ' + token : ''
+            }
         }).then(function (res) {
             if (!res.ok) {
                 var err = new Error('请求失败 ' + res.status);
