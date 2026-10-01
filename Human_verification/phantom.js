@@ -310,7 +310,6 @@ class WidgetSession {
             writable: true,
             value: 50
         });
-        this._readyAt = 0;
         this._autoRestarts = 0;
         this._autoRestarting = false;
         Object.defineProperty(this, "streamTimer", {
@@ -662,7 +661,6 @@ class WidgetSession {
          
          
         const ready = await videoReady(this.apiBase, this.challengeId, this.sessionId);
-        this._readyAt = performance.now();
         if (!ready || ready.ready !== true) {
             throw new Error("视频尚未就绪，请重试");
         }
@@ -800,10 +798,13 @@ class WidgetSession {
         if (!sb || this._streamAborted)
             return Promise.resolve();
         const totalMs = Number((ready && ready.durationMs) || (this.videoStream && this.videoStream.durationMs) || 0);
-        const want = Number(ready && ready.minPrefetch);
-        const target = Number.isFinite(want) && want > 0
-            ? Math.min(want, totalMs > 0 ? totalMs / 1000 : want)
-            : (totalMs > 0 ? Math.min(3, totalMs / 1000) : 3);
+        // v0.3.48：开播门槛从「minPrefetch（默认 3 秒）」降到【1 包】—— 首包到手就放行
+        // 开播，后续由 _chunkGate 按播放水位滚动补给。minPrefetch 仍是后端取片闸门的
+        // "允许超前量"，但不再作为前端的等待目标（它越大只会越拖慢起播）。
+        const chunkMs = Number(ready && ready.chunkDurationMs)
+            || (Number(ready && ready.durationMs) / Math.max(1, Number(ready && ready.chunkCount))) || 1000;
+        const totalS = totalMs > 0 ? totalMs / 1000 : chunkMs / 1000;
+        const target = Math.max(0.2, Math.min(chunkMs / 1000, totalS));
         return new Promise((resolve) => {
             const started = performance.now();
             const tick = () => {
@@ -955,13 +956,38 @@ class WidgetSession {
     _chunkGate(ready) {
         const chunkMs = Number(ready && ready.chunkDurationMs)
             || (Number(ready && ready.durationMs) / Math.max(1, Number(ready && ready.chunkCount))) || 33;
-        const leadMs = Math.max(0, Number((ready && ready.minPrefetch) ?? 3) * 1000);
-        const readyAt = this._readyAt || performance.now();
-        return (idx) => {
-            const due = readyAt + idx * chunkMs - leadMs;
-            const ms = due - performance.now();
-            return ms > 0 ? new Promise((resolve) => window.setTimeout(resolve, ms)) : Promise.resolve();
-        };
+        // v0.3.48：由「固定 minPrefetch 秒前视」改为【播放水位】驱动 ——
+        //   取第 i 包前，等「已经取到的那 i 包时长」被播过 2/3，并保底领先 1 包防抖动：
+        //     release = min(已取时长 × 2/3, 已取时长 − 1 包)
+        // 作用：首包到手即可开播，之后随播放进度滚动补给 —— 既不把整段一把拉走（安全），
+        // 也不会因前视不足被网络抖动卡死（流畅）。
+        // 后端闸门（第 i 包 ≥ ready + i×包时长 − minPrefetch）只是"最早可取时刻"，本策略
+        // 天然晚于它，不会撞 409；那条闸门仍在拦"不播只拿"的离线抠帧。
+        const floorMs = Math.max(1, chunkMs);
+        return (idx) => new Promise((resolve) => {
+            // 还在整段兜底下载（MSE 不可用、videoEl 尚未建立）时没有播放进度可依，
+            // 直接放行，交给调用方按窗口取完。
+            if (!this.videoEl)
+                return resolve();
+            const fetchedMs = Math.max(0, Number(idx) || 0) * chunkMs;
+            if (fetchedMs <= 0)
+                return resolve();
+            const releaseMs = Math.min((fetchedMs * 2) / 3, fetchedMs - floorMs);
+            const startedAt = performance.now();
+            const tick = () => {
+                if (this._streamAborted)
+                    return resolve();
+                const playedMs = this.videoEl ? this.videoEl.currentTime * 1000 : 0;
+                if (playedMs >= releaseMs)
+                    return resolve();
+                // 兜底：视频被暂停（用户在提示段松手）或播放异常时，不把拉流永久挂死。
+                // 正常节奏下每次等待约 1.3~2.7 秒，远够不着这个上限。
+                if (performance.now() - startedAt >= 6000)
+                    return resolve();
+                window.setTimeout(tick, 60);
+            };
+            tick();
+        });
     }
     async _pullChunks(ready) {
         const total = Number(ready.chunkCount || this.videoStream?.chunkCount || 0);
