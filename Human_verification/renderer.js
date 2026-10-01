@@ -1,35 +1,4 @@
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 import { paintFullNoise as paintFullNoisePure } from "./particles.js";
-
- 
- 
- 
- 
- 
- 
- 
- 
-// v0.3.47：后端已把整屏（噪点底噪 + 簇）渲染好，前端只负责【原样播放】这一整幅画面，
-// 不再本地画噪点、也不再做"亮度阈值覆盖"合成（原 CLUSTER_THRESHOLD 常量随之移除）。
-
 export class PhantomRenderer {
     constructor(canvas, params) {
         Object.defineProperty(this, "params", {
@@ -83,6 +52,8 @@ export class PhantomRenderer {
         this.ctx = ctx;
          
         this._img = null;
+        this._noiseCanvas = null;
+        this._noiseCtx = null;
     }
     
 
@@ -147,20 +118,41 @@ export class PhantomRenderer {
             ctx.drawImage(v, 0, 0, w, h);
             return;
         }
-        // 视频还没解码出首帧：先铺黑，避免露出上一帧残留。
-        ctx.fillStyle = "#000";
-        ctx.fillRect(0, 0, w, h);
+        // v0.3.48：视频帧还没就绪（慢链路首帧未到 / 播放中偶发掉帧）时铺【本地整屏噪点】，
+        // 不再铺纯黑。旧做法（前端自画噪点）任何时刻都有画面；改成"整屏后端出"后若铺黑，
+        // 用户会在"按下 → 首帧到达"这段里对着黑屏干等，误以为验证坏了。
+        this._paintLocalNoise();
     }
      
-    drawStaticNoise() {
+    // v0.3.48：本地噪点的生成栅格与后端渲染的视频【同分辨率】（VIDEO_RENDER_SCALE 缩放后
+    // 的尺寸），再最近邻放大到画布 —— 两种画面颗粒度一致，切换时不再有肉眼可见的
+    // "换分辨率"跳变。取不到视频尺寸（无视频 / PoW 阶段）时退回画布原生分辨率。
+    _noiseGrid() {
+        const v = this.video;
+        const gw = v && v.videoWidth ? v.videoWidth : this.canvas.width;
+        const gh = v && v.videoHeight ? v.videoHeight : this.canvas.height;
+        return [gw, gh];
+    }
+    _paintLocalNoise() {
         const { ctx, canvas } = this;
-        const w = canvas.width;
-        const h = canvas.height;
-        if (!this._img || this._img.width !== w || this._img.height !== h) {
-            this._img = ctx.createImageData(w, h);
+        const [gw, gh] = this._noiseGrid();
+        if (!this._img || this._img.width !== gw || this._img.height !== gh) {
+            this._img = ctx.createImageData(gw, gh);
+        }
+        if (!this._noiseCanvas || this._noiseCanvas.width !== gw || this._noiseCanvas.height !== gh) {
+            const nc = document.createElement("canvas");
+            nc.width = gw;
+            nc.height = gh;
+            this._noiseCanvas = nc;
+            this._noiseCtx = nc.getContext("2d");
         }
         this.paintFullNoise(this._img.data);
-        ctx.putImageData(this._img, 0, 0);
+        this._noiseCtx.putImageData(this._img, 0, 0);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(this._noiseCanvas, 0, 0, canvas.width, canvas.height);
+    }
+    drawStaticNoise() {
+        this._paintLocalNoise();
     }
      
     pause() {

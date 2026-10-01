@@ -495,6 +495,12 @@ class WidgetSession {
                 this.status.textContent = "验证已过期，正在重新取题…";
                 this.scheduleRetry(800, "auto-restart");
             }
+            else if (e && e.code === "VIDEO_TIMEOUT") {
+                // v0.3.48：视频分包迟迟不到（慢链路 / 闸门抖动）→ 自动重新取题，而不是
+                // 留一个"按了没反应"的画布让用户干等。
+                this.status.textContent = "验证题加载超时，正在重新取题…";
+                this.scheduleRetry(800, "auto-restart");
+            }
             else {
                 this.status.textContent = `初始化失败: ${e.message}`;
             }
@@ -525,7 +531,7 @@ class WidgetSession {
                 if (t >= 1)
                     this.setHint("stopped", "请松手");
             });
-            this.previewTimer = window.setTimeout(beginCollect, this.previewMs);
+            armPreviewSwitch();
         };
          
          
@@ -543,6 +549,56 @@ class WidgetSession {
             this._startStream();
              
             this.activateBtn.classList.add("phantom-holding");
+        };
+         
+         
+         
+        // v0.3.48：预览段 → 跟随段的切换改由【视频真实播放位置】驱动，不再用墙钟定时器。
+        // 视频是"按下之后"才起播的：起播被慢链路拖慢时，墙钟会在起手提示段还没放完就切进
+        // "跟随"，用户按着拖动看到的仍是提示段的整块方波闪烁（像在反复放预览），根本无法
+        // 对齐方块。改用 v.currentTime 判定：播放到 previewSeconds 才进入跟随段；同时保留
+        // 兜底超时（视频卡住 / 无视频元素时仍能进入跟随），不会一直按着没反应。
+        const armPreviewSwitch = () => {
+            window.clearTimeout(this.previewTimer);
+            const startedAt = performance.now();
+            const maxWaitMs = Math.max(8000, this.previewMs + 8000);
+            // 先确认"视频确实从起手提示段开始播"（currentTime 落在 previewSeconds 之内），
+            // 再等它越过 previewSeconds —— 否则可能读到上一次播放残留的 currentTime 而直接
+            // 跳进跟随段。start() 已把 currentTime 归零，这里只是兜住 seek 尚未生效的瞬间。
+            let fromStart = false;
+            const fire = () => {
+                this.previewTimer = 0;
+                beginCollect();
+            };
+            const tick = () => {
+                if (!this.previewing || this.finished)
+                    return;
+                const now = performance.now();
+                const v = this.videoEl;
+                if (!v) {
+                    if (now - startedAt >= this.previewMs) {
+                        fire();
+                        return;
+                    }
+                }
+                else {
+                    const playedMs = v.currentTime * 1000;
+                    if (!fromStart) {
+                        if (playedMs < this.previewMs)
+                            fromStart = true;
+                    }
+                    else if (playedMs >= this.previewMs) {
+                        fire();
+                        return;
+                    }
+                }
+                if (now - startedAt >= maxWaitMs) {
+                    fire();
+                    return;
+                }
+                this.previewTimer = window.setTimeout(tick, 50);
+            };
+            this.previewTimer = window.setTimeout(tick, 50);
         };
         const onUp = async () => {
             if (this.finished)
@@ -697,7 +753,45 @@ class WidgetSession {
         });
          
         await this._waitBuffered(ready);
+        await this._waitPlayable(v);
         return v;
+    }
+     
+    // v0.3.48：放行"按住验证"按钮前，最后确认一次视频【真有可播画面】。旧实现的两处等待
+    // （首包 5s、缓冲 8s）都带超时兜底，超时后照样返回 → 用户按下后对着黑屏干等首帧
+    // 到达，误以为验证坏了。这里分三种情况：
+    //   - readyState ≥ 2 且已知尺寸 → 已就绪，放行；
+    //   - 只有元数据但【确有缓冲】→ 放行（部分浏览器在 play() 前停在 readyState=1，
+    //     数据在就一定会解码，不能误判成"流没来"而弹重试）；
+    //   - 连缓冲都没有 → 再等 extraMs；仍没有则抛 VIDEO_TIMEOUT，交给上层自动重取题。
+    _waitPlayable(v, extraMs = 6000) {
+        return new Promise((resolve, reject) => {
+            const started = performance.now();
+            const hasBuffered = () => {
+                const sb = this.sourceBuffer;
+                try {
+                    return !!sb && sb.buffered.length > 0
+                        && sb.buffered.end(sb.buffered.length - 1) > 0;
+                }
+                catch (e) {
+                    return false;
+                }
+            };
+            const tick = () => {
+                if (this._streamAborted || this._sessionClosed)
+                    return resolve();
+                if ((v.readyState >= 2 && v.videoWidth) || hasBuffered())
+                    return resolve();
+                if (performance.now() - started >= extraMs) {
+                    const err = new Error("验证视频加载超时");
+                    err.status = 0;
+                    err.code = "VIDEO_TIMEOUT";
+                    return reject(err);
+                }
+                window.setTimeout(tick, 80);
+            };
+            tick();
+        });
     }
      
      
@@ -1674,6 +1768,13 @@ export function mount(el, opts) {
          
          
         const resetSession = () => {
+            // v0.3.48：重建会话前必须先销毁旧会话。旧实现直接 new WidgetSession 覆盖变量，
+            // 旧会话的 _pullChunks 拉流循环 / streamTimer / 那个 1px <video> 元素都会滞留
+            // （持续占后端取片额度、DOM 元素越堆越多），自动重取题时会不断累积。
+            try {
+                session?.destroy();
+            }
+            catch (e) {   }
             activateBtn.classList.remove("phantom-holding", "phantom-success", "phantom-fail", "phantom-retry");
             activateBtn.textContent = "按住并跟随方块";
             activateBtn.appendChild(progress);
@@ -1682,6 +1783,10 @@ export function mount(el, opts) {
             session = new WidgetSession(canvas, opts.apiBase, status, overlay, hint, activateBtn, 
              
             handleResult, (e) => opts.onError?.(e), resetSession);
+            // 同步 modal.session 指向新会话：closeModal 用的是 modal.session，若不同步，
+            // 关闭弹窗时销毁的仍是旧会话，而当前会话的拉流 / 定时器会继续跑下去。
+            if (modal)
+                modal.session = session;
             void session.start();
         };
         let session = new WidgetSession(canvas, opts.apiBase, status, overlay, hint, activateBtn, handleResult, (e) => opts.onError?.(e), resetSession);
