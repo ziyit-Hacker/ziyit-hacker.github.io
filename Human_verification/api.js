@@ -1,10 +1,3 @@
- 
- 
- 
- 
- 
- 
- 
 const TICKET_HEADER = "x-phantom-ticket";
 
 const DEFAULT_BASE = "https://willian-unheady-rawly.ngrok-free.dev";
@@ -63,6 +56,11 @@ function cachedBase() {
 
 function rememberBase(base) {
     if (!base) return;
+     
+     
+     
+     
+    if (base === resolvedBase) return;
     resolvedBase = base;
     ticket = { token: "", expiresAt: 0 };
     if (base === customBase()) return;
@@ -162,6 +160,7 @@ export function apiBase() {
 }
 
 let ticket = { token: "", expiresAt: 0 };
+let ticketPromise = null;
 
 function explicitApiKey() {
     try {
@@ -214,7 +213,12 @@ async function currentTicket(base) {
     if (ticket.token && Date.now() < ticket.expiresAt) {
         return ticket.token;
     }
-    return fetchTicket(base);
+    if (!ticketPromise) {
+        ticketPromise = fetchTicket(base).finally(() => {
+            ticketPromise = null;
+        });
+    }
+    return ticketPromise;
 }
 
 async function authHeaders(base) {
