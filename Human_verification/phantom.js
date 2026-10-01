@@ -393,7 +393,7 @@ class WidgetSession {
         this._preReceipts = [];
         this._powDone = false;
     }
-    // 取 /session 的密钥能力，并把它交给上层决定要不要渲染"换一种方式验证"入口。
+    // 取 /session 的密钥能力（只有票据通道拿得到，api-key / 体验页通道返回宽松默认）。
     async loadSessionCaps() {
         try {
             this._sessionCaps = await sessionInfo();
@@ -401,11 +401,15 @@ class WidgetSession {
         catch (e) {
             // 取不到就按宽松默认（两套都可试），后面 /challenge 的失败会走正常错误提示。
         }
+        return this._sessionCaps;
+    }
+    // 决定"换一种方式验证"入口是否出现：只有本次真的要出拖拽题、且 /session 明说
+    // 允许两套时才渲染。api-key / 体验页通道拿不到能力 → 不渲染，避免承诺一个换不掉的入口。
+    notifyEntry(caps, showEntry) {
         try {
-            this.onSessionInfo?.(this._sessionCaps);
+            this.onSessionInfo?.(caps, showEntry);
         }
         catch (e) { }
-        return this._sessionCaps;
     }
      
     setHint(stage, text) {
@@ -449,6 +453,15 @@ class WidgetSession {
             const methods = (challenge && Array.isArray(challenge.requiredMethods)) ? challenge.requiredMethods : [];
             this.requiredMethods = methods;
             this.powRequired = methods.indexOf("pow") !== -1;
+            if (methods.indexOf("phantom") === -1 && this.powRequired) {
+                // 权威预告说这次不需要拖拽那套（例如密钥只允许 PoW）。api-key / 体验页
+                // 通道拿不到 /session 能力，只能靠这里兜底：别先把拖拽题端上来，直接转 PoW。
+                const handled = await this._runPowFirst();
+                if (handled || this._sessionClosed)
+                    return;
+            }
+            // 本次确实要出拖拽题：这时才按 /session 的能力决定是否渲染"换一种方式验证"入口。
+            this.notifyEntry(caps, true);
             const serverPub = await importServerPublic(challenge.serverPublicJwk);
             this.sessionKey = await deriveSessionKey(privateKey, serverPub, challenge.salt);
             this.challengeId = challenge.challengeId;
@@ -1546,6 +1559,8 @@ class WidgetSession {
         const stage = this.canvas.parentElement;
         if (stage)
             stage.style.display = "none";
+        // 默认（或只允许）PoW：本次没有拖拽题，"换一种方式验证"入口不该出现。
+        this.notifyEntry(this._sessionCaps, false);
         const receipt = await this._runPowPhase("pow");
         if (this._sessionClosed)
             return true;
@@ -1913,11 +1928,12 @@ export function mount(el, opts) {
         modalCard.className = "phantom-modal-card";
         node.appendChild(modalCard);
         const { hint, canvas, overlay, activateBtn, status, progress, a11yWrap, a11yBtn, body } = buildModalBody(modalCard);
-        // v0.3.55：只有「密钥允许两套」（canSwitch）且「默认是拖拽那套」时才把
-        // "换一种方式验证"入口插进来；只允许一套时不渲染该入口，也不显示任何
-        // "不支持无障碍替代方式"之类提示，直接按 defaultMethod 走那一套。
-        const applySessionCaps = (caps) => {
-            const show = !!(caps && caps.canSwitch && caps.defaultMethod === "phantom");
+        // v0.3.55：只有「本次真的要出拖拽题」（showEntry）且「密钥允许两套」
+        // （canSwitch）且「默认就是拖拽那套」时才把"换一种方式验证"入口插进来；
+        // 只允许一套时不渲染该入口，也不显示任何"不支持无障碍替代方式"之类提示，
+        // 直接按 defaultMethod 走那一套。
+        const applySessionCaps = (caps, showEntry) => {
+            const show = !!(showEntry && caps && caps.canSwitch && caps.defaultMethod === "phantom");
             if (show) {
                 if (!a11yWrap.parentNode)
                     body.appendChild(a11yWrap);

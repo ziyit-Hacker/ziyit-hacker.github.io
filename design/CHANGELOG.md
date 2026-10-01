@@ -10,9 +10,12 @@
   - **"换一种方式验证"入口按能力渲染**：只有 `canSwitch === true` 且 `defaultMethod === "phantom"` 时才渲染该入口；`canSwitch === false` 时**不渲染**入口、也不显示"当前验证暂不支持无障碍替代方式"之类提示。
   - **默认方式直达**：`defaultMethod === "pow"` 的密钥直接进 PoW 流程，不再先出拖拽题；若权威预告 `requiredMethods` 仍含 `phantom`（双验证），PoW 通过后自动续跑拖拽那套，两套凭据一并交给接入方。
   - **`preferredMethod` 接上两个领题接口**：`POST /challenge`、`POST /pow/challenge` 支持 `"phantom"` / `"pow"`；仅在取值合法时带上，双验证场景由后端忽略（此时如实提示换不掉），非法值静默回落由后端处理。原先发送已被后端移除的 `a11y` 字段的逻辑删除。
-  - `requiredMethods` 仍是判断"要不要走双套"的唯一依据。
+  - `requiredMethods` 仍是判断"要不要走双套"的唯一依据；**反向同理**：`/challenge` 返回的预告里没有 `phantom`（例如密钥只允许 PoW）时不再先把拖拽题端上来，直接转 PoW —— 这是 api-key / 体验页通道拿不到 `/session` 能力时唯一的兜底信号。
+  - "换一种方式验证"入口改为**按本次实际流程**决定：只有本次确实要出拖拽题、且 `/session` 明说 `canSwitch` 时才渲染；拿不到密钥能力（api-key / 体验页通道）时不渲染，避免承诺一个换不掉的入口。
 ### 说明
 - 只改前端；后端未改动。
+- 密钥的「验证方式」在三条通道上生效范围不同（后端既定行为，非前端缺陷）：票据通道按来源命中的密钥生效；api-key 通道按该密钥的 `human_mode` / `allowed_modes` 生效；**体验页通道（`x-phantom-exp-key`）有意忽略所填密钥的验证方式**（`human/main.py` 的 `_authorize_experience` 里 `human_mode` 走全局默认、`allowed_modes=None`），只校验密钥格式。
+- 另注：`Human_verification/api.js` 的 `explicitApiKey()` 读全站共用的 `localStorage['phantom_api_key']`；只要在密钥页生成过一次密钥，之后全站都会切成 api-key 通道、绕过 `/session`。
 
 ## v1.28 — 2026-10-01
 ### 修复
