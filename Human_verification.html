@@ -438,6 +438,26 @@
       justify-content: center;
     }
 
+    .demo-launch {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      background: var(--muted);
+      color: var(--fg);
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: border-color 150ms ease, background 150ms ease;
+    }
+
+    .demo-launch:hover {
+      border-color: var(--accent);
+      background: var(--card);
+    }
+
      
     .code-block {
       margin: 0;
@@ -625,7 +645,7 @@
       <section class="section">
         <h2 class="section-title">在线体验</h2>
         <p class="section-desc">
-          按住按钮，目光跟随方块轨迹，停止后松开。下方即真实 widget，验证结果会打印到浏览器控制台。
+          按住按钮，目光跟随方块轨迹，停止后松开。真实 widget 位于独立体验页；登录后输入任意格式合法的 API 密钥即可试用。
         </p>
         <div class="demo-card">
           <div class="demo-card-head">
@@ -633,7 +653,7 @@
             <span class="demo-card-sub">challenge → verify</span>
           </div>
           <div class="demo-card-body">
-            <div id="app"></div>
+            <a class="demo-launch" href="./Human_verification_experience.html">前往体验页 →</a>
           </div>
         </div>
       </section>

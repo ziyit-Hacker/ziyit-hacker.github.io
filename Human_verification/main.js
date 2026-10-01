@@ -122,6 +122,11 @@ function showKeyDeniedPanel(tips) {
  
 let handle = null;
 async function mountWidget(mode) {
+    // v0.3.49：落地页（Human_verification.html）已把内嵌 widget 换成"前往体验页"超链接，
+    // 真实 widget 只跑在独立体验页（Human_verification_experience.html）。落地页上不再有
+    // #app 挂载点，这里直接跳过，避免 mount 报错；主题切换等逻辑不受影响。
+    if (!document.querySelector("#app"))
+        return;
     handle?.destroy();
     await backendReady();
     handle = mount("#app", {
