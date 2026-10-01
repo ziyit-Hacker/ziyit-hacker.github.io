@@ -519,6 +519,12 @@
             mfaStepFactors = mfaMethods.filter(function (m) {
                 return m === 'password' || m === 'totp' || m === 'recovery' || m === 'email';
             });
+            // 恢复码兜底：后端 methods 只下发"类别"（totp / passkey / ...），恢复码与 totp 同属
+            // 一类、不会单独出现，于是这个自动第二步永远看不到它——手机丢了就没路可走。这里在
+            // 2FA 待验证时把恢复码并列补上（提交时 factor=recovery，后端按 totp 类结算）。
+            if (mfaStepFactors.indexOf('totp') >= 0 && mfaStepFactors.indexOf('recovery') < 0) {
+                mfaStepFactors.push('recovery');
+            }
             const hasPasskey = mfaMethods.indexOf('passkey') >= 0;
 
             document.querySelector('form').style.display = 'none';
