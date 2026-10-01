@@ -470,8 +470,8 @@ class WidgetSession {
                 this.turnIntoRetryButton();
             }
             else if (code === 429) {
-                 
-                this.status.textContent = "尝试次数过多，请稍后再试";
+                // 后端失败频控（PHANTOM_BLOCK_S 默认 60s）：文案与冷却时长对齐。
+                this.status.textContent = "尝试次数过多，请约 1 分钟后重试";
                 this.scheduleRetry(60000);
             }
             else if (code === 401) {
@@ -1101,8 +1101,8 @@ class WidgetSession {
             const code = (e && e.status) || 0;
             this.activateBtn.classList.add("phantom-fail");
             if (code === 429) {
-                 
-                this.status.textContent = "尝试次数过多，请稍后再试";
+                // 后端失败频控（PHANTOM_BLOCK_S 默认 60s）：文案与冷却时长对齐。
+                this.status.textContent = "尝试次数过多，请约 1 分钟后重试";
                 this.activateBtn.textContent = "尝试次数过多";
                 this.scheduleRetry(60000);
             }

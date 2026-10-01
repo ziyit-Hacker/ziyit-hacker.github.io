@@ -27,7 +27,8 @@ import { paintFullNoise as paintFullNoisePure } from "./particles.js";
  
  
  
-const CLUSTER_THRESHOLD = 8;
+// v0.3.47：后端已把整屏（噪点底噪 + 簇）渲染好，前端只负责【原样播放】这一整幅画面，
+// 不再本地画噪点、也不再做"亮度阈值覆盖"合成（原 CLUSTER_THRESHOLD 常量随之移除）。
 
 export class PhantomRenderer {
     constructor(canvas, params) {
@@ -69,20 +70,6 @@ export class PhantomRenderer {
             value: void 0
         });
          
-        Object.defineProperty(this, "videoFrameCanvas", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        Object.defineProperty(this, "videoFrameCtx", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        
-
         Object.defineProperty(this, "video", {
             enumerable: true,
             configurable: true,
@@ -96,8 +83,6 @@ export class PhantomRenderer {
         this.ctx = ctx;
          
         this._img = null;
-        this._lastVideoTime = -1;
-        this._videoPixels = null;
     }
     
 
@@ -149,60 +134,22 @@ export class PhantomRenderer {
         this.rafId = requestAnimationFrame(loop);
     }
      
-     
-     
-     
-    _videoFramePixels(v, w, h) {
-        if (!this.videoFrameCanvas) {
-            this.videoFrameCanvas = document.createElement("canvas");
-            this.videoFrameCanvas.width = w;
-            this.videoFrameCanvas.height = h;
-            this.videoFrameCtx = this.videoFrameCanvas.getContext("2d", {
-                alpha: false,
-                willReadFrequently: true
-            });
-        }
-        const octx = this.videoFrameCtx;
-        if (!octx)
-            return null;
-        if (this._videoPixels && this._lastVideoTime === v.currentTime)
-            return this._videoPixels;
-        octx.drawImage(v, 0, 0, w, h);
-        const px = octx.getImageData(0, 0, w, h).data;
-        this._lastVideoTime = v.currentTime;
-        this._videoPixels = px;
-        return px;
-    }
-     
     renderFrame(t) {
         const { ctx } = this;
         const w = this.canvas.width;
         const h = this.canvas.height;
-        let img = this._img;
-        if (!img || img.width !== w || img.height !== h) {
-            img = ctx.createImageData(w, h);
-            this._img = img;
-            this._lastVideoTime = -1;
-            this._videoPixels = null;
-        }
-        const data = img.data;
-        this.paintFullNoise(data);
         const v = this.video;
         if (v && v.readyState >= 2 && v.videoWidth) {
-            const vd = this._videoFramePixels(v, w, h);
-            if (vd) {
-                const len = data.length;
-                for (let i = 0; i < len; i += 4) {
-                    const vv = vd[i];
-                    if (vv > CLUSTER_THRESHOLD) {
-                        data[i] = vv;
-                        data[i + 1] = vd[i + 1];
-                        data[i + 2] = vd[i + 2];
-                    }
-                }
-            }
+            // v0.3.47：后端已把整屏画面（噪点底噪 + 簇）渲染好，前端原样播放这一帧即可。
+            // 必须用【最近邻】放大（imageSmoothingEnabled=false）：双线性插值会把簇像素
+            // 糊到相邻像素上、形成一块可见的模糊斑块，单帧零信号当场失效。
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(v, 0, 0, w, h);
+            return;
         }
-        ctx.putImageData(img, 0, 0);
+        // 视频还没解码出首帧：先铺黑，避免露出上一帧残留。
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, w, h);
     }
      
     drawStaticNoise() {
