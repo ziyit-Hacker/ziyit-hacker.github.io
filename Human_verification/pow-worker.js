@@ -93,6 +93,11 @@ var POW_BLOCK_VIEW = new DataView(POW_BLOCK.buffer);
 
  
  
+ 
+var POW_PROGRESS_MS = 100;
+
+ 
+ 
 function solve(nonce, difficulty, onProgress) {
     var prefix = String(nonce) + ":";
     var base = prefix.length;
@@ -103,6 +108,7 @@ function solve(nonce, difficulty, onProgress) {
         POW_BLOCK[k] = prefix.charCodeAt(k) & 0xff;
     }
     var t0 = Date.now();
+    var lastReport = t0;
     var hashes = 0;
     var s, i, j, n, end, h;
 
@@ -134,8 +140,17 @@ function solve(nonce, difficulty, onProgress) {
                 return { solution: s, hashes: hashes, solveMs: Date.now() - t0 };
             }
         }
-        if (onProgress && (hashes & 0x3ffff) === 0) {
-            onProgress(hashes, Date.now() - t0);
+         
+         
+         
+         
+         
+        if (onProgress) {
+            var now = Date.now();
+            if (now - lastReport >= POW_PROGRESS_MS) {
+                lastReport = now;
+                onProgress(hashes, now - t0);
+            }
         }
     }
 }

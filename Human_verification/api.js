@@ -355,6 +355,15 @@ export function verifyPow(apiBase, challengeId, solution, sessionId) {
  
  
  
+export function submitPowStream(apiBase, challengeId, sessionId, seq, hashes, solveMs) {
+    const body = { challengeId, seq, hashes, solveMs };
+    if (sessionId) body.sessionId = sessionId;
+    return postJson(apiBase, "/pow/stream", body);
+}
+
+ 
+ 
+ 
  
  
  

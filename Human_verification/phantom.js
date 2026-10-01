@@ -1,5 +1,5 @@
 import { CONFIG, isMobileViewport } from "./config.js";
-import { requestChallenge, requestPowChallenge, submitVerify, submitStreamChunk, verifyPow, videoChunk, videoReady, } from "./api.js";
+import { requestChallenge, requestPowChallenge, submitPowStream, submitVerify, submitStreamChunk, verifyPow, videoChunk, videoReady, } from "./api.js";
 import { decrypt, deriveSessionKey, encrypt, generateClientKeyPair, importServerPublic, } from "./crypto.js";
 import { installAntidebug } from "./antidebug.js";
 import { PhantomRenderer } from "./renderer.js";
@@ -802,18 +802,34 @@ class WidgetSession {
         if (!sb || this._streamAborted)
             return Promise.resolve();
         const totalMs = Number((ready && ready.durationMs) || (this.videoStream && this.videoStream.durationMs) || 0);
-        // v0.3.48：开播门槛从「minPrefetch（默认 3 秒）」降到【1 包】—— 首包到手就放行
-        // 开播，后续由 _chunkGate 按「服务端闸门节奏 + 缓冲上限 4 包」滚动补给。
-        // minPrefetch 是后端取片闸门的"允许超前量"，不是前端的等待目标（等它只会拖慢起播）。
         const chunkMs = Number(ready && ready.chunkDurationMs)
             || (Number(ready && ready.durationMs) / Math.max(1, Number(ready && ready.chunkCount))) || 1000;
-        const totalS = totalMs > 0 ? totalMs / 1000 : chunkMs / 1000;
-        const target = Math.max(0.2, Math.min(chunkMs / 1000, totalS));
+        // v0.3.51：把开播门槛从「缓冲到 1 包」改成【整段预缓冲】。
+        // 旧版只要 1 包（1 秒）就放开按住，而视频体积远大于本链路带宽（现场实测后端入口
+        // ~110KB/s，视频需 ~840KB/s，见 _chunkGate 注释）→ 用户一按就播，缓冲恰好在
+        // 提示段（2 秒）结束处用尽 → 画面冻住；v0.3.49 起计时又只用 v.currentTime，
+        // 冻住后进度不再推进 → 永久"卡住/黑屏"。先把整段取完再放行，起播后就不可能欠载。
+        //
+        // 放行条件（任一满足即可，避免弱网下无限等）：
+        //   - 缓冲已覆盖整段（留 0.25s 余量：MSE 末尾常差最后一帧）；
+        //   - 取片循环已结束（成功=整段到手；失败时上层会显示"视频流中断"）；
+        //   - 兜底超时 15s。
+        const totalS = totalMs > 0 ? totalMs / 1000 : 0;
+        const target = totalS > 1 ? totalS - 0.25 : Math.max(0.2, chunkMs / 1000);
         return new Promise((resolve) => {
             const started = performance.now();
+            let done = false;
+            const finish = () => {
+                if (done)
+                    return;
+                done = true;
+                resolve();
+            };
             const tick = () => {
+                if (done)
+                    return;
                 if (this._streamAborted)
-                    return resolve();
+                    return finish();
                 let buffered = 0;
                 try {
                     if (sb.buffered.length)
@@ -821,11 +837,13 @@ class WidgetSession {
                 }
                 catch (e) {   }
                 if (buffered >= target)
-                    return resolve();
-                if (performance.now() - started >= 8000)
-                    return resolve();
-                window.setTimeout(tick, 60);
+                    return finish();
+                if (performance.now() - started >= 15000)
+                    return finish();
+                window.setTimeout(tick, 80);
             };
+            // 取片循环 settle（成功/失败都算）即可放行：成功时缓冲必然已覆盖整段。
+            this._pullDone?.then(finish, finish);
             tick();
         });
     }
@@ -960,37 +978,24 @@ class WidgetSession {
     _chunkGate(ready) {
         const chunkMs = Number(ready && ready.chunkDurationMs)
             || (Number(ready && ready.durationMs) / Math.max(1, Number(ready && ready.chunkCount))) || 1000;
-        // v0.3.49：修「预览一播完就卡死 / 冻一帧 / 提前结束」。旧版按【播放位置】放行下一包
-        // （release = 已取时长 × 2/3），但拉流循环在用户按下按钮【之前】就已启动，此时视频
-        // 是暂停的、currentTime 恒为 0 → 门槛永远到不了，每包只能干等 6 秒兜底超时；初始
-        // 缓冲因此只有 2~3 包，而预览段正好 2 秒 —— 预览一结束缓冲就饿死、视频 stall（浏
-        // 览器表现为黑屏 / 冻在最后一帧），stall 后 currentTime 更不动 → 越卡越死。
+        // v0.3.51：修「预览一播完就饿死 / 冻一帧」。根因**不是**取片节奏，而是
+        // 【视频体积 ≫ 链路带宽】：现场实测后端入口只有 ~110KB/s，而视频按 1 包/秒播放、
+        // 每包 base64 后上百 KB → "边播边下"必然在中途欠载。故策略整体反转：
+        // 【尽服务端闸门允许地尽快把整段预取完】，配合 _waitBuffered 的"整段预缓冲后才
+        // 放开按住"，视频一旦起播就再也不会欠载。
         //
-        // 现在改成两条与"播放位置"无关的约束，同时满足即放行，任何情况下都不会饿死：
-        //   1) 服务端闸门节奏：第 i 包 ≥ base + i×包时长 − minPrefetch。base 取【本端收到
-        //      /video/ready 回包的时刻】（见 _prepareVideo），它天然晚于服务端的
-        //      video_ready_ms，故本端算出的最早时刻必然晚于服务端 → 不会撞 409，也就不必
-        //      靠 409 退避去试探（那会污染服务端的 video_gate_blocks 留证计数）。
-        //   2) 缓冲上限 CAP：已缓冲 − 播放位置 < CAP 包才继续取。视频暂停时缓冲涨到 CAP 即
-        //      停（用户还没按按钮时不会把整段提前提走）；一旦饿死（领先变小）立刻放行 ——
-        //      所以"卡住"不再需要干等 6 秒。
-        // 安全性 = 服务端闸门（抢跑上限）+ 这里的 CAP（前端最多领先 4 包），都不允许"一次
-        // 把整段提走"；流畅性 = 最多 4 秒前视缓冲，足以扛住公网抖动。
+        //   - 服务端闸门仍是唯一限速：第 i 包 ≥ base + (i + win - 1)×包时长 − minPrefetch。
+        //     base 取【本端收到 /video/ready 回包的时刻】（见 _prepareVideo），它天然晚于
+        //     服务端的 video_ready_ms，故本端算出的最早时刻必然晚于服务端 → 不会撞 409，
+        //     也就不必靠 409 退避去试探（那会污染服务端的 video_gate_blocks 留证计数）。
+        //   - 【去掉】v0.3.49 的"缓冲最多领先 4 包（capMs）"上限：它的本意是"用户还没按
+        //     按钮时别把整段提走"，但那个约束对脚本毫无作用（脚本自己写客户端），却让
+        //     正常用户在小带宽链路上必然饿死 —— 是个只伤自己的限制。防抢跑靠服务端闸门。
         const leadMs = Math.max(1, Number(ready && ready.minPrefetch) || 3) * 1000;
         const base = Number(this._readyRespAt) || 0;
-        const capMs = Math.max(2000, 4 * chunkMs);
         // 一次并发取 win 包，本地闸门必须按这批里【最后一包】的服务端最早时刻放行，
         // 否则第 2 包会比服务端闸门早到 → 撞 409（虽然会退避重试，但白白污染留证计数）。
         const win = Math.max(1, this._chunkWindow(ready));
-        const bufferedEndMs = () => {
-            try {
-                const sb = this.sourceBuffer;
-                return sb && sb.buffered.length ? sb.buffered.end(sb.buffered.length - 1) * 1000 : 0;
-            }
-            catch (e) {
-                return 0;
-            }
-        };
         return (idx) => new Promise((resolve) => {
             const i = Math.max(0, Number(idx) || 0);
             // 按本批最后一包（i + win - 1）的服务端最早时刻放行。
@@ -998,14 +1003,9 @@ class WidgetSession {
             const tick = () => {
                 if (this._streamAborted)
                     return resolve();
-                const schedOk = base <= 0 || performance.now() >= earliest;
-                const ahead = this.videoEl ? bufferedEndMs() - this.videoEl.currentTime * 1000 : 0;
-                const capOk = !this.videoEl || ahead < capMs;
-                if (schedOk && capOk)
+                if (base <= 0 || performance.now() >= earliest)
                     return resolve();
-                // 不加"超时兜底"：两个条件都必然会被满足 —— schedOk 随墙钟到期，capOk 随
-                // 播放消耗缓冲而打开。若视频一直暂停且缓冲已满，等下去【正是本意】（别趁
-                // 用户没按按钮就把整段提走）。会话销毁时 _streamAborted 会把这里放行。
+                // 不加"超时兜底"：schedOk 随墙钟必然到期；会话销毁时 _streamAborted 放行。
                 window.setTimeout(tick, 60);
             };
             tick();
@@ -1394,6 +1394,11 @@ class WidgetSession {
             let solving = false;
             let settled = false;
             let fails = 0;
+             
+             
+             
+            let streamSeq = 0;
+            const reportPowStream = (hashes, solveMs) => submitPowStream(this.apiBase, challenge.challengeId, challenge.sessionId, streamSeq++, hashes, solveMs).catch(() => { });
             const finish = (out) => {
                 if (settled)
                     return;
@@ -1412,10 +1417,18 @@ class WidgetSession {
                 solving = true;
                 btn.classList.add("phantom-holding");
                 this.status.textContent = "正在校验…";
-                task.run(challenge.nonce, challenge.difficulty).then((out) => {
+                task.run(challenge.nonce, challenge.difficulty, (p) => {
+                     
+                    if (solving)
+                        void reportPowStream(p.hashes, p.solveMs);
+                }).then(async (out) => {
                     if (!solving)
                         return;    
                     solving = false;
+                     
+                     
+                     
+                    await reportPowStream(out.hashes, out.solveMs);
                     finish({ solution: out.solution });
                 }).catch(() => {
                     if (!solving)
