@@ -585,8 +585,10 @@
             var selectedKey = '';
             var usageData = null;
             var usageError = '';
-            var humanDaily = null;   // { map: { 'YYYY-MM-DD': 消耗点数 }, total, capped }
-            var humanError = '';
+            // 点数流水按天聚合：human=人机验证(points_consume)、inj=防注入(injection_detect*)
+            // 结构 { human: { map, total }, inj: { map, total }, capped, pages }
+            var ledgerDaily = null;
+            var ledgerError = '';
             var keysData = null;      // /api-key/mine 返回的 keys
             var keysError = '';
             var keysLoading = null;
@@ -737,37 +739,48 @@
                 return p;
             }
 
-            // ---- 人机验证：从点数流水中按天聚合 points_consume ----
-            function fetchHumanDaily(startStr, endStr) {
-                var out = { map: {}, total: 0, capped: false, pages: 0 };
-                var offset = 0;
+            // ---- 点数流水：按天聚合「防注入」与「人机验证」两类消耗 ----
+            // 两类都来自同一份 points_ledger：防注入 reason=injection_detect（含客服内部 injection_detect_cs），
+            // 人机验证 reason=points_consume。故防注入消耗的点数同样能逐日统计，不依赖后端 byDay。
+            function fetchLedgerDaily(startStr, endStr) {
+                var human = { map: {}, total: 0 };
+                var inj = { map: {}, total: 0 };
+                var pages = 0, capped = false, offset = 0;
+
+                function bucket(reason) {
+                    if (reason === 'points_consume') return human;
+                    if (reason === 'injection_detect' || reason === 'injection_detect_cs') return inj;
+                    return null;
+                }
 
                 function step() {
                     return ZIYIT_API.pointsLedger(LEDGER_PAGE, offset).then(function (data) {
                         var entries = (data && data.entries) || [];
                         var totalNum = (data && data.total != null) ? Number(data.total) : null;
-                        out.pages++;
+                        pages++;
 
                         var reachedStart = false;
                         entries.forEach(function (e) {
-                            if (!e || e.reason !== 'points_consume' || e.at == null) return;
+                            if (!e || e.at == null) return;
+                            var b = bucket(e.reason);
+                            if (!b) return;
                             var day = fmtDay(new Date(Number(e.at)));
                             if (startStr && day < startStr) { reachedStart = true; return; }
                             if (endStr && day > endStr) return;
                             var v = -Number(e.delta || 0);
                             if (v < 0) v = 0;
-                            out.map[day] = (out.map[day] || 0) + v;
-                            out.total += v;
+                            b.map[day] = (b.map[day] || 0) + v;
+                            b.total += v;
                         });
 
                         var more = entries.length >= LEDGER_PAGE && !reachedStart
                             && (totalNum == null || offset + entries.length < totalNum);
-                        if (more && out.pages >= LEDGER_MAX_PAGES) out.capped = true;
-                        if (more && out.pages < LEDGER_MAX_PAGES) {
+                        if (more && pages >= LEDGER_MAX_PAGES) capped = true;
+                        if (more && pages < LEDGER_MAX_PAGES) {
                             offset += entries.length;
                             return step();
                         }
-                        return out;
+                        return { human: human, inj: inj, capped: capped, pages: pages };
                     });
                 }
                 return step();
@@ -938,28 +951,36 @@
                     return;
                 }
 
+                // 防注入按天序列：优先用后端 byDay；缺字段时回落点数流水里的 injection_detect* 消耗
                 var byDay = (usageData && usageData.byDay) || [];
                 var hasByDay = !!(byDay && byDay.length);
                 var injMap = {};
+                var hasInj = false;
                 if (hasByDay) {
                     byDay.forEach(function (r) {
                         if (r && r.day) injMap[String(r.day)] = Number(r.points || 0);
                     });
+                    hasInj = true;
+                } else if (ledgerDaily && ledgerDaily.inj) {
+                    injMap = ledgerDaily.inj.map || {};
+                    hasInj = true;
                 }
-                var humanMap = (humanDaily && humanDaily.map) || {};
-                var hasHuman = !!humanDaily;
+
+                var humanMap = (ledgerDaily && ledgerDaily.human && ledgerDaily.human.map) || {};
+                var hasHuman = !!(ledgerDaily && ledgerDaily.human);
 
                 var listed = [];
-                if (hasByDay) listed.push('inj');
+                if (hasInj) listed.push('inj');
                 if (hasHuman) listed.push('human');
 
                 var html = '';
-                if (!hasByDay) {
-                    html += '<div class="chart-note warn">后端暂未提供按天数据（byDay），防注入检测暂无法按天展示。</div>';
+                if (!hasInj) {
+                    html += '<div class="chart-note warn">防注入按天数据缺失：后端未返回 byDay，点数流水也未能读取'
+                        + (ledgerError ? '（' + esc(ledgerError) + '）' : '') + '，暂无法按天展示防注入消耗。</div>';
                 }
                 if (!hasHuman) {
                     html += '<div class="chart-note warn">人机验证流水加载失败或暂不可用'
-                        + (humanError ? '（' + esc(humanError) + '）' : '') + '，人机验证暂无法按天展示。</div>';
+                        + (ledgerError ? '（' + esc(ledgerError) + '）' : '') + '，人机验证暂无法按天展示。</div>';
                 }
                 if (!listed.length) {
                     chartArea.innerHTML = html + '<div class="empty-box">该时间范围内暂无可用于绘图的按天数据。</div>';
@@ -967,7 +988,7 @@
                 }
 
                 var series = days.map(function (d) {
-                    return { day: d, inj: hasByDay ? (injMap[d] || 0) : 0, human: hasHuman ? (humanMap[d] || 0) : 0 };
+                    return { day: d, inj: hasInj ? (injMap[d] || 0) : 0, human: hasHuman ? (humanMap[d] || 0) : 0 };
                 });
                 var sum = series.reduce(function (a, s) { return a + s.inj + s.human; }, 0);
                 if (sum <= 0) {
@@ -977,8 +998,8 @@
 
                 html += legendHtml(listed);
                 html += (chartType === 'line') ? svgLine(series, listed) : svgBar(series, listed);
-                if (humanDaily && humanDaily.capped) {
-                    html += '<div class="chart-sub">人机验证流水仅取最近 1000 条（最多 10 页），更早记录未纳入统计。</div>';
+                if (ledgerDaily && ledgerDaily.capped) {
+                    html += '<div class="chart-sub">点数流水仅取最近 ' + (LEDGER_PAGE * LEDGER_MAX_PAGES) + ' 条（最多 ' + LEDGER_MAX_PAGES + ' 页），更早记录未纳入统计。</div>';
                 }
                 chartArea.innerHTML = html;
             }
@@ -1105,15 +1126,15 @@
                     usageError = errMsg(err);
                 });
 
-                var humanP = fetchHumanDaily(start, end).then(function (map) {
-                    humanDaily = map;
-                    humanError = '';
+                var ledgerP = fetchLedgerDaily(start, end).then(function (r) {
+                    ledgerDaily = r;
+                    ledgerError = '';
                 }, function (err) {
-                    humanDaily = null;
-                    humanError = errMsg(err);
+                    ledgerDaily = null;
+                    ledgerError = errMsg(err);
                 });
 
-                return Promise.all([usageP, humanP, ensureKeys()]).then(function () {
+                return Promise.all([usageP, ledgerP, ensureKeys()]).then(function () {
                     if (usageData) {
                         renderDetail(usageData);
                     } else {

@@ -22,13 +22,14 @@
   - [assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js) 新增 `adminInjectionModel / adminInjectionSetModel / guideInjectionUsage`，`adminInjectionReport` 支持 `source` 参数。
 ### 修复
 - **不再把防注入的点数写成"另一套"**：防注入扣的就是与人机验证**共用的同一份 ZIYIT 点数**（后端 `points_consume`、`reason="injection_detect"`，同一余额、同一条流水）。据此统一措辞：`injection.html` 定价区与结果区（「实际扣除点数」「点数余额（与人机验证共用）」）、`user/injection.html` 说明与「消耗点数」、后台「定价配置」注明只是计费单价。`user/points.html` 的流水原因映射补上 `injection_detect → 防注入检测消耗`（原先会直接把原始英文 reason 显示出来），点数说明也写明全站共用一份余额与流水；共用的价目卡 `pricingHtml()` 一并列出防注入单价（`user/points.html`、`user/api-key.html` 都用它渲染），不再让防注入看起来是另一套计费。
+- **防注入消耗未计入可视化图表**（本轮修复）：`user/injection.html` 原先防注入的按天序列只取 `/injection/usage` 的 `byDay`，而后端尚未返回该字段，导致图中只剩人机验证一条、**防注入消耗整段缺失**。现改为**两类消耗都从同一份点数流水按天聚合**——防注入 `reason=injection_detect`（含客服内部 `injection_detect_cs`）、人机验证 `reason=points_consume`，防注入逐日序列不再依赖后端 `byDay`（`byDay` 若存在仍优先采用，缺失时回落流水）。流水整体加载失败时才降级提示，堆叠柱 / 双折线两条序列随之恢复。
 ### 说明
 - 只改前端与文档（`injection.html`、`user/injection.html`、`user/points.html`、`music/admin.html`、`music/admin.js`、`assets/ziyit_api.js`、`网站功能与结构说明.md` 15.5.8、本文件）；**后端一行未改**。
 - **入口铺开**：全站 25 个带「功能区」导航的页面统一插入「防注入检测」（紧跟「人机验证」之后，相对路径按页面层级取 `./` 或 `../`）；另有 7 个页面本就带「我的点数」项，同步插入「我的用量」。本轮导航文案统一：全站 8 处「我的防注入用量」→「我的用量」（`injection.html`、`user/dlc.html`、`user/pentest.html`、`user/points.html`、`user/rc-key.html`、`user/rc-serial.html`、`user/security.html`、`user/VIP.html`）。`assets/site-index.js` 由 `build_site_index.py` 重跑生成（1061 页），两个新页面已进入站内搜索。
 - 未铺开的页面：18 个本身就没有这套全局导航（`Human_verification.html`、`search.html`、`music/admin.html`、`ikun/`、`ModWiki/`、`move/`、`tas/`、`wsh/`、`download/RC.html` 等独立子站/单页），保留原样；`wsh/user.html`、`wsh/user/password.html` 非 UTF-8 编码，未做写入以免改坏编码。
 - 体验页定位为「用户填自己的密钥」。**未做**免填 key 的体验端点：后端无此能力，且人机验证侧 `_authorize_experience` 亦要求登录并扣自己账号点数，并非匿名免费。
-- **本轮前端全部就绪，但有三处依赖后端补齐才能完整生效**（前端已按"缺口显式降级、绝不伪造"处理，后端未上线时给出明确提示）：
-  1. `GET /injection/usage` 与 `GET /admin/injection/report` 的聚合补 **`byDay`**（按天序列：`date / calls / injected / tokens / points`）——前端可视化页已留降级提示，缺字段时提示"后端暂未提供按天数据（byDay）"。
+- **前端全部就绪；下列两处需后端补齐才能完整生效**（另附一处可选优化）；前端已按"缺口显式降级、绝不伪造"处理，后端未上线时给出明确提示：
+  1. （可选优化，**已非必需**）`GET /injection/usage` 与 `GET /admin/injection/report` 的聚合补 **`byDay`**（按天序列：`date / calls / injected / tokens / points`）——前端可视化页已改用点数流水按天聚合，`byDay` 仅作为「若存在则优先采用」的来源。
   2. 新增 **Lv.1+ 只读 `GET /guide/injection/usage`**（在线客服内部 `source="cs"` 的聚合）——客服后台卡片已调用，404 时提示"后端 /guide/injection/usage 尚未上线"。
   3. `GET /admin/injection/report` 增加 **`source` 过滤参数**（当前 `bySource` 仅分组，未按来源过滤）——前端已带筛选并在返回仍含多来源时明确提示，避免误判筛选失效。
 
