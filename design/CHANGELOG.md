@@ -25,6 +25,7 @@
 - **防注入消耗未计入可视化图表**（本轮修复）：`user/injection.html` 原先防注入的按天序列只取 `/injection/usage` 的 `byDay`，而后端尚未返回该字段，导致图中只剩人机验证一条、**防注入消耗整段缺失**。现改为**两类消耗都从同一份点数流水按天聚合**——防注入 `reason=injection_detect`（含客服内部 `injection_detect_cs`）、人机验证 `reason=points_consume`，防注入逐日序列不再依赖后端 `byDay`（`byDay` 若存在仍优先采用，缺失时回落流水）。流水整体加载失败时才降级提示，堆叠柱 / 双折线两条序列随之恢复。
 - **图表字段名不匹配，导致账号整体「防注入」恒为 0**（本轮修复）：后端 `byDay` 每行的字段名是 **`date`**（见 `injection_api.py` 的 `_BYDAY_ZERO`），前端却读 `r.day` → 键名错位、`injMap` 恒空，表现为「账号整体条形图只剩人机验证一段、折线图防注入恒为 0」。改为读 `r.date`（兼容旧假设的 `day`）。
 - **单密钥维度扩成两类**（本轮）：原「单个 API KEY」只画防注入，现改为**区间合计双序列** —— 条形图为单根**堆叠柱**（防注入 + 人机验证两段），折线图为**两条水平虚线**分别表示两类合计；人为序列仅在该密钥有点数流水时绘制（缺数据时只画防注入并明确标注）。
+- **堆叠条形图两段错位（不贴合）**（本轮修复）：`svgBar` 与单密钥的 `keyRangeChart` 堆叠时把「已堆叠高度」按**点数**累加（`acc += v`），而柱高按**像素**算（`plotH * v / max`）——两者单位不一致，导致同一天同时有防注入与人机验证时，上面那段落到错误位置（与下面那段重叠 / 游离），看起来「两段没连上」。改为按**像素**累加（`acc += h`），两段严丝合缝地自下而上堆叠（注入在下、人机验证在上，与图例一致）。
 ### 说明
 - 只改前端与文档（`injection.html`、`user/injection.html`、`user/points.html`、`music/admin.html`、`music/admin.js`、`assets/ziyit_api.js`、`网站功能与结构说明.md` 15.5.8、本文件）；**后端一行未改**。
 - **入口铺开**：全站 25 个带「功能区」导航的页面统一插入「防注入检测」（紧跟「人机验证」之后，相对路径按页面层级取 `./` 或 `../`）；另有 7 个页面本就带「我的点数」项，同步插入「我的用量」。本轮导航文案统一：全站 8 处「我的防注入用量」→「我的用量」（`injection.html`、`user/dlc.html`、`user/pentest.html`、`user/points.html`、`user/rc-key.html`、`user/rc-serial.html`、`user/security.html`、`user/VIP.html`）。`assets/site-index.js` 由 `build_site_index.py` 重跑生成（1061 页），两个新页面已进入站内搜索。
@@ -33,7 +34,7 @@
 - **前端全部就绪；下列三处需后端补齐才能完整生效**（可视化页依赖的 `byDay` 后端已上线、字段名为 `date`，前端已采用；`start` / `end` / `source` 也在）；前端已按"缺口显式降级、绝不伪造"处理，缺数据时给出明确提示：
   1. 新增 **Lv.1+ 只读 `GET /guide/injection/usage`**（在线客服内部 `source="cs"` 的聚合）——客服后台卡片已调用，404 时提示"后端 /guide/injection/usage 尚未上线"。
   2. `GET /admin/injection/report` 增加 **`source` 过滤参数**（当前 `bySource` 仅分组，未按来源过滤）——前端已带筛选并在返回仍含多来源时明确提示，避免误判筛选失效。
-  3. **点数流水条目补 `apiKeyMasked`**：`points.py` 的 `apply()` 条目不记录密钥，`points_consume` 流水无法按密钥拆分，故「单个 API KEY」维度的人机验证画不出来。前端已预留读取 `e.apiKeyMasked`（`humanByKey`）——后端补上该字段后即自动显示，无需再改前端。
+  3. **点数流水条目补 `apiKeyMasked`**（调用链：`human/main.py:_points_charge` → `main.py:points_charge(api_key=…)` → `points.py:charge()` → `apply()`）：`apply()` 目前只写 `id/userId/delta/reason/balanceAfter/at`，**不记密钥**，故 `points_consume` 流水无法按密钥拆分，「单个 API KEY」维度的人机验证画不出来。改法：`apply()` 加一个 `api_key_masked` 入参并写入条目（脱敏沿用 `guide/injection_api.py:mask_key`，与 `byKey.keyMasked` 同口径），`charge()` 透传，`points_charge()` 用 `api_key` 算好传入。前端已预留读取 `e.apiKeyMasked`（`humanByKey`），补上即自动显示，无需再改前端。
 
 ## v1.29 — 2026-10-01
 ### 更新

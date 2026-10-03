@@ -890,17 +890,16 @@
                 for (var i = 0; i < n; i++) {
                     var cx = CM.l + band * (i + 0.5);
                     var x = cx - barW / 2;
-                    var acc = 0;
+                    var acc = 0;   // 已堆叠的**像素**高度（此前误加点数，导致两段错位/重叠）
                     for (var j = 0; j < listed.length; j++) {
                         var key = listed[j];
                         var v = Number(series[i][key] || 0);
+                        var h = plotH * (v / max);
                         if (v > 0) {
-                            var h = plotH * (v / max);
-                            var y = baseY - acc - h;
-                            parts.push('<rect class="' + SERIES_META[key].bar + '" x="' + r2(x) + '" y="' + r2(y) + '" width="' + r2(barW) + '" height="' + r2(h) + '">'
+                            parts.push('<rect class="' + SERIES_META[key].bar + '" x="' + r2(x) + '" y="' + r2(baseY - acc - h) + '" width="' + r2(barW) + '" height="' + r2(h) + '">'
                                 + '<title>' + esc(series[i].day + ' ' + SERIES_META[key].label + '：' + fmtNum(v) + ' 点') + '</title></rect>');
                         }
-                        acc += v;
+                        acc += h;
                     }
                 }
                 parts.push(xLabelParts(series, band));
@@ -967,14 +966,14 @@
                     // 条形：单根堆叠柱（防注入 + 人机验证两段）
                     var barW = 90;
                     var x = CM.l + plotW / 2 - barW / 2;
-                    var acc = 0;
+                    var acc = 0;   // 已堆叠的像素高度
                     rows.forEach(function (row) {
+                        var h = plotH * (row.v / max);
                         if (row.v > 0) {
-                            var h = plotH * (row.v / max);
                             parts.push('<rect class="bar-' + row.key + '" x="' + r2(x) + '" y="' + r2(baseY - acc - h) + '" width="' + barW + '" height="' + r2(h) + '">'
                                 + '<title>' + esc(masked + ' ' + SERIES_META[row.key].label + '：' + fmtNum(row.v) + ' 点') + '</title></rect>');
                         }
-                        acc += row.v;
+                        acc += h;
                     });
                     parts.push('<text class="lbl-inj" x="' + r2(CM.l + plotW / 2) + '" y="' + (CH - 12) + '" text-anchor="middle">'
                         + esc('区间合计 ' + fmtNum(total) + ' 点') + '</text>');
