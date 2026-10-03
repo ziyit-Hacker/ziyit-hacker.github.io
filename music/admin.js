@@ -93,6 +93,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('save-injection-pricing').addEventListener('click', saveInjectionPricing);
     document.getElementById('query-injection-report').addEventListener('click', loadInjectionReport);
+    document.getElementById('switch-injection-model').addEventListener('click', switchInjectionModel);
+    document.getElementById('inj-model-select').addEventListener('change', syncSwitchModelBtn);
 
      
     document.querySelector('[data-section="mod-management"]').addEventListener('click', function () {
@@ -205,7 +207,10 @@ document.addEventListener('DOMContentLoaded', function () {
         switchSection('guide-console');
         updateSystemInfo('切换到在线客服');
         guideStartPolling();
+        loadGuideInjection();
     });
+    document.getElementById('guide-inj-refresh').addEventListener('click', loadGuideInjection);
+    document.getElementById('guide-inj-range').addEventListener('change', loadGuideInjection);
 
      
     document.getElementById('add-admin-btn').addEventListener('click', openAddAdminModal);
@@ -2033,23 +2038,86 @@ function loadInjection() {
     loadInjectionReport();
 }
 
+let injModelCurrent = '';
+let injModelLocked = false;
+
+// 选中的版本 == 当前生效版本时没有可切换的目标，按钮置灰（避免白等 20 秒重载）
+function syncSwitchModelBtn() {
+    const sel = document.getElementById('inj-model-select');
+    const btn = document.getElementById('switch-injection-model');
+    if (!sel || !btn) return;
+    btn.disabled = injModelLocked || !sel.value || sel.value === injModelCurrent;
+}
+
 function loadInjectionModels() {
     const box = document.getElementById('injection-model');
-    box.innerHTML = '<p style="font-size:13px;color:var(--secondary-color);">加载中…</p>';
-    return ZIYIT_API.injectionModels().then(function (data) {
-        const items = (data && data.items) || [];
+    const sel = document.getElementById('inj-model-select');
+    const state = document.getElementById('injection-model-state');
+    sel.innerHTML = '<option value="">加载中…</option>';
+    box.textContent = '';
+    state.textContent = '';
+    return ZIYIT_API.adminInjectionModel().then(function (data) {
+        data = data || {};
+        const items = data.items || [];
+        injModelCurrent = data.current || '';
+        injModelLocked = !!data.locked;
         if (!items.length) {
-            box.innerHTML = '<p style="font-size:13px;color:var(--secondary-color);">后端未发现可用模型版本。</p>';
+            sel.innerHTML = '<option value="">后端未发现可用模型版本</option>';
+            syncSwitchModelBtn();
             return;
         }
-        box.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + items.map(function (m) {
-            const on = m.current || m.version === (data && data.current);
-            return '<span style="font-size:13px;padding:3px 10px;border-radius:10px;border:1px solid var(--border-color);' +
-                (on ? 'background:var(--accent-color);color:#fff;border-color:var(--accent-color);' : '') + '">' +
-                escAdmin(m.version) + (on ? '（当前生效）' : '') + '</span>';
-        }).join('') + '</div>';
+        // 下拉列出全部可用版本，当前生效的那条直接标出来
+        sel.innerHTML = items.map(function (m) {
+            const on = m.current || m.version === injModelCurrent;
+            return '<option value="' + escAdmin(m.version) + '"' + (on ? ' selected' : '') + '>' +
+                escAdmin(m.version) + (on ? '（当前使用）' : '') + '</option>';
+        }).join('');
+
+        const svc = data.service || {};
+        const bits = ['当前生效：' + (injModelCurrent || '未知')];
+        bits.push(data.selected ? '管理端选定：' + data.selected : '管理端选定：自动（取最新版本）');
+        if (svc.reachable === false) bits.push('推理服务：不可达');
+        else if (svc.modelVersion) bits.push('推理服务已载：' + svc.modelVersion + (svc.device ? '（' + svc.device + '）' : ''));
+        state.textContent = bits.join(' ｜ ');
+
+        box.textContent = injModelLocked
+            ? '当前版本被环境变量 GUIDE_INJECTION_MODEL_DIR 锁定，在线切换不生效。'
+            : '';
+        syncSwitchModelBtn();
     }).catch(function (err) {
-        box.innerHTML = '<p style="font-size:13px;color:var(--ziyit-danger);">加载失败：' + escAdmin(injectionErrText(err)) + '</p>';
+        sel.innerHTML = '<option value="">加载失败</option>';
+        box.innerHTML = '<span style="color:var(--ziyit-danger);">加载失败：' + escAdmin(injectionErrText(err)) + '</span>';
+        syncSwitchModelBtn();
+    });
+}
+
+function switchInjectionModel() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可切换模型版本'); return; }
+    const version = document.getElementById('inj-model-select').value;
+    if (!version) { alert('请先选择要切换的模型版本'); return; }
+    if (!confirm('确定切换到模型版本 ' + version + ' ？\n\n切换会通知推理服务重新加载模型，过程约需 20 秒，期间检测请求自动降级放行（fail-open，不误扣点数）。')) return;
+
+    const btn = document.getElementById('switch-injection-model');
+    const state = document.getElementById('injection-model-state');
+    btn.disabled = true;
+    btn.textContent = '切换中…';
+    state.textContent = '正在切换并重载模型，约需 20 秒，请勿关闭页面…';
+
+    ZIYIT_API.adminInjectionSetModel(version).then(function (r) {
+        r = r || {};
+        const done = r.requested || version;
+        state.textContent = (r.reloaded ? '重载完成' : '已提交，重载结果未确认') + '，目标版本 ' + done + '…';
+        updateSystemInfo('模型版本已切换到 ' + done);
+        // 契约要求：切换完成后重新拉一次模型列表刷新选中态
+        return ZIYIT_API.injectionModels();
+    }).then(function () {
+        return loadInjectionModels();
+    }).catch(function (err) {
+        alert('切换失败：' + injectionErrText(err));
+        state.textContent = '';
+    }).finally(function () {
+        btn.textContent = '切换';
+        syncSwitchModelBtn();
     });
 }
 
@@ -2086,7 +2154,10 @@ function saveInjectionPricing() {
     btn.textContent = '保存中…';
     ZIYIT_API.adminInjectionSavePricing(body).then(function () {
         updateSystemInfo('防注入定价已保存');
-        loadInjectionPricing();
+        const meta = document.getElementById('injection-pricing-meta');
+        return loadInjectionPricing().then(function () {
+            meta.innerHTML = '<span style="color:var(--success-color,#2ecc71);">已保存，即刻生效（新价从下一次检测起计费）。</span>' + meta.innerHTML;
+        });
     }).catch(function (err) {
         alert('保存失败：' + injectionErrText(err));
     }).finally(function () {
@@ -2103,6 +2174,7 @@ function loadInjectionReport() {
         start: document.getElementById('inj-start').value || '',
         end: document.getElementById('inj-end').value || '',
         userId: document.getElementById('inj-user-id').value || '',
+        source: document.getElementById('inj-source').value || '',
         limit: document.getElementById('inj-limit').value
     }).then(function (d) {
         renderInjectionReport(d || {});
@@ -2147,6 +2219,19 @@ function renderInjectionReport(d) {
     html += injectionTable('分模型版本', d.byVersion || [], function (v) {
         return [v.version, v.calls, v.tokens, v.points];
     });
+    const srcLabels = { api: '对外 API', cs: '在线客服内部' };
+    const bySource = d.bySource || [];
+    html += injectionTable('分调用来源', bySource.map(function (s) {
+        return { label: srcLabels[s.source] || s.source, calls: s.calls, tokens: s.tokens, points: s.points };
+    }), function (s) {
+        return [s.label, s.calls, s.tokens, s.points];
+    }, '来源');
+    // 「调用来源」筛选需要后端按 source 过滤；未生效时明确说出来，别让人以为筛选坏了
+    const srcFilter = (document.getElementById('inj-source') || {}).value || '';
+    if (srcFilter && bySource.length > 1) {
+        html += '<p style="margin:-6px 0 16px;font-size:12px;color:var(--secondary-color);">' +
+            '注意：后端当前未按 source 过滤（返回仍含全部来源），需后端给 <code>/admin/injection/report</code> 加 <code>source</code> 参数后此筛选才会生效。</p>';
+    }
     html += injectionTable('分密钥', d.byKey || [], function (k) {
         return [k.keyMasked, k.calls, k.tokens, k.points];
     });
@@ -2159,13 +2244,54 @@ function statCard(value, label) {
         '<div class="user-stat-label">' + escAdmin(label) + '</div></div>';
 }
 
-function injectionTable(title, rows, pick) {
+// ---------------- 在线客服后台：本站注入检测消耗（source=cs，Lv.1+ 可读） ----------------
+function fmtDayInput(d) {
+    const p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+
+function loadGuideInjection() {
+    const panel = document.getElementById('guide-inj-panel');
+    if (!panel) return;
+    const days = Number((document.getElementById('guide-inj-range') || {}).value || 1);
+    const end = new Date();
+    const start = new Date(end.getTime() - (days - 1) * 86400000);
+    panel.innerHTML = '<p style="font-size:13px;color:var(--secondary-color);">加载中…</p>';
+    return ZIYIT_API.guideInjectionUsage({
+        start: fmtDayInput(start), end: fmtDayInput(end), limit: 10
+    }).then(function (d) {
+        d = d || {};
+        const calls = Number(d.calls || 0);
+        let html = '<div class="user-stats">' +
+            statCard(fmtPoints(calls), '检测次数') +
+            statCard(fmtPoints(d.injected), '判为注入') +
+            statCard(fmtPoints(d.totalTokens), '总 Token') +
+            statCard(fmtPoints(d.totalPoints), '本站消耗点数') +
+            '</div>';
+        const tops = d.topKeywords || [];
+        if (tops.length) {
+            html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">' + tops.map(function (t) {
+                return '<span style="font-size:12px;padding:2px 8px;border-radius:10px;background:var(--danger-color,#e74c3c);color:#fff;">' +
+                    escAdmin(t.keyword) + ' × ' + escAdmin(t.count) + '</span>';
+            }).join('') + '</div>';
+        }
+        if (!calls) {
+            html += '<p style="font-size:13px;color:var(--secondary-color);margin-top:10px;">该区间内没有本站检测记录。</p>';
+        }
+        panel.innerHTML = html;
+    }).catch(function (err) {
+        panel.innerHTML = '<p style="font-size:13px;color:var(--ziyit-danger);">加载失败：' + escAdmin(injectionErrText(err)) +
+            '（若为 404，说明后端 <code>/guide/injection/usage</code> 尚未上线）</p>';
+    });
+}
+
+function injectionTable(title, rows, pick, firstHead) {
     let html = '<div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">' +
         '<h3 style="margin:0 0 12px;color:var(--primary-color);">' + escAdmin(title) + '</h3>';
     if (!rows.length) {
         return html + '<p style="color:var(--secondary-color);font-size:13px;">暂无数据。</p></div>';
     }
-    const title2 = title === '分密钥' ? ['密钥（脱敏）', '调用', 'Token', '点数'] : ['版本', '调用', 'Token', '点数'];
+    const title2 = [firstHead || (title === '分密钥' ? '密钥（脱敏）' : '版本'), '调用', 'Token', '点数'];
     html += '<div style="display:flex;gap:10px;padding:8px 10px;font-size:12px;color:var(--secondary-color);border-bottom:1px solid var(--border-color);">' +
         title2.map(function (h) {
             return '<span style="flex:1;min-width:0;">' + escAdmin(h) + '</span>';

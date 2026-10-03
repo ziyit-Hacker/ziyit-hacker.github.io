@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的防注入用量 - ZIYIT</title>
-    <meta name="description" content="查看自己在澄镜防注入检测 API 上的调用次数、Token 用量、消费点数与命中关键词统计。">
+    <title>我的用量 - ZIYIT</title>
+    <meta name="description" content="可视化查看自己在澄镜防注入检测与人机验证上的点数消耗：按天用量图表、调用次数、Token 用量与命中关键词统计。">
     <meta name="author" content="ZIYIT STUDIO">
     <meta name="robots" content="noindex, nofollow">
     <link rel="canonical" href="https://ziyit-hacker.github.io/user/injection.html">
@@ -250,6 +250,158 @@
             border-color: var(--ziyit-danger);
         }
 
+        .toolbar select {
+            padding: 8px 10px;
+            font-size: 14px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 6px;
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+        }
+
+        .seg {
+            display: inline-flex;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 6px;
+            overflow: hidden;
+            flex-wrap: wrap;
+        }
+
+        .seg button {
+            padding: 7px 12px;
+            font-size: 13px;
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-secondary);
+            border: none;
+            border-right: 1px solid var(--ziyit-border);
+            cursor: pointer;
+        }
+
+        .seg button:last-child {
+            border-right: none;
+        }
+
+        .seg button.active {
+            background: var(--ziyit-primary);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .chart-legend {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin: 4px 0 10px;
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+        }
+
+        .chart-legend .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .chart-legend .dot-inj {
+            background: var(--ziyit-primary);
+        }
+
+        .chart-legend .dot-human {
+            background: var(--ziyit-warning);
+        }
+
+        .chart-legend .unit {
+            margin-left: auto;
+        }
+
+        .chart-svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .chart-svg .grid {
+            stroke: var(--ziyit-border-light);
+            stroke-width: 1;
+        }
+
+        .chart-svg .axis {
+            stroke: var(--ziyit-border);
+            stroke-width: 1;
+        }
+
+        .chart-svg .tick {
+            fill: var(--ziyit-text-secondary);
+            font-size: 11px;
+        }
+
+        .chart-svg .bar-inj {
+            fill: var(--ziyit-primary);
+        }
+
+        .chart-svg .bar-human {
+            fill: var(--ziyit-warning);
+        }
+
+        .chart-svg .line-inj {
+            fill: none;
+            stroke: var(--ziyit-primary);
+            stroke-width: 2;
+        }
+
+        .chart-svg .line-human {
+            fill: none;
+            stroke: var(--ziyit-warning);
+            stroke-width: 2;
+        }
+
+        .chart-svg .pt-inj {
+            fill: var(--ziyit-primary);
+        }
+
+        .chart-svg .pt-human {
+            fill: var(--ziyit-warning);
+        }
+
+        .chart-svg .dash-inj {
+            fill: none;
+            stroke: var(--ziyit-primary);
+            stroke-width: 2;
+            stroke-dasharray: 6 4;
+        }
+
+        .chart-svg .lbl-inj {
+            fill: var(--ziyit-primary);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .chart-note {
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            line-height: 1.7;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 8px;
+        }
+
+        .chart-note.warn {
+            color: var(--ziyit-warning);
+            border-color: var(--ziyit-warning);
+        }
+
+        .chart-sub {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+            margin-top: 8px;
+            line-height: 1.7;
+        }
+
         @media (max-width: 768px) {
             .page {
                 margin: 12px;
@@ -321,7 +473,7 @@
                 <li class="line nav-item" data-role="admin"></li>
                 <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
                 <li class="nav-item" data-role="all"><a href="../user/points.html">我的点数</a></li>
-                <li class="nav-item" data-role="all"><a href="../user/injection.html">我的防注入用量</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/injection.html">我的用量</a></li>
                 <li class="nav-item" data-role="all"><a href="../user/file-keys.html">我的文件密钥</a></li>
                 <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
                 <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
@@ -330,14 +482,15 @@
     </div>
 
     <div class="page">
-        <h1>我的防注入用量</h1>
+        <h1>我的用量</h1>
         <a href="javascript:history.back()" class="back-link">返回</a>
         <p class="page-sub">
-            统计<b>你名下 API 密钥</b>调用澄镜防注入检测的用量：按真实发生的检测计费（模型段按 Token、关键词段按命中个数），
-            降级时模型段记 0。数据来自用量流水，只含已完成的检测。
+            可视化查看<b>你名下 API 密钥</b>在澄镜防注入检测与人机验证上的点数消耗：可按时间区间、账户整体或单个 API KEY 切换维度，
+            并以条形统计图或折线统计图对比两类数据。防注入按真实发生的检测计费（模型段按 Token、关键词段按命中个数），降级时模型段记 0。
         </p>
         <p class="page-sub">
-            这里只是<b>消耗明细</b>——扣的是和你人机验证<b>同一份 ZIYIT 点数</b>（同一个余额、同一条流水，流水中记为「防注入检测消耗」）。
+            这里展示的只是<b>消耗明细</b>——防注入检测与人机验证扣的是<b>同一份 ZIYIT 点数</b>（同一个余额、同一条流水；
+            流水中防注入记为 <code>injection_detect</code>、人机验证记为 <code>points_consume</code>）。
             余额与充值请到 <a href="./points.html">我的点数</a>。
         </p>
 
@@ -362,6 +515,43 @@
             <button type="button" class="btn ghost" id="resetBtn">重置</button>
         </div>
 
+        <div class="block">
+            <h2>用量可视化</h2>
+            <div class="toolbar" style="margin-bottom:12px;">
+                <div class="fld">
+                    <label>时间区间</label>
+                    <div class="seg" id="rangeSeg">
+                        <button type="button" data-days="7">最近 7 天</button>
+                        <button type="button" data-days="30" class="active">最近 30 天</button>
+                        <button type="button" data-days="90">最近 90 天</button>
+                    </div>
+                </div>
+                <div class="fld">
+                    <label>统计维度</label>
+                    <div class="seg" id="dimSeg">
+                        <button type="button" data-dim="account" class="active">账户整体</button>
+                        <button type="button" data-dim="key">单个 API KEY</button>
+                    </div>
+                </div>
+                <div class="fld" id="keyFld" style="display:none;">
+                    <label for="keySelect">API KEY</label>
+                    <select id="keySelect">
+                        <option value="">（加载中…）</option>
+                    </select>
+                </div>
+                <div class="fld">
+                    <label>图表类型</label>
+                    <div class="seg" id="typeSeg">
+                        <button type="button" data-type="bar" class="active">条形统计图</button>
+                        <button type="button" data-type="line">折线统计图</button>
+                    </div>
+                </div>
+            </div>
+            <div id="chartArea">
+                <div class="empty-box">加载中…</div>
+            </div>
+        </div>
+
         <div id="resultArea">
             <div class="empty-box">加载中…</div>
         </div>
@@ -381,6 +571,28 @@
             var queryBtn = document.getElementById('queryBtn');
             var resetBtn = document.getElementById('resetBtn');
             var resultArea = document.getElementById('resultArea');
+            var chartArea = document.getElementById('chartArea');
+            var rangeSeg = document.getElementById('rangeSeg');
+            var dimSeg = document.getElementById('dimSeg');
+            var typeSeg = document.getElementById('typeSeg');
+            var keyFld = document.getElementById('keyFld');
+            var keySelect = document.getElementById('keySelect');
+
+            // 可视化状态
+            var rangeDays = 30;
+            var dimension = 'account';
+            var chartType = 'bar';
+            var selectedKey = '';
+            var usageData = null;
+            var usageError = '';
+            var humanDaily = null;   // { map: { 'YYYY-MM-DD': 消耗点数 }, total, capped }
+            var humanError = '';
+            var keysData = null;      // /api-key/mine 返回的 keys
+            var keysError = '';
+            var keysLoading = null;
+
+            var LEDGER_PAGE = 100;
+            var LEDGER_MAX_PAGES = 10;
 
             var LOADING_HTML = '<div class="ziyit-loading">' +
                 '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>' +
@@ -412,7 +624,407 @@
                 return fallback || '请求失败，请稍后再试';
             }
 
-            function render(data) {
+            function fmtMaybe(n) {
+                return (n == null || n === '') ? '—' : fmtNum(n);
+            }
+
+            function pick(obj, names) {
+                if (!obj) return null;
+                for (var i = 0; i < names.length; i++) {
+                    var v = obj[names[i]];
+                    if (v != null && v !== '') return v;
+                }
+                return null;
+            }
+
+            function r2(v) {
+                return Math.round(v * 100) / 100;
+            }
+
+            // ---- 日期工具（本地时区） ----
+            function pad2(n) {
+                return (n < 10 ? '0' : '') + n;
+            }
+
+            function fmtDay(d) {
+                return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+            }
+
+            function parseDay(s) {
+                var p = String(s || '').split('-');
+                if (p.length !== 3) return null;
+                var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+                return isNaN(d.getTime()) ? null : d;
+            }
+
+            // 区间（含首尾）按天升序；无效或反向时返回空数组
+            function dayRange(startStr, endStr) {
+                var s = parseDay(startStr), e = parseDay(endStr);
+                if (!s || !e) return [];
+                if (e.getTime() < s.getTime()) { var t = s; s = e; e = t; }
+                var out = [];
+                var cur = new Date(s.getTime());
+                var guard = 0;
+                while (cur.getTime() <= e.getTime() && guard < 400) {
+                    out.push(fmtDay(cur));
+                    cur.setDate(cur.getDate() + 1);
+                    guard++;
+                }
+                return out;
+            }
+
+            function applyRangeToInputs() {
+                var end = new Date();
+                var start = new Date();
+                start.setDate(start.getDate() - (rangeDays - 1));
+                startInput.value = fmtDay(start);
+                endInput.value = fmtDay(end);
+            }
+
+            function maskKey(k) {
+                var s = String(k == null ? '' : k);
+                if (s.length <= 8) return s;
+                return s.slice(0, 4) + '…' + s.slice(-4);
+            }
+
+            // ---- 密钥列表 ----
+            function findKey(val) {
+                if (!keysData) return null;
+                for (var i = 0; i < keysData.length; i++) {
+                    if (keysData[i] && keysData[i].api_key === val) return keysData[i];
+                }
+                return null;
+            }
+
+            function renderKeyOptions() {
+                if (keysError) {
+                    keySelect.innerHTML = '<option value="">密钥加载失败</option>';
+                    return;
+                }
+                if (!keysData || !keysData.length) {
+                    keySelect.innerHTML = '<option value="">暂无密钥</option>';
+                    selectedKey = '';
+                    return;
+                }
+                var has = false;
+                for (var i = 0; i < keysData.length; i++) {
+                    if (keysData[i] && keysData[i].api_key === selectedKey) { has = true; break; }
+                }
+                if (!has) selectedKey = keysData[0].api_key || '';
+                keySelect.innerHTML = keysData.map(function (k) {
+                    var val = (k && k.api_key) || '';
+                    return '<option value="' + esc(val) + '"' + (val === selectedKey ? ' selected' : '') + '>' + esc(maskKey(val)) + '</option>';
+                }).join('');
+            }
+
+            function ensureKeys() {
+                if (keysData) return Promise.resolve(keysData);
+                if (keysLoading) return keysLoading;
+                var p = ZIYIT_API.request('/api-key/mine').then(function (data) {
+                    keysData = (data && data.keys) || [];
+                    keysError = '';
+                    keysLoading = null;
+                    renderKeyOptions();
+                    return keysData;
+                }, function (err) {
+                    keysData = [];
+                    keysError = errMsg(err);
+                    keysLoading = null;
+                    renderKeyOptions();
+                    return keysData;
+                });
+                keysLoading = p;
+                return p;
+            }
+
+            // ---- 人机验证：从点数流水中按天聚合 points_consume ----
+            function fetchHumanDaily(startStr, endStr) {
+                var out = { map: {}, total: 0, capped: false, pages: 0 };
+                var offset = 0;
+
+                function step() {
+                    return ZIYIT_API.pointsLedger(LEDGER_PAGE, offset).then(function (data) {
+                        var entries = (data && data.entries) || [];
+                        var totalNum = (data && data.total != null) ? Number(data.total) : null;
+                        out.pages++;
+
+                        var reachedStart = false;
+                        entries.forEach(function (e) {
+                            if (!e || e.reason !== 'points_consume' || e.at == null) return;
+                            var day = fmtDay(new Date(Number(e.at)));
+                            if (startStr && day < startStr) { reachedStart = true; return; }
+                            if (endStr && day > endStr) return;
+                            var v = -Number(e.delta || 0);
+                            if (v < 0) v = 0;
+                            out.map[day] = (out.map[day] || 0) + v;
+                            out.total += v;
+                        });
+
+                        var more = entries.length >= LEDGER_PAGE && !reachedStart
+                            && (totalNum == null || offset + entries.length < totalNum);
+                        if (more && out.pages >= LEDGER_MAX_PAGES) out.capped = true;
+                        if (more && out.pages < LEDGER_MAX_PAGES) {
+                            offset += entries.length;
+                            return step();
+                        }
+                        return out;
+                    });
+                }
+                return step();
+            }
+
+            // ---- SVG 图表 ----
+            var CW = 720, CH = 320, CM = { l: 52, r: 16, t: 16, b: 34 };
+            var SERIES_META = {
+                inj: { label: '防注入检测', dot: 'dot-inj', bar: 'bar-inj', line: 'line-inj', pt: 'pt-inj' },
+                human: { label: '人机验证', dot: 'dot-human', bar: 'bar-human', line: 'line-human', pt: 'pt-human' }
+            };
+
+            function niceCeil(v) {
+                if (!(v > 0)) return 1;
+                var exp = Math.pow(10, Math.floor(Math.log(v) / Math.LN10));
+                var f = v / exp;
+                var nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;
+                return nf * exp;
+            }
+
+            function maxStack(series, listed) {
+                var m = 0;
+                for (var i = 0; i < series.length; i++) {
+                    var sum = 0;
+                    for (var j = 0; j < listed.length; j++) sum += Number(series[i][listed[j]] || 0);
+                    if (sum > m) m = sum;
+                }
+                return m;
+            }
+
+            function maxSingle(series, listed) {
+                var m = 0;
+                for (var i = 0; i < series.length; i++) {
+                    for (var j = 0; j < listed.length; j++) {
+                        var v = Number(series[i][listed[j]] || 0);
+                        if (v > m) m = v;
+                    }
+                }
+                return m;
+            }
+
+            function gridParts(max, plotH, baseY) {
+                var x0 = CM.l, x1 = CW - CM.r;
+                var parts = [];
+                for (var i = 0; i <= 4; i++) {
+                    var v = max * i / 4;
+                    var y = baseY - plotH * (i / 4);
+                    parts.push('<line class="grid" x1="' + x0 + '" y1="' + r2(y) + '" x2="' + x1 + '" y2="' + r2(y) + '"></line>');
+                    parts.push('<text class="tick" x="' + (x0 - 8) + '" y="' + r2(y + 4) + '" text-anchor="end">' + esc(fmtNum(v)) + '</text>');
+                }
+                parts.push('<line class="axis" x1="' + x0 + '" y1="' + CM.t + '" x2="' + x0 + '" y2="' + baseY + '"></line>');
+                parts.push('<line class="axis" x1="' + x0 + '" y1="' + baseY + '" x2="' + x1 + '" y2="' + baseY + '"></line>');
+                return parts;
+            }
+
+            function xLabelParts(series, band) {
+                var n = series.length;
+                var step = Math.max(1, Math.ceil(n / 12));
+                var parts = [];
+                for (var i = 0; i < n; i++) {
+                    if (i % step !== 0 && i !== n - 1) continue;
+                    var cx = CM.l + band * (i + 0.5);
+                    parts.push('<text class="tick" x="' + r2(cx) + '" y="' + (CH - 12) + '" text-anchor="middle">' + esc(series[i].day.slice(5)) + '</text>');
+                }
+                return parts.join('');
+            }
+
+            function legendHtml(listed) {
+                return '<div class="chart-legend">'
+                    + listed.map(function (k) {
+                        return '<span><span class="dot ' + SERIES_META[k].dot + '"></span>' + esc(SERIES_META[k].label) + '</span>';
+                    }).join('')
+                    + '<span class="unit">Y 轴单位：点</span></div>';
+            }
+
+            function svgBar(series, listed) {
+                var n = series.length;
+                var plotW = CW - CM.l - CM.r;
+                var plotH = CH - CM.t - CM.b;
+                var max = niceCeil(maxStack(series, listed));
+                var baseY = CM.t + plotH;
+                var band = plotW / n;
+                var barW = Math.max(2, Math.min(band * 0.64, 46));
+
+                var parts = gridParts(max, plotH, baseY);
+                for (var i = 0; i < n; i++) {
+                    var cx = CM.l + band * (i + 0.5);
+                    var x = cx - barW / 2;
+                    var acc = 0;
+                    for (var j = 0; j < listed.length; j++) {
+                        var key = listed[j];
+                        var v = Number(series[i][key] || 0);
+                        if (v > 0) {
+                            var h = plotH * (v / max);
+                            var y = baseY - acc - h;
+                            parts.push('<rect class="' + SERIES_META[key].bar + '" x="' + r2(x) + '" y="' + r2(y) + '" width="' + r2(barW) + '" height="' + r2(h) + '">'
+                                + '<title>' + esc(series[i].day + ' ' + SERIES_META[key].label + '：' + fmtNum(v) + ' 点') + '</title></rect>');
+                        }
+                        acc += v;
+                    }
+                }
+                parts.push(xLabelParts(series, band));
+                return '<svg class="chart-svg" viewBox="0 0 ' + CW + ' ' + CH + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="按天用量堆叠条形图">' + parts.join('') + '</svg>';
+            }
+
+            function svgLine(series, listed) {
+                var n = series.length;
+                var plotW = CW - CM.l - CM.r;
+                var plotH = CH - CM.t - CM.b;
+                var max = niceCeil(maxSingle(series, listed));
+                var baseY = CM.t + plotH;
+                var band = plotW / n;
+
+                var parts = gridParts(max, plotH, baseY);
+                parts.push(xLabelParts(series, band));
+
+                for (var j = 0; j < listed.length; j++) {
+                    var key = listed[j];
+                    var pts = [];
+                    var circles = [];
+                    for (var i = 0; i < n; i++) {
+                        var v = Number(series[i][key] || 0);
+                        var cx = CM.l + band * (i + 0.5);
+                        var cy = baseY - plotH * (v / max);
+                        pts.push(r2(cx) + ',' + r2(cy));
+                        circles.push('<circle class="' + SERIES_META[key].pt + '" cx="' + r2(cx) + '" cy="' + r2(cy) + '" r="3">'
+                            + '<title>' + esc(series[i].day + ' ' + SERIES_META[key].label + '：' + fmtNum(v) + ' 点') + '</title></circle>');
+                    }
+                    if (n > 1) parts.push('<polyline class="' + SERIES_META[key].line + '" points="' + pts.join(' ') + '"></polyline>');
+                    parts.push(circles.join(''));
+                }
+                return '<svg class="chart-svg" viewBox="0 0 ' + CW + ' ' + CH + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="按天用量折线图">' + parts.join('') + '</svg>';
+            }
+
+            // 单密钥：只有区间聚合值，画一条水平虚线或单根柱，绝不伪造逐日点
+            function keyFlatChart(total, masked) {
+                if (!(total > 0)) {
+                    return '<div class="empty-box">该密钥在所选时间区间内暂无防注入消耗记录。</div>';
+                }
+                var plotW = CW - CM.l - CM.r;
+                var plotH = CH - CM.t - CM.b;
+                var max = niceCeil(total);
+                var baseY = CM.t + plotH;
+                var y = baseY - plotH * (total / max);
+                var note = '区间合计（无按天数据）：' + fmtNum(total) + ' 点';
+
+                var parts = gridParts(max, plotH, baseY);
+                if (chartType === 'line') {
+                    parts.push('<line class="dash-inj" x1="' + CM.l + '" y1="' + r2(y) + '" x2="' + (CW - CM.r) + '" y2="' + r2(y) + '"></line>');
+                    parts.push('<text class="lbl-inj" x="' + (CM.l + 8) + '" y="' + r2(y - 8) + '">' + esc(note) + '</text>');
+                } else {
+                    var barW = 80;
+                    var x = CM.l + plotW / 2 - barW / 2;
+                    var h = plotH * (total / max);
+                    parts.push('<rect class="bar-inj" x="' + r2(x) + '" y="' + r2(baseY - h) + '" width="' + barW + '" height="' + r2(h) + '">'
+                        + '<title>' + esc(masked + ' ' + note) + '</title></rect>');
+                    parts.push('<text class="lbl-inj" x="' + r2(CM.l + plotW / 2) + '" y="' + (CH - 12) + '" text-anchor="middle">' + esc(note) + '</text>');
+                }
+                return '<svg class="chart-svg" viewBox="0 0 ' + CW + ' ' + CH + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="单个密钥区间合计用量图">' + parts.join('') + '</svg>';
+            }
+
+            function renderChartBlock() {
+                if (dimension === 'key') { renderKeyChart(); return; }
+
+                var days = dayRange(startInput.value, endInput.value);
+                if (!days.length) {
+                    chartArea.innerHTML = '<div class="empty-box">请选择有效的时间区间。</div>';
+                    return;
+                }
+
+                var byDay = (usageData && usageData.byDay) || [];
+                var hasByDay = !!(byDay && byDay.length);
+                var injMap = {};
+                if (hasByDay) {
+                    byDay.forEach(function (r) {
+                        if (r && r.day) injMap[String(r.day)] = Number(r.points || 0);
+                    });
+                }
+                var humanMap = (humanDaily && humanDaily.map) || {};
+                var hasHuman = !!humanDaily;
+
+                var listed = [];
+                if (hasByDay) listed.push('inj');
+                if (hasHuman) listed.push('human');
+
+                var html = '';
+                if (!hasByDay) {
+                    html += '<div class="chart-note warn">后端暂未提供按天数据（byDay），防注入检测暂无法按天展示。</div>';
+                }
+                if (!hasHuman) {
+                    html += '<div class="chart-note warn">人机验证流水加载失败或暂不可用'
+                        + (humanError ? '（' + esc(humanError) + '）' : '') + '，人机验证暂无法按天展示。</div>';
+                }
+                if (!listed.length) {
+                    chartArea.innerHTML = html + '<div class="empty-box">该时间范围内暂无可用于绘图的按天数据。</div>';
+                    return;
+                }
+
+                var series = days.map(function (d) {
+                    return { day: d, inj: hasByDay ? (injMap[d] || 0) : 0, human: hasHuman ? (humanMap[d] || 0) : 0 };
+                });
+                var sum = series.reduce(function (a, s) { return a + s.inj + s.human; }, 0);
+                if (sum <= 0) {
+                    chartArea.innerHTML = html + '<div class="empty-box">该时间范围内暂无消耗记录。</div>';
+                    return;
+                }
+
+                html += legendHtml(listed);
+                html += (chartType === 'line') ? svgLine(series, listed) : svgBar(series, listed);
+                if (humanDaily && humanDaily.capped) {
+                    html += '<div class="chart-sub">人机验证流水仅取最近 1000 条（最多 10 页），更早记录未纳入统计。</div>';
+                }
+                chartArea.innerHTML = html;
+            }
+
+            function renderKeyChart() {
+                if (keysError) {
+                    chartArea.innerHTML = '<div class="error-box">密钥加载失败：' + esc(keysError) + '</div>';
+                    return;
+                }
+                if (!keysData || !keysData.length) {
+                    chartArea.innerHTML = '<div class="empty-box">你名下暂无 API KEY，无法按单个密钥查看。可在 <a href="../Human_verification.html">人机验证体验页</a> 领取后重试。</div>';
+                    return;
+                }
+                if (!selectedKey) {
+                    chartArea.innerHTML = '<div class="empty-box">请选择一个 API KEY。</div>';
+                    return;
+                }
+
+                var masked = maskKey(selectedKey);
+                var byKey = (usageData && usageData.byKey) || [];
+                var match = null;
+                for (var i = 0; i < byKey.length; i++) {
+                    if (byKey[i] && String(byKey[i].keyMasked) === masked) { match = byKey[i]; break; }
+                }
+                var injTotal = match ? Number(match.points || 0) : 0;
+
+                var kobj = findKey(selectedKey);
+                var used = pick(kobj, ['points_used', 'pointsUsed']);
+                var dailyUsed = pick(kobj, ['daily_points_used', 'dailyPointsUsed']);
+
+                var html = '<div class="chart-note">当前维度：单个 API KEY（' + esc(masked) + '）。'
+                    + '防注入检测按该密钥在所选区间的<b>区间聚合值</b>展示；点数流水中不含 apiKey，故后端暂无按密钥的逐日数据。</div>';
+
+                html += '<div class="chart-legend"><span><span class="dot dot-inj"></span>防注入检测（区间合计）</span><span class="unit">Y 轴单位：点</span></div>';
+                html += keyFlatChart(injTotal, masked);
+
+                html += '<div class="stats" style="margin-top:16px;margin-bottom:8px;">'
+                    + '<div class="stat"><div class="stat-num">' + esc(fmtMaybe(used)) + '</div><div class="stat-label">该密钥累计消耗</div></div>'
+                    + '<div class="stat"><div class="stat-num warn">' + esc(fmtMaybe(dailyUsed)) + '</div><div class="stat-label">该密钥今日消耗</div></div>'
+                    + '</div>'
+                    + '<div class="chart-note warn">后端暂无按密钥的人机验证流水；以上为该密钥累计消耗（含人机验证与防注入，两类合计）。</div>';
+
+                chartArea.innerHTML = html;
+            }
+
+            function renderDetail(data) {
                 var calls = Number(data.calls || 0);
                 var injected = Number(data.injected || 0);
                 var degraded = Number(data.degraded || 0);
@@ -473,29 +1085,110 @@
             }
 
             function load() {
+                if (!startInput.value || !endInput.value) applyRangeToInputs();
                 resultArea.innerHTML = LOADING_HTML;
+                chartArea.innerHTML = '<div class="empty-box">加载中…</div>';
                 queryBtn.disabled = true;
-                return ZIYIT_API.injectionUsage({
-                    start: startInput.value || '',
-                    end: endInput.value || '',
+
+                var start = startInput.value || '';
+                var end = endInput.value || '';
+
+                var usageP = ZIYIT_API.injectionUsage({
+                    start: start,
+                    end: end,
                     limit: limitSelect.value
                 }).then(function (data) {
-                    render(data || {});
-                }).catch(function (err) {
-                    resultArea.innerHTML = '<div class="error-box">加载失败：' + esc(errMsg(err)) + '</div>';
-                }).finally(function () {
+                    usageData = data || {};
+                    usageError = '';
+                }, function (err) {
+                    usageData = null;
+                    usageError = errMsg(err);
+                });
+
+                var humanP = fetchHumanDaily(start, end).then(function (map) {
+                    humanDaily = map;
+                    humanError = '';
+                }, function (err) {
+                    humanDaily = null;
+                    humanError = errMsg(err);
+                });
+
+                return Promise.all([usageP, humanP, ensureKeys()]).then(function () {
+                    if (usageData) {
+                        renderDetail(usageData);
+                    } else {
+                        resultArea.innerHTML = '<div class="error-box">加载失败：' + esc(usageError || '请求失败，请稍后再试') + '</div>';
+                    }
+                    renderChartBlock();
                     queryBtn.disabled = false;
                 });
             }
 
-            queryBtn.addEventListener('click', load);
-            resetBtn.addEventListener('click', function () {
-                startInput.value = '';
-                endInput.value = '';
-                limitSelect.value = '20';
+            function syncSeg(seg, attr, value) {
+                var btns = seg.querySelectorAll('button');
+                for (var i = 0; i < btns.length; i++) {
+                    btns[i].classList.toggle('active', btns[i].getAttribute(attr) === String(value));
+                }
+            }
+
+            function closestBtn(e) {
+                var el = e.target;
+                while (el && el !== e.currentTarget) {
+                    if (el.tagName === 'BUTTON') return el;
+                    el = el.parentNode;
+                }
+                return null;
+            }
+
+            rangeSeg.addEventListener('click', function (e) {
+                var b = closestBtn(e);
+                if (!b || !b.getAttribute('data-days')) return;
+                rangeDays = parseInt(b.getAttribute('data-days'), 10) || 30;
+                syncSeg(rangeSeg, 'data-days', rangeDays);
+                applyRangeToInputs();
                 load();
             });
 
+            dimSeg.addEventListener('click', function (e) {
+                var b = closestBtn(e);
+                if (!b || !b.getAttribute('data-dim')) return;
+                dimension = b.getAttribute('data-dim');
+                syncSeg(dimSeg, 'data-dim', dimension);
+                keyFld.style.display = dimension === 'key' ? '' : 'none';
+                if (dimension === 'key') {
+                    ensureKeys().then(function () { renderChartBlock(); });
+                }
+                renderChartBlock();
+            });
+
+            typeSeg.addEventListener('click', function (e) {
+                var b = closestBtn(e);
+                if (!b || !b.getAttribute('data-type')) return;
+                chartType = b.getAttribute('data-type');
+                syncSeg(typeSeg, 'data-type', chartType);
+                renderChartBlock();
+            });
+
+            keySelect.addEventListener('change', function () {
+                selectedKey = keySelect.value || '';
+                renderChartBlock();
+            });
+
+            queryBtn.addEventListener('click', load);
+            resetBtn.addEventListener('click', function () {
+                rangeDays = 30;
+                dimension = 'account';
+                chartType = 'bar';
+                limitSelect.value = '20';
+                syncSeg(rangeSeg, 'data-days', 30);
+                syncSeg(dimSeg, 'data-dim', 'account');
+                syncSeg(typeSeg, 'data-type', 'bar');
+                keyFld.style.display = 'none';
+                applyRangeToInputs();
+                load();
+            });
+
+            applyRangeToInputs();
             load();
         });
     </script>

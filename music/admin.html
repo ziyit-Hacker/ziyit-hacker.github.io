@@ -388,8 +388,19 @@
                     <p class="user-del-date" id="injection-meta" style="display:block;margin-bottom:16px;"></p>
 
                     <div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">
-                        <h3 style="margin:0 0 12px;color:var(--primary-color);">模型版本</h3>
-                        <div id="injection-model"></div>
+                        <h3 style="margin:0 0 6px;color:var(--primary-color);">模型版本</h3>
+                        <p style="margin:0 0 12px;font-size:12px;color:var(--secondary-color);">
+                            在线切换澄镜推理模型版本。切换会通知推理服务重新加载模型，<b>过程约需 20 秒</b>，期间检测请求自动降级放行（fail-open，不误扣点数）。
+                        </p>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+                            <div style="min-width:200px;">
+                                <label class="form-label">可用版本</label>
+                                <select class="form-input" id="inj-model-select"></select>
+                            </div>
+                            <button class="user-btn" id="switch-injection-model">切换</button>
+                            <span id="injection-model-state" style="font-size:12px;color:var(--secondary-color);"></span>
+                        </div>
+                        <div id="injection-model" style="margin-top:10px;font-size:12px;color:var(--secondary-color);"></div>
                     </div>
 
                     <div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">
@@ -422,6 +433,14 @@
                             <div>
                                 <label class="form-label">用户 ID（可选）</label>
                                 <input type="number" class="form-input" id="inj-user-id" min="1" placeholder="留空 = 全部">
+                            </div>
+                            <div>
+                                <label class="form-label">调用来源</label>
+                                <select class="form-input" id="inj-source">
+                                    <option value="">全部来源</option>
+                                    <option value="api">对外 API</option>
+                                    <option value="cs">在线客服内部</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="form-label">关键词 TopN</label>
@@ -707,6 +726,26 @@
                         <div style="display: flex; gap: 8px;">
                             <button class="user-btn" id="guide-console-refresh">刷新队列</button>
                         </div>
+                    </div>
+                    <div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:14px;">
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;justify-content:space-between;">
+                            <h3 style="margin:0;color:var(--primary-color);">本站注入检测消耗</h3>
+                            <div style="display:flex;gap:8px;align-items:flex-end;">
+                                <div>
+                                    <label class="form-label">统计区间</label>
+                                    <select class="form-input" id="guide-inj-range">
+                                        <option value="1" selected>今天</option>
+                                        <option value="7">最近 7 天</option>
+                                        <option value="30">最近 30 天</option>
+                                    </select>
+                                </div>
+                                <button class="user-btn" id="guide-inj-refresh">刷新</button>
+                            </div>
+                        </div>
+                        <p style="margin:8px 0 12px;font-size:12px;color:var(--secondary-color);">
+                            访客消息进入 AI 回答前会先做一次注入检测，这部分消耗记为「本站」（source=cs），与对外 API 调用分开统计。扣的是和人机验证共用的同一份点数。
+                        </p>
+                        <div id="guide-inj-panel"><p style="font-size:13px;color:var(--secondary-color);">加载中…</p></div>
                     </div>
                     <div class="chat-layout" style="height: 540px; flex: none;">
                         <div class="chat-sessions" id="guide-inbox-list">

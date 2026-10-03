@@ -13,13 +13,24 @@
   - 后台管理 `music/admin` 新增「防注入检测」区块（Lv.3+）：模型版本、定价配置（可只改一项）、用量报表（`start` / `end` / `user_id` 过滤）。
   - [assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js) 新增 `injectionDetect / injectionModels / injectionPricing / injectionUsage / adminInjectionReport / adminInjectionPricing / adminInjectionSavePricing`；检测走 `api-key` 头且**不带** Authorization（计费归属由密钥决定）。
 - **接入地址统一用本站域名**：产品页 curl / JavaScript / Python 三份示例直接写 `https://ziyitstudio.ccwu.cc/injection/detect`，不再留 `<后端域名>` 占位符要接入方自己填；新增《网站功能与结构说明》15.5.8「接入地址」记录该口径。
+- **用量数据可视化与报表改造**（本轮）：
+  - [user/injection.html](file:///f:/Code/html/ziyit/user/injection.html) 由「用量明细表」升级为**「我的用量」可视化页**：三维分段控件 —— 时间区间（7 / 30 / 90 天，默认 30）、统计维度（**账户整体** / **单个 API KEY**）、图表类型（**条形** / **折线**）；条形图为**堆叠柱**（防注入 + 人机验证两段堆叠展示），折线图为**两条异色折线**分别展示两类数据；全部**手写 SVG**（纯静态站、无第三方库）。防注入序列取 `GET /injection/usage` 聚合，人机验证序列用 `pointsLedger`（`reason="points_consume"`）按天聚合。账户维度两类均有按天序列；单密钥维度人机验证无按密钥流水（后端点水条目 `points.apply()` 不带 apiKey），改展示 `points_used` / `daily_points_used` 两个数字卡并标注口径。**数据缺口显式降级、绝不伪造**：`byDay` 缺失时提示"后端暂未提供按天数据（byDay）"并从图剔除该序列。
+  - [music/admin.html](file:///f:/Code/html/ziyit/music/admin.html) / [music/admin.js](file:///f:/Code/html/ziyit/music/admin.js)：模型版本从只读标签改为**下拉列表 + 当前使用版本标记 + 「切换」按钮**（Lv.3+，`PUT /admin/injection/model`）：切换中按钮置灰显示「切换中…」并提示「切换过程约需 20 秒，期间 fail-open 不误扣点数」，成功后回刷 `GET /injection/models` 刷新列表；被环境变量锁定（`locked`）时下拉禁用并提示。
+  - 管理端报表新增**「分调用来源」分组表**（`api` 对外 API / `cs` 在线客服内部），并在筛选区新增**「调用来源」筛选**（透传 `source` 参数）。
+  - **在线客服后台** `#guide-console` 新增**「本站注入检测消耗」**卡片（今天 / 7 天 / 30 天）：检测次数 / 判为注入 / 总 Token / 消耗点数 + 关键词，读本站来源（`source="cs"`）。
+  - 管理端定价表单补**「保存后即刻生效」**提示（新价从下一次检测起计费）。
+  - [assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js) 新增 `adminInjectionModel / adminInjectionSetModel / guideInjectionUsage`，`adminInjectionReport` 支持 `source` 参数。
 ### 修复
 - **不再把防注入的点数写成"另一套"**：防注入扣的就是与人机验证**共用的同一份 ZIYIT 点数**（后端 `points_consume`、`reason="injection_detect"`，同一余额、同一条流水）。据此统一措辞：`injection.html` 定价区与结果区（「实际扣除点数」「点数余额（与人机验证共用）」）、`user/injection.html` 说明与「消耗点数」、后台「定价配置」注明只是计费单价。`user/points.html` 的流水原因映射补上 `injection_detect → 防注入检测消耗`（原先会直接把原始英文 reason 显示出来），点数说明也写明全站共用一份余额与流水；共用的价目卡 `pricingHtml()` 一并列出防注入单价（`user/points.html`、`user/api-key.html` 都用它渲染），不再让防注入看起来是另一套计费。
 ### 说明
 - 只改前端与文档（`injection.html`、`user/injection.html`、`user/points.html`、`music/admin.html`、`music/admin.js`、`assets/ziyit_api.js`、`网站功能与结构说明.md` 15.5.8、本文件）；**后端一行未改**。
-- **入口铺开**：全站 25 个带「功能区」导航的页面统一插入「防注入检测」（紧跟「人机验证」之后，相对路径按页面层级取 `./` 或 `../`）；另有 7 个页面本就带「我的点数」项，同步插入「我的防注入用量」。`assets/site-index.js` 由 `build_site_index.py` 重跑生成（1061 页），两个新页面已进入站内搜索。
+- **入口铺开**：全站 25 个带「功能区」导航的页面统一插入「防注入检测」（紧跟「人机验证」之后，相对路径按页面层级取 `./` 或 `../`）；另有 7 个页面本就带「我的点数」项，同步插入「我的用量」。本轮导航文案统一：全站 8 处「我的防注入用量」→「我的用量」（`injection.html`、`user/dlc.html`、`user/pentest.html`、`user/points.html`、`user/rc-key.html`、`user/rc-serial.html`、`user/security.html`、`user/VIP.html`）。`assets/site-index.js` 由 `build_site_index.py` 重跑生成（1061 页），两个新页面已进入站内搜索。
 - 未铺开的页面：18 个本身就没有这套全局导航（`Human_verification.html`、`search.html`、`music/admin.html`、`ikun/`、`ModWiki/`、`move/`、`tas/`、`wsh/`、`download/RC.html` 等独立子站/单页），保留原样；`wsh/user.html`、`wsh/user/password.html` 非 UTF-8 编码，未做写入以免改坏编码。
 - 体验页定位为「用户填自己的密钥」。**未做**免填 key 的体验端点：后端无此能力，且人机验证侧 `_authorize_experience` 亦要求登录并扣自己账号点数，并非匿名免费。
+- **本轮前端全部就绪，但有三处依赖后端补齐才能完整生效**（前端已按"缺口显式降级、绝不伪造"处理，后端未上线时给出明确提示）：
+  1. `GET /injection/usage` 与 `GET /admin/injection/report` 的聚合补 **`byDay`**（按天序列：`date / calls / injected / tokens / points`）——前端可视化页已留降级提示，缺字段时提示"后端暂未提供按天数据（byDay）"。
+  2. 新增 **Lv.1+ 只读 `GET /guide/injection/usage`**（在线客服内部 `source="cs"` 的聚合）——客服后台卡片已调用，404 时提示"后端 /guide/injection/usage 尚未上线"。
+  3. `GET /admin/injection/report` 增加 **`source` 过滤参数**（当前 `bySource` 仅分组，未按来源过滤）——前端已带筛选并在返回仍含多来源时明确提示，避免误判筛选失效。
 
 ## v1.29 — 2026-10-01
 ### 更新

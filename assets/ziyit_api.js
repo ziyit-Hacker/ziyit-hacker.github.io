@@ -1711,6 +1711,7 @@
         if (o.start) qs.push('start=' + encodeURIComponent(o.start));
         if (o.end) qs.push('end=' + encodeURIComponent(o.end));
         if (o.userId != null && o.userId !== '') qs.push('user_id=' + encodeURIComponent(o.userId));
+        if (o.source) qs.push('source=' + encodeURIComponent(o.source));
         return request('/admin/injection/report' + (qs.length ? '?' + qs.join('&') : ''));
     }
 
@@ -1721,6 +1722,25 @@
     // 可只传要改的字段（与 /admin/pricing 的整份 PUT 不同）
     function adminInjectionSavePricing(body) {
         return put('/admin/injection/pricing', body || {});
+    }
+
+    // 管理端：澄镜模型版本（Lv.3+）。GET 读当前/可选/推理服务状态；PUT 切换并触发推理服务重载
+    function adminInjectionModel() {
+        return request('/admin/injection/model');
+    }
+
+    function adminInjectionSetModel(version) {
+        return put('/admin/injection/model', { version: version || '' });
+    }
+
+    // 客服后台：本站（在线客服内部，source=cs）的注入检测消耗，Lv.1+ 可读
+    function guideInjectionUsage(opts) {
+        var o = opts || {};
+        var qs = [];
+        if (o.limit != null) qs.push('limit=' + encodeURIComponent(o.limit));
+        if (o.start) qs.push('start=' + encodeURIComponent(o.start));
+        if (o.end) qs.push('end=' + encodeURIComponent(o.end));
+        return request('/guide/injection/usage' + (qs.length ? '?' + qs.join('&') : ''));
     }
 
     window.ZIYIT_API = {
@@ -1768,6 +1788,9 @@
         adminInjectionReport: adminInjectionReport,
         adminInjectionPricing: adminInjectionPricing,
         adminInjectionSavePricing: adminInjectionSavePricing,
+        adminInjectionModel: adminInjectionModel,
+        adminInjectionSetModel: adminInjectionSetModel,
+        guideInjectionUsage: guideInjectionUsage,
         submitMod: submitMod,
         sendVerifyEmail: sendVerifyEmail,
         downloadMod: downloadMod,
