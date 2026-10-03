@@ -17,7 +17,8 @@
 - **不再把防注入的点数写成"另一套"**：防注入扣的就是与人机验证**共用的同一份 ZIYIT 点数**（后端 `points_consume`、`reason="injection_detect"`，同一余额、同一条流水）。据此统一措辞：`injection.html` 定价区与结果区（「实际扣除点数」「点数余额（与人机验证共用）」）、`user/injection.html` 说明与「消耗点数」、后台「定价配置」注明只是计费单价。`user/points.html` 的流水原因映射补上 `injection_detect → 防注入检测消耗`（原先会直接把原始英文 reason 显示出来），点数说明也写明全站共用一份余额与流水；共用的价目卡 `pricingHtml()` 一并列出防注入单价（`user/points.html`、`user/api-key.html` 都用它渲染），不再让防注入看起来是另一套计费。
 ### 说明
 - 只改前端与文档（`injection.html`、`user/injection.html`、`user/points.html`、`music/admin.html`、`music/admin.js`、`assets/ziyit_api.js`、`网站功能与结构说明.md` 15.5.8、本文件）；**后端一行未改**。
-- 导航仅在新建的两个页面内加了入口（`injection.html` 嵌在「功能区」；`user/injection.html` 嵌在「功能区」与用户区），**全站导航未批量改动**，需要时另行报备。
+- **入口铺开**：全站 25 个带「功能区」导航的页面统一插入「防注入检测」（紧跟「人机验证」之后，相对路径按页面层级取 `./` 或 `../`）；另有 7 个页面本就带「我的点数」项，同步插入「我的防注入用量」。`assets/site-index.js` 由 `build_site_index.py` 重跑生成（1061 页），两个新页面已进入站内搜索。
+- 未铺开的页面：18 个本身就没有这套全局导航（`Human_verification.html`、`search.html`、`music/admin.html`、`ikun/`、`ModWiki/`、`move/`、`tas/`、`wsh/`、`download/RC.html` 等独立子站/单页），保留原样；`wsh/user.html`、`wsh/user/password.html` 非 UTF-8 编码，未做写入以免改坏编码。
 - 体验页定位为「用户填自己的密钥」。**未做**免填 key 的体验端点：后端无此能力，且人机验证侧 `_authorize_experience` 亦要求登录并扣自己账号点数，并非匿名免费。
 
 ## v1.29 — 2026-10-01
