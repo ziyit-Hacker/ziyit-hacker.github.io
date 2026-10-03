@@ -419,8 +419,9 @@
         <h1>我的点数</h1>
         <a href="javascript:history.back()" class="back-link">返回</a>
         <p class="page-sub">
-            ZIYIT 人机验证（Phantom）<b>按真实发生的动作扣点</b>：领题握手、视频分包、实时流、判定、PoW 追加等都会消耗点数，
-            <b>不是按结果计费</b>，验证失败时已发生的动作同样扣点。余额低于最低可开始要求时无法开始验证，请先充值。
+            ZIYIT 点数<b>全站共用一份余额与流水</b>：人机验证（Phantom）<b>按真实发生的动作扣点</b>，领题握手、视频分包、实时流、判定、PoW 追加等都会消耗，
+            <b>不是按结果计费</b>，验证失败时已发生的动作同样扣点；<b>澄镜防注入检测</b>也扣这份点数（流水里记为「防注入检测消耗」，按 Token 与命中关键词计）。
+            余额低于最低可开始要求时无法开始验证，请先充值。
         </p>
 
         <div class="toolbar">
@@ -534,6 +535,7 @@
                 if (r === 'points_purchase') return '购买到账';
                 if (r === 'points_vip_gift') return 'VIP 升级赠送';
                 if (r === 'points_consume') return '人机验证消耗';
+                if (r === 'injection_detect') return '防注入检测消耗';
                 return r || '点数变动';
             }
 

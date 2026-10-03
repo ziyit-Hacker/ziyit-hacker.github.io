@@ -3,6 +3,23 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.30 — 2026-10-01
+### 新增
+- **澄镜防注入检测前端落地**（对接后端《网站功能与结构说明》15.5「对外接口」）：
+  - 新建产品 / 体验单页 [injection.html](file:///f:/Code/html/ziyit/injection.html)：Hero + 功能特点（三层防护 / 98%+ 准确率 / 混合判定 / fail-open 不误扣）+ **动态定价**（读 `GET /injection/pricing`，不硬编码）+ 体验区 + 代码示例 + 页内 API 文档。
+  - 体验区：`api-key` 用 password 型输入框（带显示 / 隐藏切换，**只进 sessionStorage**，不写 `localStorage['phantom_api_key']` 以免污染全站人机验证通道）；textarea 实时字数 + 10000 上限前置拦截（对应 413）；回车直接检测、Shift + 回车换行；结果区给出 `injection` 0/1 大徽章、`modelProb` + `threshold`、命中关键词标签、Token 明细、`cost` 拆解、`charged` + `balance`、`degraded` 降级提示。
+  - 错误映射按 `401 / 400 / 403(reason) / 413 / 503` 分档中文提示（余额不足带 `points` / `minRequired`）。
+  - 新建 [user/injection.html](file:///f:/Code/html/ziyit/user/injection.html)：登录用户查看**自己名下密钥**的防注入用量（调用 / 注入 / 降级 / Token / 点数 + 关键词 TopN + 分版本 + 分密钥，支持 `start` / `end` / `limit`）。
+  - 后台管理 `music/admin` 新增「防注入检测」区块（Lv.3+）：模型版本、定价配置（可只改一项）、用量报表（`start` / `end` / `user_id` 过滤）。
+  - [assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js) 新增 `injectionDetect / injectionModels / injectionPricing / injectionUsage / adminInjectionReport / adminInjectionPricing / adminInjectionSavePricing`；检测走 `api-key` 头且**不带** Authorization（计费归属由密钥决定）。
+- **接入地址统一用本站域名**：产品页 curl / JavaScript / Python 三份示例直接写 `https://ziyitstudio.ccwu.cc/injection/detect`，不再留 `<后端域名>` 占位符要接入方自己填；新增《网站功能与结构说明》15.5.8「接入地址」记录该口径。
+### 修复
+- **不再把防注入的点数写成"另一套"**：防注入扣的就是与人机验证**共用的同一份 ZIYIT 点数**（后端 `points_consume`、`reason="injection_detect"`，同一余额、同一条流水）。据此统一措辞：`injection.html` 定价区与结果区（「实际扣除点数」「点数余额（与人机验证共用）」）、`user/injection.html` 说明与「消耗点数」、后台「定价配置」注明只是计费单价。`user/points.html` 的流水原因映射补上 `injection_detect → 防注入检测消耗`（原先会直接把原始英文 reason 显示出来），点数说明也写明全站共用一份余额与流水；共用的价目卡 `pricingHtml()` 一并列出防注入单价（`user/points.html`、`user/api-key.html` 都用它渲染），不再让防注入看起来是另一套计费。
+### 说明
+- 只改前端与文档（`injection.html`、`user/injection.html`、`user/points.html`、`music/admin.html`、`music/admin.js`、`assets/ziyit_api.js`、`网站功能与结构说明.md` 15.5.8、本文件）；**后端一行未改**。
+- 导航仅在新建的两个页面内加了入口（`injection.html` 嵌在「功能区」；`user/injection.html` 嵌在「功能区」与用户区），**全站导航未批量改动**，需要时另行报备。
+- 体验页定位为「用户填自己的密钥」。**未做**免填 key 的体验端点：后端无此能力，且人机验证侧 `_authorize_experience` 亦要求登录并扣自己账号点数，并非匿名免费。
+
 ## v1.29 — 2026-10-01
 ### 更新
 - **人机验证对接后端 v0.3.55 的「验证方式」新契约**（`Human_verification/api.js`、`Human_verification/phantom.js`）：

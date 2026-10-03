@@ -1625,6 +1625,19 @@
                 '当前为「按单次验证」口径：整条验证链路只按上面三档中的<b>一档</b>收取，不逐步计费。</div>';
         }
 
+        // 澄镜防注入检测走的是同一份点数，价目卡里一并列出，别让它看起来像另一套计费
+        var inj = pricing.injection || {};
+        var injLine = '';
+        if (inj.tokensPerPoint != null || inj.pointsPerKeyword != null) {
+            var seg = [];
+            if (inj.tokensPerPoint != null) seg.push(_prFmt(inj.tokensPerPoint) + ' Token = 1 点');
+            if (inj.pointsPerKeyword != null) seg.push('命中关键词 ' + _prFmt(inj.pointsPerKeyword) + ' 点 / 个');
+            injLine = '<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--ziyit-border);' +
+                'font-size:13px;color:var(--ziyit-text-secondary);line-height:1.8;">' +
+                '澄镜防注入检测（<b>扣同一份点数</b>）：' + _prEsc(seg.join('，')) + '。' +
+                '流水记为「防注入检测消耗」，余额与充值见本页。</div>';
+        }
+
         return '<div style="border:1px solid var(--ziyit-border);border-radius:10px;padding:16px;background:var(--ziyit-bg);">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">' +
             '<span style="font-size:15px;font-weight:600;color:var(--ziyit-text-primary);">当前定价</span>' +
@@ -1636,9 +1649,78 @@
             (vipLine ? '<div style="margin-top:6px;font-size:13px;color:var(--ziyit-text-secondary);">' + _prEsc(vipLine) + '</div>' : '') +
             '<details style="margin-top:10px;">' +
             '<summary style="cursor:pointer;font-size:13px;color:var(--ziyit-primary);">价格详情（每个步骤多少点）</summary>' +
-            '<div style="margin-top:8px;">' + rows + '</div></details>' +
+            '<div style="margin-top:8px;">' + rows + '</div></details>' + injLine +
             '<div style="margin-top:10px;font-size:12px;color:var(--ziyit-text-secondary);">价格由管理员在后台配置，此处仅展示当前口径；实际扣点按真实发生的动作结算。</div>' +
             '</div>';
+    }
+
+    // ------------------------------------------------------------
+    // 澄镜防注入检测 API（防注入检测 v0.3.56）
+    // 检测走 api-key 头（与人机验证同一把密钥、同一套门禁），其余按登录 JWT 走。
+    // 这里不发 Authorization：检测的计费归属由 api-key 决定，不带登录票据更干净。
+    // ------------------------------------------------------------
+    function injectionDetect(text, apiKey) {
+        return fetchApi('/injection/detect', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': '1',
+                'api-key': String(apiKey == null ? '' : apiKey)
+            },
+            body: JSON.stringify({ text: String(text == null ? '' : text) })
+        }).then(function (res) {
+            return res.json().catch(function () { return null; }).then(function (data) {
+                if (!res.ok) {
+                    var detail = data && data.detail;
+                    var err = new Error(errorText(detail) || ('请求失败 ' + res.status));
+                    err.status = res.status;
+                    err.data = data;
+                    err.detail = detail;
+                    err.reason = (detail && typeof detail === 'object') ? detail.reason : '';
+                    throw err;
+                }
+                return data;
+            });
+        });
+    }
+
+    // 公开：可用模型版本 / 当前定价（产品页与体验页都从这里取，前端不硬编码价格）
+    function injectionModels() {
+        return request('/injection/models');
+    }
+
+    function injectionPricing() {
+        return request('/injection/pricing');
+    }
+
+    // 我的用量（登录用户；只统计自己名下的调用）
+    function injectionUsage(opts) {
+        var o = opts || {};
+        var qs = [];
+        if (o.limit != null) qs.push('limit=' + encodeURIComponent(o.limit));
+        if (o.start) qs.push('start=' + encodeURIComponent(o.start));
+        if (o.end) qs.push('end=' + encodeURIComponent(o.end));
+        return request('/injection/usage' + (qs.length ? '?' + qs.join('&') : ''));
+    }
+
+    // 管理端：报表与定价（Lv.3+）
+    function adminInjectionReport(opts) {
+        var o = opts || {};
+        var qs = [];
+        if (o.limit != null) qs.push('limit=' + encodeURIComponent(o.limit));
+        if (o.start) qs.push('start=' + encodeURIComponent(o.start));
+        if (o.end) qs.push('end=' + encodeURIComponent(o.end));
+        if (o.userId != null && o.userId !== '') qs.push('user_id=' + encodeURIComponent(o.userId));
+        return request('/admin/injection/report' + (qs.length ? '?' + qs.join('&') : ''));
+    }
+
+    function adminInjectionPricing() {
+        return request('/admin/injection/pricing');
+    }
+
+    // 可只传要改的字段（与 /admin/pricing 的整份 PUT 不同）
+    function adminInjectionSavePricing(body) {
+        return put('/admin/injection/pricing', body || {});
     }
 
     window.ZIYIT_API = {
@@ -1679,6 +1761,13 @@
         pointsPurchase: pointsPurchase,
         pointsPricing: pointsPricing,
         pricingHtml: pricingHtml,
+        injectionDetect: injectionDetect,
+        injectionModels: injectionModels,
+        injectionPricing: injectionPricing,
+        injectionUsage: injectionUsage,
+        adminInjectionReport: adminInjectionReport,
+        adminInjectionPricing: adminInjectionPricing,
+        adminInjectionSavePricing: adminInjectionSavePricing,
         submitMod: submitMod,
         sendVerifyEmail: sendVerifyEmail,
         downloadMod: downloadMod,

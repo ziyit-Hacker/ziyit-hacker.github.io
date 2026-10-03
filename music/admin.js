@@ -82,6 +82,19 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('reset-pricing').addEventListener('click', resetPricing);
 
      
+    document.querySelector('[data-section="injection-management"]').addEventListener('click', function () {
+        switchSection('injection-management');
+        updateSystemInfo('切换到防注入检测');
+        loadInjection();
+    });
+    document.getElementById('refresh-injection').addEventListener('click', function () {
+        loadInjection();
+        updateSystemInfo('防注入数据已刷新');
+    });
+    document.getElementById('save-injection-pricing').addEventListener('click', saveInjectionPricing);
+    document.getElementById('query-injection-report').addEventListener('click', loadInjectionReport);
+
+     
     document.querySelector('[data-section="mod-management"]').addEventListener('click', function () {
         switchSection('mod-management');
         updateSystemInfo('切换到 MOD/DLC 管理');
@@ -1996,6 +2009,176 @@ function resetPricing() {
     }).catch(function (err) {
         alert('恢复失败: ' + ((err && err.data && err.data.detail) || (err && err.message) || err));
     }).finally(function () { btn.disabled = false; });
+}
+
+// ------------------------------------------------------------
+// 防注入检测（澄镜对外接口）：模型版本 / 定价配置 / 用量报表
+// 单价一律取后端返回值，前端不硬编码任何价格。
+// ------------------------------------------------------------
+function injectionErrText(err) {
+    if (err && err.data && err.data.detail) {
+        const d = err.data.detail;
+        if (typeof d === 'string') return d;
+        return d.message || JSON.stringify(d);
+    }
+    if (err && err.status === 403) return '权限不足（需 Lv.3+ 管理员）';
+    if (err && err.status === 401) return '登录状态已失效，请重新登录';
+    return (err && err.message) || '请求失败';
+}
+
+function loadInjection() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可访问防注入检测'); return; }
+    loadInjectionModels();
+    loadInjectionPricing();
+    loadInjectionReport();
+}
+
+function loadInjectionModels() {
+    const box = document.getElementById('injection-model');
+    box.innerHTML = '<p style="font-size:13px;color:var(--secondary-color);">加载中…</p>';
+    return ZIYIT_API.injectionModels().then(function (data) {
+        const items = (data && data.items) || [];
+        if (!items.length) {
+            box.innerHTML = '<p style="font-size:13px;color:var(--secondary-color);">后端未发现可用模型版本。</p>';
+            return;
+        }
+        box.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + items.map(function (m) {
+            const on = m.current || m.version === (data && data.current);
+            return '<span style="font-size:13px;padding:3px 10px;border-radius:10px;border:1px solid var(--border-color);' +
+                (on ? 'background:var(--accent-color);color:#fff;border-color:var(--accent-color);' : '') + '">' +
+                escAdmin(m.version) + (on ? '（当前生效）' : '') + '</span>';
+        }).join('') + '</div>';
+    }).catch(function (err) {
+        box.innerHTML = '<p style="font-size:13px;color:var(--ziyit-danger);">加载失败：' + escAdmin(injectionErrText(err)) + '</p>';
+    });
+}
+
+function loadInjectionPricing() {
+    const meta = document.getElementById('injection-pricing-meta');
+    return ZIYIT_API.adminInjectionPricing().then(function (cfg) {
+        cfg = cfg || {};
+        const tppEl = document.getElementById('inj-tokens-per-point');
+        const ppkEl = document.getElementById('inj-points-per-keyword');
+        tppEl.value = cfg.tokensPerPoint != null ? cfg.tokensPerPoint : '';
+        ppkEl.value = cfg.pointsPerKeyword != null ? cfg.pointsPerKeyword : '';
+
+        let line = '';
+        if (cfg.updatedAt) line += '最近修改：' + new Date(Number(cfg.updatedAt)).toLocaleString() + ' ｜ ';
+        if (cfg.updatedBy != null && cfg.updatedBy !== '') line += '修改人：' + cfg.updatedBy + ' ｜ ';
+        line += '可只改其中一项，保存后即刻生效。';
+        meta.textContent = line;
+    }).catch(function (err) {
+        meta.innerHTML = '<span style="color:var(--ziyit-danger);">定价加载失败：' + escAdmin(injectionErrText(err)) + '</span>';
+    });
+}
+
+function saveInjectionPricing() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可修改定价'); return; }
+    const tpp = parseFloat(document.getElementById('inj-tokens-per-point').value);
+    const ppk = parseFloat(document.getElementById('inj-points-per-keyword').value);
+    const body = {};
+    if (isFinite(tpp)) body.tokensPerPoint = tpp;
+    if (isFinite(ppk)) body.pointsPerKeyword = ppk;
+    if (!Object.keys(body).length) { alert('请至少填写一项要修改的价格'); return; }
+
+    const btn = document.getElementById('save-injection-pricing');
+    btn.disabled = true;
+    btn.textContent = '保存中…';
+    ZIYIT_API.adminInjectionSavePricing(body).then(function () {
+        updateSystemInfo('防注入定价已保存');
+        loadInjectionPricing();
+    }).catch(function (err) {
+        alert('保存失败：' + injectionErrText(err));
+    }).finally(function () {
+        btn.disabled = false;
+        btn.textContent = '保存定价';
+    });
+}
+
+function loadInjectionReport() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可查看防注入报表'); return; }
+    const panel = document.getElementById('injection-report-panel');
+    panel.innerHTML = loadingHTML();
+    return ZIYIT_API.adminInjectionReport({
+        start: document.getElementById('inj-start').value || '',
+        end: document.getElementById('inj-end').value || '',
+        userId: document.getElementById('inj-user-id').value || '',
+        limit: document.getElementById('inj-limit').value
+    }).then(function (d) {
+        renderInjectionReport(d || {});
+    }).catch(function (err) {
+        panel.innerHTML = '<p style="padding:20px;color:var(--ziyit-danger);">加载失败: ' + escAdmin(injectionErrText(err)) + '</p>';
+    });
+}
+
+function renderInjectionReport(d) {
+    const panel = document.getElementById('injection-report-panel');
+    const calls = Number(d.calls || 0);
+    const injected = Number(d.injected || 0);
+    const degraded = Number(d.degraded || 0);
+    const rate = calls ? Math.round(injected / calls * 1000) / 10 : 0;
+
+    let html = '<div class="user-stats">' +
+        statCard(fmtPoints(calls), '调用次数') +
+        statCard(fmtPoints(injected), '判为注入') +
+        statCard(rate + '%', '注入占比') +
+        statCard(fmtPoints(degraded), '降级次数') +
+        statCard(fmtPoints(d.totalTokens), '总 Token') +
+        statCard(fmtPoints(d.totalPoints), '消耗点数') +
+        '</div>';
+
+    if (!calls) {
+        html += '<p style="padding:12px 0;color:var(--secondary-color);font-size:14px;">该筛选条件下没有调用记录。</p>';
+        panel.innerHTML = html;
+        return;
+    }
+
+    const tops = d.topKeywords || [];
+    html += '<div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">' +
+        '<h3 style="margin:0 0 12px;color:var(--primary-color);">命中关键词 Top' + tops.length + '</h3>' +
+        (tops.length
+            ? '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + tops.map(function (t) {
+                return '<span style="font-size:13px;padding:2px 8px;border-radius:10px;background:var(--danger-color,#e74c3c);color:#fff;">' +
+                    escAdmin(t.keyword) + ' × ' + escAdmin(t.count) + '</span>';
+            }).join('') + '</div>'
+            : '<p style="color:var(--secondary-color);font-size:13px;">没有命中任何关键词。</p>') +
+        '</div>';
+
+    html += injectionTable('分模型版本', d.byVersion || [], function (v) {
+        return [v.version, v.calls, v.tokens, v.points];
+    });
+    html += injectionTable('分密钥', d.byKey || [], function (k) {
+        return [k.keyMasked, k.calls, k.tokens, k.points];
+    });
+
+    panel.innerHTML = html;
+}
+
+function statCard(value, label) {
+    return '<div class="user-stat-card"><div class="user-stat-number">' + escAdmin(value) + '</div>' +
+        '<div class="user-stat-label">' + escAdmin(label) + '</div></div>';
+}
+
+function injectionTable(title, rows, pick) {
+    let html = '<div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">' +
+        '<h3 style="margin:0 0 12px;color:var(--primary-color);">' + escAdmin(title) + '</h3>';
+    if (!rows.length) {
+        return html + '<p style="color:var(--secondary-color);font-size:13px;">暂无数据。</p></div>';
+    }
+    const title2 = title === '分密钥' ? ['密钥（脱敏）', '调用', 'Token', '点数'] : ['版本', '调用', 'Token', '点数'];
+    html += '<div style="display:flex;gap:10px;padding:8px 10px;font-size:12px;color:var(--secondary-color);border-bottom:1px solid var(--border-color);">' +
+        title2.map(function (h) {
+            return '<span style="flex:1;min-width:0;">' + escAdmin(h) + '</span>';
+        }).join('') + '</div>';
+    rows.forEach(function (r) {
+        const cells = pick(r);
+        html += '<div style="display:flex;gap:10px;padding:9px 10px;font-size:13px;border-bottom:1px solid var(--border-color);">' +
+            cells.map(function (c, i) {
+                return '<span style="flex:1;min-width:0;' + (i ? 'font-family:Consolas,monospace;white-space:nowrap;' : 'word-break:break-all;') + '">' +
+                    escAdmin(c == null ? '-' : c) + '</span>';
+            }).join('') + '</div>';
+    });
+    return html + '</div>';
 }
 
 let modList = [];

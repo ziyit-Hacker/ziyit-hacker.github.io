@@ -84,6 +84,9 @@
                     <li class="menu-item" data-section="pricing-management" data-level="3">
  定价管理
                     </li>
+                    <li class="menu-item" data-section="injection-management" data-level="3">
+ 防注入检测
+                    </li>
                     <li class="menu-item" data-section="mod-management" data-level="3">
  MOD / DLC 管理
                     </li>
@@ -363,6 +366,76 @@
                     </div>
                     <p class="user-del-date" id="pricing-meta" style="display:block;margin-bottom:16px;"></p>
                     <div id="pricing-panel">
+                        <div class="skeleton-list">
+                            <div class="skeleton-row">
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="injection-management" class="content-section">
+                    <div class="section-header">
+                        <h2>防注入检测</h2>
+                        <div style="display:flex;gap:10px;">
+                            <button class="user-btn" id="refresh-injection">刷新</button>
+                            <button class="user-btn success" id="save-injection-pricing">保存定价</button>
+                        </div>
+                    </div>
+                    <p class="user-del-date" id="injection-meta" style="display:block;margin-bottom:16px;"></p>
+
+                    <div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">
+                        <h3 style="margin:0 0 12px;color:var(--primary-color);">模型版本</h3>
+                        <div id="injection-model"></div>
+                    </div>
+
+                    <div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">
+                        <h3 style="margin:0 0 6px;color:var(--primary-color);">定价配置</h3>
+                        <p style="margin:0 0 12px;font-size:12px;color:var(--secondary-color);">这里只是防注入检测的计费单价；扣的是与人机验证共用的同一份点数。</p>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+                            <div>
+                                <label class="form-label">多少 Token 收 1 点</label>
+                                <input type="number" class="form-input" id="inj-tokens-per-point" step="0.01" min="0.01">
+                            </div>
+                            <div>
+                                <label class="form-label">每个命中关键词收多少点</label>
+                                <input type="number" class="form-input" id="inj-points-per-keyword" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div id="injection-pricing-meta" style="margin-top:10px;font-size:12px;color:var(--secondary-color);"></div>
+                    </div>
+
+                    <div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">
+                        <h3 style="margin:0 0 12px;color:var(--primary-color);">用量统计与消费报表</h3>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+                            <div>
+                                <label class="form-label">起始日期</label>
+                                <input type="date" class="form-input" id="inj-start">
+                            </div>
+                            <div>
+                                <label class="form-label">结束日期</label>
+                                <input type="date" class="form-input" id="inj-end">
+                            </div>
+                            <div>
+                                <label class="form-label">用户 ID（可选）</label>
+                                <input type="number" class="form-input" id="inj-user-id" min="1" placeholder="留空 = 全部">
+                            </div>
+                            <div>
+                                <label class="form-label">关键词 TopN</label>
+                                <select class="form-input" id="inj-limit">
+                                    <option value="10">10</option>
+                                    <option value="20" selected>20</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                            <button class="user-btn" id="query-injection-report">查询</button>
+                        </div>
+                    </div>
+
+                    <div id="injection-report-panel">
                         <div class="skeleton-list">
                             <div class="skeleton-row">
                                 <div class="sk-details"><div class="sk-block sk-line"></div><div class="sk-block sk-line"></div></div>

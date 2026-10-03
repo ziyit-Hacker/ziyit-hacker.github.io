@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的防注入用量 - ZIYIT</title>
+    <meta name="description" content="查看自己在澄镜防注入检测 API 上的调用次数、Token 用量、消费点数与命中关键词统计。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ziyit-hacker.github.io/user/injection.html">
+    <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
+    <script src="../assets/f12check.js"></script>
+    <script src="../assets/ziyit_api.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: default !important;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--ziyit-primary);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: var(--ziyit-bg);
+        }
+
+        .page {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 24px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .page h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: var(--ziyit-text-secondary);
+            margin: 6px 0 16px;
+            line-height: 1.7;
+        }
+
+        .back-link {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar .fld {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .toolbar label {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+        }
+
+        .toolbar input {
+            padding: 8px 10px;
+            font-size: 14px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 6px;
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            cursor: text !important;
+        }
+
+        .toolbar input:focus {
+            outline: none;
+            border-color: var(--ziyit-primary);
+            box-shadow: 0 0 0 3px var(--ziyit-primary-light);
+        }
+
+        .btn {
+            padding: 9px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            background-color: var(--ziyit-primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background .2s, transform .1s;
+        }
+
+        .btn:hover {
+            background-color: var(--ziyit-primary-dark);
+        }
+
+        .btn:active {
+            transform: scale(.98);
+        }
+
+        .btn:disabled {
+            background-color: var(--ziyit-text-disabled);
+            cursor: not-allowed;
+        }
+
+        .btn.ghost {
+            background: transparent;
+            color: var(--ziyit-primary);
+            border: 1px solid var(--ziyit-primary);
+        }
+
+        .btn.ghost:hover {
+            background: var(--ziyit-primary-light);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            border: 1px solid var(--ziyit-border-light);
+            border-radius: 10px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, rgba(0, 120, 212, .08), rgba(102, 230, 86, .08));
+        }
+
+        .stat-num {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--ziyit-primary);
+            line-height: 1.2;
+        }
+
+        .stat-num.danger {
+            color: var(--ziyit-danger);
+        }
+
+        .stat-num.warn {
+            color: var(--ziyit-warning);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+            margin-top: 4px;
+        }
+
+        .block {
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: var(--ziyit-bg);
+        }
+
+        .block h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            margin-bottom: 12px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border-light);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .data-table th {
+            text-align: left;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--ziyit-text-secondary);
+            background: var(--ziyit-bg);
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--ziyit-border-light);
+        }
+
+        .data-table td {
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--ziyit-border-light);
+            color: var(--ziyit-text-primary);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table td.num {
+            font-family: Consolas, 'Courier New', monospace;
+            white-space: nowrap;
+        }
+
+        .kw-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .kw-tag {
+            font-size: 13px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(242, 87, 103, .14);
+            border: 1px solid var(--ziyit-danger);
+            color: var(--ziyit-danger);
+        }
+
+        .loading,
+        .error-box,
+        .empty-box {
+            padding: 18px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--ziyit-text-secondary);
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 10px;
+        }
+
+        .error-box {
+            color: var(--ziyit-danger);
+            border-color: var(--ziyit-danger);
+        }
+
+        @media (max-width: 768px) {
+            .page {
+                margin: 12px;
+                padding: 16px;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .data-table .hide-sm {
+                display: none;
+            }
+        }
+    </style>
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <script src="../assets/blacklist.js"></script>
+</head>
+
+<body>
+
+    <div class="site-nav">
+        <div class="site-nav-inner">
+            <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
+            <ul class="site-nav-menu" id="navMenu">
+                <li class="nav-item has-sub" data-role="all">功能区
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href='../download/'>下载</a></li>
+                        <li class="nav-item" data-role="all"><a href='../move/'>更多</a></li>
+                        <li class="nav-item" data-role="all"><a href="../move/mod">病毒库</a></li>
+                        <li class="nav-item" data-role="all"><a href="../search">搜索</a></li>
+                        <li class="nav-item" data-role="all"><a href="../music/">音乐</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Translator">巨硬翻译</a></li>
+                        <li class="nav-item" data-role="all"><a href="../Human_verification.html">人机验证</a></li>
+                        <li class="nav-item" data-role="all"><a href="../injection.html">防注入检测</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="all"></li>
+                <li class="nav-item has-sub" data-role="admin">ZIYIT<span class="bid">开发者选项</span>
+                    <ul>
+                        <li class="nav-item" data-role="admin"><a href="../developers/">日志</a></li>
+                        <li class="nav-item" data-role="admin"><a href="../backrooms/Deployment">常部署时间</a></li>
+                        <li class="nav-item" data-role="adminstr"><a href="../music/admin">后台管理</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item has-sub" data-role="all">图书馆
+                    <ul>
+                        <li class="nav-item" data-role="all"><a href="../ModWiki/">Minecraft Mod Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/">Backrooms Wiki</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/normal-levels/">层级</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/subareas/">子区集</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/entities/">实体</a></li>
+                        <li class="nav-item" data-role="all"><a href="../backrooms/objects/">物品</a></li>
+                    </ul>
+                </li>
+                <li class="line nav-item" data-role="admin"></li>
+                <li class="nav-item" data-role="all"><a href="../user" id="userActionLink">用户中心</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/points.html">我的点数</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/injection.html">我的防注入用量</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/file-keys.html">我的文件密钥</a></li>
+                <li class="nav-item" data-role="all"><a href="../user/" id="loginLink">登录</a></li>
+                <li class="nav-item" data-role="all"><a href="javascript:history.back()">返回</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page">
+        <h1>我的防注入用量</h1>
+        <a href="javascript:history.back()" class="back-link">返回</a>
+        <p class="page-sub">
+            统计<b>你名下 API 密钥</b>调用澄镜防注入检测的用量：按真实发生的检测计费（模型段按 Token、关键词段按命中个数），
+            降级时模型段记 0。数据来自用量流水，只含已完成的检测。
+        </p>
+        <p class="page-sub">
+            这里只是<b>消耗明细</b>——扣的是和你人机验证<b>同一份 ZIYIT 点数</b>（同一个余额、同一条流水，流水中记为「防注入检测消耗」）。
+            余额与充值请到 <a href="./points.html">我的点数</a>。
+        </p>
+
+        <div class="toolbar">
+            <div class="fld">
+                <label for="startInput">起始日期</label>
+                <input type="date" id="startInput">
+            </div>
+            <div class="fld">
+                <label for="endInput">结束日期</label>
+                <input type="date" id="endInput">
+            </div>
+            <div class="fld">
+                <label for="limitSelect">关键词 TopN</label>
+                <select id="limitSelect" style="padding:8px 10px;font-size:14px;border:1px solid var(--ziyit-border);border-radius:6px;background:var(--ziyit-bg-card);color:var(--ziyit-text-primary);">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+            <button type="button" class="btn" id="queryBtn">查询</button>
+            <button type="button" class="btn ghost" id="resetBtn">重置</button>
+        </div>
+
+        <div id="resultArea">
+            <div class="empty-box">加载中…</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!ZIYIT_API.getToken()) {
+                alert('请先登录后再查看用量');
+                window.location.href = './';
+                return;
+            }
+
+            var startInput = document.getElementById('startInput');
+            var endInput = document.getElementById('endInput');
+            var limitSelect = document.getElementById('limitSelect');
+            var queryBtn = document.getElementById('queryBtn');
+            var resetBtn = document.getElementById('resetBtn');
+            var resultArea = document.getElementById('resultArea');
+
+            var LOADING_HTML = '<div class="ziyit-loading">' +
+                '<button class="ziyit-loading-btn" disabled><span class="spinner"></span>加载中</button>' +
+                '<div class="ziyit-loader">' +
+                '<div class="loader-title"><img src="../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div>' +
+                '<div class="loader-bar"><div class="loader-fill"></div></div>' +
+                '</div></div>';
+
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            function fmtNum(n) {
+                if (n == null || n === '') return '0';
+                var v = Number(n);
+                if (isNaN(v)) return esc(n);
+                if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+                return String(Math.round(v * 100) / 100);
+            }
+
+            function errMsg(err, fallback) {
+                if (err && err.data) {
+                    var d = err.data.detail;
+                    if (typeof d === 'string' && d) return d;
+                    if (d && d.message) return d.message;
+                    if (err.data.message) return err.data.message;
+                }
+                if (err && err.status === 401) return '登录状态已失效，请重新登录';
+                return fallback || '请求失败，请稍后再试';
+            }
+
+            function render(data) {
+                var calls = Number(data.calls || 0);
+                var injected = Number(data.injected || 0);
+                var degraded = Number(data.degraded || 0);
+                var rate = calls ? Math.round(injected / calls * 1000) / 10 : 0;
+
+                var html = '<div class="stats">'
+                    + '<div class="stat"><div class="stat-num">' + esc(fmtNum(calls)) + '</div><div class="stat-label">调用次数</div></div>'
+                    + '<div class="stat"><div class="stat-num danger">' + esc(fmtNum(injected)) + '</div><div class="stat-label">判为注入</div></div>'
+                    + '<div class="stat"><div class="stat-num">' + esc(fmtNum(rate)) + '%</div><div class="stat-label">注入占比</div></div>'
+                    + '<div class="stat"><div class="stat-num warn">' + esc(fmtNum(degraded)) + '</div><div class="stat-label">降级次数</div></div>'
+                    + '<div class="stat"><div class="stat-num">' + esc(fmtNum(data.totalTokens)) + '</div><div class="stat-label">总 Token</div></div>'
+                    + '<div class="stat"><div class="stat-num">' + esc(fmtNum(data.totalPoints)) + '</div><div class="stat-label">消耗点数</div></div>'
+                    + '</div>';
+
+                if (!calls) {
+                    html += '<div class="empty-box">该时间范围内暂无调用记录。'
+                        + '你可以在 <a href="../injection.html">防注入检测</a> 页面用你的密钥试一条。</div>';
+                    resultArea.innerHTML = html;
+                    return;
+                }
+
+                var tops = data.topKeywords || [];
+                html += '<div class="block"><h2>命中关键词 Top' + esc(fmtNum(tops.length)) + '</h2>'
+                    + (tops.length
+                        ? '<div class="kw-list">' + tops.map(function (t) {
+                            return '<span class="kw-tag">' + esc(t.keyword) + ' × ' + esc(fmtNum(t.count)) + '</span>';
+                        }).join('') + '</div>'
+                        : '<div class="loading">没有命中任何关键词。</div>')
+                    + '</div>';
+
+                var byVer = data.byVersion || [];
+                html += '<div class="block"><h2>分模型版本</h2>'
+                    + (byVer.length
+                        ? '<table class="data-table"><thead><tr><th>版本</th><th>调用</th><th class="hide-sm">Token</th><th>点数</th></tr></thead><tbody>'
+                        + byVer.map(function (v) {
+                            return '<tr><td>' + esc(v.version) + '</td>'
+                                + '<td class="num">' + esc(fmtNum(v.calls)) + '</td>'
+                                + '<td class="num hide-sm">' + esc(fmtNum(v.tokens)) + '</td>'
+                                + '<td class="num">' + esc(fmtNum(v.points)) + '</td></tr>';
+                        }).join('') + '</tbody></table>'
+                        : '<div class="loading">暂无数据。</div>')
+                    + '</div>';
+
+                var byKey = data.byKey || [];
+                html += '<div class="block"><h2>分密钥</h2>'
+                    + (byKey.length
+                        ? '<table class="data-table"><thead><tr><th>密钥（脱敏）</th><th>调用</th><th class="hide-sm">Token</th><th>点数</th></tr></thead><tbody>'
+                        + byKey.map(function (k) {
+                            return '<tr><td>' + esc(k.keyMasked) + '</td>'
+                                + '<td class="num">' + esc(fmtNum(k.calls)) + '</td>'
+                                + '<td class="num hide-sm">' + esc(fmtNum(k.tokens)) + '</td>'
+                                + '<td class="num">' + esc(fmtNum(k.points)) + '</td></tr>';
+                        }).join('') + '</tbody></table>'
+                        : '<div class="loading">暂无数据。</div>')
+                    + '</div>';
+
+                resultArea.innerHTML = html;
+            }
+
+            function load() {
+                resultArea.innerHTML = LOADING_HTML;
+                queryBtn.disabled = true;
+                return ZIYIT_API.injectionUsage({
+                    start: startInput.value || '',
+                    end: endInput.value || '',
+                    limit: limitSelect.value
+                }).then(function (data) {
+                    render(data || {});
+                }).catch(function (err) {
+                    resultArea.innerHTML = '<div class="error-box">加载失败：' + esc(errMsg(err)) + '</div>';
+                }).finally(function () {
+                    queryBtn.disabled = false;
+                });
+            }
+
+            queryBtn.addEventListener('click', load);
+            resetBtn.addEventListener('click', function () {
+                startInput.value = '';
+                endInput.value = '';
+                limitSelect.value = '20';
+                load();
+            });
+
+            load();
+        });
+    </script>
+
+    <script>
+        function checkLoginStatus() {
+            const navItems = document.querySelectorAll('.nav-item');
+            if (!ZIYIT_API.getToken()) {
+                navItems.forEach(function (item) {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+                return;
+            }
+            ZIYIT_API.currentUser().then(function (user) {
+                const isVip = ZIYIT_API.isVip(user);
+                const uname = user.username || '';
+                const isAdmin = uname === 'Minecraft_zy227';
+                navItems.forEach(function (item) {
+                    const role = item.getAttribute('data-role');
+                    let show = role === 'all';
+                    if (isAdmin) {
+                        show = show || role === 'admin' || role === 'adminstr';
+                    } else if (isVip) {
+                        show = show || role === 'admin';
+                    }
+                    item.classList.toggle('visible', show);
+                    item.classList.toggle('hidden', !show);
+                });
+                const loginLink = document.getElementById('loginLink');
+                if (loginLink) loginLink.style.display = 'none';
+            }).catch(function () {
+                navItems.forEach(function (item) {
+                    item.classList.add('hidden');
+                    item.classList.remove('visible');
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+    <script src="../assets/ziyit-theme.js"></script>
+</body>
+
+</html>
