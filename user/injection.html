@@ -374,8 +374,21 @@
             stroke-dasharray: 6 4;
         }
 
+        .chart-svg .dash-human {
+            fill: none;
+            stroke: var(--ziyit-warning);
+            stroke-width: 2;
+            stroke-dasharray: 6 4;
+        }
+
         .chart-svg .lbl-inj {
             fill: var(--ziyit-primary);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .chart-svg .lbl-human {
+            fill: var(--ziyit-warning);
             font-size: 12px;
             font-weight: 600;
         }
@@ -745,6 +758,7 @@
             function fetchLedgerDaily(startStr, endStr) {
                 var human = { map: {}, total: 0 };
                 var inj = { map: {}, total: 0 };
+                var humanByKey = {};   // apiKeyMasked -> { map, total }（仅当流水条目带 apiKeyMasked）
                 var pages = 0, capped = false, offset = 0;
 
                 function bucket(reason) {
@@ -771,6 +785,13 @@
                             if (v < 0) v = 0;
                             b.map[day] = (b.map[day] || 0) + v;
                             b.total += v;
+                            // 人机验证若在流水条目上带了密钥（后端补 apiKeyMasked 后），再按密钥分一份
+                            if (e.reason === 'points_consume' && e.apiKeyMasked) {
+                                var km = String(e.apiKeyMasked);
+                                var kb = humanByKey[km] || (humanByKey[km] = { map: {}, total: 0 });
+                                kb.map[day] = (kb.map[day] || 0) + v;
+                                kb.total += v;
+                            }
                         });
 
                         var more = entries.length >= LEDGER_PAGE && !reachedStart
@@ -780,7 +801,7 @@
                             offset += entries.length;
                             return step();
                         }
-                        return { human: human, inj: inj, capped: capped, pages: pages };
+                        return { human: human, inj: inj, humanByKey: humanByKey, capped: capped, pages: pages };
                     });
                 }
                 return step();
@@ -915,29 +936,48 @@
                 return '<svg class="chart-svg" viewBox="0 0 ' + CW + ' ' + CH + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="按天用量折线图">' + parts.join('') + '</svg>';
             }
 
-            // 单密钥：只有区间聚合值，画一条水平虚线或单根柱，绝不伪造逐日点
-            function keyFlatChart(total, masked) {
+            // 单密钥：只有区间聚合值（无逐日数据），按区间合计绘制；
+            // 人机验证在有按密钥数据时画第二段/第二条，无数据（humanTotal 为 null）时只画防注入。
+            function keyRangeChart(injTotal, humanTotal, masked) {
+                var inj = Number(injTotal || 0);
+                var hasHuman = humanTotal != null;
+                var human = hasHuman ? Number(humanTotal || 0) : 0;
+                var total = inj + human;
                 if (!(total > 0)) {
-                    return '<div class="empty-box">该密钥在所选时间区间内暂无防注入消耗记录。</div>';
+                    return '<div class="empty-box">该密钥在所选时间区间内暂无消耗记录。</div>';
                 }
                 var plotW = CW - CM.l - CM.r;
                 var plotH = CH - CM.t - CM.b;
                 var max = niceCeil(total);
                 var baseY = CM.t + plotH;
-                var y = baseY - plotH * (total / max);
-                var note = '区间合计（无按天数据）：' + fmtNum(total) + ' 点';
-
                 var parts = gridParts(max, plotH, baseY);
+
+                var rows = [{ key: 'inj', v: inj }];
+                if (hasHuman) rows.push({ key: 'human', v: human });
+
                 if (chartType === 'line') {
-                    parts.push('<line class="dash-inj" x1="' + CM.l + '" y1="' + r2(y) + '" x2="' + (CW - CM.r) + '" y2="' + r2(y) + '"></line>');
-                    parts.push('<text class="lbl-inj" x="' + (CM.l + 8) + '" y="' + r2(y - 8) + '">' + esc(note) + '</text>');
+                    // 折线：区间合计是单一数值，用两条水平虚线表示两类各自的合计
+                    rows.forEach(function (row) {
+                        var y = baseY - plotH * (row.v / max);
+                        parts.push('<line class="dash-' + row.key + '" x1="' + CM.l + '" y1="' + r2(y) + '" x2="' + (CW - CM.r) + '" y2="' + r2(y) + '"></line>');
+                        parts.push('<text class="lbl-' + row.key + '" x="' + (CM.l + 8) + '" y="' + r2(y - 6) + '">'
+                            + esc(SERIES_META[row.key].label + '：' + fmtNum(row.v) + ' 点') + '</text>');
+                    });
                 } else {
-                    var barW = 80;
+                    // 条形：单根堆叠柱（防注入 + 人机验证两段）
+                    var barW = 90;
                     var x = CM.l + plotW / 2 - barW / 2;
-                    var h = plotH * (total / max);
-                    parts.push('<rect class="bar-inj" x="' + r2(x) + '" y="' + r2(baseY - h) + '" width="' + barW + '" height="' + r2(h) + '">'
-                        + '<title>' + esc(masked + ' ' + note) + '</title></rect>');
-                    parts.push('<text class="lbl-inj" x="' + r2(CM.l + plotW / 2) + '" y="' + (CH - 12) + '" text-anchor="middle">' + esc(note) + '</text>');
+                    var acc = 0;
+                    rows.forEach(function (row) {
+                        if (row.v > 0) {
+                            var h = plotH * (row.v / max);
+                            parts.push('<rect class="bar-' + row.key + '" x="' + r2(x) + '" y="' + r2(baseY - acc - h) + '" width="' + barW + '" height="' + r2(h) + '">'
+                                + '<title>' + esc(masked + ' ' + SERIES_META[row.key].label + '：' + fmtNum(row.v) + ' 点') + '</title></rect>');
+                        }
+                        acc += row.v;
+                    });
+                    parts.push('<text class="lbl-inj" x="' + r2(CM.l + plotW / 2) + '" y="' + (CH - 12) + '" text-anchor="middle">'
+                        + esc('区间合计 ' + fmtNum(total) + ' 点') + '</text>');
                 }
                 return '<svg class="chart-svg" viewBox="0 0 ' + CW + ' ' + CH + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="单个密钥区间合计用量图">' + parts.join('') + '</svg>';
             }
@@ -958,7 +998,9 @@
                 var hasInj = false;
                 if (hasByDay) {
                     byDay.forEach(function (r) {
-                        if (r && r.day) injMap[String(r.day)] = Number(r.points || 0);
+                        // 后端 byDay 行字段名是 date（早期假设的 day 一并兼容）
+                        var d = r ? String(r.date || r.day || '') : '';
+                        if (d) injMap[d] = Number(r.points || 0);
                     });
                     hasInj = true;
                 } else if (ledgerDaily && ledgerDaily.inj) {
@@ -1025,22 +1067,31 @@
                     if (byKey[i] && String(byKey[i].keyMasked) === masked) { match = byKey[i]; break; }
                 }
                 var injTotal = match ? Number(match.points || 0) : 0;
+                var keyHuman = (ledgerDaily && ledgerDaily.humanByKey) ? ledgerDaily.humanByKey[masked] : null;
+                var humanTotal = keyHuman ? Number(keyHuman.total || 0) : null;   // null = 无按密钥人机验证数据
 
                 var kobj = findKey(selectedKey);
                 var used = pick(kobj, ['points_used', 'pointsUsed']);
                 var dailyUsed = pick(kobj, ['daily_points_used', 'dailyPointsUsed']);
 
-                var html = '<div class="chart-note">当前维度：单个 API KEY（' + esc(masked) + '）。'
-                    + '防注入检测按该密钥在所选区间的<b>区间聚合值</b>展示；点数流水中不含 apiKey，故后端暂无按密钥的逐日数据。</div>';
+                var hasHuman = humanTotal != null;
+                var listed = ['inj'];
+                if (hasHuman) listed.push('human');
 
-                html += '<div class="chart-legend"><span><span class="dot dot-inj"></span>防注入检测（区间合计）</span><span class="unit">Y 轴单位：点</span></div>';
-                html += keyFlatChart(injTotal, masked);
+                var html = '<div class="chart-note">当前维度：单个 API KEY（' + esc(masked) + '）。'
+                    + '该密钥只有<b>区间聚合值</b>（后端既无按密钥的逐日防注入数据，也无逐日人机验证数据），故两类均按所选区间的合计展示。</div>';
+
+                html += legendHtml(listed);
+                html += keyRangeChart(injTotal, humanTotal, masked);
 
                 html += '<div class="stats" style="margin-top:16px;margin-bottom:8px;">'
                     + '<div class="stat"><div class="stat-num">' + esc(fmtMaybe(used)) + '</div><div class="stat-label">该密钥累计消耗</div></div>'
                     + '<div class="stat"><div class="stat-num warn">' + esc(fmtMaybe(dailyUsed)) + '</div><div class="stat-label">该密钥今日消耗</div></div>'
-                    + '</div>'
-                    + '<div class="chart-note warn">后端暂无按密钥的人机验证流水；以上为该密钥累计消耗（含人机验证与防注入，两类合计）。</div>';
+                    + '</div>';
+                if (!hasHuman) {
+                    html += '<div class="chart-note warn">点数流水未记录密钥归属，后端暂无「按密钥的人机验证」数据；'
+                        + '上图为该密钥的防注入消耗，两张卡片为该密钥累计 / 今日总消耗（含人机验证与防注入，两类合计）。</div>';
+                }
 
                 chartArea.innerHTML = html;
             }
