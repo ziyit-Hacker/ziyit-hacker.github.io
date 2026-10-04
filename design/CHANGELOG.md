@@ -3,6 +3,13 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.35 — 2026-10-04
+### 变更
+- [backrooms/review.html](file:///f:/Code/html/ziyit/backrooms/review.html) **三个列表改为各自独立的搜索框**：移除原「文档范围」卡片里的全局搜索框（`#search-input` / `#search-clear` / `#search-info`），改为在「待基础审核」「高级审核」「已收录文档」三张卡片内各放一组搜索框 —— `#basic-search` / `#advanced-search` / `#approved-search`（各配「清空」按钮），互不影响、只过滤本列表、仍为前端本地过滤不发额外请求。
+- 搜索状态由单个字符串改为 `QUERY = { basic, advanced, approved }`；`matches(it, q)` / `visible(items, q)` 增加 query 参数；新增 `countText(n, total, q)`，有搜索词时标题徽章显示「匹配 n / 共 total 条」，无搜索词显示「total 条」。文档类型的 tab 切换保留在「文档范围」卡片中。
+### 说明
+- 只改前端页面 `backrooms/review.html` 与本文件；**后端一行未改**；内联脚本 `node --check` 通过。
+
 ## v1.34 — 2026-10-04
 ### 变更
 - **四个分类列表页改为读后端动态渲染**：`backrooms/normal-levels/index.html`（层级）、`backrooms/entities/index.html`（实体）、`backrooms/objects/index.html`（物品）、`backrooms/phenomena/index.html`（现象）中原本硬编码的 Wikidot 清单（`<div class="style-block">` + `<ul><li><a href="level-0.html">…` 共约 **50.3 万字符**）整体删除，换成一段 `#br-list` 占位 + 内联脚本：

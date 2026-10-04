@@ -100,38 +100,45 @@
 
         <div class="card" id="sec-filter">
             <h2>🔎 文档范围</h2>
-            <p class="desc">先选择文档类型，再按需搜索。搜索按「ID / 名称 / 作者」模糊匹配当前类型下的全部状态文档。</p>
+            <p class="desc">先选择文档类型；下面三个列表各带独立搜索框，按「ID / 名称 / 作者」模糊匹配，只过滤本列表。</p>
             <div class="type-tabs" id="type-tabs">
                 <button class="type-tab active" data-type="level">层级</button>
                 <button class="type-tab" data-type="entity">实体</button>
                 <button class="type-tab" data-type="object">物品</button>
                 <button class="type-tab" data-type="phenomenon">现象</button>
             </div>
-            <div class="search-row">
-                <input id="search-input" type="search" placeholder="搜索 ID / 名称 / 作者…">
-                <button id="search-clear" class="secondary">清空</button>
-                <span class="search-info" id="search-info"></span>
-            </div>
         </div>
 
         <div class="card" id="sec-basic">
             <h2>🤖 待基础审核（AI 初审）<span id="basic-count" class="badge b-pending"></span></h2>
             <p class="desc">状态为 pending / ai_failed 的稿件。管理员用自有 AI 依据审核标准初审：生成提示词 → 复制到自己的 AI → 把 AI 回复粘贴提交（提示词内嵌前端标准文件内容）。</p>
-            <button id="btn-basic-refresh" class="secondary">刷新</button>
+            <div class="search-row">
+                <input id="basic-search" type="search" placeholder="搜索待基础审核稿件（ID / 名称 / 作者）…">
+                <button id="basic-search-clear" class="secondary">清空</button>
+                <button id="btn-basic-refresh" class="secondary">刷新</button>
+            </div>
             <div id="basic-list"></div>
         </div>
 
         <div class="card" id="sec-advanced">
             <h2>🛡 高级审核（人工复审）<span id="advanced-count" class="badge b-advanced"></span></h2>
             <p class="desc">AI 初审通过后进入高级审核队列（Lv.2+ 可操作）。</p>
-            <button id="btn-advanced-refresh" class="secondary">刷新</button>
+            <div class="search-row">
+                <input id="advanced-search" type="search" placeholder="搜索高级审核稿件（ID / 名称 / 作者）…">
+                <button id="advanced-search-clear" class="secondary">清空</button>
+                <button id="btn-advanced-refresh" class="secondary">刷新</button>
+            </div>
             <div id="advanced-list"></div>
         </div>
 
         <div class="card" id="sec-approved">
             <h2>✅ 已收录文档（重写 / 删除）<span id="approved-count" class="badge b-approved"></span></h2>
             <p class="desc">已收录的文档可标记重写（下架 + 保留原文件）或直接删除（Lv.2+ 可操作）。</p>
-            <button id="btn-approved-refresh" class="secondary">刷新</button>
+            <div class="search-row">
+                <input id="approved-search" type="search" placeholder="搜索已收录文档（ID / 名称 / 作者）…">
+                <button id="approved-search-clear" class="secondary">清空</button>
+                <button id="btn-approved-refresh" class="secondary">刷新</button>
+            </div>
             <div id="approved-list"></div>
         </div>
     </main>
@@ -144,7 +151,9 @@
 
     <script>
         var ME = null, LEVEL = 0;
-        var CUR_TYPE = 'level', QUERY = '';
+        var CUR_TYPE = 'level';
+        // 三个列表各自独立的搜索词
+        var QUERY = { basic: '', advanced: '', approved: '' };
         var TYPE_LABEL = { level: '层级', entity: '实体', object: '物品', phenomenon: '现象' };
         var PREFIX = { level: '/backrooms/levels', entity: '/backrooms/entities', object: '/backrooms/objects', phenomenon: '/backrooms/phenomena' };
         var ALL_ITEMS = [];
@@ -208,15 +217,16 @@
         function closeModal() { $('modal-mask').classList.remove('show'); $('modal-box').innerHTML = ''; }
         document.getElementById('modal-mask').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 
-        // ---------- 搜索过滤 ----------
-        function matches(it) {
-            if (!QUERY) return true;
-            var q = QUERY.toLowerCase();
+        // ---------- 搜索过滤（每个列表各自独立） ----------
+        function matches(it, q) {
+            if (!q) return true;
+            q = q.toLowerCase();
             return String(idOf(it)).toLowerCase().indexOf(q) !== -1
                 || String(nameOf(it)).toLowerCase().indexOf(q) !== -1
                 || String(authorOf(it)).toLowerCase().indexOf(q) !== -1;
         }
-        function visible(items) { return items.filter(matches); }
+        function visible(items, q) { return items.filter(function (it) { return matches(it, q); }); }
+        function countText(n, total, q) { return q ? ('匹配 ' + n + ' / 共 ' + total + ' 条') : (total + ' 条'); }
 
         // ---------- 查看 / 下载 ----------
         async function fetchDocHtml(id) {
@@ -280,10 +290,11 @@
         }
 
         function renderBasic() {
-            var items = visible(ALL_ITEMS.filter(function (it) { return it.status === 'pending' || it.status === 'ai_failed'; }));
+            var all = ALL_ITEMS.filter(function (it) { return it.status === 'pending' || it.status === 'ai_failed'; });
+            var items = visible(all, QUERY.basic);
             var el = $('basic-list');
-            $('basic-count').textContent = items.length + ' 条';
-            if (!items.length) { el.innerHTML = emptyHTML(QUERY ? '无匹配的待基础审核稿件。' : '暂无待基础审核的稿件。'); return; }
+            $('basic-count').textContent = countText(items.length, all.length, QUERY.basic);
+            if (!items.length) { el.innerHTML = emptyHTML(QUERY.basic ? '无匹配的待基础审核稿件。' : '暂无待基础审核的稿件。'); return; }
             el.innerHTML = '<table><thead><tr><th>文档</th><th>作者</th><th>大小</th><th>状态</th><th>版本</th><th style="width:250px">操作</th></tr></thead><tbody>'
                 + items.map(function (it) {
                     var id = idOf(it);
@@ -301,10 +312,11 @@
         }
 
         function renderAdvanced() {
-            var items = visible(ALL_ITEMS.filter(function (it) { return it.status === 'advanced_pending'; }));
+            var all = ALL_ITEMS.filter(function (it) { return it.status === 'advanced_pending'; });
+            var items = visible(all, QUERY.advanced);
             var el = $('advanced-list');
-            $('advanced-count').textContent = items.length + ' 条';
-            if (!items.length) { el.innerHTML = emptyHTML(QUERY ? '无匹配的高级审核稿件。' : '暂无高级审核中的稿件。'); return; }
+            $('advanced-count').textContent = countText(items.length, all.length, QUERY.advanced);
+            if (!items.length) { el.innerHTML = emptyHTML(QUERY.advanced ? '无匹配的高级审核稿件。' : '暂无高级审核中的稿件。'); return; }
             el.innerHTML = '<table><thead><tr><th>文档</th><th>作者</th><th>大小</th><th>版本</th><th style="width:180px">操作</th></tr></thead><tbody>'
                 + items.map(function (it) {
                     var id = idOf(it);
@@ -321,10 +333,11 @@
         }
 
         function renderApproved() {
-            var items = visible(ALL_ITEMS.filter(function (it) { return it.status === 'approved'; }));
+            var all = ALL_ITEMS.filter(function (it) { return it.status === 'approved'; });
+            var items = visible(all, QUERY.approved);
             var el = $('approved-list');
-            $('approved-count').textContent = items.length + ' 条';
-            if (!items.length) { el.innerHTML = emptyHTML(QUERY ? '无匹配的已收录文档。' : '暂无已收录的文档。'); return; }
+            $('approved-count').textContent = countText(items.length, all.length, QUERY.approved);
+            if (!items.length) { el.innerHTML = emptyHTML(QUERY.approved ? '无匹配的已收录文档。' : '暂无已收录的文档。'); return; }
             el.innerHTML = '<table><thead><tr><th>文档</th><th>作者</th><th>版本</th><th style="width:180px">操作</th></tr></thead><tbody>'
                 + items.map(function (it) {
                     var id = idOf(it);
@@ -341,7 +354,6 @@
 
         function renderAll() {
             renderBasic(); renderAdvanced(); renderApproved();
-            $('search-info').textContent = '共 ' + ALL_ITEMS.length + ' 条' + (QUERY ? '，匹配 ' + visible(ALL_ITEMS).length + ' 条' : '');
         }
 
         function loadAll() {
@@ -358,7 +370,6 @@
                 var msg = emptyHTML('加载失败：' + errText(err));
                 $('basic-list').innerHTML = msg; $('advanced-list').innerHTML = msg; $('approved-list').innerHTML = msg;
                 $('basic-count').textContent = '0 条'; $('advanced-count').textContent = '0 条'; $('approved-count').textContent = '0 条';
-                $('search-info').textContent = '';
             });
         }
 
@@ -392,8 +403,13 @@
             loadAll();
         });
 
-        $('search-input').addEventListener('input', function () { QUERY = this.value.trim(); renderAll(); });
-        $('search-clear').addEventListener('click', function () { $('search-input').value = ''; QUERY = ''; renderAll(); });
+        // 三个列表各自的搜索框（互不影响，仅本地过滤，不发额外请求）
+        function bindSearch(key) {
+            var input = $(key + '-search'), clear = $(key + '-search-clear');
+            input.addEventListener('input', function () { QUERY[key] = this.value.trim(); renderAll(); });
+            clear.addEventListener('click', function () { input.value = ''; QUERY[key] = ''; renderAll(); });
+        }
+        ['basic', 'advanced', 'approved'].forEach(bindSearch);
 
         function findItem(id) {
             for (var i = 0; i < ALL_ITEMS.length; i++) { if (idOf(ALL_ITEMS[i]) === id) return ALL_ITEMS[i]; }
