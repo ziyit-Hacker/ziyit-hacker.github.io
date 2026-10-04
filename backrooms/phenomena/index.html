@@ -600,9 +600,13 @@
                                         return { id: id, base: base, isBase: false, dec: null, suffix: rest };
                                     }
                                     function displayId(it) {
-                                        var p = parseId(it);
-                                        if (p.base === null) return String(idOf(it));
-                                        return PREFIX_NAME + ' ' + p.base + (p.dec !== null ? ('.' + p.dec) : (p.suffix || ''));
+                                        var id = String(idOf(it));
+                                        var m = id.match(/^\s*(Level|Entity|Object|Phenomenon)\s*-\s*([\s\S]*)$/i);
+                                        if (!m) return id;
+                                        var p = parseId(it), rest;
+                                        if (p.base === null) rest = m[2];
+                                        else rest = String(p.base) + (p.dec !== null ? ('.' + p.dec) : (p.suffix || ''));
+                                        return PREFIX_NAME + ' ' + rest;
                                     }
                                     function baseUrl() { return (window.ZIYIT_API && ZIYIT_API.base) ? ZIYIT_API.base() : ''; }
                                     function docUrl(id) { return baseUrl() + PREFIX[TYPE] + '/' + encodeURIComponent(id); }

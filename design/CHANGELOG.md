@@ -3,6 +3,16 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.38 — 2026-10-04
+### 变更
+- **四个分类列表页：类型前缀后的 `-` 一律显示为空格（含特殊组）**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)）：v1.37 只对**有数字**的条目做了「前缀后 → 空格」的显示，特殊组仍原样输出带 `-` 的 ID（`Level-!+`、`Level-NO-DATA`…），与普通条目不一致。现改为 `displayId` 统一按前缀拆分，只要 ID 以 `Level-` / `Entity-` / `Object-` / `Phenomenon-` 开头就显示为 `类型词 + 空格 + 剩余部分`：
+  - `Level-11` → `Level 11`、`Level-1-1` → `Level 1.1`（不变）；
+  - 特殊条目：`Level-!+` → `Level !+`、`Level-!+-1` → `Level !+-1`、`Level-!+_old` → `Level !+_old`、`Level-NO-DATA` → `Level NO-DATA`、`Level-fun` → `Level fun`、`Level-frontrooms` → `Level frontrooms`；
+  - 不以类型前缀开头的（`trimmed-level-!`、`broken` 等）保持原样；特殊组「特殊层级 / 特殊实体 / 特殊物品 / 特殊现象」保留不变。
+- 四类页面共用同一段 `displayId`，因此实体、物品、现象与层级表现完全一致（如 `Entity-3-2` → `Entity 3.2`、`Phenomenon-5-1` → `Phenomena 5.1`）。
+### 说明
+- 只改前端四个 `index.html` 与本文件；**后端一行未改**；四页内联脚本 `new Function` 校验通过。
+
 ## v1.37 — 2026-10-04
 ### 变更
 - **四个分类列表页：带后缀/小数的条目改为嵌套在对应数字层级下方**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)）：把原来的 `numOf`（只取开头数字）换成 `parseId`，拆分出 `base`（整数部分）、`dec`（小数部分）、`suffix`（后缀），并据此分两级渲染 —— 纯数字 ID 作为父项，带小数/后缀的作为子项放进父项内的子 `<ul>`，与原维基 `Level 11` 下挂 `level-11latest` 的结构一致：
