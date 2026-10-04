@@ -567,21 +567,25 @@
                                         <p><a href="#0">Phenomena 1-99</a></p>
                                     </div>
                                 </div>
-                                                                <div class="style-block">
-                                    <h2 id="toc0"><span>现象列表<a name="0"></a></span></h2>
-                                    <div class="br-list-meta" id="br-count"></div>
-                                    <ul id="br-list"><li>正在从服务器加载…</li></ul>
-                                </div>
-                                <style>.br-list-meta{font-size:13px;color:#777;margin:0 0 8px}#br-list .br-badge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#fff4d6;color:#8a6d00;font-size:12px}#br-list .br-rew{background:#fff0dc;color:#a35200}</style>
+                                                                                                <div id="br-count" class="br-list-meta"></div>
+                                <div id="br-list"><p class="br-empty">正在从服务器加载…</p></div>
+                                <style>
+                                .br-list-meta{font-size:13px;color:#777;margin:0 0 8px}
+                                #br-list .br-empty{color:#888;font-size:13px}
+                                #br-list .br-badge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#fff4d6;color:#8a6d00;font-size:12px}
+                                #br-list .br-rew{background:#fff0dc;color:#a35200}
+                                </style>
                                 <script>
                                 (function () {
                                     var TYPE = 'phenomenon', OPEN_PARAM = 'open_phenomenon';
+                                    var PREFIX_NAME = 'Phenomena', FIRST_TITLE = 'Phenomena 1-99', SPECIAL = '特殊现象';
                                     var PREFIX = { level: '/backrooms/levels', entity: '/backrooms/entities', object: '/backrooms/objects', phenomenon: '/backrooms/phenomena' };
                                     var listEl = document.getElementById('br-list');
                                     var countEl = document.getElementById('br-count');
                                     if (!listEl) return;
                                     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
                                     function idOf(it) { return it.id || it.levelId || it.docId || ''; }
+                                    function numOf(it) { var bare = String(idOf(it)).replace(/^\s*(Level|Entity|Object|Phenomenon)-/i, ''); var m = bare.match(/^(\d+)/); return m ? parseInt(m[1], 10) : null; }
                                     function baseUrl() { return (window.ZIYIT_API && ZIYIT_API.base) ? ZIYIT_API.base() : ''; }
                                     function docUrl(id) { return baseUrl() + PREFIX[TYPE] + '/' + encodeURIComponent(id); }
                                     function openDoc(id) {
@@ -592,19 +596,44 @@
                                             });
                                         } else { window.open(docUrl(id), '_blank'); }
                                     }
+                                    function li(it) {
+                                        var id = idOf(it), name = it.name || '';
+                                        var tail = name ? ('“' + esc(name) + '”') : '[NO DATA]';
+                                        var badge = '';
+                                        if (it.rewritten) badge = '<span class="br-badge br-rew">已重写·下架</span>';
+                                        else if (it.status && it.status !== 'approved') badge = '<span class="br-badge">' + esc(it.statusText || it.status) + '</span>';
+                                        if (it.status === 'approved' && !it.rewritten) {
+                                            return '<li><a href="' + esc(docUrl(id)) + '" target="_blank" rel="noopener">' + esc(id) + '</a> - ' + tail + badge + '</li>';
+                                        }
+                                        return '<li><a href="javascript:void(0)" data-open="' + esc(id) + '">' + esc(id) + '</a> - ' + tail + badge + '</li>';
+                                    }
+                                    function titleOf(key) {
+                                        if (key === 'special') return SPECIAL;
+                                        var n = Number(key);
+                                        return n === 0 ? FIRST_TITLE : (PREFIX_NAME + ' ' + n + '-' + (n + 99));
+                                    }
+                                    function anchorOf(key) { return key === 'special' ? '10' : String(Number(key) / 100); }
                                     function render(items) {
-                                        if (!items.length) { listEl.innerHTML = '<li>暂无收录条目。</li>'; if (countEl) countEl.textContent = ''; return; }
+                                        if (!items.length) { listEl.innerHTML = '<p class="br-empty">暂无收录条目。</p>'; if (countEl) countEl.textContent = ''; return; }
                                         if (countEl) countEl.textContent = '共 ' + items.length + ' 条（数据来自服务器，实时更新）';
-                                        listEl.innerHTML = items.map(function (it) {
-                                            var id = idOf(it), name = it.name || '';
-                                            var tail = name ? ('“' + esc(name) + '”') : '[NO DATA]';
-                                            var badge = '';
-                                            if (it.rewritten) badge = '<span class="br-badge br-rew">已重写·下架</span>';
-                                            else if (it.status && it.status !== 'approved') badge = '<span class="br-badge">' + esc(it.statusText || it.status) + '</span>';
-                                            if (it.status === 'approved' && !it.rewritten) {
-                                                return '<li><a href="' + esc(docUrl(id)) + '" target="_blank" rel="noopener">' + esc(id) + '</a> - ' + tail + badge + '</li>';
-                                            }
-                                            return '<li><a href="javascript:void(0)" data-open="' + esc(id) + '">' + esc(id) + '</a> - ' + tail + badge + '</li>';
+                                        var map = {}, order = [];
+                                        items.forEach(function (it) {
+                                            var n = numOf(it);
+                                            var key = (n === null || n >= 1000) ? 'special' : String(Math.floor(n / 100) * 100);
+                                            if (!map[key]) { map[key] = []; order.push(key); }
+                                            map[key].push(it);
+                                        });
+                                        order.sort(function (a, b) {
+                                            if (a === 'special') return 1;
+                                            if (b === 'special') return -1;
+                                            return Number(a) - Number(b);
+                                        });
+                                        listEl.innerHTML = order.map(function (key) {
+                                            var a = anchorOf(key);
+                                            return '<div class="style-block">'
+                                                + '<h2 id="toc-' + esc(a) + '"><span>' + esc(titleOf(key)) + '<a name="' + esc(a) + '"></a></span></h2>'
+                                                + '<ul>' + map[key].map(li).join('') + '</ul>'
+                                                + '</div>';
                                         }).join('');
                                     }
                                     listEl.addEventListener('click', function (e) {
@@ -614,13 +643,13 @@
                                         openDoc(a.getAttribute('data-open'));
                                     });
                                     function load() {
-                                        if (!window.ZIYIT_API || !ZIYIT_API.backroomsTypeList) { listEl.innerHTML = '<li>接口未就绪。</li>'; return; }
+                                        if (!window.ZIYIT_API || !ZIYIT_API.backroomsTypeList) { listEl.innerHTML = '<p class="br-empty">接口未就绪。</p>'; return; }
                                         ZIYIT_API.backroomsTypeList(TYPE).then(function (d) {
                                             var items = (d && (d.items || d.levels || d.data)) || [];
                                             if (!Array.isArray(items)) items = [];
                                             render(items);
                                         }).catch(function (err) {
-                                            listEl.innerHTML = '<li>加载失败：' + esc((err && err.message) || '请求失败') + '</li>';
+                                            listEl.innerHTML = '<p class="br-empty">加载失败：' + esc((err && err.message) || '请求失败') + '</p>';
                                         });
                                     }
                                     load();

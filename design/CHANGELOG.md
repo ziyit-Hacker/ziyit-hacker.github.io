@@ -3,6 +3,19 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.36 — 2026-10-04
+### 变更
+- **四个分类列表页恢复分组展示**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)）：v1.34 改成后端动态渲染后所有条目堆在一个列表里，现按原维基的分组标题重新分组 —— 去掉文档 ID 的类型前缀后取开头的编号，按 `每 100 区间` 归组并渲染成独立的 `.style-block` + `<h2>`，只在有内容时输出该组：
+  - 层级：`Level 0-99` / `Level 100-199` / … / `Level 900-999`；
+  - **编号判定**：去掉 `Level-` / `Entity-` / `Object-` / `Phenomenon-` 前缀后**必须以数字开头**才算有编号（`Level-0-1` → 0 档、`Level-11latest` → 11 档，与原页面一致）；取不到编号的（`Level-!+`、`Level-!+-1`、`Level-!`、`Level-NO-DATA`、`Level-fun`、`Level-broken`、`Level-frontrooms`、`trimmed-level-!` 等）统一归入「特殊层级」；
+  - 实体：`Entity 1-99` … `Entity 900-999`，无数字的归入「特殊实体」；
+  - 物品：`Object 1-99` … `Object 900-999`，无数字的归入「特殊物品」；
+  - 现象：`Phenomena 1-99` … `Phenomena 900-999`，无数字的归入「特殊现象」。
+  - **编号 ≥1000 的（如 `Level-114514`）同样归入特殊组**；原页面的「其他」组也一并并入特殊组（原来「其他」只有 `Level-the-m-e-g` 一条）。分组锚点 `name`/`id` 沿用原「快速跳转」TOC 的编号（0–9，特殊组为 10）。
+  - 列表项、状态徽章、`approved` 直链后端、`?open_{type}=` 直达等行为保持不变。
+### 说明
+- 只改前端四个 `index.html` 与本文件；**后端一行未改**；四页内联脚本 `node --check` / `new Function` 校验通过。
+
 ## v1.35 — 2026-10-04
 ### 变更
 - [backrooms/review.html](file:///f:/Code/html/ziyit/backrooms/review.html) **三个列表改为各自独立的搜索框**：移除原「文档范围」卡片里的全局搜索框（`#search-input` / `#search-clear` / `#search-info`），改为在「待基础审核」「高级审核」「已收录文档」三张卡片内各放一组搜索框 —— `#basic-search` / `#advanced-search` / `#approved-search`（各配「清空」按钮），互不影响、只过滤本列表、仍为前端本地过滤不发额外请求。
