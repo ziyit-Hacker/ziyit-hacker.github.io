@@ -3,6 +3,25 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.32 — 2026-10-04
+### 新增
+- **知识库可见等级管理模块**（后台「知识库管理」区块，**仅 Lv.4 站长可见**）：对接后端 `guide/knowledge_api.py` 的全部 8 个接口，覆盖「条目总表 / 目录树 / 关键词搜索 / 原文·生效文对照 / 多档位文档预览 / 模拟提问 / 编辑与恢复」。所有改动落在后端覆盖层（`guide_knowledge_access.json`），**不改原 markdown、改完即时生效、无需发布**。
+  - **入口与权限**：侧边栏新增 `[data-section="knowledge-management"][data-level="4"]`，`applyMenuByLevel()` 对非 Lv.4 自动隐藏；点击时 `canAccess(4)` 二次校验。与后端权限门配合：401（未登录）/ 403（非站长 `super_admin_required`、邮箱未验证）分别映射为明确中文提示（`kbErrText`），403 文案为「仅限站长（Lv.4）操作」。
+  - **① 条目总表**：`GET /admin/knowledge/entries`，展示全部字段（`key/title/docTitle/parent/isGroup/level/hidden/overridden/added/chars/docChars`）+ 等级 / 状态（可见·隐藏）/ 已改 / 新增徽章 + 每行「对照 / 编辑」操作；顶部回填 `levelCounts`（各档数量）与 `updatedAt`（最后更新时间，本地格式化）。支持按标题（key）搜索（透传 `q`）。
+  - **② 目录树与分级筛选**：基于同一接口、按 `parent` + `isGroup` 递归构建「大节 → 子节」层级；顶部五个筛选「全部 / 公开 / Lv.1+ / Lv.2+ / Lv.3+ / Lv.4」旁显示 `levelCounts` 数量，切换即时过滤表格与目录树（本地过滤，保证计数始终是全量分布）。
+  - **③ 关键词搜索**：`GET /admin/knowledge/search?q=&level=`，跨标题与正文，展示 `matchedIn`（标题 / 正文标签）与 `snippet`，命中词 `<mark>` 高亮，结果可一键对照 / 编辑。
+  - **④ 原文·生效文对照**：`GET /admin/knowledge/entry?key=` 取 `text`/`docText`，并排两栏显示；「差异高亮」按行对比（对方不存在的行标红 / 标绿），可关闭为纯文本。
+  - **⑤ 多档位文档预览**：`GET /admin/knowledge/preview?level=`，展示该档位实际可见的 `text` 全文 + `titles` 标签 + `chars` / `entryCount` 数字卡；五个档位可切换、实时刷新。
+  - **⑥ 模拟提问**：`GET /admin/knowledge/preview?level=0&q=...`，展示 `matched`（真正注入给 AI 的段落，字符串）；含提问输入框、以哪一档身份提问的下拉，以及该档位可见范围摘要。
+  - **⑦ 编辑与恢复**：`PUT /admin/knowledge/entry`（部分字段更新 `key/level/hidden/title/body/parent/added`；`title`/`body` 空串 = 还原原文）、`DELETE /admin/knowledge/entry?key=`（仅 `added:true`；删文档条目前端拦截并提示「只能删除站长新增条目，文档条目请使用「恢复公开/隐藏」功能」）、`POST /admin/knowledge/reset`（`{keys:[...]}` 单条 / `{all:true}` 全部，只重置等级回公开）。含「载入 / 新建条目 / 保存 / 还原标题 / 还原正文 / 恢复公开 / 删除新增条目 / 全部恢复公开」完整闭环。
+  - **新增条目规则**：`key` 用新标题、强制 `added:true`、可选 `parent`；与文档已有章节重名时后端返回 400 `key_exists_in_doc`，前端映射为「该标题与文档已有章节重名，请换一个标题」友好提示（`not_added`、`entry_not_found`、`invalid_value`、`missing_target` 同样分档提示）。
+- [assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js) 新增并导出 `knowledgeEntries / knowledgeEntry / knowledgeDoc / knowledgePreview / knowledgeSearch / knowledgeUpsert / knowledgeDelete / knowledgeReset`。
+- [music/admin.css](file:///f:/Code/html/ziyit/music/admin.css) 新增 `.kb-*` 系列样式（元信息条 / 等级 tab / 子页 tab / 表格 / 目录树 / 等级与状态徽章 / 搜索卡片 / 并排对照 / 预览 pre / 编辑网格 / 提示条），含 `[data-theme="dark"]` 暗色适配与 ≤900px 响应式（对照与编辑网格转单列）。
+### 说明
+- 只改前端与文档（`music/admin.html`、`music/admin.js`、`music/admin.css`、`assets/ziyit_api.js`、本文件）；**后端一行未改**。
+- **契约与需求文案的两处差异（已按后端实际契约实现）**：① `entries` 的 `q` 仅按 `key` 模糊匹配、`level` 是**精确等级**（不是「≥」）；为让等级计数始终反映全量分布，前端一次性拉全量后本地过滤，`q` 搜索时才透传 `q`。② `preview` 带 `q` 时返回的 `matched` 是**字符串**（`【标题】\n正文` 拼接），非数组，界面按 pre 文本渲染。
+- **等级语义**：`level 0=公开 / 1-4=仅 Lv.N+ 可见`；AI 客服侧由后端 `ai_engine.select_knowledge(admin_level=...)` 按提问者真实等级过滤，前端各视图均明确标注条目可见等级徽章。
+
 ## v1.31 — 2026-10-04
 ### 修复
 - **用户管理界面不显示头像**：`music/admin.js` 的 `renderUserList()` 原先把头像渲染成**用户名首字母文字**（`div.user-avatar-small`），改为真正的 `<img>`，数据取用户资料里的 `avatarUrl`，用 `ZIYIT_API.applyImage()` 加载（自带 blob 处理）并绑定 `error` 事件兜底默认头像 `../assets/ziyit.png`；用户详情弹窗（`openEditModal`）顶部同步新增头像预览（`#edit-avatar`），加载失败同样回退默认头像。`admin.css` 的 `.user-avatar-small` 补 `overflow:hidden; object-fit:cover`，保证任意比例图片裁成圆形。

@@ -1743,6 +1743,48 @@
         return request('/guide/injection/usage' + (qs.length ? '?' + qs.join('&') : ''));
     }
 
+    // ===== 知识库可见等级管理（仅 Lv.4 站长，且邮箱已验证）=====
+    // 条目总表：level（精确等级 0-4）/ q（按 key 模糊）
+    function knowledgeEntries(opts) {
+        var o = opts || {};
+        var qs = [];
+        if (o.level != null && o.level !== '') qs.push('level=' + encodeURIComponent(o.level));
+        if (o.q) qs.push('q=' + encodeURIComponent(o.q));
+        return request('/admin/knowledge/entries' + (qs.length ? '?' + qs.join('&') : ''));
+    }
+    // 单条详情：含 text（生效文）与 docText（文档原文）
+    function knowledgeEntry(key) {
+        return request('/admin/knowledge/entry?key=' + encodeURIComponent(key));
+    }
+    // 原始文档全文（只读）
+    function knowledgeDoc() {
+        return request('/admin/knowledge/doc');
+    }
+    // 档位预览：level 过滤后的可见全文；带 q 时返回真正注入给 AI 的 matched（字符串）
+    function knowledgePreview(level, q) {
+        var qs = ['level=' + encodeURIComponent(level == null ? 0 : level)];
+        if (q) qs.push('q=' + encodeURIComponent(q));
+        return request('/admin/knowledge/preview?' + qs.join('&'));
+    }
+    // 关键词搜索：命中标题/正文，返回 matchedIn 与 snippet
+    function knowledgeSearch(q, level) {
+        var qs = ['q=' + encodeURIComponent(q)];
+        if (level != null && level !== '') qs.push('level=' + encodeURIComponent(level));
+        return request('/admin/knowledge/search?' + qs.join('&'));
+    }
+    // 新增 / 修改（只传要改的字段；title/body 传空串 = 还原原文）
+    function knowledgeUpsert(body) {
+        return put('/admin/knowledge/entry', body || {});
+    }
+    // 删除（仅限 added:true 的条目）
+    function knowledgeDelete(key) {
+        return request('/admin/knowledge/entry?key=' + encodeURIComponent(key), { method: 'DELETE' });
+    }
+    // 恢复公开：{keys:[...]} 或 {all:true}
+    function knowledgeReset(body) {
+        return post('/admin/knowledge/reset', body || {});
+    }
+
     window.ZIYIT_API = {
         BASE: DEFAULT_BASE,
         backendReady: backendReady,
@@ -1791,6 +1833,14 @@
         adminInjectionModel: adminInjectionModel,
         adminInjectionSetModel: adminInjectionSetModel,
         guideInjectionUsage: guideInjectionUsage,
+        knowledgeEntries: knowledgeEntries,
+        knowledgeEntry: knowledgeEntry,
+        knowledgeDoc: knowledgeDoc,
+        knowledgePreview: knowledgePreview,
+        knowledgeSearch: knowledgeSearch,
+        knowledgeUpsert: knowledgeUpsert,
+        knowledgeDelete: knowledgeDelete,
+        knowledgeReset: knowledgeReset,
         submitMod: submitMod,
         sendVerifyEmail: sendVerifyEmail,
         downloadMod: downloadMod,

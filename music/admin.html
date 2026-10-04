@@ -75,6 +75,9 @@
                     <li class="menu-item" data-section="admin-management" data-level="1">
  管理员管理
                     </li>
+                    <li class="menu-item" data-section="knowledge-management" data-level="4">
+ 知识库管理
+                    </li>
                     <li class="menu-item" data-section="guide-console" data-level="1">
  在线客服
                     </li>
@@ -716,6 +719,191 @@
                                 <div class="loader-bar"><div class="loader-fill"></div></div>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- 知识库可见等级管理（仅 Lv.4 站长，v1.32） -->
+                <section id="knowledge-management" class="content-section">
+                    <div class="section-header">
+                        <h2>知识库管理</h2>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="user-btn" id="kb-refresh">刷新</button>
+                        </div>
+                    </div>
+                    <div class="kb-meta">
+                        <span>最后更新：<b id="kb-updated">-</b></span>
+                        <span>条目总数：<b id="kb-total">0</b></span>
+                        <span class="kb-meta-tip">改完即生效（无需发布）；只写覆盖层、不改原 markdown</span>
+                    </div>
+
+                    <div class="kb-level-tabs" id="kb-level-tabs">
+                        <button type="button" class="kb-tab active" data-kblevel="all">全部 <span class="kb-count" data-kbcount="all">0</span></button>
+                        <button type="button" class="kb-tab" data-kblevel="0">公开 <span class="kb-count" data-kbcount="0">0</span></button>
+                        <button type="button" class="kb-tab" data-kblevel="1">Lv.1+ <span class="kb-count" data-kbcount="1">0</span></button>
+                        <button type="button" class="kb-tab" data-kblevel="2">Lv.2+ <span class="kb-count" data-kbcount="2">0</span></button>
+                        <button type="button" class="kb-tab" data-kblevel="3">Lv.3+ <span class="kb-count" data-kbcount="3">0</span></button>
+                        <button type="button" class="kb-tab" data-kblevel="4">Lv.4 <span class="kb-count" data-kbcount="4">0</span></button>
+                    </div>
+
+                    <div class="kb-subtabs" id="kb-subtabs">
+                        <button type="button" class="kb-subtab active" data-kbtab="entries">条目总表</button>
+                        <button type="button" class="kb-subtab" data-kbtab="tree">目录树</button>
+                        <button type="button" class="kb-subtab" data-kbtab="search">关键词搜索</button>
+                        <button type="button" class="kb-subtab" data-kbtab="compare">原文/生效文对照</button>
+                        <button type="button" class="kb-subtab" data-kbtab="preview">档位预览</button>
+                        <button type="button" class="kb-subtab" data-kbtab="ask">模拟提问</button>
+                        <button type="button" class="kb-subtab" data-kbtab="edit">编辑与恢复</button>
+                    </div>
+
+                    <!-- ① 条目总表 -->
+                    <div class="kb-pane active" id="kb-pane-entries">
+                        <div class="user-controls">
+                            <input type="text" class="user-search" id="kb-entries-q" placeholder="按标题（key）搜索...">
+                            <button class="user-btn" id="kb-entries-search">搜索</button>
+                            <button class="user-btn" id="kb-entries-clear">清空</button>
+                        </div>
+                        <div class="kb-table-wrap">
+                            <table class="kb-table">
+                                <thead>
+                                    <tr>
+                                        <th>标题 / Key</th>
+                                        <th>文档原标题</th>
+                                        <th>大节</th>
+                                        <th>类型</th>
+                                        <th>等级</th>
+                                        <th>状态</th>
+                                        <th>改过</th>
+                                        <th>新增</th>
+                                        <th>字数</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="kb-entries-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ② 目录树 -->
+                    <div class="kb-pane" id="kb-pane-tree">
+                        <div class="kb-tree" id="kb-tree"></div>
+                    </div>
+
+                    <!-- ③ 关键词搜索 -->
+                    <div class="kb-pane" id="kb-pane-search">
+                        <div class="user-controls">
+                            <input type="text" class="user-search" id="kb-search-q" placeholder="跨标题与正文内容搜索关键词...">
+                            <label class="kb-inline-label">等级
+                                <select class="form-select kb-inline-select" id="kb-search-level">
+                                    <option value="">全部</option>
+                                    <option value="0">公开</option>
+                                    <option value="1">Lv.1+</option>
+                                    <option value="2">Lv.2+</option>
+                                    <option value="3">Lv.3+</option>
+                                    <option value="4">Lv.4</option>
+                                </select>
+                            </label>
+                            <button class="user-btn" id="kb-search-btn">搜索</button>
+                        </div>
+                        <div id="kb-search-results"></div>
+                    </div>
+
+                    <!-- ④ 原文/生效文对照 -->
+                    <div class="kb-pane" id="kb-pane-compare">
+                        <div class="user-controls">
+                            <select class="form-select kb-pick" id="kb-compare-key"></select>
+                            <button class="user-btn" id="kb-compare-load">加载对照</button>
+                            <label class="kb-inline-label"><input type="checkbox" id="kb-compare-diff" checked> 差异高亮</label>
+                        </div>
+                        <div class="kb-compare-head">状态：<span id="kb-compare-state">-</span></div>
+                        <div class="kb-compare" id="kb-compare"></div>
+                    </div>
+
+                    <!-- ⑤ 档位预览 -->
+                    <div class="kb-pane" id="kb-pane-preview">
+                        <div class="kb-level-tabs kb-level-tabs-inline" id="kb-preview-tabs">
+                            <button type="button" class="kb-tab active" data-pvlevel="0">公开</button>
+                            <button type="button" class="kb-tab" data-pvlevel="1">Lv.1+</button>
+                            <button type="button" class="kb-tab" data-pvlevel="2">Lv.2+</button>
+                            <button type="button" class="kb-tab" data-pvlevel="3">Lv.3+</button>
+                            <button type="button" class="kb-tab" data-pvlevel="4">Lv.4</button>
+                        </div>
+                        <div class="user-stats">
+                            <div class="user-stat-card"><div class="user-stat-number" id="kb-pv-count">0</div><div class="user-stat-label">条目数</div></div>
+                            <div class="user-stat-card"><div class="user-stat-number" id="kb-pv-chars">0</div><div class="user-stat-label">字数</div></div>
+                        </div>
+                        <div class="kb-titles" id="kb-pv-titles"></div>
+                        <pre class="kb-pre" id="kb-pv-text"></pre>
+                    </div>
+
+                    <!-- ⑥ 模拟提问 -->
+                    <div class="kb-pane" id="kb-pane-ask">
+                        <div class="user-controls">
+                            <input type="text" class="user-search" id="kb-ask-q" placeholder="输入用户可能问的一句话，看 AI 真正会拿到那几段...">
+                            <label class="kb-inline-label">以等级
+                                <select class="form-select kb-inline-select" id="kb-ask-level">
+                                    <option value="0">公开（普通用户）</option>
+                                    <option value="1">Lv.1+</option>
+                                    <option value="2">Lv.2+</option>
+                                    <option value="3">Lv.3+</option>
+                                    <option value="4">Lv.4</option>
+                                </select>
+                            </label>
+                            <button class="user-btn" id="kb-ask-btn">模拟</button>
+                        </div>
+                        <div class="kb-ask-meta" id="kb-ask-meta"></div>
+                        <pre class="kb-pre" id="kb-ask-matched"></pre>
+                    </div>
+
+                    <!-- ⑦ 编辑与恢复 -->
+                    <div class="kb-pane" id="kb-pane-edit">
+                        <div class="user-controls">
+                            <select class="form-select kb-pick" id="kb-edit-key"></select>
+                            <button class="user-btn" id="kb-edit-load">载入</button>
+                            <button class="user-btn success" id="kb-edit-new">新建条目</button>
+                        </div>
+                        <div class="kb-edit-grid">
+                            <div class="form-group">
+                                <label class="form-label">条目 Key（章节标题；新增时即新标题）</label>
+                                <input type="text" class="form-input" id="kb-edit-keyname">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">可见等级</label>
+                                <select class="form-select" id="kb-edit-level">
+                                    <option value="0">0 · 公开（所有人）</option>
+                                    <option value="1">1 · 仅 Lv.1+</option>
+                                    <option value="2">2 · 仅 Lv.2+</option>
+                                    <option value="3">3 · 仅 Lv.3+</option>
+                                    <option value="4">4 · 仅 Lv.4 站长</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">归属大节（仅新增条目用）</label>
+                                <select class="form-select" id="kb-edit-parent">
+                                    <option value="">（不指定）</option>
+                                </select>
+                            </div>
+                            <div class="form-group kb-check">
+                                <label class="form-label"><input type="checkbox" id="kb-edit-hidden"> 隐藏（任何等级都不注入）</label>
+                                <label class="form-label"><input type="checkbox" id="kb-edit-added"> 标记为「站长新增条目」</label>
+                            </div>
+                            <div class="form-group kb-span2">
+                                <label class="form-label">标题覆盖（留空或点「还原标题」= 还原文档原标题）</label>
+                                <input type="text" class="form-input" id="kb-edit-title" placeholder="留空表示使用原文档标题">
+                            </div>
+                            <div class="form-group kb-span2">
+                                <label class="form-label">正文覆盖（留空 = 还原文档原文）</label>
+                                <textarea class="form-input kb-textarea" id="kb-edit-body" placeholder="留空表示使用原文档正文"></textarea>
+                            </div>
+                        </div>
+                        <div class="kb-edit-actions">
+                            <button class="user-btn success" id="kb-edit-save">保存修改</button>
+                            <button class="user-btn" id="kb-edit-restore-title">还原标题</button>
+                            <button class="user-btn" id="kb-edit-restore-body">还原正文</button>
+                            <button class="user-btn" id="kb-edit-public">恢复公开</button>
+                            <button class="user-btn danger" id="kb-edit-delete">删除新增条目</button>
+                            <button class="user-btn danger" id="kb-reset-all">全部恢复公开</button>
+                        </div>
+                        <div class="kb-hint" id="kb-edit-hint"></div>
                     </div>
                 </section>
 

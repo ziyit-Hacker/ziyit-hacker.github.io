@@ -5014,3 +5014,735 @@ document.addEventListener('DOMContentLoaded', function () {
         guideLoadAgents();
     });
 });
+
+
+/* =====================================================================
+ * v1.32：知识库可见等级管理（仅 Lv.4 站长；后端 /admin/knowledge/*）
+ * 所有改动落在后端覆盖层，不改原 markdown，改完即时生效、无需发布。
+ * ===================================================================== */
+
+var kbState = {
+    loaded: false,
+    loading: false,
+    full: [],            // 全量条目（未筛选，供等级计数 / 目录树 / 下拉用）
+    items: [],           // 当前用于表格渲染的条目（受 q 影响）
+    counts: {},          // 全量等级计数 levelCounts
+    updatedAt: '',
+    total: 0,
+    q: '',               // 条目总表搜索词
+    level: 'all',        // 总表 / 目录树当前筛选档
+    tab: 'entries',      // 当前子页
+    pvLevel: 0,          // 档位预览当前等级
+    compareKey: '',      // 对照当前条目
+    editKey: '',         // 编辑当前条目
+    editAdded: false,    // 编辑中的条目是否为「站长新增」
+    editAdding: false    // 是否处于新建模式
+};
+var kbLoadSeq = 0;
+
+// ---------- 通用小工具 ----------
+function kbLevelLabel(n) {
+    n = Number(n) || 0;
+    if (n <= 0) return '公开';
+    if (n >= 4) return 'Lv.4';
+    return 'Lv.' + n + '+';
+}
+function kbLevelClass(n) {
+    n = Number(n) || 0;
+    if (n < 0) n = 0;
+    if (n > 4) n = 4;
+    return 'kb-badge kb-lv' + n;
+}
+function kbFmtTime(s) {
+    if (!s) return '-';
+    var d = new Date(s);
+    if (isNaN(d.getTime())) return String(s);
+    function p(n) { return (n < 10 ? '0' : '') + n; }
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+function kbErrText(err, fallback) {
+    if (!err) return fallback || '未知错误';
+    var detail = err.data && err.data.detail;
+    var reason = (detail && typeof detail === 'object') ? detail.reason : '';
+    var msg = err.message || ((detail && typeof detail === 'string') ? detail : '') || '';
+    if (err.status === 401) return '登录已过期，请重新登录';
+    if (err.status === 403) {
+        if (reason === 'super_admin_required') return '仅限站长（Lv.4）操作';
+        if (reason === 'email_not_verified' || /邮箱|验证/.test(msg)) return '请先完成邮箱验证后再使用知识库管理';
+        return msg || '无权限操作（仅限站长 Lv.4）';
+    }
+    if (reason === 'key_exists_in_doc') return '该标题与文档已有章节重名，请换一个标题';
+    if (reason === 'not_added') return '只能删除站长新增条目，文档条目请使用「恢复公开/隐藏」功能';
+    if (reason === 'entry_not_found') return '未找到该条目（可能已被删除，请刷新）';
+    if (reason === 'invalid_value') return msg || '参数不合法';
+    if (reason === 'missing_target') return msg || '请指定要重置的条目';
+    if (reason === 'doc_not_found') return msg || '知识库文档读取失败';
+    return msg || fallback || '请求失败';
+}
+// 关键词高亮（仅用于标题 / 片段，文本先转义）
+function kbHighlight(text, kw) {
+    text = String(text == null ? '' : text);
+    if (!kw) return escAdmin(text);
+    var lower = text.toLowerCase(), k = String(kw).toLowerCase();
+    var idx = lower.indexOf(k);
+    if (idx < 0) return escAdmin(text);
+    var out = '', i = 0;
+    while (idx >= 0) {
+        out += escAdmin(text.slice(i, idx));
+        out += '<mark class="kb-mark">' + escAdmin(text.slice(idx, idx + k.length)) + '</mark>';
+        i = idx + k.length;
+        idx = lower.indexOf(k, i);
+    }
+    out += escAdmin(text.slice(i));
+    return out;
+}
+function kbPreLines(text) {
+    text = String(text == null ? '' : text);
+    if (!text) return '<div class="kb-line kb-muted">（空）</div>';
+    return text.split('\n').map(function (l) {
+        return '<div class="kb-line">' + (l ? escAdmin(l) : '&nbsp;') + '</div>';
+    }).join('');
+}
+// 逐行差异高亮：某行在对方文本里找不到（去空白比较）即视为变化
+function kbDiffLines(docText, effText) {
+    var a = String(docText == null ? '' : docText).split('\n');
+    var b = String(effText == null ? '' : effText).split('\n');
+    var setA = {}, setB = {};
+    a.forEach(function (l) { var t = l.trim(); if (t) setA[t] = true; });
+    b.forEach(function (l) { var t = l.trim(); if (t) setB[t] = true; });
+    function render(lines, other, cls) {
+        return lines.map(function (l) {
+            var t = l.trim();
+            var chg = t && !other[t];
+            return '<div class="kb-line' + (chg ? ' ' + cls : '') + '">' + (l ? escAdmin(l) : '&nbsp;') + '</div>';
+        }).join('');
+    }
+    return { left: render(a, setB, 'kb-line-del'), right: render(b, setA, 'kb-line-add') };
+}
+
+// ---------- 分页 / 分节切换 ----------
+function kbSetTab(tab) {
+    kbState.tab = tab;
+    document.querySelectorAll('#kb-subtabs .kb-subtab').forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-kbtab') === tab);
+    });
+    document.querySelectorAll('#knowledge-management .kb-pane').forEach(function (p) {
+        p.classList.remove('active');
+    });
+    var pane = document.getElementById('kb-pane-' + tab);
+    if (pane) pane.classList.add('active');
+}
+function kbLazyLoadTab() {
+    var t = kbState.tab;
+    if (t === 'preview') kbLoadPreview(kbState.pvLevel);
+    else if (t === 'compare') {
+        var c = document.getElementById('kb-compare-key');
+        if (c && c.value) kbLoadCompare();
+    } else if (t === 'edit') {
+        var e = document.getElementById('kb-edit-key');
+        if (e && e.value && !kbState.editAdding) kbLoadEdit();
+    }
+}
+function kbOnEnter() {
+    if (!canAccess(4)) { showToast('知识库管理仅限站长（Lv.4）操作', 'error'); return; }
+    switchSection('knowledge-management');
+    updateSystemInfo('切换到知识库管理');
+    kbSetTab(kbState.tab || 'entries');
+    kbLoad(false).then(function () { kbLazyLoadTab(); });
+}
+
+// ---------- 数据加载与渲染 ----------
+function kbLoad(refresh) {
+    if (!canAccess(4)) return Promise.resolve();
+    var seq = ++kbLoadSeq;
+    var body = document.getElementById('kb-entries-body');
+    if (body && !kbState.loaded) body.innerHTML = '<tr><td colspan="10" class="kb-empty">加载中...</td></tr>';
+    var q = kbState.q || '';
+    var opts = {};
+    if (q) opts.q = q;
+    kbState.loading = true;
+    return ZIYIT_API.knowledgeEntries(opts).then(function (d) {
+        if (seq !== kbLoadSeq) return;
+        d = d || {};
+        var items = d.items || [];
+        kbState.items = items;
+        if (!q) {
+            kbState.full = items.slice();
+            kbState.counts = d.levelCounts || {};
+        }
+        kbState.updatedAt = d.updatedAt || kbState.updatedAt;
+        kbState.total = d.total || 0;
+        kbState.loaded = true;
+        kbState.loading = false;
+        kbRenderMeta();
+        kbRenderCounts();
+        kbRenderEntries();
+        kbRenderTree();
+        kbFillPickers();
+        kbRenderParentOptions();
+    }).catch(function (err) {
+        if (seq !== kbLoadSeq) return;
+        kbState.loaded = false;
+        kbState.loading = false;
+        if (body) body.innerHTML = '<tr><td colspan="10" class="kb-empty">' + escAdmin(kbErrText(err, '加载失败')) + '</td></tr>';
+        showToast(kbErrText(err, '知识库加载失败'), 'error');
+    });
+}
+function kbRenderMeta() {
+    var u = document.getElementById('kb-updated');
+    if (u) u.textContent = kbFmtTime(kbState.updatedAt);
+    var t = document.getElementById('kb-total');
+    if (t) t.textContent = String(kbState.total || 0);
+}
+function kbRenderCounts() {
+    var c = kbState.counts || {};
+    var total = 0;
+    for (var k in c) { if (Object.prototype.hasOwnProperty.call(c, k)) total += Number(c[k]) || 0; }
+    var allEl = document.querySelector('#kb-level-tabs .kb-count[data-kbcount="all"]');
+    if (allEl) allEl.textContent = String(total);
+    [0, 1, 2, 3, 4].forEach(function (n) {
+        var el = document.querySelector('#kb-level-tabs .kb-count[data-kbcount="' + n + '"]');
+        if (el) el.textContent = String(c[String(n)] || 0);
+    });
+}
+function kbFiltered() {
+    var list = kbState.items || [];
+    if (kbState.level === 'all') return list;
+    var lv = String(kbState.level);
+    return list.filter(function (x) { return String(x.level) === lv; });
+}
+function kbRenderEntries() {
+    var body = document.getElementById('kb-entries-body');
+    if (!body) return;
+    var list = kbFiltered();
+    if (!list.length) { body.innerHTML = '<tr><td colspan="10" class="kb-empty">没有符合条件的条目</td></tr>'; return; }
+    var html = '';
+    list.forEach(function (x) {
+        html += '<tr>' +
+            '<td>' + kbHighlight(x.title, kbState.q) +
+            (x.title !== x.key ? '<div class="kb-sub">' + escAdmin(x.key) + '</div>' : '') + '</td>' +
+            '<td>' + ((x.docTitle && x.docTitle !== x.title) ? escAdmin(x.docTitle) : '<span class="kb-muted">-</span>') + '</td>' +
+            '<td>' + (x.parent ? escAdmin(x.parent) : '<span class="kb-muted">-</span>') + '</td>' +
+            '<td>' + (x.isGroup ? '大节' : '子节') + '</td>' +
+            '<td><span class="' + kbLevelClass(x.level) + '">' + kbLevelLabel(x.level) + '</span></td>' +
+            '<td>' + (x.hidden ? '<span class="kb-badge kb-badge-hidden">隐藏</span>' : '<span class="kb-badge kb-badge-ok">可见</span>') + '</td>' +
+            '<td>' + (x.overridden ? '<span class="kb-badge kb-badge-ovr">已改</span>' : '<span class="kb-muted">-</span>') + '</td>' +
+            '<td>' + (x.added ? '<span class="kb-badge kb-badge-added">新增</span>' : '<span class="kb-muted">-</span>') + '</td>' +
+            '<td>' + x.chars + (x.docChars !== x.chars ? ' <span class="kb-muted">/ ' + x.docChars + '</span>' : '') + '</td>' +
+            '<td class="kb-ops">' +
+            '<button class="user-btn" data-kbact="compare" data-kbkey="' + escAdmin(x.key) + '">对照</button>' +
+            '<button class="user-btn" data-kbact="edit" data-kbkey="' + escAdmin(x.key) + '">编辑</button>' +
+            '</td></tr>';
+    });
+    body.innerHTML = html;
+}
+function kbRenderTree() {
+    var wrap = document.getElementById('kb-tree');
+    if (!wrap) return;
+    var list = kbFiltered();
+    if (!list.length) { wrap.innerHTML = '<div class="kb-empty">没有符合条件的条目</div>'; return; }
+    var byKey = {};
+    list.forEach(function (x) { byKey[x.key] = x; });
+    var roots = [], childrenMap = {};
+    list.forEach(function (x) {
+        var p = (x.parent && byKey[x.parent]) ? x.parent : '';
+        if (p) { (childrenMap[p] = childrenMap[p] || []).push(x); }
+        else roots.push(x);
+    });
+    function node(x, depth) {
+        var kids = childrenMap[x.key] || [];
+        var cls = x.isGroup ? 'kb-node-group' : 'kb-node-item';
+        var html = '<div class="kb-node ' + cls + '" style="padding-left:' + (8 + depth * 18) + 'px" data-kbkey="' + escAdmin(x.key) + '">' +
+            '<span class="kb-node-title">' + kbHighlight(x.title, kbState.q) + '</span>' +
+            '<span class="' + kbLevelClass(x.level) + '">' + kbLevelLabel(x.level) + '</span>' +
+            (x.hidden ? '<span class="kb-badge kb-badge-hidden">隐藏</span>' : '') +
+            (x.added ? '<span class="kb-badge kb-badge-added">新增</span>' : '') +
+            (x.overridden ? '<span class="kb-badge kb-badge-ovr">已改</span>' : '') +
+            '<span class="kb-node-chars">' + x.chars + '字</span>' +
+            '</div>';
+        kids.forEach(function (k) { html += node(k, depth + 1); });
+        return html;
+    }
+    var out = '';
+    roots.forEach(function (r) { out += node(r, 0); });
+    wrap.innerHTML = out;
+}
+function kbFillPickers() {
+    var list = (kbState.full && kbState.full.length) ? kbState.full : (kbState.items || []);
+    var opts = list.map(function (x) {
+        var label = (x.isGroup ? '▸ ' : '　') + x.title + '（' + kbLevelLabel(x.level) + (x.added ? '·新增' : '') + '）';
+        return '<option value="' + escAdmin(x.key) + '">' + escAdmin(label) + '</option>';
+    }).join('');
+    ['kb-compare-key', 'kb-edit-key'].forEach(function (id) {
+        var sel = document.getElementById(id);
+        if (!sel) return;
+        var cur = sel.value;
+        sel.innerHTML = opts;
+        if (cur && list.some(function (x) { return x.key === cur; })) sel.value = cur;
+    });
+}
+function kbRenderParentOptions() {
+    var sel = document.getElementById('kb-edit-parent');
+    if (!sel) return;
+    var cur = sel.value;
+    var groups = (kbState.full || []).filter(function (x) { return x.isGroup; });
+    sel.innerHTML = '<option value="">（不指定）</option>' + groups.map(function (g) {
+        return '<option value="' + escAdmin(g.key) + '">' + escAdmin(g.title) + '</option>';
+    }).join('');
+    if (cur) sel.value = cur;
+}
+function kbEnsureOption(selId, key) {
+    var sel = document.getElementById(selId);
+    if (!sel || !key) return;
+    var found = false;
+    for (var i = 0; i < sel.options.length; i++) { if (sel.options[i].value === key) { found = true; break; } }
+    if (!found) {
+        var o = document.createElement('option');
+        o.value = key; o.textContent = key;
+        sel.appendChild(o);
+    }
+    sel.value = key;
+}
+function kbOpenCompare(key) {
+    if (!key) return;
+    kbEnsureOption('kb-compare-key', key);
+    kbSetTab('compare');
+    kbLoadCompare();
+}
+function kbOpenEdit(key) {
+    if (!key) return;
+    kbEnsureOption('kb-edit-key', key);
+    kbSetTab('edit');
+    kbLoadEdit();
+}
+
+// ---------- ③ 关键词搜索 ----------
+function kbDoSearch() {
+    var qi = document.getElementById('kb-search-q');
+    var q = qi ? qi.value.trim() : '';
+    if (!q) { showToast('请输入搜索关键词', 'error'); return; }
+    var lvSel = document.getElementById('kb-search-level');
+    var lv = lvSel ? lvSel.value : '';
+    var box = document.getElementById('kb-search-results');
+    if (box) box.innerHTML = '<div class="kb-empty">搜索中...</div>';
+    ZIYIT_API.knowledgeSearch(q, lv === '' ? null : lv).then(function (d) {
+        kbRenderSearchResults(d, q);
+    }).catch(function (err) {
+        if (box) box.innerHTML = '<div class="kb-empty">' + escAdmin(kbErrText(err, '搜索失败')) + '</div>';
+        showToast(kbErrText(err, '搜索失败'), 'error');
+    });
+}
+function kbRenderSearchResults(d, q) {
+    var box = document.getElementById('kb-search-results');
+    if (!box) return;
+    var items = (d && d.items) || [];
+    if (!items.length) { box.innerHTML = '<div class="kb-empty">没有命中「' + escAdmin(q) + '」的条目</div>'; return; }
+    var html = '<div class="kb-search-summary">共命中 ' + items.length + ' 条</div>';
+    items.forEach(function (x) {
+        var where = (x.matchedIn || []).map(function (w) {
+            return '<span class="kb-badge kb-badge-ok">' + (w === 'title' ? '标题' : '正文') + '</span>';
+        }).join(' ');
+        html += '<div class="kb-result">' +
+            '<div class="kb-result-head">' +
+            '<span class="kb-result-title">' + kbHighlight(x.title, q) + '</span> ' + where +
+            ' <span class="' + kbLevelClass(x.level) + '">' + kbLevelLabel(x.level) + '</span>' +
+            (x.hidden ? ' <span class="kb-badge kb-badge-hidden">隐藏</span>' : '') +
+            '</div>' +
+            (x.snippet ? '<pre class="kb-snippet">' + kbHighlight(x.snippet, q) + '</pre>' : '') +
+            '<div class="kb-result-ops">' +
+            '<button class="user-btn" data-kbact="compare" data-kbsearchkey="' + escAdmin(x.key) + '">对照</button>' +
+            '<button class="user-btn" data-kbact="edit" data-kbsearchkey="' + escAdmin(x.key) + '">编辑</button>' +
+            '</div></div>';
+    });
+    box.innerHTML = html;
+}
+
+// ---------- ④ 原文 / 生效文对照 ----------
+function kbLoadCompare() {
+    var sel = document.getElementById('kb-compare-key');
+    var key = sel ? sel.value : '';
+    if (!key) return;
+    var wrap = document.getElementById('kb-compare');
+    if (wrap) wrap.innerHTML = '<div class="kb-empty">加载中...</div>';
+    ZIYIT_API.knowledgeEntry(key).then(function (d) {
+        kbState.compareKey = key;
+        kbRenderCompare(d);
+    }).catch(function (err) {
+        if (wrap) wrap.innerHTML = '<div class="kb-empty">' + escAdmin(kbErrText(err, '加载失败')) + '</div>';
+        var s = document.getElementById('kb-compare-state');
+        if (s) s.textContent = '-';
+        showToast(kbErrText(err, '加载失败'), 'error');
+    });
+}
+function kbRenderCompare(d) {
+    d = d || {};
+    var stateEl = document.getElementById('kb-compare-state');
+    if (stateEl) {
+        stateEl.innerHTML = '等级 <b>' + kbLevelLabel(d.level) + '</b> · ' +
+            (d.hidden ? '已隐藏' : '可见') + ' · ' +
+            (d.added ? '站长新增' : '文档条目') + ' · ' +
+            (d.overridden ? '已修改' : '未修改') + ' · 原 ' + (d.docChars || 0) + ' 字 / 生效 ' + (d.chars || 0) + ' 字';
+    }
+    var wrap = document.getElementById('kb-compare');
+    if (!wrap) return;
+    var cb = document.getElementById('kb-compare-diff');
+    var highlight = !cb || cb.checked;
+    var docText = d.docText || '';
+    var effText = d.text || '';
+    var leftHtml, rightHtml;
+    if (highlight) {
+        var diff = kbDiffLines(docText, effText);
+        leftHtml = diff.left; rightHtml = diff.right;
+    } else {
+        leftHtml = kbPreLines(docText); rightHtml = kbPreLines(effText);
+    }
+    wrap.innerHTML =
+        '<div class="kb-compare-col">' +
+        '<div class="kb-compare-colhead">原文 · ' + escAdmin(d.docTitle || '(无)') + '</div>' +
+        '<div class="kb-lines">' + leftHtml + '</div></div>' +
+        '<div class="kb-compare-col">' +
+        '<div class="kb-compare-colhead">生效文 · ' + escAdmin(d.title || '(无)') + '</div>' +
+        '<div class="kb-lines">' + rightHtml + '</div></div>';
+}
+
+// ---------- ⑤ 档位预览 ----------
+function kbLoadPreview(level) {
+    level = Number(level) || 0;
+    kbState.pvLevel = level;
+    document.querySelectorAll('#kb-preview-tabs .kb-tab').forEach(function (b) {
+        b.classList.toggle('active', (Number(b.getAttribute('data-pvlevel')) || 0) === level);
+    });
+    var txt = document.getElementById('kb-pv-text');
+    var titles = document.getElementById('kb-pv-titles');
+    if (txt) txt.textContent = '加载中...';
+    ZIYIT_API.knowledgePreview(level).then(function (d) {
+        d = d || {};
+        var c = document.getElementById('kb-pv-count');
+        if (c) c.textContent = String(d.entryCount || 0);
+        var ch = document.getElementById('kb-pv-chars');
+        if (ch) ch.textContent = String(d.chars || 0);
+        if (titles) {
+            titles.innerHTML = (d.titles || []).map(function (t) {
+                return '<span class="kb-chip">' + escAdmin(t) + '</span>';
+            }).join('') || '<span class="kb-muted">（该档位看不到任何条目）</span>';
+        }
+        if (txt) txt.textContent = d.text || '（该档位看不到任何内容）';
+    }).catch(function (err) {
+        if (txt) txt.textContent = kbErrText(err, '预览失败');
+        showToast(kbErrText(err, '预览失败'), 'error');
+    });
+}
+
+// ---------- ⑥ 模拟提问 ----------
+function kbDoAsk() {
+    var qi = document.getElementById('kb-ask-q');
+    var q = qi ? qi.value.trim() : '';
+    if (!q) { showToast('请输入要模拟的提问', 'error'); return; }
+    var ls = document.getElementById('kb-ask-level');
+    var level = ls ? (Number(ls.value) || 0) : 0;
+    var meta = document.getElementById('kb-ask-meta');
+    var out = document.getElementById('kb-ask-matched');
+    if (out) out.textContent = '模拟中...';
+    ZIYIT_API.knowledgePreview(level, q).then(function (d) {
+        d = d || {};
+        if (meta) meta.innerHTML = '以 <b>' + kbLevelLabel(level) + '</b> 提问 · 该档位可见 ' +
+            (d.entryCount || 0) + ' 条 / ' + (d.chars || 0) + ' 字';
+        if (out) out.textContent = (d.matched && String(d.matched).trim())
+            ? d.matched
+            : '（这句话没有匹配到任何段落，AI 不会拿到知识库内容）';
+    }).catch(function (err) {
+        if (out) out.textContent = kbErrText(err, '模拟失败');
+        showToast(kbErrText(err, '模拟失败'), 'error');
+    });
+}
+
+// ---------- ⑦ 编辑与恢复 ----------
+function kbEditHint(msg, type) {
+    var el = document.getElementById('kb-edit-hint');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.className = 'kb-hint' + (type ? ' kb-hint-' + type : '');
+}
+function kbSetVal(id, v) { var el = document.getElementById(id); if (el) el.value = v; }
+function kbSetChk(id, v) { var el = document.getElementById(id); if (el) el.checked = !!v; }
+function kbLoadEdit() {
+    var sel = document.getElementById('kb-edit-key');
+    var key = sel ? sel.value : '';
+    if (!key) { kbEditHint('请先选择或新建一个条目', 'warn'); return; }
+    kbState.editAdding = false;
+    return ZIYIT_API.knowledgeEntry(key).then(function (d) {
+        d = d || {};
+        kbState.editKey = d.key || key;
+        kbState.editAdded = !!d.added;
+        kbFillEditForm(d);
+        kbEditHint('已载入「' + (d.title || d.key || key) + '」。改动即时生效，可切到「档位预览 / 模拟提问」核对。', 'ok');
+    }).catch(function (err) {
+        var m = kbErrText(err, '载入失败');
+        kbEditHint(m, 'error');
+        showToast(m, 'error');
+    });
+}
+function kbFillEditForm(d) {
+    var isAdded = !!d.added;
+    kbSetVal('kb-edit-keyname', d.key || '');
+    kbSetVal('kb-edit-level', String(d.level == null ? 0 : d.level));
+    // 新增条目的「原标题 / 原正文」就是它自身，需要按 key 差异判断是否被改过
+    kbSetVal('kb-edit-title', isAdded
+        ? ((d.title && d.title !== d.key) ? d.title : '')
+        : ((d.title && d.title !== d.docTitle) ? d.title : ''));
+    kbSetVal('kb-edit-body', isAdded
+        ? (d.text || '')
+        : ((d.text && d.text !== d.docText) ? d.text : ''));
+    kbSetChk('kb-edit-hidden', d.hidden);
+    kbSetChk('kb-edit-added', d.added);
+    var keyEl = document.getElementById('kb-edit-keyname');
+    if (keyEl) keyEl.disabled = true;                 // 已有条目不允许改 key
+    var addedEl = document.getElementById('kb-edit-added');
+    if (addedEl) addedEl.disabled = true;             // added 标记不可后改
+    var parentSel = document.getElementById('kb-edit-parent');
+    if (parentSel) {
+        parentSel.value = d.parent || '';
+        if (d.parent && parentSel.value !== d.parent) {
+            var o = document.createElement('option');
+            o.value = d.parent; o.textContent = d.parent;
+            parentSel.appendChild(o);
+            parentSel.value = d.parent;
+        }
+        parentSel.disabled = true;                    // parent 只对新增条目生效
+    }
+}
+function kbNewEntry() {
+    kbState.editAdding = true;
+    kbState.editKey = '';
+    kbState.editAdded = true;
+    kbSetVal('kb-edit-keyname', '');
+    kbSetVal('kb-edit-level', '0');
+    kbSetVal('kb-edit-title', '');
+    kbSetVal('kb-edit-body', '');
+    kbSetChk('kb-edit-hidden', false);
+    kbSetChk('kb-edit-added', true);
+    var keyEl = document.getElementById('kb-edit-keyname'); if (keyEl) keyEl.disabled = false;
+    var addedEl = document.getElementById('kb-edit-added'); if (addedEl) addedEl.disabled = false;
+    var parentSel = document.getElementById('kb-edit-parent'); if (parentSel) { parentSel.disabled = false; parentSel.value = ''; }
+    var sel = document.getElementById('kb-edit-key'); if (sel) sel.value = '';
+    kbEditHint('新建模式：条目 Key 使用新标题（不能与文档已有章节重名）；下方「正文覆盖」即该条目的内容。', 'warn');
+}
+function kbSaveEdit() {
+    var keyEl = document.getElementById('kb-edit-keyname');
+    var key = keyEl ? keyEl.value.trim() : '';
+    if (!key) { kbEditHint('请填写条目 Key（新增时即新标题）', 'error'); showToast('请填写条目 Key', 'error'); return; }
+    var lvEl = document.getElementById('kb-edit-level');
+    var level = lvEl ? (Number(lvEl.value) || 0) : 0;
+    var hiddenEl = document.getElementById('kb-edit-hidden');
+    var hidden = !!(hiddenEl && hiddenEl.checked);
+    var titleEl = document.getElementById('kb-edit-title');
+    var titleVal = titleEl ? titleEl.value : '';
+    var bodyEl = document.getElementById('kb-edit-body');
+    var bodyVal = bodyEl ? bodyEl.value : '';
+    var parentEl = document.getElementById('kb-edit-parent');
+    var parentVal = parentEl ? parentEl.value : '';
+    var payload = { key: key, level: level, hidden: hidden };
+    if (kbState.editAdding) {
+        if (!bodyVal.trim()) { kbEditHint('站长新增条目必须填写正文内容', 'error'); showToast('请填写正文内容', 'error'); return; }
+        payload.added = true;
+        payload.body = bodyVal;
+        if (parentVal) payload.parent = parentVal;
+    } else {
+        payload.title = titleVal;    // 空串 = 还原文档原标题
+        payload.body = bodyVal;      // 空串 = 还原文档原文
+        if (kbState.editAdded) payload.added = true;
+    }
+    var btn = document.getElementById('kb-edit-save');
+    if (btn) btn.disabled = true;
+    ZIYIT_API.knowledgeUpsert(payload).then(function () {
+        showToast(kbState.editAdding ? '新增成功（已即时生效）' : '保存成功（已即时生效）');
+        kbEditHint('保存成功，改动已即时生效（无需发布）。', 'ok');
+        kbState.editAdding = false;
+        return kbLoad(true).then(function () {
+            kbEnsureOption('kb-edit-key', key);
+            return kbLoadEdit();
+        });
+    }).catch(function (err) {
+        var m = kbErrText(err, '保存失败');
+        kbEditHint(m, 'error');
+        showToast(m, 'error');
+    }).then(function () { if (btn) btn.disabled = false; });
+}
+function kbRestoreTitle() { kbRestoreField('title'); }
+function kbRestoreBody() { kbRestoreField('body'); }
+function kbRestoreField(field) {
+    if (kbState.editAdding) { kbEditHint('新建模式下无需还原', 'warn'); return; }
+    if (field === 'body' && kbState.editAdded) { kbEditHint('站长新增条目没有原始正文可还原', 'warn'); return; }
+    var key = kbState.editKey || ((document.getElementById('kb-edit-key') || {}).value);
+    if (!key) { kbEditHint('请先载入一个条目', 'warn'); return; }
+    kbSetVal(field === 'title' ? 'kb-edit-title' : 'kb-edit-body', '');
+    kbSaveEdit();   // 空串即还原
+}
+function kbSetPublic() {
+    var key = kbState.editKey || ((document.getElementById('kb-edit-key') || {}).value);
+    if (!key) { kbEditHint('请先载入一个条目', 'warn'); return; }
+    ZIYIT_API.knowledgeReset({ keys: [key] }).then(function (d) {
+        showToast('已恢复公开' + (d && d.changed ? '（改动 ' + d.changed + ' 条）' : ''));
+        return kbLoad(true).then(function () {
+            kbEnsureOption('kb-edit-key', key);
+            return kbLoadEdit();
+        });
+    }).catch(function (err) {
+        var m = kbErrText(err, '恢复失败');
+        kbEditHint(m, 'error'); showToast(m, 'error');
+    });
+}
+function kbDeleteEntry() {
+    var key = kbState.editKey || ((document.getElementById('kb-edit-key') || {}).value);
+    if (!key) { kbEditHint('请先载入一个条目', 'warn'); return; }
+    if (kbState.editAdding || !kbState.editAdded) {
+        var m = '只能删除站长新增条目，文档条目请使用「恢复公开/隐藏」功能';
+        kbEditHint(m, 'error'); showToast(m, 'error'); return;
+    }
+    if (!confirm('确定删除站长新增条目「' + key + '」？该操作不可撤销。')) return;
+    ZIYIT_API.knowledgeDelete(key).then(function () {
+        showToast('已删除该新增条目');
+        kbState.editAdding = false; kbState.editKey = ''; kbState.editAdded = false;
+        kbSetVal('kb-edit-keyname', '');
+        kbSetVal('kb-edit-body', '');
+        kbEditHint('条目已删除。', 'ok');
+        return kbLoad(true);
+    }).catch(function (err) {
+        var m = kbErrText(err, '删除失败');
+        kbEditHint(m, 'error'); showToast(m, 'error');
+    });
+}
+function kbResetAll() {
+    if (!confirm('确定把所有条目恢复为「公开」？这只重置等级，不会删除站长修改的正文，也不会取消隐藏。')) return;
+    ZIYIT_API.knowledgeReset({ all: true }).then(function (d) {
+        showToast('已全部恢复公开' + (d && d.changed ? '（改动 ' + d.changed + ' 条）' : ''));
+        return kbLoad(true);
+    }).catch(function (err) {
+        var m = kbErrText(err, '操作失败');
+        showToast(m, 'error');
+    });
+}
+
+// ---------- 事件绑定 ----------
+document.addEventListener('DOMContentLoaded', function () {
+    var menu = document.querySelector('.menu-item[data-section="knowledge-management"]');
+    if (menu) menu.addEventListener('click', kbOnEnter);
+
+    var refresh = document.getElementById('kb-refresh');
+    if (refresh) refresh.addEventListener('click', function () {
+        kbState.q = '';
+        kbSetVal('kb-entries-q', '');
+        kbLoad(true).then(function () { showToast('知识库已刷新'); });
+    });
+
+    var subtabs = document.getElementById('kb-subtabs');
+    if (subtabs) subtabs.addEventListener('click', function (e) {
+        var b = (e.target && e.target.closest) ? e.target.closest('.kb-subtab') : null;
+        if (!b) return;
+        if (!canAccess(4)) { showToast('知识库管理仅限站长（Lv.4）操作', 'error'); return; }
+        kbSetTab(b.getAttribute('data-kbtab'));
+        kbLazyLoadTab();
+    });
+
+    var lt = document.getElementById('kb-level-tabs');
+    if (lt) lt.addEventListener('click', function (e) {
+        var b = (e.target && e.target.closest) ? e.target.closest('.kb-tab[data-kblevel]') : null;
+        if (!b) return;
+        kbState.level = b.getAttribute('data-kblevel') || 'all';
+        lt.querySelectorAll('.kb-tab').forEach(function (x) { x.classList.toggle('active', x === b); });
+        kbRenderEntries();
+        kbRenderTree();
+    });
+
+    var pt = document.getElementById('kb-preview-tabs');
+    if (pt) pt.addEventListener('click', function (e) {
+        var b = (e.target && e.target.closest) ? e.target.closest('.kb-tab[data-pvlevel]') : null;
+        if (!b) return;
+        kbLoadPreview(Number(b.getAttribute('data-pvlevel')) || 0);
+    });
+
+    var eb = document.getElementById('kb-entries-body');
+    if (eb) eb.addEventListener('click', function (e) {
+        var btn = (e.target && e.target.closest) ? e.target.closest('[data-kbact]') : null;
+        if (!btn) return;
+        var key = btn.getAttribute('data-kbkey');
+        if (btn.getAttribute('data-kbact') === 'compare') kbOpenCompare(key); else kbOpenEdit(key);
+    });
+    var es = document.getElementById('kb-entries-search');
+    if (es) es.addEventListener('click', function () {
+        var qi = document.getElementById('kb-entries-q');
+        kbState.q = qi ? qi.value.trim() : '';
+        kbLoad(true);
+    });
+    var ec = document.getElementById('kb-entries-clear');
+    if (ec) ec.addEventListener('click', function () {
+        kbSetVal('kb-entries-q', '');
+        kbState.q = '';
+        kbLoad(true);
+    });
+    var eq = document.getElementById('kb-entries-q');
+    if (eq) eq.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); if (es) es.click(); }
+    });
+
+    var tree = document.getElementById('kb-tree');
+    if (tree) tree.addEventListener('click', function (e) {
+        var node = (e.target && e.target.closest) ? e.target.closest('[data-kbkey]') : null;
+        if (!node) return;
+        kbOpenEdit(node.getAttribute('data-kbkey'));
+    });
+
+    var sb = document.getElementById('kb-search-btn');
+    if (sb) sb.addEventListener('click', kbDoSearch);
+    var sq = document.getElementById('kb-search-q');
+    if (sq) sq.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); kbDoSearch(); }
+    });
+    var sr = document.getElementById('kb-search-results');
+    if (sr) sr.addEventListener('click', function (e) {
+        var btn = (e.target && e.target.closest) ? e.target.closest('[data-kbact]') : null;
+        if (!btn) return;
+        var key = btn.getAttribute('data-kbsearchkey');
+        if (btn.getAttribute('data-kbact') === 'compare') kbOpenCompare(key); else kbOpenEdit(key);
+    });
+
+    var cl = document.getElementById('kb-compare-load');
+    if (cl) cl.addEventListener('click', kbLoadCompare);
+    var ck = document.getElementById('kb-compare-key');
+    if (ck) ck.addEventListener('change', kbLoadCompare);
+    var cd = document.getElementById('kb-compare-diff');
+    if (cd) cd.addEventListener('change', function () { if (kbState.compareKey) kbLoadCompare(); });
+
+    var ab = document.getElementById('kb-ask-btn');
+    if (ab) ab.addEventListener('click', kbDoAsk);
+    var aq = document.getElementById('kb-ask-q');
+    if (aq) aq.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); kbDoAsk(); }
+    });
+
+    var el = document.getElementById('kb-edit-load');
+    if (el) el.addEventListener('click', kbLoadEdit);
+    var ek = document.getElementById('kb-edit-key');
+    if (ek) ek.addEventListener('change', kbLoadEdit);
+    var en = document.getElementById('kb-edit-new');
+    if (en) en.addEventListener('click', kbNewEntry);
+    var esv = document.getElementById('kb-edit-save');
+    if (esv) esv.addEventListener('click', kbSaveEdit);
+    var ert = document.getElementById('kb-edit-restore-title');
+    if (ert) ert.addEventListener('click', kbRestoreTitle);
+    var erb = document.getElementById('kb-edit-restore-body');
+    if (erb) erb.addEventListener('click', kbRestoreBody);
+    var ep = document.getElementById('kb-edit-public');
+    if (ep) ep.addEventListener('click', kbSetPublic);
+    var ed = document.getElementById('kb-edit-delete');
+    if (ed) ed.addEventListener('click', kbDeleteEntry);
+    var ra = document.getElementById('kb-reset-all');
+    if (ra) ra.addEventListener('click', kbResetAll);
+
+    // 直链 #knowledge-management（仅站长）
+    if (location.hash === '#knowledge-management' && canAccess(4)) {
+        adminSectionLocked = true;
+        switchSection('knowledge-management');
+        kbLoad(false);
+    }
+});
