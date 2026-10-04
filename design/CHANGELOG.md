@@ -3,6 +3,17 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.37 — 2026-10-04
+### 变更
+- **四个分类列表页：带后缀/小数的条目改为嵌套在对应数字层级下方**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)）：把原来的 `numOf`（只取开头数字）换成 `parseId`，拆分出 `base`（整数部分）、`dec`（小数部分）、`suffix`（后缀），并据此分两级渲染 —— 纯数字 ID 作为父项，带小数/后缀的作为子项放进父项内的子 `<ul>`，与原维基 `Level 11` 下挂 `level-11latest` 的结构一致：
+  - `Level-1-1` → 归入 `Level 0-99` 组、嵌套在 `Level-1` 下方；`Level-204-1` → 归入 `Level 200-299` 组、嵌套在 `Level-204` 下方（小数计入分组）。
+  - 带后缀的（`Level-11latest`）同样嵌套在 `Level-11` 下方；找不到对应父项时（如只有 `Level-1-1` 没有 `Level-1`）按普通顶层条目渲染，位置按数字顺序插入。
+  - 子项按小数数值升序、后缀按字母序排列。
+- **带数字条目的显示格式统一为 `类型词 + 空格 + 数字`**（`displayId`）：`Level-11` → `Level 11`、`Level-1-1` → `Level 1.1`（`Level` 头后面的 `-` 显示为 `.` 并当作小数）、`Level-11latest` → `Level 11latest`；无数字的特殊条目（`Level-!+`、`Level-NO-DATA`、`trimmed-level-!` 等）保持原样。链接/点击仍用原始 ID，`approved` 直链与 `?open_{type}=` 直达不受影响。
+- 新增 `#br-list ul ul` 样式，让嵌套子列表有缩进与圆点标记。
+### 说明
+- 只改前端四个 `index.html` 与本文件；**后端一行未改**；四页内联脚本 `new Function` 校验通过。
+
 ## v1.36 — 2026-10-04
 ### 变更
 - **四个分类列表页恢复分组展示**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)）：v1.34 改成后端动态渲染后所有条目堆在一个列表里，现按原维基的分组标题重新分组 —— 去掉文档 ID 的类型前缀后取开头的编号，按 `每 100 区间` 归组并渲染成独立的 `.style-block` + `<h2>`，只在有内容时输出该组：

@@ -561,6 +561,7 @@
                                 #br-list .br-empty{color:#888;font-size:13px}
                                 #br-list .br-badge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#fff4d6;color:#8a6d00;font-size:12px}
                                 #br-list .br-rew{background:#fff0dc;color:#a35200}
+                                #br-list ul ul{margin:4px 0 0;padding-left:22px;list-style:circle}
                                 </style>
                                 <script>
                                 (function () {
@@ -572,7 +573,24 @@
                                     if (!listEl) return;
                                     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
                                     function idOf(it) { return it.id || it.levelId || it.docId || ''; }
-                                    function numOf(it) { var bare = String(idOf(it)).replace(/^\s*(Level|Entity|Object|Phenomenon)-/i, ''); var m = bare.match(/^(\d+)/); return m ? parseInt(m[1], 10) : null; }
+                                    function parseId(it) {
+                                        var id = String(idOf(it));
+                                        var bare = id.replace(/^\s*(Level|Entity|Object|Phenomenon)\s*-\s*/i, '');
+                                        var m = bare.match(/^(\d+)([\s\S]*)$/);
+                                        if (!m) return { id: id, base: null, isBase: false, dec: null, suffix: null };
+                                        var base = parseInt(m[1], 10), rest = m[2];
+                                        if (!rest) return { id: id, base: base, isBase: true, dec: null, suffix: null };
+                                        if (rest.charAt(0) === '-') {
+                                            var d = rest.slice(1);
+                                            if (/^\d+(?:[-.]\d+)*$/.test(d)) return { id: id, base: base, isBase: false, dec: d.replace(/-/g, '.'), suffix: null };
+                                        }
+                                        return { id: id, base: base, isBase: false, dec: null, suffix: rest };
+                                    }
+                                    function displayId(it) {
+                                        var p = parseId(it);
+                                        if (p.base === null) return String(idOf(it));
+                                        return PREFIX_NAME + ' ' + p.base + (p.dec !== null ? ('.' + p.dec) : (p.suffix || ''));
+                                    }
                                     function baseUrl() { return (window.ZIYIT_API && ZIYIT_API.base) ? ZIYIT_API.base() : ''; }
                                     function docUrl(id) { return baseUrl() + PREFIX[TYPE] + '/' + encodeURIComponent(id); }
                                     function openDoc(id) {
@@ -583,16 +601,16 @@
                                             });
                                         } else { window.open(docUrl(id), '_blank'); }
                                     }
-                                    function li(it) {
-                                        var id = idOf(it), name = it.name || '';
+                                    function li(it, childrenHtml) {
+                                        var id = idOf(it), name = it.name || '', label = displayId(it);
                                         var tail = name ? ('“' + esc(name) + '”') : '[NO DATA]';
                                         var badge = '';
                                         if (it.rewritten) badge = '<span class="br-badge br-rew">已重写·下架</span>';
                                         else if (it.status && it.status !== 'approved') badge = '<span class="br-badge">' + esc(it.statusText || it.status) + '</span>';
-                                        if (it.status === 'approved' && !it.rewritten) {
-                                            return '<li><a href="' + esc(docUrl(id)) + '" target="_blank" rel="noopener">' + esc(id) + '</a> - ' + tail + badge + '</li>';
-                                        }
-                                        return '<li><a href="javascript:void(0)" data-open="' + esc(id) + '">' + esc(id) + '</a> - ' + tail + badge + '</li>';
+                                        var link;
+                                        if (it.status === 'approved' && !it.rewritten) link = '<a href="' + esc(docUrl(id)) + '" target="_blank" rel="noopener">' + esc(label) + '</a>';
+                                        else link = '<a href="javascript:void(0)" data-open="' + esc(id) + '">' + esc(label) + '</a>';
+                                        return '<li>' + link + ' - ' + tail + badge + (childrenHtml || '') + '</li>';
                                     }
                                     function titleOf(key) {
                                         if (key === 'special') return SPECIAL;
@@ -605,8 +623,8 @@
                                         if (countEl) countEl.textContent = '共 ' + items.length + ' 条（数据来自服务器，实时更新）';
                                         var map = {}, order = [];
                                         items.forEach(function (it) {
-                                            var n = numOf(it);
-                                            var key = (n === null || n >= 1000) ? 'special' : String(Math.floor(n / 100) * 100);
+                                            var info = parseId(it);
+                                            var key = (info.base === null || info.base >= 1000) ? 'special' : String(Math.floor(info.base / 100) * 100);
                                             if (!map[key]) { map[key] = []; order.push(key); }
                                             map[key].push(it);
                                         });
@@ -619,9 +637,44 @@
                                             var a = anchorOf(key);
                                             return '<div class="style-block">'
                                                 + '<h2 id="toc-' + esc(a) + '"><span>' + esc(titleOf(key)) + '<a name="' + esc(a) + '"></a></span></h2>'
-                                                + '<ul>' + map[key].map(li).join('') + '</ul>'
+                                                + '<ul>' + blockItems(map[key]).join('') + '</ul>'
                                                 + '</div>';
                                         }).join('');
+                                    }
+                                    function childSortVal(it) {
+                                        var p = parseId(it);
+                                        if (p.dec !== null) { var v = parseFloat(p.base + '.' + p.dec); return isNaN(v) ? p.base : v; }
+                                        return Number.MAX_SAFE_INTEGER;
+                                    }
+                                    function blockItems(list) {
+                                        var parents = {}, orphans = [];
+                                        list.forEach(function (it) {
+                                            var p = parseId(it);
+                                            if (p.isBase && p.base !== null && !parents[p.base]) parents[p.base] = { base: p.base, item: it, children: [] };
+                                        });
+                                        list.forEach(function (it) {
+                                            var p = parseId(it);
+                                            if (p.isBase) return;
+                                            if (p.base !== null && parents[p.base]) parents[p.base].children.push(it);
+                                            else orphans.push(it);
+                                        });
+                                        var entries = [];
+                                        Object.keys(parents).forEach(function (b) { entries.push(parents[b]); });
+                                        orphans.forEach(function (it) {
+                                            var p = parseId(it);
+                                            entries.push({ base: (p.base === null ? Number.MAX_SAFE_INTEGER : p.base), item: it, children: [] });
+                                        });
+                                        entries.sort(function (x, y) { return x.base - y.base; });
+                                        return entries.map(function (e) {
+                                            if (!e.children.length) return li(e.item);
+                                            e.children.sort(function (x, y) {
+                                                var d = childSortVal(x) - childSortVal(y);
+                                                if (d) return d;
+                                                var sx = String(parseId(x).suffix || ''), sy = String(parseId(y).suffix || '');
+                                                return sx < sy ? -1 : (sx > sy ? 1 : 0);
+                                            });
+                                            return li(e.item, '<ul>' + e.children.map(function (c) { return li(c); }).join('') + '</ul>');
+                                        });
                                     }
                                     listEl.addEventListener('click', function (e) {
                                         var a = e.target.closest ? e.target.closest('a[data-open]') : null;
