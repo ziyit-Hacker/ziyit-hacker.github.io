@@ -1470,19 +1470,48 @@
     }
 
      
-    function backroomsDownloadStandard() {
-        return fetchApi('/backrooms/normal-levels/slyq.md')
+     
+     
+    var BACKROOMS_STANDARD = {
+        level: { rel: 'normal-levels/slyq.md', name: '层级审核标准.md' },
+        entity: { rel: 'entities/slyq.md', name: '实体审核标准.md' },
+        object: { rel: 'objects/slyq.md', name: '物品审核标准.md' },
+        phenomenon: { rel: 'normal-levels/slyq.md', name: '现象审核标准.md' }
+    };
+
+    function backroomsStandardConfig(type) {
+        return BACKROOMS_STANDARD[type] || BACKROOMS_STANDARD.level;
+    }
+
+     
+     
+     
+    function backroomsStandardUrl(type) {
+        var cfg = backroomsStandardConfig(type);
+        try { return new URL(cfg.rel, document.baseURI).href; } catch (e) { return cfg.rel; }
+    }
+
+     
+     
+    function backroomsLoadStandard(type) {
+        return fetch(backroomsStandardUrl(type), { cache: 'no-store' })
             .then(function (r) {
-                if (!r.ok) { var e = new Error('下载失败 ' + r.status); e.status = r.status; throw e; }
-                return r.blob();
-            })
-            .then(function (blob) {
-                var a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = '层级审核标准.md';
-                document.body.appendChild(a); a.click(); a.remove();
-                URL.revokeObjectURL(a.href);
+                if (!r.ok) { var e = new Error('标准文件不存在 ' + r.status); e.status = r.status; throw e; }
+                return r.text();
             });
+    }
+
+     
+    function backroomsDownloadStandard(type) {
+        var cfg = backroomsStandardConfig(type);
+        return backroomsLoadStandard(type).then(function (text) {
+            var blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = cfg.name;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+        });
     }
 
      
@@ -1945,6 +1974,8 @@
         backroomsAiReview: backroomsAiReview,
         backroomsAdvancedReview: backroomsAdvancedReview,
         backroomsDownloadStandard: backroomsDownloadStandard,
+        backroomsLoadStandard: backroomsLoadStandard,
+        backroomsStandardUrl: backroomsStandardUrl,
         backroomsBase: backroomsBase,
         backroomsOpenLevel: backroomsOpenLevel,
         backroomsPrefix: backroomsPrefix,

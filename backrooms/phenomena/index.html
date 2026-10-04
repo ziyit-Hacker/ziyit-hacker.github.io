@@ -431,7 +431,7 @@
                         <h2><span>你曾经来过这里</span></h2>
 <div style="position: absolute; right: 10px; top: 10px; text-align: center;">
         <div id="userInfo" style="color: black; font-size: 18px;">
-            <strong><span id="usernameDisplay">您还未登录，<a href="https://ziyit-hacker.github.io/user/">登录</a> 或 <a href="../normal-levels/levels/register.html">注册</a></span></strong>
+            <strong><span id="usernameDisplay">您还未登录，<a href="https://ziyit-hacker.github.io/user/">登录</a> 或 <a href="/user/register">注册</a></span></strong>
             <br>
             <strong><span id="userTypeDisplay"></span></strong>
         </div>
@@ -470,7 +470,7 @@
             const pageContent = document.getElementById('page-content');
 
             if (!authToken) {
-                if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="https://ziyit-hacker.github.io/user/">登录</a> 或 <a href="../normal-levels/levels/register.html">注册</a>';
+                if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="https://ziyit-hacker.github.io/user/">登录</a> 或 <a href="/user/register">注册</a>';
                 if (userTypeDisplay) userTypeDisplay.textContent = '';
             } else {
                 const user = await ZIYIT_API.currentUser();
@@ -547,9 +547,9 @@
                                         <h2><span>更多文章<span class="moremark"><span
                                                         style="white-space: pre-wrap;">&#32;</span></span></span></h2>
                                         <ul>
-                                            <li><strong><a href="normal-levels-i.html">普通层级</a></strong></li>
-                                            <li><strong><a href="../normal-levels/levels/entities.html">普通实体</a></strong></li>
-                                            <li><strong><a href="../normal-levels/levels/objects.html">物品</a></strong></li>
+                                            <li><strong><a href="/backrooms/normal-levels/">普通层级</a></strong></li>
+                                            <li><strong><a href="/backrooms/entities/">普通实体</a></strong></li>
+                                            <li><strong><a href="/backrooms/objects/">物品</a></strong></li>
                                             <li><strong><a href="mailto:ziyitstudio@qq.com">提交现象</a></strong></li>
                                         </ul>
                                     </div>
@@ -567,133 +567,74 @@
                                         <p><a href="#0">Phenomena 1-99</a></p>
                                     </div>
                                 </div>
-                                <div class="style-block">
-                                    <h2 id="toc0"><span>Phenomena 1-99<a name="0"></a></span></h2>
-                                    <div class="back-to-toc">
-                                        <p><a href="#t">▲</a></p>
-                                    </div>
-                                    <ul>
-                                        <li><a href="phenomenon-1.html">Phenomenon 1</a> - “导向操纵”</li>
-                                        <li><a href="phenomenon-2.html">Phenomenon 2</a> - “血月”</li>
-                                        <li><a href="phenomenon-3.html">Phenomenon 3</a> - “欢欣之舞”</li>
-                                        <li><a href="phenomenon-4.html">Phenomenon 4</a> - “蜘蛛文”</li>
-                                        <li><a href="phenomenon-5.html">Phenomenon 5</a> - “切行”</li>
-                                        <li><a href="phenomenon-6.html">Phenomenon 6</a> - “尼比鲁大灾难”</li>
-                                        <li><a href="phenomenon-7.html">Phenomenon 7</a> - “阈界反响”</li>
-                                        <li><a href="phenomenon-8.html">Phenomenon 8</a> - “涂鸦陷阱”</li>
-                                        <li><a href="phenomenon-9.html">Phenomenon 9</a> - “ <span
-                                                style="color: blue"><strong><em>蓝色消解</em></strong></span> ”</li>
-                                        <li><a href="phenomenon-10.html">Phenomenon 10</a> - “哈梅林和声”</li>
-                                        <li><a href="phenomenon-11.html">Phenomenon 11</a> - “后室式缩词”</li>
-                                        <li><a href="phenomenon-12.html">Phenomenon 12</a> - “植殖癌”</li>
-                                        <li><a href="phenomenon-13.html">Phenomenon 13</a> - <span
-                                                style="color: red">“<tt>归途</tt>”</span></li>
-                                        <li><a href="phenomenon-14.html">Phenomenon 14</a> - “也许是，也许不是”</li>
-                                        <li><a href="phenomenon-15.html">Phenomenon 15</a> - “倒转”</li>
-                                        <li><a href="phenomenon-16.html">Phenomenon 16</a> - “动荡风暴”
-                                            <ul>
-                                                <li><a class="newpage" href="phenomenon-16-1.html">Phenomenon 16.1</a> -
-                                                    “尘世中的灵性”</li>
-                                            </ul>
-                                        </li>
-                                        <li><a href="phenomenon-17.html">Phenomenon 17</a> - “前厅映像”</li>
-                                        <li><a href="phenomenon-18.html">Phenomenon 18</a> - <span
-                                                style="color: #9348ef">“无尽流浪者”</span></li>
-                                        <li><a href="phenomenon-19.html">Phenomenon 19</a> - “往日无线电波”</li>
-                                        <li><a href="phenomenon-20.html">Phenomenon 20</a> - “环萦数梦”</li>
-                                        <li><a href="phenomenon-21.html">Phenomenon 21</a> - “残喘”</li>
-                                        <li><a href="phenomenon-22.html">Phenomenon 22</a> - “🪑”</li>
-                                        <li><a href="phenomenon-23.html">Phenomenon 23</a> - “切行融合”</li>
-                                        <li><a href="phenomenon-24.html">Phenomenon 24</a> - “切行脱离”</li>
-                                        <li><a href="phenomenon-25.html">Phenomenon 25</a> - “呼噜，呼噜。”</li>
-                                        <li><a href="phenomenon-26.html">Phenomenon 26</a> - “S.U.N.，你难道不觉得自己很可笑么？快解除这诅咒吧！”
-                                            <ul>
-                                                <li><a href="phenomenon-26-0001.html">Phenomenon 26.0001</a> -
-                                                    “令所有其他关于思想、身体与灵魂的现象、效应皆黯然失色的现象：关于天选之人立方那永无终日的秘密，沉重地反映了在后室英文维基写作的范围，以及当下搅乱了社区氛围的那出闹剧，重复往粪坑里丢一个个与天选之人立方相似又不尽相同的角色；他们的区别在于天选之人立方知道何时该停下，而社区里的某些角色根本不知道何时该停下”
-                                                </li>
-                                                <li><a href="phenomenon-26-0004379i.html">Phenomenon 26.0004379i</a> -
-                                                    “真正的Phenomenon 26”</li>
-                                            </ul>
-                                        </li>
-                                        <li><a href="phenomenon-27.html">Phenomenon 27</a> - “虚幻之声”</li>
-                                        <li><a href="phenomenon-28.html">Phenomenon 28</a> - “悼念平常”</li>
-                                        <li><a href="phenomenon-29.html">Phenomenon 29</a> - “低语”</li>
-                                        <li><a href="phenomenon-30.html">Phenomenon 30</a> - “光球”</li>
-                                        <li><a class="newpage" href="phenomenon-31.html">Phenomenon 31</a> - “潜在骤灭假说”<span
-                                                class="dont-translate"><span
-                                                    style="white-space: pre-wrap;">&#32;</span></span></li>
-                                        <li><a href="phenomenon-32.html">Phenomenon 32</a> - “层级速度”</li>
-                                        <li><a href="phenomenon-33.html">Phenomenon 33</a> - “自动修正”</li>
-                                        <li><a href="phenomenon-34.html">Phenomenon 34</a> - “跨年失败”</li>
-                                        <li><a class="newpage" href="phenomenon-35.html">Phenomenon 35</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-36.html">Phenomenon 36</a> - [NO DATA]</li>
-                                        <li><a href="phenomenon-37.html">Phenomenon 37</a> - “慷慨”</li>
-                                        <li><a href="phenomenon-38.html">Phenomenon 38</a> - “希望现象”</li>
-                                        <li><a class="newpage" href="phenomenon-39.html">Phenomenon 39</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-40.html">Phenomenon 40</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-41.html">Phenomenon 41</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-42.html">Phenomenon 42</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-43.html">Phenomenon 43</a> - “信息禁阅”</li>
-                                        <li><a class="newpage" href="phenomenon-44.html">Phenomenon 44</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-45.html">Phenomenon 45</a> - [NO DATA]</li>
-                                        <li><a href="phenomenon-46.html">Phenomenon 46</a> - “野兽之眼”</li>
-                                        <li><a class="newpage" href="phenomenon-47.html">Phenomenon 47</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-48.html">Phenomenon 48</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-49.html">Phenomenon 49</a> - [NO DATA]</li>
-                                        <li><a href="phenomenon-50.html">Phenomenon 50</a> - “漩涡”</li>
-                                        <li><a href="../entities/entity-51.html">Phenomenon 51</a>
-                                            - “午夜带的掠食”</li>
-                                        <li><a class="newpage" href="phenomenon-52.html">Phenomenon 52</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-53.html">Phenomenon 53</a> - [NO DATA]</li>
-                                        <li><a href="phenomenon-54.html">Phenomenon 54</a> - “本源欺谬”</li>
-                                        <li><a href="phenomenon-55.html">Phenomenon 55</a> - <span class="GODHAND"><span
-                                                    style="color: red"><strong>“神之手”</strong></span></span></li>
-                                        <li><a class="newpage" href="phenomenon-56.html">Phenomenon 56</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-57.html">Phenomenon 57</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-58.html">Phenomenon 58</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-59.html">Phenomenon 59</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-60.html">Phenomenon 60</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-61.html">Phenomenon 61</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-62.html">Phenomenon 62</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-63.html">Phenomenon 63</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-64.html">Phenomenon 64</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-65.html">Phenomenon 65</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-66.html">Phenomenon 66</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-67.html">Phenomenon 67</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-68.html">Phenomenon 68</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-69.html">Phenomenon 69</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-70.html">Phenomenon 70</a> - [NO DATA]</li>
-                                        <li><a href="phenomenon-71.html">Phenomenon 71</a> - “数疫”</li>
-                                        <li><a class="newpage" href="phenomenon-72.html">Phenomenon 72</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-73.html">Phenomenon 73</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-74.html">Phenomenon 74</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-75.html">Phenomenon 75</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-76.html">Phenomenon 76</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-77.html">Phenomenon 77</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-78.html">Phenomenon 78</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-79.html">Phenomenon 79</a> - [NO DATA]</li>
-                                        <li><a href="phenomenon-80.html">Phenomenon 80</a> - “请别离去”</li>
-                                        <li><a class="newpage" href="phenomenon-81.html">Phenomenon 81</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-82.html">Phenomenon 82</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-83.html">Phenomenon 83</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-84.html">Phenomenon 84</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-85.html">Phenomenon 85</a> - [NO DATA]</li>
-                                        <li><a href="phenomenon-86.html">Phenomenon 86</a> - “<em>后室大型流星雨</em>”</li>
-                                        <li><a class="newpage" href="phenomenon-87.html">Phenomenon 87</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-88.html">Phenomenon 88</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-89.html">Phenomenon 89</a> - [NO DATA]</li>
-                                        <li><a href="phenomenon-90.html">Phenomenon 90</a> - “信件”</li>
-                                        <li><a class="newpage" href="phenomenon-91.html">Phenomenon 91</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-92.html">Phenomenon 92</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-93.html">Phenomenon 93</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-94.html">Phenomenon 94</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-95.html">Phenomenon 95</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-96.html">Phenomenon 96</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-97.html">Phenomenon 97</a> - [NO DATA]</li>
-                                        <li><a class="newpage" href="phenomenon-98.html">Phenomenon 98</a> - [NO DATA]</li>
-                                        <li><a href="phenomenon-99.html">Phenomenon 99</a> - “迫使永生”</li>
-                                    </ul>
+                                                                <div class="style-block">
+                                    <h2 id="toc0"><span>现象列表<a name="0"></a></span></h2>
+                                    <div class="br-list-meta" id="br-count"></div>
+                                    <ul id="br-list"><li>正在从服务器加载…</li></ul>
                                 </div>
+                                <style>.br-list-meta{font-size:13px;color:#777;margin:0 0 8px}#br-list .br-badge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#fff4d6;color:#8a6d00;font-size:12px}#br-list .br-rew{background:#fff0dc;color:#a35200}</style>
+                                <script>
+                                (function () {
+                                    var TYPE = 'phenomenon', OPEN_PARAM = 'open_phenomenon';
+                                    var PREFIX = { level: '/backrooms/levels', entity: '/backrooms/entities', object: '/backrooms/objects', phenomenon: '/backrooms/phenomena' };
+                                    var listEl = document.getElementById('br-list');
+                                    var countEl = document.getElementById('br-count');
+                                    if (!listEl) return;
+                                    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+                                    function idOf(it) { return it.id || it.levelId || it.docId || ''; }
+                                    function baseUrl() { return (window.ZIYIT_API && ZIYIT_API.base) ? ZIYIT_API.base() : ''; }
+                                    function docUrl(id) { return baseUrl() + PREFIX[TYPE] + '/' + encodeURIComponent(id); }
+                                    function openDoc(id) {
+                                        if (window.ZIYIT_API && ZIYIT_API.backroomsTypeOpen) {
+                                            ZIYIT_API.backroomsTypeOpen(TYPE, id).catch(function (err) {
+                                                var extra = (err && err.status === 404) ? '（该文档未收录或已下架）' : '';
+                                                alert('打开失败：' + ((err && err.message) || err) + extra);
+                                            });
+                                        } else { window.open(docUrl(id), '_blank'); }
+                                    }
+                                    function render(items) {
+                                        if (!items.length) { listEl.innerHTML = '<li>暂无收录条目。</li>'; if (countEl) countEl.textContent = ''; return; }
+                                        if (countEl) countEl.textContent = '共 ' + items.length + ' 条（数据来自服务器，实时更新）';
+                                        listEl.innerHTML = items.map(function (it) {
+                                            var id = idOf(it), name = it.name || '';
+                                            var tail = name ? ('“' + esc(name) + '”') : '[NO DATA]';
+                                            var badge = '';
+                                            if (it.rewritten) badge = '<span class="br-badge br-rew">已重写·下架</span>';
+                                            else if (it.status && it.status !== 'approved') badge = '<span class="br-badge">' + esc(it.statusText || it.status) + '</span>';
+                                            if (it.status === 'approved' && !it.rewritten) {
+                                                return '<li><a href="' + esc(docUrl(id)) + '" target="_blank" rel="noopener">' + esc(id) + '</a> - ' + tail + badge + '</li>';
+                                            }
+                                            return '<li><a href="javascript:void(0)" data-open="' + esc(id) + '">' + esc(id) + '</a> - ' + tail + badge + '</li>';
+                                        }).join('');
+                                    }
+                                    listEl.addEventListener('click', function (e) {
+                                        var a = e.target.closest ? e.target.closest('a[data-open]') : null;
+                                        if (!a) return;
+                                        e.preventDefault();
+                                        openDoc(a.getAttribute('data-open'));
+                                    });
+                                    function load() {
+                                        if (!window.ZIYIT_API || !ZIYIT_API.backroomsTypeList) { listEl.innerHTML = '<li>接口未就绪。</li>'; return; }
+                                        ZIYIT_API.backroomsTypeList(TYPE).then(function (d) {
+                                            var items = (d && (d.items || d.levels || d.data)) || [];
+                                            if (!Array.isArray(items)) items = [];
+                                            render(items);
+                                        }).catch(function (err) {
+                                            listEl.innerHTML = '<li>加载失败：' + esc((err && err.message) || '请求失败') + '</li>';
+                                        });
+                                    }
+                                    load();
+                                    (function () {
+                                        var m = location.search.match(new RegExp('[?&]' + OPEN_PARAM + '=([^&]*)'));
+                                        if (!m) return;
+                                        var id = '';
+                                        try { id = decodeURIComponent(m[1]); } catch (e) { id = m[1]; }
+                                        if (!id) return;
+                                        try { history.replaceState(null, '', location.pathname); } catch (e) { }
+                                        openDoc(id);
+                                    })();
+                                })();
+                                </script>
                             </div>
                             <div class="page-tags">
                                 <span>

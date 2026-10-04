@@ -3,6 +3,28 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.34 — 2026-10-04
+### 变更
+- **四个分类列表页改为读后端动态渲染**：`backrooms/normal-levels/index.html`（层级）、`backrooms/entities/index.html`（实体）、`backrooms/objects/index.html`（物品）、`backrooms/phenomena/index.html`（现象）中原本硬编码的 Wikidot 清单（`<div class="style-block">` + `<ul><li><a href="level-0.html">…` 共约 **50.3 万字符**）整体删除，换成一段 `#br-list` 占位 + 内联脚本：
+  - 数据来源 `ZIYIT_API.backroomsTypeList(type)`，按后端返回的 ID 排序实时渲染 `<li><a>ID</a> - “名称” 状态徽章</li>`，页面顶部显示「共 N 条（数据来自服务器，实时更新）」。原「每 100 一个分组标题 + 描述」不再保留。
+  - 链接：`approved` 条目直接新窗口打开后端文档页（`ZIYIT_API.base() + /backrooms/{type}/{id}`）；其余状态（作者自己的待审稿、管理员可见的待审稿、`rewritten`）点击改用 `ZIYIT_API.backroomsTypeOpen(type, id)`（带 Bearer 凭证），失败时提示「该文档未收录或已下架」。
+  - **支持后端约定的直达参数**：后端 `site_page` 为 `/backrooms/{type}/?open_{type}={id}`（收录邮件里的链接），四个页面分别识别 `?open_level / ?open_entity / ?open_object / ?open_phenomenon` 并自动打开对应文档，随后清除 query。
+- **顺带修复因删除静态文档产生的死链**（仅限这四个页面内）：`levels/register.html` → `/user/register`；`levels/sub-layers.html` → `/backrooms/sub-layers/`；`levels/entities.html|objects.html|phenomena.html` → `/backrooms/entities/|objects/|phenomena/`；`entities/normal-levels.html`、`normal-levels-i.html` → `/backrooms/normal-levels/`。
+### 说明
+- 只改前端（上述四个 `index.html` + 本文件）；**后端一行未改**。
+- 四个页面体积从 2926/1630/3520/647 行降到约 877/662/666/669 行；改动前的完整内容仍在 Git 历史中，可 `git checkout -- backrooms/*/index.html` 回滚。
+- **遗留未处理**：① `backrooms/groups/`、`backrooms/sub-layers/`、`backrooms/必读/` 等其余 wiki 页面里指向已删文档的相对链接（如 `../normal-levels/levels/level-1.html`）仍会 404；② `normal-levels/levels/` 下被一并删除的工具页（`entities.html`、`objects.html`、`phenomena.html`、`groups-list.html`、`sub-layers.html`、`the-m-e-g.html`、`test.html`、`1.html`、`broken-google.html`）不属于文档正文，如需可 `git checkout` 单独恢复。
+
+## v1.33 — 2026-10-04
+### 变更
+- **后室审核页扩展为四类文档**：[backrooms/review.html](file:///f:/Code/html/ziyit/backrooms/review.html) 原先只处理「层级」，现按后端统一契约（`GET /backrooms/levels|entities|objects|phenomena`）覆盖**层级 / 实体 / 物品 / 现象**四类。新增类型切换 tab（`#type-tabs`）与搜索框（`#search-input`，按「ID / 名称 / 作者」模糊匹配当前类型下全部状态文档，前端本地过滤、不发额外请求）；三个列表（待基础审核 / 高级审核 / 已收录）共用一次 `ZIYIT_API.backroomsTypeList(type)` 拉取结果并按状态拆分。查看 / 下载 / 生成提示词 / 提交审核结果 / 通过 / 拒绝 / 重写 / 删除全部按当前类型走通用接口（`backroomsTypeRewrite`、`backroomsTypeAdminDelete`；AI/高级审核接口后端按文档 ID 自动识别类型，沿用 `levelId` 字段即兼容四类）。
+- **审核标准改为读前端文件**：[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js) 的 `backroomsDownloadStandard()` 不再请求后端 `/backrooms/normal-levels/slyq.md`，改为按类型读取随站点发布的前端标准文件——层级 `backrooms/normal-levels/slyq.md`、实体 `backrooms/entities/slyq.md`、物品 `backrooms/objects/slyq.md`（现象暂无独立标准，暂用层级标准），并分别另存为「层级/实体/物品/现象审核标准.md」。新增并导出 `backroomsLoadStandard(type)` / `backroomsStandardUrl(type)`；「生成提示词」改为在浏览器端把前端标准全文 + 审核规则 + 稿件信息拼成完整提示词（不再依赖后端 `action=prompt`）。
+- **删除前端静态文档（大删）**：删除 `backrooms/normal-levels/levels/`、`backrooms/entities/`、`backrooms/objects/`、`backrooms/phenomena/` 下共 **916 个**静态 `.html` 文档（层级 571 / 实体 198 / 物品 96 / 现象 51）。**保留** 各目录 `index.html` 列表页、`entities/iets.html`、`phenomena/ipts.html` 与全部 `slyq.md` 标准文件；`normal-levels/levels/` 清空后目录一并移除。后室文档内容改由后端页面提供（`/backrooms/{type}/{id}`）。
+### 说明
+- 只改前端与文档（`backrooms/review.html`、`assets/ziyit_api.js`、本文件）；**后端一行未改**。
+- 删除的静态文档全部受 Git 跟踪（删除时工作区干净），如需回滚可 `git checkout -- backrooms/` 恢复。
+- 后端 `POST /backrooms/review/ai`、`/backrooms/review/advanced` 的入参 `targetId = docId or levelId`，按 ID 全站唯一查找，故前端对四类文档统一沿用 `levelId` 字段提交即可。
+
 ## v1.32 — 2026-10-04
 ### 新增
 - **知识库可见等级管理模块**（后台「知识库管理」区块，**仅 Lv.4 站长可见**）：对接后端 `guide/knowledge_api.py` 的全部 8 个接口，覆盖「条目总表 / 目录树 / 关键词搜索 / 原文·生效文对照 / 多档位文档预览 / 模拟提问 / 编辑与恢复」。所有改动落在后端覆盖层（`guide_knowledge_access.json`），**不改原 markdown、改完即时生效、无需发布**。
