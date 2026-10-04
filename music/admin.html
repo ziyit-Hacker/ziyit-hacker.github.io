@@ -34,7 +34,7 @@
             <div class="header-top">
                 <h1 class="admin-title">音乐管理系统</h1>
                 <div class="user-info">
-                    <div class="user-avatar">AD</div>
+                    <div class="user-avatar" id="header-avatar"><img id="header-avatar-img" src="../assets/ziyit.png" alt="当前管理员头像"></div>
                     <div>
                         <div class="user-name">管理员</div>
                         <div class="user-role" id="user-role">系统管理员</div>
@@ -891,10 +891,27 @@
         </footer>
     </div>
 
+    <!-- 管理员邮箱验证强制门（v1.31）：未验证邮箱前拦截全部管理功能 -->
+    <div class="email-gate" id="email-verify-gate">
+        <div class="email-gate-card">
+            <h2>需要完成邮箱验证</h2>
+            <p style="font-size:14px;line-height:1.6;color:var(--secondary-color);margin:0;">
+                为保障管理员账号安全，所有管理员必须完成邮箱验证后才能使用管理功能。
+            </p>
+            <div class="email-gate-status" id="email-gate-status">正在检查邮箱验证状态…</div>
+            <div class="email-gate-actions">
+                <button type="button" class="user-btn" id="email-gate-profile">前往验证 / 绑定邮箱</button>
+                <button type="button" class="user-btn" id="email-gate-recheck">刷新状态</button>
+                <button type="button" class="user-btn success" id="email-gate-send">发送验证邮件</button>
+            </div>
+        </div>
+    </div>
+
     
     <div class="modal" id="user-modal">
         <div class="modal-content">
             <div class="modal-header" id="modal-title">编辑用户</div>
+            <img id="edit-avatar" class="modal-avatar" src="../assets/ziyit.png" alt="用户头像">
             <form id="user-form">
                 <div class="form-group">
                     <label class="form-label">用户名</label>

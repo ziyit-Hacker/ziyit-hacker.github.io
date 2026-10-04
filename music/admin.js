@@ -25,6 +25,14 @@ function switchSection(sectionId) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // v1.31：任何侧栏菜单点击都视为用户主动选段，标记后异步权限校验不再覆盖（修复在线客服被弹回）
+    const sidebarMenu = document.querySelector('.sidebar-menu');
+    if (sidebarMenu) {
+        sidebarMenu.addEventListener('click', function (e) {
+            if (e.target && e.target.closest && e.target.closest('.menu-item[data-section]')) adminSectionLocked = true;
+        }, true);
+    }
+
      
     document.querySelector('[data-section="music-management"]').addEventListener('click', function () {
         switchSection('music-management');
@@ -47,6 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
          
         loadUsers();
+        loadIpBans();
     });
 
      
@@ -263,6 +272,12 @@ function loadingHTML() {
 let currentAdminLevel = 0;
 let currentAdminInfo = null;
 
+// v1.31：头像与邮箱验证门相关状态
+const DEFAULT_AVATAR = '../assets/ziyit.png';
+let adminSectionLocked = false;   // 用户已主动选择分节（点击/直达），异步校验不得再覆盖
+const adminAvatarCache = {};      // userId -> avatarUrl（'' 表示已确认无头像）
+const adminAvatarPending = {};    // userId -> true（正在拉取）
+
  
 function adminLevelName(level) {
     level = Number(level);
@@ -331,6 +346,9 @@ function checkUserPermission() {
         const userNameEl = document.querySelector('.user-info .user-name');
         if (userNameEl && me.username) userNameEl.textContent = me.username;
 
+        // v1.31：顶栏展示当前登录管理员的真实头像
+        loadHeaderAvatar(me.userId);
+
         applyMenuByLevel();
          
         chatLoadHistory();
@@ -340,11 +358,22 @@ function checkUserPermission() {
             chatPollTimer = setInterval(pollChatInbox, 5000);
             setTimeout(pollChatInbox, 300);
         }
-         
-        const firstVisible = document.querySelector('.sidebar-menu .menu-item[data-level]:not([style*="display: none"])');
-        if (firstVisible && firstVisible.getAttribute('data-section')) {
-            switchSection(firstVisible.getAttribute('data-section'));
+
+        // v1.31：仅当用户尚未主动选择分节时，才做兜底切段；且优先尊重 URL hash（如 #guide-console）。
+        // 修正：此前该异步回调无条件切到首个可见菜单，会把用户点击的「在线客服」覆盖回用户管理。
+        if (!adminSectionLocked) {
+            const hashSec = String(location.hash || '').replace('#', '');
+            let target = '';
+            if (hashSec && document.getElementById(hashSec)) target = hashSec;
+            if (!target) {
+                const firstVisible = document.querySelector('.sidebar-menu .menu-item[data-level]:not([style*="display: none"])');
+                if (firstVisible) target = firstVisible.getAttribute('data-section') || '';
+            }
+            if (target) switchSection(target);
         }
+
+        // v1.31：管理员邮箱验证强制门
+        enforceAdminEmailVerification();
     }).catch(function (err) {
         console.error('权限校验失败:', err);
         if (err && err.status === 401) {
@@ -354,6 +383,121 @@ function checkUserPermission() {
         }
     });
 }
+
+// ===== v1.31：头像与邮箱验证辅助 =====
+
+// 顶栏「当前登录管理员」头像
+function loadHeaderAvatar(uid) {
+    const img = document.getElementById('header-avatar-img');
+    if (!img || uid == null || uid === '') return;
+    ZIYIT_API.request('/users/' + encodeURIComponent(uid)).then(function (u) {
+        if (u && u.avatarUrl) {
+            ZIYIT_API.applyImage(img, u.avatarUrl, DEFAULT_AVATAR).catch(function () { });
+        }
+    }).catch(function () { });
+}
+
+// 管理员列表头像：优先用已加载的全量用户列表 / 缓存，未知的按 userId 逐个补拉
+function adminAvatarOf(uid) {
+    const key = String(uid);
+    if (Object.prototype.hasOwnProperty.call(adminAvatarCache, key)) return adminAvatarCache[key];
+    const list = Array.isArray(userList) ? userList : [];
+    for (let i = 0; i < list.length; i++) {
+        if (String(list[i].userId) === key) {
+            adminAvatarCache[key] = list[i].avatarUrl || '';
+            return adminAvatarCache[key];
+        }
+    }
+    return '';
+}
+
+function hydrateAdminAvatars(list) {
+    const tasks = [];
+    (Array.isArray(list) ? list : []).forEach(function (a) {
+        const f = adminFields(a);
+        const key = String(f.userId);
+        if (key === '-' || Object.prototype.hasOwnProperty.call(adminAvatarCache, key) || adminAvatarPending[key]) return;
+        adminAvatarPending[key] = true;
+        tasks.push(
+            ZIYIT_API.request('/users/' + encodeURIComponent(key)).then(function (u) {
+                adminAvatarCache[key] = (u && u.avatarUrl) || '';
+            }).catch(function () {
+                adminAvatarCache[key] = '';
+            }).then(function () { delete adminAvatarPending[key]; })
+        );
+    });
+    if (!tasks.length) return Promise.resolve();
+    return Promise.all(tasks).then(function () { renderAdmins(); });
+}
+
+// 邮箱验证强制门：/admin/me 不返回 emailVerified，需另查 /auth/me
+function enforceAdminEmailVerification() {
+    return ZIYIT_API.me().then(function (u) {
+        if (u && u.emailVerified) {
+            hideEmailGate();
+            return true;
+        }
+        showEmailGate(u || {});
+        return false;
+    }).catch(function (err) {
+        // 401 会由全局未授权处理跳登录；其余情况（网络抖动等）不误伤
+        if (!(err && err.status === 401)) hideEmailGate();
+        return true;
+    });
+}
+
+function showEmailGate(u) {
+    const gate = document.getElementById('email-verify-gate');
+    if (!gate) return;
+    const status = document.getElementById('email-gate-status');
+    const sendBtn = document.getElementById('email-gate-send');
+    const email = u && u.email ? String(u.email) : '';
+    if (status) {
+        status.innerHTML = email
+            ? ('当前邮箱：<b>' + escAdmin(email) + '</b><br>状态：<span style="color:var(--danger-color,#e74c3c);">未验证</span>')
+            : '当前账号未绑定邮箱，请先前往个人资料页绑定邮箱后再验证。';
+    }
+    if (sendBtn) {
+        sendBtn.style.display = email ? '' : 'none';
+        sendBtn.disabled = false;
+        sendBtn.textContent = '发送验证邮件';
+    }
+    gate.classList.add('active');
+}
+
+function hideEmailGate() {
+    const gate = document.getElementById('email-verify-gate');
+    if (gate) gate.classList.remove('active');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const sendBtn = document.getElementById('email-gate-send');
+    if (sendBtn) sendBtn.addEventListener('click', function () {
+        sendBtn.disabled = true;
+        sendBtn.textContent = '发送中…';
+        ZIYIT_API.sendVerifyEmail().then(function () {
+            showToast('验证邮件已发送，请查收邮箱', 'success');
+            sendBtn.textContent = '已发送（60s 后可重发）';
+            setTimeout(function () { sendBtn.disabled = false; sendBtn.textContent = '重新发送验证邮件'; }, 60000);
+        }).catch(function (err) {
+            sendBtn.disabled = false;
+            sendBtn.textContent = '发送失败，请重试';
+            showToast((err && err.data && err.data.detail) || '发送失败，请稍后再试', 'error');
+        });
+    });
+    const recheck = document.getElementById('email-gate-recheck');
+    if (recheck) recheck.addEventListener('click', function () {
+        recheck.disabled = true;
+        enforceAdminEmailVerification().then(function (ok) {
+            recheck.disabled = false;
+            showToast(ok ? '邮箱已验证，已解锁管理功能' : '邮箱仍未验证', ok ? 'success' : 'error');
+        });
+    });
+    const profileBtn = document.getElementById('email-gate-profile');
+    if (profileBtn) profileBtn.addEventListener('click', function () {
+        window.location.href = '../user/profile.html';
+    });
+});
 
 
 
@@ -1066,9 +1210,15 @@ function renderUserList(list) {
         const item = document.createElement('div');
         item.className = 'user-item';
 
-        const avatar = document.createElement('div');
+        const avatar = document.createElement('img');
         avatar.className = 'user-avatar-small';
-        avatar.textContent = username.charAt(0).toUpperCase();
+        avatar.alt = username + ' 的头像';
+        avatar.src = DEFAULT_AVATAR;
+        // v1.31：从用户资料读取头像，加载失败回退默认头像
+        if (user.avatarUrl) ZIYIT_API.applyImage(avatar, user.avatarUrl, DEFAULT_AVATAR).catch(function () { });
+        avatar.addEventListener('error', function () {
+            if (avatar.getAttribute('src') !== DEFAULT_AVATAR) avatar.src = DEFAULT_AVATAR;
+        });
 
         const details = document.createElement('div');
         details.className = 'user-details';
@@ -1290,6 +1440,13 @@ function openEditModal(user) {
     document.getElementById('edit-email').value = user.email && user.email !== '[NO DATA]' ? user.email : '';
     document.getElementById('edit-role').value = (String(user.role || '').toUpperCase() === 'ZC') ? 'ZC' : 'UR';
     document.getElementById('edit-password').value = '';
+    // v1.31：详情弹窗展示用户头像（失败回退默认头像）
+    const avatarEl = document.getElementById('edit-avatar');
+    if (avatarEl) {
+        avatarEl.alt = (user.username || '用户') + ' 的头像';
+        avatarEl.src = DEFAULT_AVATAR;
+        if (user.avatarUrl) ZIYIT_API.applyImage(avatarEl, user.avatarUrl, DEFAULT_AVATAR).catch(function () { });
+    }
     document.getElementById('user-modal').classList.add('active');
 }
 
@@ -3487,19 +3644,6 @@ document.addEventListener('DOMContentLoaded', function () {
     setInterval(loadOnlineStats, 30000);
 
      
-    document.querySelector('[data-section="user-management"]').addEventListener('click', function () {
-         
-        document.querySelectorAll('.content-section').forEach(section => {
-            section.classList.remove('active');
-        });
-        document.getElementById('user-management').classList.add('active');
-
-         
-        loadUsers();
-        loadIpBans();
-    });
-
-     
     document.getElementById('refresh-users').addEventListener('click', function () {
         loadUsers();
         updateSystemInfo('用户列表已刷新');
@@ -3795,6 +3939,8 @@ function loadAdmins() {
             return lv <= myLevel || lv === higherLevel;
         });
         renderAdmins();
+        // v1.31：补拉未知管理员头像（/admin/admins 不返回 avatarUrl），完成后自动重渲染
+        hydrateAdminAvatars(adminList);
         const total = document.getElementById('admin-total');
         if (total) total.textContent = adminList.length;
         const superCount = document.getElementById('admin-super-count');
@@ -3823,10 +3969,16 @@ function renderAdmins() {
     const meId = currentAdminInfo && (currentAdminInfo.userId != null ? currentAdminInfo.userId : currentAdminInfo.id);
     list.forEach(function (a) {
         const f = adminFields(a);
+        const isSelf = meId != null && String(f.userId) === String(meId);
         const isSuper = f.userId === 1 || String(f.type).toLowerCase() === 'adminstrator';
         const levelCls = f.level === 4 ? 'normal' : (f.level === 3 ? 'edit' : 'banned');
-        html += '<div class="user-item wide-item"><div class="user-details">'
-            + '<div class="user-name">' + escAdmin(f.username) + '</div>'
+        const avatarUrl = adminAvatarOf(f.userId) || DEFAULT_AVATAR;
+        // v1.31：展示管理员头像；当前登录管理员加高亮边框 + 「当前登录」角标
+        html += '<div class="user-item wide-item' + (isSelf ? ' self-admin' : '') + '">'
+            + '<img class="user-avatar-small" data-avatar-uid="' + escAdmin(f.userId) + '" alt="' + escAdmin(f.username) + ' 的头像" src="' + escAdmin(avatarUrl) + '">'
+            + '<div class="user-details">'
+            + '<div class="user-name">' + escAdmin(f.username)
+            + (isSelf ? '<span class="user-badge-self">当前登录</span>' : '') + '</div>'
             + '<div class="user-type ' + levelCls + '">' + adminLevelName(f.level) + '（Lv.' + f.level + '）</div>'
             + '<div class="user-del-date">ID: ' + escAdmin(f.userId)
             + (f.type ? ' ｜ 类型: ' + escAdmin(f.type) : '')
@@ -3838,6 +3990,11 @@ function renderAdmins() {
             + '</div></div>';
     });
     area.innerHTML = html;
+    area.querySelectorAll('img.user-avatar-small[data-avatar-uid]').forEach(function (img) {
+        const uid = img.getAttribute('data-avatar-uid');
+        const url = adminAvatarOf(uid);
+        if (url) ZIYIT_API.applyImage(img, url, DEFAULT_AVATAR).catch(function () { });
+    });
     area.querySelectorAll('[data-act]').forEach(function (btn) {
         const idx = parseInt(btn.getAttribute('data-idx'), 10);
         const a = adminList[idx];
@@ -4783,7 +4940,8 @@ function guideResolveCheck() {
     var token = params.get('guide_resolve');
     if (!token) return;
 
-     
+    // v1.31：直达客服控制台，锁定分段，避免异步权限校验回弹到其它分节
+    adminSectionLocked = true;
     switchSection('guide-console');
     updateSystemInfo('切换到在线客服');
     guideStartPolling();
@@ -4820,6 +4978,7 @@ document.addEventListener('DOMContentLoaded', function () {
     guideInit();
      
     if (location.hash === '#guide-console') {
+        adminSectionLocked = true;
         switchSection('guide-console');
         updateSystemInfo('切换到在线客服');
         guideStartPolling();

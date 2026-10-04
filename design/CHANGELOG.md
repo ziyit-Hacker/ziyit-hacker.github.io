@@ -3,6 +3,20 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.31 — 2026-10-04
+### 修复
+- **用户管理界面不显示头像**：`music/admin.js` 的 `renderUserList()` 原先把头像渲染成**用户名首字母文字**（`div.user-avatar-small`），改为真正的 `<img>`，数据取用户资料里的 `avatarUrl`，用 `ZIYIT_API.applyImage()` 加载（自带 blob 处理）并绑定 `error` 事件兜底默认头像 `../assets/ziyit.png`；用户详情弹窗（`openEditModal`）顶部同步新增头像预览（`#edit-avatar`），加载失败同样回退默认头像。`admin.css` 的 `.user-avatar-small` 补 `overflow:hidden; object-fit:cover`，保证任意比例图片裁成圆形。
+- **管理员列表无头像 / 无法区分当前登录管理员**：`renderAdmins()` 为每位管理员加上头像节点；当前登录管理员（`currentAdminInfo.userId`）所在行加 `.self-admin` 高亮（绿色描边 + 浅绿底）并在用户名后显示「当前登录」角标（`.user-badge-self`）。因后端 `_admin_view()` 不返回 `avatarUrl`，前端用 `adminAvatarOf()` 先从已加载的全量用户列表取，未知者由 `hydrateAdminAvatars()` 逐个调 `GET /users/{id}` 补拉并缓存（一次性、完成后自动重渲染）；顶栏「当前登录管理员」也改为真实头像（`loadHeaderAvatar()`）。
+- **点击「在线客服」标签被弹回用户管理**：根因是 `checkUserPermission()` 的异步回调（`adminMe()` 返回后）**无条件** `switchSection(firstVisible)`，会覆盖用户已点击的目标分段或 URL `#guide-console` 直达。现引入 `adminSectionLocked` 标记：侧栏任意 `[data-section]` 点击（捕获阶段）、`#guide-console` hash 直达、`guide_resolve` 直达都会上锁，异步校验随即改为「有 hash 目标优先用 hash，否则才兜底首个可见菜单」。同时删除 `[data-section="user-management"]` 的**重复事件绑定**（原 L35 与 L3490 各绑一次，后者缺 `menu-item.active` 切换），保留一处并补上 `loadIpBans()`。
+### 新增
+- **管理员邮箱验证强制门**：`checkUserPermission()` 通过后另查 `GET /auth/me`（`/admin/me` 不返回 `emailVerified`），未验证时弹出全屏遮罩 `#email-verify-gate` 拦截全部管理功能，展示当前邮箱与未验证状态，提供「发送验证邮件」（`POST /email/send-verify`，60s 重发节流）、「刷新状态」（重新校验，通过即解锁）与「前往验证 / 绑定邮箱」（跳 `user/profile.html`）三个动作；未绑定邮箱时隐藏发送按钮并提示先绑定。网络异常（非 401）时不误伤、不拦截。
+### 说明
+- 只改前端与文档（`music/admin.html`、`music/admin.js`、`music/admin.css`、本文件）；**后端一行未改**。
+- **后端字段缺口（前端已兜底，若要更省事建议后端补齐，由用户自行决定）**：
+  1. `_admin_view()`（`GET /admin/admins`）不返回 `avatarUrl` → 前端改按 `GET /users/{id}` 逐个补拉（N+1，管理员数量小可接受）。若后端在 `_admin_view()` 里补 `avatarUrl`（复用 `public_user_data` 的 `with_base_url(f"/img/{avatar_id}")` 口径），前端可省掉这轮请求。
+  2. `GET /admin/me` 不返回 `emailVerified` / `email` → 前端另调 `GET /auth/me` 判断。若后端在 `/admin/me` 补上 `emailVerified`，前端可少一次请求。
+  3. 邮箱验证**当前仅为前端强制**（后端 `require_email_verified()` 已定义但全站未被任何路由引用）→ 若需服务端硬拦截，可在管理员相关路由的依赖里挂上 `require_email_verified`。
+
 ## v1.30 — 2026-10-01
 ### 新增
 - **澄镜防注入检测前端落地**（对接后端《网站功能与结构说明》15.5「对外接口」）：
