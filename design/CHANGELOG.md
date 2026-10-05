@@ -3,6 +3,14 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.39 — 2026-10-04
+### 变更
+- **四个分类列表页：不再列出「原始 ID 带额外 `-`」的小数/后缀条目**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)）：按用户要求，ID 除类型前缀外还带额外 `-` 的条目（子层级 / 小数 / 后缀，如 `Level-0-1`、`Level-909-0`、`Level-11latest`、`Phenomenon-26-0004379i`）**从列表中移除、不再显示**。列表只保留**纯整数编号**（`Level 0` … `Level 999`）与**无数字的特殊条目**（`Level Room-1`、`Level NO-DATA` 等，类型前缀后的 `-` 仍显示为空格）。
+- 实现：`render()` 入口用 `parseId` 过滤掉 `dec !== null || suffix !== null` 的条目；「共 N 条」计数与分组同步只统计显示出来的条目。
+- 该改动使 v1.37 引入的「小数/后缀嵌套到父层级下方」不再有机会触发（相关分支保留但不再产生子项）。
+### 说明
+- 只改前端四个 `index.html` 与本文件；**后端一行未改**；四页内联脚本 `new Function` 校验通过。
+
 ## v1.38 — 2026-10-04
 ### 变更
 - **四个分类列表页：类型前缀后的 `-` 一律显示为空格（含特殊组）**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)）：v1.37 只对**有数字**的条目做了「前缀后 → 空格」的显示，特殊组仍原样输出带 `-` 的 ID（`Level-!+`、`Level-NO-DATA`…），与普通条目不一致。现改为 `displayId` 统一按前缀拆分，只要 ID 以 `Level-` / `Entity-` / `Object-` / `Phenomenon-` 开头就显示为 `类型词 + 空格 + 剩余部分`：

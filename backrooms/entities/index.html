@@ -623,6 +623,8 @@
                                     }
                                     function anchorOf(key) { return key === 'special' ? '10' : String(Number(key) / 100); }
                                     function render(items) {
+                                        // 只列纯整数层级与特殊条目；原始 ID 带额外 - 的（小数/后缀，如 Entity-0-1、Entity-11latest）不显示
+                                        items = items.filter(function (it) { var p = parseId(it); return p.dec === null && p.suffix === null; });
                                         if (!items.length) { listEl.innerHTML = '<p class="br-empty">暂无收录条目。</p>'; if (countEl) countEl.textContent = ''; return; }
                                         if (countEl) countEl.textContent = '共 ' + items.length + ' 条（数据来自服务器，实时更新）';
                                         var map = {}, order = [];
