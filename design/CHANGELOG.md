@@ -3,6 +3,14 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.42 — 2026-10-05
+### 变更
+- **四个分类列表页：条目唯一性去重**（normal-levels / entities / objects / phenomena）：`render()` 在分区前新增**按 ID 去重**（`seenIdx`/`uniq`）。同一 ID 若因登录态被后端返回多条不同状态，保留 `approved` 那一份，其余丢弃 —— 杜绝「同一文档既出现在主列表、又出现在『未收录 / 已下架』区」的重复条目（如 `Level-€`、`Level-滚木`）。
+- **顶部「快速跳转」新增「未收录 / 已下架」选项**：四页 TOC 追加 `<a href="#archive">未收录 / 已下架</a>`；归档区标题补 `id="toc-archive"` 与 `<a name="archive"></a>` 锚点。
+- **恢复「回到顶部」**：动态渲染的每个 `.style-block`（含归档区）内补回 `<div class="back-to-toc"><p><a href="#t">▲</a></p></div>`（`▲` 用实体 `&#9650;` 以规避编码风险）。此前 v1.34 将硬编码列表改为 JS 渲染时该标记丢失，只剩 CSS 样式、功能消失；现按 [sub-layers/index.html](file:///f:/Code/html/ziyit/backrooms/sub-layers/index.html) 的原始标记复原（`#t` 锚点即 TOC 标题处的 `<a name="t">`）。
+### 说明
+- 只改前端四个 `index.html` 与本文件；**后端一行未改**；四页内联脚本 `new Function` 校验通过。
+
 ## v1.41 — 2026-10-05
 ### 变更
 - **四个分类列表页：所有条目统一改用 blob 方式打开文档**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)）：此前 `li()` 对 `approved` 条目直接 `href` 到后端文档 URL（`base + /backrooms/{type}/{id}`、`target="_blank"`），**直链后端会引发跨域与文档渲染问题**。现改为**所有条目一律走 `ZIYIT_API.backroomsTypeOpen(type, id)`** —— 带 `ngrok-skip-browser-warning` / `Authorization` 头取回 HTML，再以 blob URL 新窗口打开，与本页 `?open_{type}=` 直达及非公开条目的打开方式完全统一。

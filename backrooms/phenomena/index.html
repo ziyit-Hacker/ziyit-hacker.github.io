@@ -564,7 +564,7 @@
                                         <h4><span>快速跳转<span class="import"><span
                                                         style="white-space: pre-wrap;">&#32;</span></span><a
                                                     name="t"></a></span></h4>
-                                        <p><a href="#0">Phenomena 1-99</a></p>
+                                        <p><a href="#0">Phenomena 1-99</a><a href="#archive">未收录 / 已下架</a></p>
                                     </div>
                                 </div>
                                                                                                 <div id="br-count" class="br-list-meta"></div>
@@ -646,6 +646,15 @@
                                     function render(items) {
                                         // 只列纯整数层级与特殊条目；原始 ID 带额外 - 的（小数/后缀）不显示
                                         items = items.filter(function (it) { var p = parseId(it); return p.dec === null && p.suffix === null; });
+                                        // 同一 ID 可能返回多条（状态不同，登录后会同时出现公开与自己可见的两份）：按 ID 去重、公开状态优先，保证条目唯一
+                                        var seenIdx = {}, uniq = [];
+                                        items.forEach(function (it) {
+                                            var k = String(idOf(it));
+                                            if (!(k in seenIdx)) { seenIdx[k] = uniq.length; uniq.push(it); return; }
+                                            var cur = uniq[seenIdx[k]];
+                                            if (cur.status !== 'approved' && it.status === 'approved') uniq[seenIdx[k]] = it;
+                                        });
+                                        items = uniq;
                                         // 登录后后端还会返回「仅自己可见」的各状态稿件：已收录的进主列表，其余（被打回/已下架/审核中）单独成区
                                         var archived = [];
                                         items = items.filter(function (it) {
@@ -670,12 +679,14 @@
                                             var a = anchorOf(key);
                                             return '<div class="style-block">'
                                                 + '<h2 id="toc-' + esc(a) + '"><span>' + esc(titleOf(key)) + '<a name="' + esc(a) + '"></a></span></h2>'
+                                                + '<div class="back-to-toc"><p><a href="#t">&#9650;</a></p></div>'
                                                 + '<ul>' + blockItems(map[key]).join('') + '</ul>'
                                                 + '</div>';
                                         }).join('');
                                         if (archived.length) {
                                             html += '<div class="style-block br-archive">'
-                                                + '<h2><span>未收录 / 已下架</span></h2>'
+                                                + '<h2 id="toc-archive"><span>未收录 / 已下架<a name="archive"></a></span></h2>'
+                                                + '<div class="back-to-toc"><p><a href="#t">&#9650;</a></p></div>'
                                                 + '<ul>' + archived.map(function (it) { return li(it); }).join('') + '</ul>'
                                                 + '</div>';
                                         }
