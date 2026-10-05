@@ -101,7 +101,9 @@
     function fetchWithTimeout(url, options) {
         if (typeof AbortController === 'undefined') return fetch(url, options);
         var ctrl = new AbortController();
-        var timer = setTimeout(function () { ctrl.abort(); }, REQUEST_TIMEOUT_MS);
+        // 上传 .rcm 这类大请求体要走更久，允许调用方用 __timeoutMs 覆盖默认 20 秒
+        var timeoutMs = (options && options.__timeoutMs) || REQUEST_TIMEOUT_MS;
+        var timer = setTimeout(function () { ctrl.abort(); }, timeoutMs);
         var opts = {};
         for (var k in options) opts[k] = options[k];
         opts.signal = ctrl.signal;
@@ -548,6 +550,21 @@
      
     function submitMod(payload) {
         return post('/mods/submit', payload);
+    }
+
+    // 我上传的 MOD 列表 + 上传配额：{mods:[...], quota:{limit,used,remaining,unlimited,reason}}
+    function myMods() {
+        return request('/mods/mine');
+    }
+
+    // 直接把 .rcm 传到后端（multipart）——不再需要先把文件传到网盘/对象存储再贴链接。
+    // 不设 Content-Type，交给浏览器自动带上 multipart boundary；体积大，单独放宽超时。
+    function uploadMod(formData) {
+        return request('/mods/upload', {
+            method: 'POST',
+            body: formData,
+            __timeoutMs: 300000
+        });
     }
 
     function sendVerifyEmail() {
@@ -1871,6 +1888,8 @@
         knowledgeDelete: knowledgeDelete,
         knowledgeReset: knowledgeReset,
         submitMod: submitMod,
+        myMods: myMods,
+        uploadMod: uploadMod,
         sendVerifyEmail: sendVerifyEmail,
         downloadMod: downloadMod,
         requestDeletion: requestDeletion,

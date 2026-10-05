@@ -1468,26 +1468,38 @@
             <div class="modal-container" style="max-width:520px;">
                 <div class="modal-header">上传我的 MOD</div>
                 <div class="modal-body">
-                    <p style="color:var(--ziyit-text-secondary); margin-bottom:1rem;">提交后需管理员审核，作者将以你的账号自动记录。文件请先上传到可直链下载的地址（如网盘 / 对象存储）。</p>
+                    <p style="color:var(--ziyit-text-secondary); margin-bottom:1rem;">直接把 .rcm 文件传到服务器，作者自动记为你的账号，无需再自行找地方托管文件。同名（同一作者）重复上传即视为更新版本。</p>
                     <div style="margin-bottom:1rem;">
                         <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">MOD 名称 *</label>
-                        <input type="text" id="submit-mod-name" placeholder="例如：Process Optimizer"
+                        <input type="text" id="submit-mod-name" placeholder="例如：ProcessOptimizer"
                             style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;">
+                        <div style="color:#94a3b8;font-size:0.75rem;margin-top:0.35rem;">必须与包内 ModConfig.json 的 Name 完全一致，且只能由字母/数字/下划线组成</div>
                     </div>
                     <div style="margin-bottom:1rem;">
-                        <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">文件下载链接 *</label>
-                        <input type="text" id="submit-mod-url" placeholder="https://.../xxx.rcm"
-                            style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;">
+                        <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">MOD 文件（.rcm）*</label>
+                        <input type="file" id="submit-mod-file" accept=".rcm"
+                            style="width:100%;box-sizing:border-box;padding:0.55rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.85rem;">
+                        <div style="color:#94a3b8;font-size:0.75rem;margin-top:0.35rem;">单个文件不超过 32MB</div>
                     </div>
                     <div style="margin-bottom:1rem;">
                         <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">版本号 *</label>
                         <input type="text" id="submit-mod-version" placeholder="例如：1.0.0"
                             style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;">
                     </div>
+                    <div style="margin-bottom:1rem;">
+                        <label style="display:block;font-weight:600;margin-bottom:0.4rem;font-size:0.9rem;">说明（可选）</label>
+                        <textarea id="submit-mod-desc" rows="2" maxlength="300" placeholder="这个 MOD 是做什么的"
+                            style="width:100%;box-sizing:border-box;padding:0.6rem 0.8rem;border:1px solid var(--ziyit-border);border-radius:10px;font-size:0.9rem;resize:vertical;"></textarea>
+                    </div>
+                    <label style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.85rem;cursor:pointer;margin-bottom:0.6rem;">
+                        <input type="checkbox" id="submit-mod-dlc" style="margin-top:0.2rem;">
+                        <span>作为 DLC 发布（仅 3 级及以上管理员可选；发布后未持有该扩展包的账号无法下载）</span>
+                    </label>
+                    <div id="submit-mod-quota" style="color:var(--ziyit-text-secondary);font-size:0.8rem;"></div>
                 </div>
                 <div class="modal-footer">
                     <button id="submit-mod-cancel" style="background:var(--ziyit-border);color:var(--ziyit-text-primary);border:none;padding:0.5rem 1.4rem;border-radius:40px;font-size:0.85rem;cursor:pointer;font-weight:500;">取消</button>
-                    <button id="submit-mod-confirm" style="background:#1e293b;color:#fff;border:none;padding:0.5rem 1.4rem;border-radius:40px;font-size:0.85rem;cursor:pointer;font-weight:500;">提交</button>
+                    <button id="submit-mod-confirm" style="background:#1e293b;color:#fff;border:none;padding:0.5rem 1.4rem;border-radius:40px;font-size:0.85rem;cursor:pointer;font-weight:500;">上传</button>
                 </div>
             </div>
         </div>
@@ -3346,6 +3358,21 @@
             const submitBtn = document.getElementById('mod-submit-btn');
             if (!submitModal || !submitBtn) return;
 
+            const fileInput = document.getElementById('submit-mod-file');
+            const quotaEl = document.getElementById('submit-mod-quota');
+
+            function renderQuota(quota) {
+                if (!quotaEl) return;
+                if (!quota) { quotaEl.textContent = ''; return; }
+                const who = quota.reason ? '（' + quota.reason + '）' : '';
+                if (quota.unlimited) {
+                    quotaEl.textContent = '上传额度：不限' + who;
+                } else {
+                    quotaEl.textContent = '上传额度：已用 ' + quota.used + ' / ' + quota.limit +
+                        who + '，剩余 ' + quota.remaining + ' 个';
+                }
+            }
+
             function openSubmitModal() {
                 if (!ZIYIT_API.getToken()) {
                     alert('请先登录后再上传 MOD');
@@ -3353,9 +3380,17 @@
                     return;
                 }
                 document.getElementById('submit-mod-name').value = '';
-                document.getElementById('submit-mod-url').value = '';
                 document.getElementById('submit-mod-version').value = '';
+                document.getElementById('submit-mod-desc').value = '';
+                document.getElementById('submit-mod-dlc').checked = false;
+                if (fileInput) fileInput.value = '';
+                if (quotaEl) quotaEl.textContent = '正在获取上传额度...';
                 submitModal.style.display = 'flex';
+                ZIYIT_API.myMods().then(function (res) {
+                    renderQuota(res && res.quota);
+                }).catch(function () {
+                    if (quotaEl) quotaEl.textContent = '';
+                });
             }
 
             function closeSubmitModal() {
@@ -3370,26 +3405,43 @@
 
             document.getElementById('submit-mod-confirm').addEventListener('click', function () {
                 const modName = document.getElementById('submit-mod-name').value.trim();
-                const lastFileUrl = document.getElementById('submit-mod-url').value.trim();
                 const modVersion = document.getElementById('submit-mod-version').value.trim();
-                if (!modName || !lastFileUrl || !modVersion) {
-                    alert('请填写 MOD 名称、文件下载链接和版本号');
-                    return;
-                }
+                const modDescription = (document.getElementById('submit-mod-desc').value || '').trim();
+                const isDLC = document.getElementById('submit-mod-dlc').checked;
+                const file = (fileInput && fileInput.files && fileInput.files[0]) || null;
+
+                if (!file) { alert('请选择要上传的 .rcm 文件'); return; }
+                if (!/\.rcm$/i.test(file.name)) { alert('只能上传 .rcm 文件'); return; }
+                if (!modName) { alert('请填写 MOD 名称'); return; }
+                if (!modVersion) { alert('请填写版本号'); return; }
+
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('modName', modName);
+                fd.append('modVersion', modVersion);
+                fd.append('modDescription', modDescription);
+                fd.append('isDLC', isDLC ? 'true' : 'false');
+
                 const btn = this;
                 const oldText = btn.textContent;
-                btn.textContent = '提交中...';
+                btn.textContent = '上传中...';
                 btn.disabled = true;
-                ZIYIT_API.submitMod({
-                    modName: modName,
-                    lastFileUrl: lastFileUrl,
-                    modVersion: modVersion
-                }).then(function () {
-                    alert('MOD 已提交，等待管理员审核');
+                ZIYIT_API.uploadMod(fd).then(function (res) {
+                    const q = res && res.quota;
+                    const head = (res && res.created) ? 'MOD 上传成功' : 'MOD 已更新为 ' + (res && res.modVersion);
+                    const idText = (res && res.modId != null) ? '（MODID ' + res.modId + '）' : '';
+                    const quotaText = (q && !q.unlimited) ? '\n剩余额度：' + q.remaining + ' / ' + q.limit : '';
+                    renderQuota(q);
+                    alert(head + idText + quotaText);
                     closeSubmitModal();
                     loadModDownload();
                 }).catch(function (err) {
-                    alert('提交失败: ' + (err.message || err));
+                    if (err && err.status === 401) {
+                        alert('登录已过期，请重新登录');
+                        window.location.href = '../user/';
+                        return;
+                    }
+                    alert('上传失败: ' + ((err && err.message) || err));
                 }).finally(function () {
                     btn.textContent = oldText;
                     btn.disabled = false;
