@@ -568,12 +568,21 @@
                                     </div>
                                 </div>
                                                                                                 <div id="br-count" class="br-list-meta"></div>
-                                <div id="br-list"><p class="br-empty">正在从服务器加载…</p></div>
+                                <div id="br-list"><div class="ziyit-loader"><div class="loader-title"><img src="../../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div><div class="loader-bar"><div class="loader-fill"></div></div></div></div>
                                 <style>
                                 .br-list-meta{font-size:13px;color:#777;margin:0 0 8px}
                                 #br-list .br-empty{color:#888;font-size:13px}
+                                #br-list .ziyit-loader{text-align:center;padding:24px 20px}
+                                #br-list .ziyit-loader .loader-title{display:flex;align-items:center;justify-content:center;gap:8px;font-size:20px;font-weight:700;letter-spacing:6px;color:var(--ziyit-primary,#0078d4);margin-bottom:12px}
+                                #br-list .ziyit-loader .loader-logo{width:22px;height:22px;object-fit:contain}
+                                #br-list .ziyit-loader .loader-bar{width:300px;max-width:80%;height:4px;border-radius:2px;background:var(--ziyit-primary-light,#e8f3fb);overflow:hidden;position:relative;margin:0 auto}
+                                #br-list .ziyit-loader .loader-fill{position:absolute;top:0;left:0;width:35%;height:100%;border-radius:2px;background:linear-gradient(90deg,var(--ziyit-primary,#0078d4),var(--ziyit-primary-dark,#005a9e));animation:brLoaderSlide 2s infinite}
+                                @keyframes brLoaderSlide{0%{transform:translateX(-100%) scaleX(1);animation-timing-function:cubic-bezier(0.33,0.45,0.67,0)}45%{transform:translateX(260%) scaleX(1.524)}50%{transform:translateX(260%) scaleX(1);animation-timing-function:cubic-bezier(0.33,0.45,0.67,0)}95%{transform:translateX(-100%) scaleX(1.524)}100%{transform:translateX(-100%) scaleX(1)}}
                                 #br-list .br-badge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#fff4d6;color:#8a6d00;font-size:12px}
                                 #br-list .br-rew{background:#fff0dc;color:#a35200}
+                                #br-list .br-archive{margin-top:28px;border-top:2px dashed #e3bcbc;padding-top:4px}
+                                #br-list .br-archive>h2 span{color:#b04141}
+                                #br-list .br-archive ul>li{color:#8a5a5a}
                                 #br-list ul ul{margin:4px 0 0;padding-left:22px;list-style:circle}
                                 </style>
                                 <script>
@@ -638,8 +647,14 @@
                                     function render(items) {
                                         // 只列纯整数层级与特殊条目；原始 ID 带额外 - 的（小数/后缀）不显示
                                         items = items.filter(function (it) { var p = parseId(it); return p.dec === null && p.suffix === null; });
-                                        if (!items.length) { listEl.innerHTML = '<p class="br-empty">暂无收录条目。</p>'; if (countEl) countEl.textContent = ''; return; }
-                                        if (countEl) countEl.textContent = '共 ' + items.length + ' 条（数据来自服务器，实时更新）';
+                                        // 登录后后端还会返回「仅自己可见」的各状态稿件：已收录的进主列表，其余（被打回/已下架/审核中）单独成区
+                                        var archived = [];
+                                        items = items.filter(function (it) {
+                                            if (it.status === 'approved' && !it.rewritten) return true;
+                                            archived.push(it); return false;
+                                        });
+                                        if (!items.length && !archived.length) { listEl.innerHTML = '<p class="br-empty">暂无收录条目。</p>'; if (countEl) countEl.textContent = ''; return; }
+                                        if (countEl) countEl.textContent = '共 ' + items.length + ' 条（数据来自服务器，实时更新）' + (archived.length ? '，另 ' + archived.length + ' 条未收录' : '');
                                         var map = {}, order = [];
                                         items.forEach(function (it) {
                                             var info = parseId(it);
@@ -652,13 +667,20 @@
                                             if (b === 'special') return -1;
                                             return Number(a) - Number(b);
                                         });
-                                        listEl.innerHTML = order.map(function (key) {
+                                        var html = order.map(function (key) {
                                             var a = anchorOf(key);
                                             return '<div class="style-block">'
                                                 + '<h2 id="toc-' + esc(a) + '"><span>' + esc(titleOf(key)) + '<a name="' + esc(a) + '"></a></span></h2>'
                                                 + '<ul>' + blockItems(map[key]).join('') + '</ul>'
                                                 + '</div>';
                                         }).join('');
+                                        if (archived.length) {
+                                            html += '<div class="style-block br-archive">'
+                                                + '<h2><span>未收录 / 已下架</span></h2>'
+                                                + '<ul>' + archived.map(function (it) { return li(it); }).join('') + '</ul>'
+                                                + '</div>';
+                                        }
+                                        listEl.innerHTML = html;
                                     }
                                     function childSortVal(it) {
                                         var p = parseId(it);

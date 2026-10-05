@@ -3,6 +3,14 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.40 — 2026-10-05
+### 变更
+- **四个分类列表页：加载占位由纯文本换成站点统一加载器**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)）：`#br-list` 初始占位由 `<p class="br-empty">正在从服务器加载…</p>` 换成站点统一的 `.ziyit-loader`（`loader-title` + logo + `loader-bar` / `loader-fill`），与本站在 [developers/index.html](file:///f:/Code/html/ziyit/developers/index.html) 等处使用的加载动画一致。四页未引入 `ziyit-theme.css`，故在页内联 `<style>` 自备 `#br-list .ziyit-loader …` 系列样式与 `@keyframes brLoaderSlide`（颜色取 CSS 变量并带兜底色）。
+- **四个分类列表页：登录后返回的「仅自己可见」稿件单独成区**：后端 [\_collect_docs()](file:///f:/Code/Python/ZIYIT主页后端业务代码/backrooms_levels.py#L700-L717) 对匿名只返回 `approved` + `rewritten`，但**作者额外看到本人各状态稿件、管理员看到全部**，这些条目此前与公开条目混排、仅靠小徽章区分。现 `render()` 先按 `it.status === 'approved' && !it.rewritten` 把已收录条目放进主列表并照常分组，其余状态（被打回 / 已下架 / 审核中，如 `Level €`、`Level 滚木`）统一收进列表末尾单独一区「**未收录 / 已下架**」，每条仍保留自身状态徽章；顶部计数变为「共 N 条（数据来自服务器，实时更新），另 M 条未收录」。
+- 列表请求口径不变：未登录不带票据，登录后由 `ZIYIT_API.request()` 自动附加 `Authorization: Bearer`（沿用既有逻辑，未改）。
+### 说明
+- 只改前端四个 `index.html` 与本文件；**后端一行未改**；四页内联脚本 `new Function` 校验通过。
+
 ## v1.39 — 2026-10-04
 ### 变更
 - **四个分类列表页：不再列出「原始 ID 带额外 `-`」的小数/后缀条目**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)）：按用户要求，ID 除类型前缀外还带额外 `-` 的条目（子层级 / 小数 / 后缀，如 `Level-0-1`、`Level-909-0`、`Level-11latest`、`Phenomenon-26-0004379i`）**从列表中移除、不再显示**。列表只保留**纯整数编号**（`Level 0` … `Level 999`）与**无数字的特殊条目**（`Level Room-1`、`Level NO-DATA` 等，类型前缀后的 `-` 仍显示为空格）。
