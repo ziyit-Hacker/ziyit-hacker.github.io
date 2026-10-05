@@ -1191,6 +1191,50 @@
         return request('/rc/tokens/mine/' + encodeURIComponent(tokenId), { method: 'DELETE' });
     }
 
+    // ---- RCU 更新管理（管理员后台，Lv.3+）----
+    function rcuList() {
+        return request('/updates');
+    }
+    function rcuRevokedList() {
+        return request('/updates/revoked');
+    }
+    // 发布 RCU 包：multipart/form-data。切勿手写 Content-Type，交给浏览器带 boundary。
+    function rcuPublish(formData) {
+        return request('/updates', { method: 'POST', body: formData });
+    }
+    function rcuRevokeAdd(payload) {
+        return post('/updates/revoked', payload);
+    }
+    function rcuRevokeRemove(version) {
+        return request('/updates/revoked/' + encodeURIComponent(version), { method: 'DELETE' });
+    }
+    // 带管理员凭据下载 .7z：浏览器直开链接带不上 Authorization，只能走 fetch + blob。
+    function rcuDownload(version) {
+        var token = getToken();
+        return fetchApi('/updates/' + encodeURIComponent(version) + '/download', {
+            headers: {
+                'ngrok-skip-browser-warning': '1',
+                'Authorization': token ? 'Bearer ' + token : ''
+            }
+        }).then(function (res) {
+            if (!res.ok) {
+                var e = new Error('下载失败 ' + res.status);
+                e.status = res.status;
+                throw e;
+            }
+            return res.blob();
+        }).then(function (blob) {
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = version + '.7z';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        });
+    }
+
      
      
      
@@ -1949,6 +1993,12 @@
         rcSerialRevoke: rcSerialRevoke,
         rcTokensMine: rcTokensMine,
         rcTokenRevoke: rcTokenRevoke,
+        rcuList: rcuList,
+        rcuRevokedList: rcuRevokedList,
+        rcuPublish: rcuPublish,
+        rcuRevokeAdd: rcuRevokeAdd,
+        rcuRevokeRemove: rcuRevokeRemove,
+        rcuDownload: rcuDownload,
         pentestApply: pentestApply,
         pentestMy: pentestMy,
         pentestUpdateMyTask: pentestUpdateMyTask,

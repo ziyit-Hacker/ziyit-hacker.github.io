@@ -164,6 +164,20 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('rc-bug-filter').addEventListener('change', renderRcBugs);
 
      
+    document.querySelector('[data-section="rcu-management"]').addEventListener('click', function () {
+        switchSection('rcu-management');
+        updateSystemInfo('切换到 RCU 更新管理');
+        loadRcuPanel();
+    });
+    document.getElementById('refresh-rcu').addEventListener('click', function () {
+        loadRcuPanel();
+        updateSystemInfo('RCU 列表已刷新');
+    });
+    document.getElementById('rcu-search').addEventListener('input', renderRcuUpdates);
+    document.getElementById('rcu-publish-btn').addEventListener('click', publishRcuUpdate);
+    document.getElementById('rcu-revoke-add-btn').addEventListener('click', addRcuRevoked);
+
+     
     document.querySelector('[data-section="afdian-management"]').addEventListener('click', function () {
         switchSection('afdian-management');
         updateSystemInfo('切换到爱发电订单');
@@ -2651,6 +2665,10 @@ let keyTargetUser = null;
 let rcBugList = [];
 let rcBugStatuses = [];
 
+ 
+let rcuUpdateList = [];
+let rcuRevokedList = [];
+
 function rcUserKeys(u) {
     return Array.isArray(u.keys) ? u.keys
         : (Array.isArray(u.rcKeys) ? u.rcKeys
@@ -2883,6 +2901,203 @@ function saveRcBugStatus(bug, opts) {
 }
 
  
+ 
+
+function rcuFmtSize(n) {
+    n = Number(n) || 0;
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    return (n / 1024 / 1024).toFixed(2) + ' MB';
+}
+
+function loadRcuPanel() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可访问 RCU 更新管理'); return Promise.resolve(); }
+    document.getElementById('rcu-list').innerHTML = loadingHTML();
+    document.getElementById('rcu-revoked-list').innerHTML = loadingHTML();
+    return Promise.all([
+        ZIYIT_API.rcuList(),
+        ZIYIT_API.rcuRevokedList()
+    ]).then(function (res) {
+        rcuUpdateList = (res[0] && res[0].updates) || [];
+        rcuRevokedList = (res[1] && res[1].revoked) || [];
+        renderRcuUpdates();
+        renderRcuRevoked();
+    }).catch(function (err) {
+        const msg = '<p style="padding: 20px; color: var(--ziyit-danger);">加载失败: ' + escAdmin(err.message || err) + '</p>';
+        document.getElementById('rcu-list').innerHTML = msg;
+        document.getElementById('rcu-revoked-list').innerHTML = msg;
+    });
+}
+
+function renderRcuUpdates() {
+    const search = (document.getElementById('rcu-search').value || '').trim().toLowerCase();
+    const area = document.getElementById('rcu-list');
+    const revokedSet = {};
+    rcuRevokedList.forEach(function (r) { revokedSet[String(r.version)] = true; });
+    const list = rcuUpdateList.filter(function (u) {
+        if (!search) return true;
+        return String(u.version || '').toLowerCase().indexOf(search) !== -1
+            || String(u.channel || '').toLowerCase().indexOf(search) !== -1;
+    });
+    if (!list.length) {
+        area.innerHTML = '<p style="padding: 20px; color: var(--ziyit-text-secondary);">暂无已发布更新包</p>';
+        return;
+    }
+    let html = '';
+    list.forEach(function (u) {
+        const ver = String(u.version || '');
+        const revoked = revokedSet[ver] ? ' <span style="color:var(--ziyit-danger);">已撤销</span>' : '';
+        const tags = escAdmin(u.channel || 'stable')
+            + (u.isLts ? ' · LTS' : '')
+            + (u.isDelta ? ' · 增量(基线 ' + escAdmin(u.baseVersion || '?') + ')' : '');
+        html += '<div class="user-item wide-item"><div class="user-details">'
+            + '<div class="user-name">' + escAdmin(ver)
+            + ' <span style="font-size:11px;color:var(--ziyit-text-secondary);">' + tags + '</span>' + revoked + '</div>'
+            + '<div class="user-email">大小: ' + escAdmin(rcuFmtSize(u.size)) + ' ｜ 发布: ' + escAdmin(u.publishedAt || '-') + '</div>'
+            + '<div class="user-email" style="font-family: monospace;">sha256: ' + escAdmin(u.sha256 || '-') + '</div>'
+            + '</div><div class="user-actions">'
+            + '<button class="action-btn edit" data-rcu-download="' + escAdmin(ver) + '">下载</button>'
+            + '<button class="action-btn danger" data-rcu-revoke="' + escAdmin(ver) + '">撤销</button>'
+            + '</div></div>';
+    });
+    area.innerHTML = html;
+    area.querySelectorAll('[data-rcu-download]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const ver = btn.getAttribute('data-rcu-download');
+            btn.disabled = true;
+            ZIYIT_API.rcuDownload(ver).catch(function (err) {
+                alert('下载失败: ' + (err.message || err));
+            }).then(function () { btn.disabled = false; });
+        });
+    });
+    area.querySelectorAll('[data-rcu-revoke]').forEach(function (btn) {
+        btn.addEventListener('click', function () { revokeRcuVersion(btn.getAttribute('data-rcu-revoke')); });
+    });
+}
+
+function renderRcuRevoked() {
+    const area = document.getElementById('rcu-revoked-list');
+    if (!rcuRevokedList.length) {
+        area.innerHTML = '<p style="padding: 20px; color: var(--ziyit-text-secondary);">暂无撤销版本</p>';
+        return;
+    }
+    let html = '';
+    rcuRevokedList.forEach(function (r) {
+        html += '<div class="user-item wide-item"><div class="user-details">'
+            + '<div class="user-name">' + escAdmin(r.version)
+            + ' <span style="font-size:11px;color:var(--ziyit-text-secondary);">' + escAdmin(r.reason || '-') + '</span></div>'
+            + '<div class="user-email">' + escAdmin(r.message || '（无说明）')
+            + (r.minSafeVersion ? ' ｜ 最低安全版本: ' + escAdmin(r.minSafeVersion) : '') + '</div>'
+            + '<div class="user-email">撤销于: ' + escAdmin(r.revokedAt || '-')
+            + (r.revokedBy ? '（by ' + escAdmin(r.revokedBy) + '）' : '') + '</div>'
+            + '</div><div class="user-actions">'
+            + '<button class="action-btn" data-rcu-unrevoke="' + escAdmin(String(r.version)) + '">解除撤销</button>'
+            + '</div></div>';
+    });
+    area.innerHTML = html;
+    area.querySelectorAll('[data-rcu-unrevoke]').forEach(function (btn) {
+        btn.addEventListener('click', function () { removeRcuRevoked(btn.getAttribute('data-rcu-unrevoke')); });
+    });
+}
+
+function rcuSha256Hex(file) {
+    return file.arrayBuffer().then(function (buf) {
+        return crypto.subtle.digest('SHA-256', buf);
+    }).then(function (digest) {
+        return Array.prototype.map.call(new Uint8Array(digest), function (b) {
+            return ('00' + b.toString(16)).slice(-2);
+        }).join('').toUpperCase();
+    });
+}
+
+function publishRcuUpdate() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可发布 RCU'); return; }
+    const statusEl = document.getElementById('rcu-publish-status');
+    const fileEl = document.getElementById('rcu-file');
+    const file = fileEl.files && fileEl.files[0];
+    const version = (document.getElementById('rcu-version').value || '').trim();
+    const channel = document.getElementById('rcu-channel').value || 'stable';
+    const baseVersion = (document.getElementById('rcu-base-version').value || '').trim();
+    const isLts = document.getElementById('rcu-is-lts').checked;
+    const isDelta = document.getElementById('rcu-is-delta').checked;
+    const allowDowngrade = document.getElementById('rcu-allow-downgrade').checked;
+    const sha = (document.getElementById('rcu-sha256').value || '').trim().toUpperCase();
+    if (!file) { alert('请先选择 .7z 更新包'); return; }
+    if (!version) { alert('请填写版本号'); return; }
+    if (isDelta && !baseVersion) { alert('增量包必须填写 baseVersion'); return; }
+    statusEl.textContent = sha ? '正在上传...' : '正在计算 sha256 ...';
+    const prep = sha ? Promise.resolve(sha) : rcuSha256Hex(file);
+    prep.then(function (digest) {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('version', version);
+        fd.append('channel', channel);
+        fd.append('sha256', digest);
+        if (isLts) fd.append('isLts', 'true');
+        if (isDelta) fd.append('isDelta', 'true');
+        if (baseVersion) fd.append('baseVersion', baseVersion);
+        if (allowDowngrade) fd.append('allowDowngrade', 'true');
+        statusEl.textContent = '正在上传（' + rcuFmtSize(file.size) + '）...';
+        return ZIYIT_API.rcuPublish(fd);
+    }).then(function (res) {
+        const warn = (res && res.result === 'warn_unsigned')
+            ? '（注意：包内 manifest.json 未签名，已按告警放行）' : '';
+        statusEl.textContent = ((res && res.message) || '已发布') + warn;
+        document.getElementById('rcu-version').value = '';
+        document.getElementById('rcu-base-version').value = '';
+        document.getElementById('rcu-sha256').value = '';
+        fileEl.value = '';
+        loadRcuPanel();
+    }).catch(function (err) {
+        statusEl.textContent = '发布失败: ' + (err.message || err);
+    });
+}
+
+function revokeRcuVersion(version) {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可撤销 RCU'); return; }
+    const reason = prompt('撤销 ' + version + ' 的原因（可留空，默认 manual）：', 'manual');
+    if (reason === null) return;
+    const message = prompt('给客户端展示的提示信息（可留空）：', '');
+    if (message === null) return;
+    ZIYIT_API.rcuRevokeAdd({ version: version, reason: reason, message: message }).then(function (res) {
+        alert((res && res.message) || '已撤销');
+        loadRcuPanel();
+    }).catch(function (err) {
+        alert('撤销失败: ' + (err.message || err));
+    });
+}
+
+function addRcuRevoked() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可维护撤销列表'); return; }
+    const version = (document.getElementById('rcu-revoke-version').value || '').trim();
+    const reason = (document.getElementById('rcu-revoke-reason').value || '').trim();
+    const message = (document.getElementById('rcu-revoke-message').value || '').trim();
+    const minSafeVersion = (document.getElementById('rcu-revoke-min').value || '').trim();
+    if (!version) { alert('请填写要撤销的版本号'); return; }
+    ZIYIT_API.rcuRevokeAdd({
+        version: version, reason: reason, message: message, minSafeVersion: minSafeVersion
+    }).then(function (res) {
+        alert((res && res.message) || '已加入撤销列表');
+        ['rcu-revoke-version', 'rcu-revoke-reason', 'rcu-revoke-message', 'rcu-revoke-min'].forEach(function (id) {
+            document.getElementById(id).value = '';
+        });
+        loadRcuPanel();
+    }).catch(function (err) {
+        alert('操作失败: ' + (err.message || err));
+    });
+}
+
+function removeRcuRevoked(version) {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可维护撤销列表'); return; }
+    if (!confirm('确定解除对 ' + version + ' 的撤销？')) return;
+    ZIYIT_API.rcuRevokeRemove(version).then(function (res) {
+        alert((res && res.message) || '已解除撤销');
+        loadRcuPanel();
+    }).catch(function (err) {
+        alert('操作失败: ' + (err.message || err));
+    });
+}
+
  
  
  

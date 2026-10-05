@@ -99,6 +99,9 @@
                     <li class="menu-item" data-section="rc-bug-management" data-level="3">
  RC BUG 管理
                     </li>
+                    <li class="menu-item" data-section="rcu-management" data-level="3">
+ RCU 更新管理
+                    </li>
                     <li class="menu-item" data-section="afdian-management" data-level="3">
  爱发电订单
                     </li>
@@ -584,6 +587,55 @@
                         <button class="user-btn" id="refresh-rc-bugs">刷新列表</button>
                     </div>
                     <div class="user-list" id="rc-bug-list"></div>
+                </section>
+
+                <section id="rcu-management" class="content-section">
+                    <div class="section-header">
+                        <h2>RCU 更新管理</h2>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button class="user-btn" id="refresh-rcu">刷新列表</button>
+                        </div>
+                    </div>
+                    <p style="padding: 4px 2px 10px; color: var(--ziyit-text-secondary); font-size: 13px; line-height: 1.8;">
+                        发布 / 查看 RC 在线更新包（Lv.3+）。包内 manifest.json.version 必须与填写的版本号一致；
+                        sha256 留空会由浏览器按所选文件自动计算。撤销后 RC 客户端不会再安装该版本。
+                    </p>
+
+                    <div style="background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+                        <h3 style="margin: 0 0 10px; font-size: 15px;">发布更新包</h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                            <input type="file" id="rcu-file" accept=".7z" style="font-size: 12px; max-width: 220px;">
+                            <input type="text" id="rcu-version" placeholder="版本号 如 26.9" style="padding:6px 10px;border-radius:6px;border:1px solid var(--ziyit-border);font-size:12px;width:140px;">
+                            <select id="rcu-channel" style="padding:6px 10px;border-radius:6px;border:1px solid var(--ziyit-border);font-size:12px;">
+                                <option value="stable">stable</option>
+                                <option value="snapshot">snapshot</option>
+                            </select>
+                            <input type="text" id="rcu-base-version" placeholder="增量基线 baseVersion（可选）" style="padding:6px 10px;border-radius:6px;border:1px solid var(--ziyit-border);font-size:12px;width:200px;">
+                            <input type="text" id="rcu-sha256" placeholder="sha256（留空自动计算）" style="padding:6px 10px;border-radius:6px;border:1px solid var(--ziyit-border);font-size:12px;width:220px;">
+                            <label style="font-size:12px;color:var(--ziyit-text-secondary);"><input type="checkbox" id="rcu-is-lts"> LTS</label>
+                            <label style="font-size:12px;color:var(--ziyit-text-secondary);"><input type="checkbox" id="rcu-is-delta"> 增量包</label>
+                            <label style="font-size:12px;color:var(--ziyit-text-secondary);"><input type="checkbox" id="rcu-allow-downgrade"> 允许降级（Lv.4）</label>
+                            <button class="user-btn" id="rcu-publish-btn">发布</button>
+                        </div>
+                        <div id="rcu-publish-status" style="margin-top: 8px; font-size: 12px; color: var(--ziyit-text-secondary);"></div>
+                    </div>
+
+                    <div class="user-controls">
+                        <input type="text" class="user-search" id="rcu-search" placeholder="搜索版本 / 渠道...">
+                    </div>
+                    <div class="user-list" id="rcu-list"><div class="skeleton-list"><div class="skeleton-row"><div class="sk-block sk-line" style="width:80%"></div></div></div></div>
+
+                    <div class="section-header" style="margin-top: 20px;">
+                        <h2 style="font-size: 16px;">已撤销版本</h2>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px;">
+                        <input type="text" id="rcu-revoke-version" placeholder="要撤销的版本号" style="padding:6px 10px;border-radius:6px;border:1px solid var(--ziyit-border);font-size:12px;width:150px;">
+                        <input type="text" id="rcu-revoke-reason" placeholder="原因 如 security（可选）" style="padding:6px 10px;border-radius:6px;border:1px solid var(--ziyit-border);font-size:12px;width:180px;">
+                        <input type="text" id="rcu-revoke-message" placeholder="提示信息（可选）" style="padding:6px 10px;border-radius:6px;border:1px solid var(--ziyit-border);font-size:12px;width:180px;">
+                        <input type="text" id="rcu-revoke-min" placeholder="minSafeVersion（可选）" style="padding:6px 10px;border-radius:6px;border:1px solid var(--ziyit-border);font-size:12px;width:180px;">
+                        <button class="user-btn danger" id="rcu-revoke-add-btn">加入撤销</button>
+                    </div>
+                    <div class="user-list" id="rcu-revoked-list"></div>
                 </section>
 
                 
