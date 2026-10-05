@@ -682,7 +682,8 @@
                                     function idOf(it) { return it.id || it.levelId || it.docId || ''; }
                                     function parseId(it) {
                                         var id = String(idOf(it)).replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFEFF\u00AD]/g, '').replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-');
-                                        var bare = id.replace(/^\s*(Level|Entity|Object|Phenomenon)\s*-\s*/i, '');
+                                        // 前缀分隔符宽容：Level 之后的任意分隔（空格/全角空格/下划线/冒号/破折号等）都算前缀分隔，避免变体 ID 剥离失败
+                                        var bare = id.replace(/^\s*(Level|Entity|Object|Phenomenon)[\s\-_:：＿]+/i, '');
                                         var m = bare.match(/^(\d+)([\s\S]*)$/);
                                         if (!m) return { id: id, base: null, isBase: false, dec: null, suffix: null };
                                         var base = parseInt(m[1], 10), rest = m[2];
@@ -695,7 +696,7 @@
                                     }
                                     function displayId(it) {
                                         var id = String(idOf(it)).replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFEFF\u00AD]/g, '').replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-');
-                                        var m = id.match(/^\s*(Level|Entity|Object|Phenomenon)\s*-\s*([\s\S]*)$/i);
+                                        var m = id.match(/^\s*(Level|Entity|Object|Phenomenon)[\s\-_:：＿]+([\s\S]*)$/i);
                                         if (!m) return id;
                                         var p = parseId(it), rest;
                                         if (p.base === null) rest = m[2];
@@ -973,11 +974,8 @@
                 }
             });
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', merge);
-            } else {
-                merge();
-            }
+            // 遗留 merge() 已停用：v1.34 起列表已由上方脚本整体渲染，此函数会再次请求同一接口，
+            // 把被过滤掉的（小数/后缀等）条目按原始 ID 原样追加进「特殊层级」，造成重复且带 `-`。
 
              
             (function () {

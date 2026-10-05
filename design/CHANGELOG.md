@@ -3,6 +3,21 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.46 — 2026-10-05
+### 变更
+- **层级列表页：停用遗留的 `merge()` 注入脚本**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)）：页面尾部第二个 `<script>` 中的 `merge()` 会再次请求同一接口 `/backrooms/levels`，对每个「非纯数字」条目按**原始 ID** 追加 `<li><a class="dyn-level">` 到「特殊层级」区块的 `<ul>`。而主列表已按 v1.39 规则过滤掉 `Level-909-0`、`Level-11latest` 这类小数/后缀条目，`findExisting()` 自然找不到对应锚点 → 于是又插入一条原样带 `-` 的条目。v1.41–v1.45 的过滤与去重都作用在 `render()` 的 `items` 上，管不到这段渲染后直接操作 DOM 的注入，所以此前修复对它无效。
+### 说明
+- 停用方式：移除 `merge()` 的调用（`DOMContentLoaded` / 立即调用两处）。v1.34 起列表已由上方脚本整体渲染，`merge()` 属遗留冗余；其余三个分类页本就没有该脚本。
+- 只改前端一个 `index.html` 与本文件；**后端一行未改**；四页内联脚本 `new Function` 校验通过。
+
+## v1.45 — 2026-10-05
+### 变更
+- **四个分类列表页：前缀分隔符宽容归一化**（normal-levels / entities / objects / phenomena）：`parseId()` 剥离前缀的正则由只认 ASCII `-` 的 `^\s*(Level|Entity|Object|Phenomenon)\s*-\s*` 改为 `[\s\-_:：＿]+`，`displayId()` 的前缀匹配同步放宽。此前若登录态返回的本人稿件 ID 用空格/下划线等非 `-` 分隔（如 `Level 909-0`、`Level_909-0`），前缀剥离会整体失败 → 该条目 `dec`/`suffix` 均为 `null`，**绕过 v1.39「小数/后缀不显示」的过滤**混进「特殊层级」，同时 `displayId()` 因匹配失败而**原样输出带 `-` 的原始 ID**，造成与规范条目重复（重复的那份带 `-`）。
+### 说明
+- 修复后实测（当前代码逻辑）：`Level 909-0` / `Level_909-0` → **不再显示**（与 `Level-909-0` 一样被过滤）；`Level 909` 与 `Level-909`、`Level €`/`Level_€`/`Level-€` 归一后同名 → 去重；`Level-Room-1`、`Level-!` 等合法特殊名保持不变。
+- 匿名数据无回归：线上 `/backrooms/levels` 615 条 → 过滤后仍为 **568** 条、显示名 0 冲突。
+- 只改前端四个 `index.html` 与本文件；**后端一行未改**；四页内联脚本 `new Function` 校验通过。
+
 ## v1.44 — 2026-10-05
 ### 变更
 - **四个分类列表页：ID 先剥离不可见字符再做解析**（normal-levels / entities / objects / phenomena）：`parseId()` 与 `displayId()` 在归一化破折号之前，先剔除零宽/不可见字符（U+200B–U+200F、U+202A–U+202E、U+2060–U+2064、U+206A–U+206F、U+FEFF、U+00AD）。此前若登录态返回的稿件 ID 形如 `Level\u200B-909-0`，前缀正则匹配失败 → 既躲过解析（`dec`/`suffix` 均为 `null`）混进「特殊层级」，又让 `displayId()` 回退成原始 ID、把破折号原样显示出来，于是同一条文档在主列表与「未收录 / 已下架」各出现一次（重复的那份带 `-`）。
