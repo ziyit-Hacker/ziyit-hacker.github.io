@@ -620,9 +620,8 @@
                                         var badge = '';
                                         if (it.rewritten) badge = '<span class="br-badge br-rew">已重写·下架</span>';
                                         else if (it.status && it.status !== 'approved') badge = '<span class="br-badge">' + esc(it.statusText || it.status) + '</span>';
-                                        var link;
-                                        if (it.status === 'approved' && !it.rewritten) link = '<a href="' + esc(docUrl(id)) + '" target="_blank" rel="noopener">' + esc(label) + '</a>';
-                                        else link = '<a href="javascript:void(0)" data-open="' + esc(id) + '">' + esc(label) + '</a>';
+                                        // 统一用 blob 打开（backroomsTypeOpen）：直链后端 URL 会带来跨域与文档渲染问题
+                                        var link = '<a href="javascript:void(0)" data-open="' + esc(id) + '">' + esc(label) + '</a>';
                                         return '<li>' + link + ' - ' + tail + badge + (childrenHtml || '') + '</li>';
                                     }
                                     function titleOf(key) {

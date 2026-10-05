@@ -3,6 +3,12 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.41 — 2026-10-05
+### 变更
+- **四个分类列表页：所有条目统一改用 blob 方式打开文档**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)）：此前 `li()` 对 `approved` 条目直接 `href` 到后端文档 URL（`base + /backrooms/{type}/{id}`、`target="_blank"`），**直链后端会引发跨域与文档渲染问题**。现改为**所有条目一律走 `ZIYIT_API.backroomsTypeOpen(type, id)`** —— 带 `ngrok-skip-browser-warning` / `Authorization` 头取回 HTML，再以 blob URL 新窗口打开，与本页 `?open_{type}=` 直达及非公开条目的打开方式完全统一。
+### 说明
+- 只改前端四个 `index.html` 与本文件；**后端一行未改**；四页内联脚本 `new Function` 校验通过。
+
 ## v1.40 — 2026-10-05
 ### 变更
 - **四个分类列表页：加载占位由纯文本换成站点统一加载器**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)）：`#br-list` 初始占位由 `<p class="br-empty">正在从服务器加载…</p>` 换成站点统一的 `.ziyit-loader`（`loader-title` + logo + `loader-bar` / `loader-fill`），与本站在 [developers/index.html](file:///f:/Code/html/ziyit/developers/index.html) 等处使用的加载动画一致。四页未引入 `ziyit-theme.css`，故在页内联 `<style>` 自备 `#br-list .ziyit-loader …` 系列样式与 `@keyframes brLoaderSlide`（颜色取 CSS 变量并带兜底色）。
