@@ -596,7 +596,7 @@
                                     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
                                     function idOf(it) { return it.id || it.levelId || it.docId || ''; }
                                     function parseId(it) {
-                                        var id = String(idOf(it)).replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-');
+                                        var id = String(idOf(it)).replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFEFF\u00AD]/g, '').replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-');
                                         var bare = id.replace(/^\s*(Level|Entity|Object|Phenomenon)\s*-\s*/i, '');
                                         var m = bare.match(/^(\d+)([\s\S]*)$/);
                                         if (!m) return { id: id, base: null, isBase: false, dec: null, suffix: null };
@@ -609,7 +609,7 @@
                                         return { id: id, base: base, isBase: false, dec: null, suffix: rest };
                                     }
                                     function displayId(it) {
-                                        var id = String(idOf(it)).replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-');
+                                        var id = String(idOf(it)).replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFEFF\u00AD]/g, '').replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-');
                                         var m = id.match(/^\s*(Level|Entity|Object|Phenomenon)\s*-\s*([\s\S]*)$/i);
                                         if (!m) return id;
                                         var p = parseId(it), rest;
@@ -646,10 +646,10 @@
                                     function render(items) {
                                         // 只列纯整数层级与特殊条目；原始 ID 带额外 - 的（小数/后缀）不显示
                                         items = items.filter(function (it) { var p = parseId(it); return p.dec === null && p.suffix === null; });
-                                        // 同一 ID 可能返回多条（状态不同，登录后会同时出现公开与自己可见的两份）：按 ID 去重、公开状态优先，保证条目唯一
+                                        // 同一文档可能返回多条（状态不同，或 ID 带隐形字符/变体破折号）：按「归一化显示名」去重、公开状态优先，保证条目唯一
                                         var seenIdx = {}, uniq = [];
                                         items.forEach(function (it) {
-                                            var k = String(idOf(it));
+                                            var k = displayId(it);
                                             if (!(k in seenIdx)) { seenIdx[k] = uniq.length; uniq.push(it); return; }
                                             var cur = uniq[seenIdx[k]];
                                             if (cur.status !== 'approved' && it.status === 'approved') uniq[seenIdx[k]] = it;
