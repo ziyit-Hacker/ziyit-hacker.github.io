@@ -2118,6 +2118,23 @@ with open('ModConfig.json', 'w', encoding='utf-8') as f:
 json.dump(config, f, ensure_ascii=False, indent=2)
 ```
 
+### 13.5 `rely` 目录（不加密资源）
+
+DLC（`License = "ZIYIT STUDIO"`）打包时会对除 `ModConfig.json` 外的所有文件逐个 AES 加密（加 `.rce` 后缀）。若扩展包需要携带**体积较大的第三方依赖**（运行时、浏览器内核、模型文件等），请把它们放进源码根目录下名为 `rely` 的目录：
+
+```
+MyDlc/
+├── ModConfig.json
+├── main.py
+└── rely/            # 该目录原样打包，不加密
+    └── runtime.zip
+```
+
+- 规则：`rely` 目录下的文件**不加密**，原样打进 `.rcm`，加载时也不会被解密处理。
+- 适用范围：仅识别**源码根目录**下的 `rely`；其他层级同名的目录不生效。
+- 原因：这类依赖多为公开二进制，加密只会带来无谓的内存占用与耗时。
+- 代码内读取路径：`os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rely', ...)`。
+
 ---
 
 ## 14. MOD 目录结构
@@ -3119,7 +3136,7 @@ self.count_label.config(text=str(len(self.app.all_process_data)))
 
 CoreToolkit 是一个由 ZIYIT STUDIO 官方发布的**前置 DLC**（`License = "ZIYIT STUDIO"`），它提供了一系列通用的工具函数和 UI 辅助，旨在简化其他 MOD/DLC 的开发，避免重复造轮子。任何 MOD 都可以通过声明依赖关系来使用 CoreToolkit 提供的接口。
 
-**当前版本**：1.0.1
+**当前版本**：1.3.0
 **最低主程序版本**：26.7
 
 ---
@@ -3146,7 +3163,7 @@ CoreToolkit 包含三个核心模块：
    在 `Dependencies` 数组中添加 `"CoreToolkit"`。
 
 2. **声明导入白名单**
-   在 `import` 数组中添加 `"CoreToolkit"`（或具体子模块，如 `"CoreToolkit.mixin"`）。
+   在 `import` 数组中添加 `"CoreToolkit"`。
 
 3. **安装前置 DLC**
    向官方 `ziyitstudio@qq.com` 申请获得该 DLC。
@@ -3174,38 +3191,20 @@ CoreToolkit 包含三个核心模块：
 
 ### G.3 核心 API 参考
 
-所有 API 均位于 `CoreToolkit` 包下，你可以通过以下方式导入：
+所有公开 API 均由 `CoreToolkit` 包入口统一导出（即 `mixin.py`、`utils.py` 中的全部公开函数）。**请使用 `import CoreToolkit` 后以属性方式调用**：DLC 以加密包形式加载，其临时解包目录在加载完成后即被清理，只有 `CoreToolkit` 模块本身常驻 `sys.modules`，因此属性调用是最稳妥、也是唯一推荐的方式。
 
 ```python
-from CoreToolkit.mixin import (
-    show_info_dialog,
-    get_selected_process_info,
-    list_processes,
-    list_threads,
-    list_handles,
-    list_services,
-    list_drivers,
-    control_service,
-    reg_read,
-    reg_write,
-    reg_delete_value,
-    reg_enum_keys,
-    reg_enum_values,
-    query_wmi,
-    get_system_info,
-    register_setting,
-    unregister_setting,
-    run_in_thread,
-    read_config,
-    write_config,
-    format_process_name,
-)
-from CoreToolkit.utils import SystemInfo, format_bytes, safe_selected_pids
+import CoreToolkit
+
+CoreToolkit.show_info_dialog(app, '提示', 'core.msg.done')
+CoreToolkit.run_in_thread(worker)
+pids = CoreToolkit.safe_selected_pids(app)
+size = CoreToolkit.format_bytes(1024 * 1024)
 ```
 
 ---
 
-#### G.3.1 mixin 模块 – 基础 UI 与辅助函数
+#### G.3.1 基础 UI 与辅助函数
 
 `mixin.py` 提供了最常用的通用函数，推荐优先使用。
 
@@ -3300,7 +3299,7 @@ from CoreToolkit.utils import SystemInfo, format_bytes, safe_selected_pids
 
 ---
 
-#### G.3.2 mixin 模块 – 进程与系统枚举 API（新增）
+#### G.3.2 进程与系统枚举 API
 
 以下 API 提供了对系统底层信息的枚举能力，适用于开发者工具和高级诊断场景。
 
@@ -3435,7 +3434,7 @@ from CoreToolkit.utils import SystemInfo, format_bytes, safe_selected_pids
 
 ---
 
-#### G.3.3 mixin 模块 – 注册表操作 API（新增）
+#### G.3.3 注册表操作 API
 
 以下 API 提供了对 Windows 注册表的读写和枚举能力。
 
@@ -3512,7 +3511,7 @@ from CoreToolkit.utils import SystemInfo, format_bytes, safe_selected_pids
 
 ---
 
-#### G.3.4 mixin 模块 – MOD 设置注册 API（新增）
+#### G.3.4 MOD 设置注册 API
 
 以下 API 允许 MOD 向 CoreToolkit 注册自定义设置项，这些设置项会统一管理并可被其他 MOD 复用。
 
@@ -3555,7 +3554,7 @@ from CoreToolkit.utils import SystemInfo, format_bytes, safe_selected_pids
 
 ---
 
-#### G.3.5 utils 模块
+#### G.3.5 基础工具 API
 
 `utils.py` 提供了一些基础辅助类和函数。
 
@@ -3601,6 +3600,108 @@ from CoreToolkit.utils import SystemInfo, format_bytes, safe_selected_pids
   if pids:
       # 安全处理
   ```
+
+---
+
+#### G.3.6 窗口与进程控制 API
+
+以下 API 用于操作 Windows 窗口句柄与启动外部进程，典型场景是把外部程序窗口嵌入自建界面（例如把浏览器窗口挂进 Tk 容器）。
+
+##### `get_widget_handle(widget)`
+
+- **参数**：`widget` – 任意 Tk 控件
+- **返回值**：`int` – 控件的原生窗口句柄（HWND），失败返回 `0`
+- **说明**：获取 Tk 控件的句柄，作为嵌入时的父窗口使用。
+
+##### `is_window_valid(hwnd)`
+
+- **参数**：`hwnd` (`int`) – 窗口句柄
+- **返回值**：`bool` – 句柄是否有效
+
+##### `get_window_pid(hwnd)`
+
+- **参数**：`hwnd` (`int`)
+- **返回值**：`int` – 窗口所属进程 PID，失败返回 `0`
+
+##### `get_window_title(hwnd)` / `get_window_class(hwnd)`
+
+- **参数**：`hwnd` (`int`)
+- **返回值**：`str` – 窗口标题 / 窗口类名，失败返回空字符串
+
+##### `set_window_title(hwnd, title)`
+
+- **参数**：`hwnd` (`int`)、`title` (`str`)
+- **返回值**：`bool` – 是否成功
+
+##### `get_window_rect(hwnd)` / `get_client_size(hwnd)`
+
+- **参数**：`hwnd` (`int`)
+- **返回值**：`get_window_rect` 返回 `(left, top, right, bottom)`，失败返回 `None`；`get_client_size` 返回 `(width, height)`，失败返回 `(0, 0)`
+
+##### `get_foreground_window()`
+
+- **返回值**：`int` – 当前前台窗口句柄
+
+##### `enum_windows(visible_only=True)`
+
+- **参数**：`visible_only` (`bool`) – 是否只枚举可见窗口
+- **返回值**：`list[dict]` – 每项包含 `hwnd`、`pid`、`title`、`class_name`
+
+##### `find_windows_by_pid(pid)` / `find_windows_by_title(keyword)`
+
+- **参数**：`pid` (`int`) 或 `keyword` (`str`，不区分大小写)
+- **返回值**：`list[int]` – 匹配的窗口句柄列表
+
+##### `wait_for_window(pid, timeout=15.0, interval=0.2)`
+
+- **参数**：`pid` (`int`)、`timeout` (`float`，秒)、`interval` (`float`，轮询间隔秒)
+- **返回值**：`int` – 找到的窗口句柄，超时返回 `0`
+- **说明**：轮询等待目标进程的窗口出现，适合等外部程序启动完成后再执行嵌入。
+
+##### `embed_window(child_hwnd, parent_hwnd)` / `detach_window(child_hwnd)`
+
+- **参数**：`child_hwnd`、`parent_hwnd` (`int`)
+- **返回值**：`bool` – 是否成功
+- **说明**：`embed_window` 通过 `SetParent` 把子窗口嵌入父窗口；`detach_window` 把子窗口重新挂回桌面。
+
+##### `move_window(hwnd, x, y, width, height)` / `show_window(hwnd, visible=True)`
+
+- **参数**：`hwnd` (`int`)、`x`/`y`/`width`/`height` (`int`)、`visible` (`bool`)
+- **返回值**：`bool` – 是否成功
+- **说明**：移动/缩放窗口，以及显示或隐藏窗口。
+
+##### `set_window_borderless(hwnd)`
+
+- **参数**：`hwnd` (`int`)
+- **返回值**：`bool` – 是否成功
+- **说明**：去掉标题栏与可调整边框并附加 `WS_CHILD` 样式，让嵌入后的效果更自然。
+
+##### `spawn_process(command, cwd=None, env=None, hidden=False)`
+
+- **参数**：`command` (`list` 或 `str`)、`cwd` (`str`)、`env` (`dict`)、`hidden` (`bool`)
+- **返回值**：`subprocess.Popen` 对象，失败返回 `None`
+- **说明**：启动外部进程；`hidden=True` 时不显示控制台窗口。
+
+**示例：把外部程序窗口嵌入 Tk 容器**
+
+```python
+import tkinter as tk
+import CoreToolkit
+
+def launch_and_embed(app, exe_path):
+    holder = tk.Frame(app.root, width=800, height=600)
+    holder.pack(fill='both', expand=True)
+    app.root.update_idletasks()
+    process = CoreToolkit.spawn_process([exe_path])
+    if process is None:
+        return
+    hwnd = CoreToolkit.wait_for_window(process.pid, 20.0)
+    if not hwnd:
+        return
+    CoreToolkit.set_window_borderless(hwnd)
+    CoreToolkit.embed_window(hwnd, CoreToolkit.get_widget_handle(holder))
+    CoreToolkit.move_window(hwnd, 0, 0, 800, 600)
+```
 
 ---
 
