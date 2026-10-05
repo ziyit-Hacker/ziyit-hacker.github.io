@@ -681,7 +681,7 @@
                                     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
                                     function idOf(it) { return it.id || it.levelId || it.docId || ''; }
                                     function parseId(it) {
-                                        var id = String(idOf(it));
+                                        var id = String(idOf(it)).replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-');
                                         var bare = id.replace(/^\s*(Level|Entity|Object|Phenomenon)\s*-\s*/i, '');
                                         var m = bare.match(/^(\d+)([\s\S]*)$/);
                                         if (!m) return { id: id, base: null, isBase: false, dec: null, suffix: null };
@@ -694,7 +694,7 @@
                                         return { id: id, base: base, isBase: false, dec: null, suffix: rest };
                                     }
                                     function displayId(it) {
-                                        var id = String(idOf(it));
+                                        var id = String(idOf(it)).replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-');
                                         var m = id.match(/^\s*(Level|Entity|Object|Phenomenon)\s*-\s*([\s\S]*)$/i);
                                         if (!m) return id;
                                         var p = parseId(it), rest;
@@ -746,6 +746,10 @@
                                             if (it.status === 'approved' && !it.rewritten) return true;
                                             archived.push(it); return false;
                                         });
+                                        // 归档区不得与主列表重复：ID 不同但显示名相同的视为同一条，主列表已有的显示名从归档区剔除（并按显示名去掉归档区自身重复）
+                                        var shownLabels = {};
+                                        items.forEach(function (it) { shownLabels[displayId(it)] = 1; });
+                                        archived = archived.filter(function (it) { var lb = displayId(it); if (shownLabels[lb]) return false; shownLabels[lb] = 1; return true; });
                                         if (!items.length && !archived.length) { listEl.innerHTML = '<p class="br-empty">暂无收录条目。</p>'; if (countEl) countEl.textContent = ''; return; }
                                         if (countEl) countEl.textContent = '共 ' + items.length + ' 条（数据来自服务器，实时更新）' + (archived.length ? '，另 ' + archived.length + ' 条未收录' : '');
                                         var map = {}, order = [];
