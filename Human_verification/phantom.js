@@ -1,5 +1,5 @@
 import { CONFIG, isMobileViewport } from "./config.js";
-import { isMethodNotAllowed, requestChallenge, requestPowChallenge, sessionInfo, submitPowStream, submitVerify, submitStreamChunk, verifyPow, videoBinary, videoChunk, videoReady, } from "./api.js";
+import { isMethodNotAllowed, requestChallenge, requestPowChallenge, sessionInfo, submitPowStream, submitVerify, submitStreamChunk, verifyPow, videoBinary, } from "./api.js";
 import { decrypt, deriveSessionKey, encrypt, generateClientKeyPair, importServerPublic, } from "./crypto.js";
 import { installAntidebug } from "./antidebug.js";
 import { PhantomRenderer } from "./renderer.js";
@@ -285,24 +285,7 @@ class WidgetSession {
             value: ""
         });
          
-        Object.defineProperty(this, "videoStream", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        Object.defineProperty(this, "mediaSource", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        Object.defineProperty(this, "sourceBuffer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
+
          
         Object.defineProperty(this, "streamEnabled", {
             enumerable: true,
@@ -337,24 +320,7 @@ class WidgetSession {
             value: 0
         });
          
-        Object.defineProperty(this, "_streamAborted", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        Object.defineProperty(this, "_pullDone", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        Object.defineProperty(this, "_markFirstChunk", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
+
          
         Object.defineProperty(this, "_sessionClosed", {
             enumerable: true,
@@ -363,18 +329,7 @@ class WidgetSession {
             value: false
         });
          
-        Object.defineProperty(this, "_appendQueue", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
-        Object.defineProperty(this, "_appending", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
+
          
          
         this.requiredMethods = [];
@@ -711,124 +666,9 @@ class WidgetSession {
      
      
      
+    // 整段标准 MP4 直下：GET /video 取原始字节 → Blob → <video>（不再走 MSE / fMP4 分包）。
+    // HTTP 错误（403/404/410 等）带 status 原样上抛，交给上层现有分支显式提示。
     async _prepareVideo(challenge) {
-        const vs = challenge && challenge.videoStream;
-        if (!vs || !vs.chunkCount) {
-            // 非分包模式（后端 VIDEO_CHUNKED=False）：整段 MP4 由 /video 以二进制直下，
-            // 前端不再解 base64、不走就绪握手、不逐包拉取。分包路径原样保留。
-            return await this._prepareVideoBinary(challenge);
-        }
-        this.videoStream = vs;
-        const mime = vs.mime || challenge.videoMime || "video/mp4";
-         
-        const type = vs.codec ? `${mime}; codecs="${vs.codec}"` : mime;
-         
-         
-        const ready = await videoReady(this.apiBase, this.challengeId, this.sessionId);
-        // v0.3.49：记下【收到 /video/ready 回包的时刻】，作为取片闸门的本地基准。
-        // 它天然晚于服务端的 video_ready_ms（服务端是在处理该请求时就记的），因此本端
-        // 由此换算出的"最早可取时刻"必然晚于服务端闸门 → 永远不会撞 409。
-        this._readyRespAt = performance.now();
-        if (!ready || ready.ready !== true) {
-            throw new Error("视频尚未就绪，请重试");
-        }
-         
-         
-        let mseOk = false;
-        try {
-            mseOk = typeof MediaSource !== "undefined" && !!MediaSource.isTypeSupported(type);
-        }
-        catch (e) {
-            mseOk = false;
-        }
-        if (!mseOk) {
-            return await this._prepareVideoFallback(mime, ready);
-        }
-        const ms = new MediaSource();
-        const url = URL.createObjectURL(ms);
-        const v = document.createElement("video");
-        v.src = url;
-        v.muted = true;
-        v.playsInline = true;
-        v.setAttribute("playsinline", "");
-        v.preload = "auto";
-         
-         
-        v.style.cssText = "position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
-        this.canvas.parentElement?.appendChild(v);
-        this.videoEl = v;
-        this.videoUrl = url;
-        this.mediaSource = ms;
-        try {
-            await new Promise((resolve, reject) => {
-                if (ms.readyState === "open")
-                    return resolve();
-                ms.addEventListener("sourceopen", () => resolve(), { once: true });
-                window.setTimeout(() => reject(new Error("MediaSource 打开超时")), 5000);
-            });
-             
-            this.sourceBuffer = ms.addSourceBuffer(type);
-        }
-        catch (e) {
-             
-            v.remove();
-            URL.revokeObjectURL(url);
-            this.videoEl = null;
-            this.videoUrl = "";
-            this.mediaSource = null;
-            this.sourceBuffer = null;
-            return await this._prepareVideoFallback(mime, ready);
-        }
-         
-         
-        this._streamAborted = false;
-        let markFirst, failFirst;
-        const firstChunk = new Promise((resolve, reject) => {
-            markFirst = resolve;
-            failFirst = reject;
-        });
-         
-        this._markFirstChunk = (err) => {
-            const fn = err ? failFirst : markFirst;
-            this._markFirstChunk = null;
-            fn?.(err);
-        };
-        firstChunk.catch(() => { });
-        this._pullDone = this._pullChunks(ready).catch((e) => {
-            this._markFirstChunk?.(e);
-            if (this._streamAborted)
-                return;
-             
-            this.status.textContent = "视频流中断，请重新验证";
-            this.onError(e);
-        });
-         
-        await Promise.race([
-            firstChunk,
-            new Promise((resolve) => window.setTimeout(resolve, 5000)),
-        ]);
-         
-        await new Promise((resolve) => {
-            if (v.readyState >= 1)
-                return resolve();
-            const done = () => resolve();
-            v.addEventListener("loadedmetadata", done, { once: true });
-            v.addEventListener("durationchange", done, { once: true });
-            v.addEventListener("error", done, { once: true });
-            window.setTimeout(done, 5000);
-        });
-         
-        await this._waitBuffered(ready);
-        await this._waitPlayable(v);
-        return v;
-    }
-     
-     
-    // 非分包模式（后端 VIDEO_CHUNKED=False）：GET /video 二进制直下整段 MP4。
-    // 与分包路径完全分流——不调 /video/ready、不调 /video/chunk、不做 MSE、不做整段
-    // 预缓冲：拿到 arrayBuffer 直接转 Blob 交给 <video>。HTTP 错误（403/404/410 等）
-    // 原样带 status 抛出，交给上层现有的 403/410 分支显式提示。
-    async _prepareVideoBinary(challenge) {
         const remote = challenge && challenge.videoUrl;
         if (!remote) {
             throw new Error("挑战缺少视频信息");
@@ -852,7 +692,6 @@ class WidgetSession {
             this.canvas.parentElement?.appendChild(v);
             this.videoEl = v;
             this.videoUrl = url;
-            this.videoStream = null;
             await new Promise((resolve, reject) => {
                 if (v.readyState >= 1)
                     return resolve();
@@ -881,205 +720,6 @@ class WidgetSession {
         return v;
     }
      
-    // v0.3.48：放行"按住验证"按钮前，最后确认一次视频【真有可播画面】。旧实现的两处等待
-    // （首包 5s、缓冲 8s）都带超时兜底，超时后照样返回 → 用户按下后对着黑屏干等首帧
-    // 到达，误以为验证坏了。这里分三种情况：
-    //   - readyState ≥ 2 且已知尺寸 → 已就绪，放行；
-    //   - 只有元数据但【确有缓冲】→ 放行（部分浏览器在 play() 前停在 readyState=1，
-    //     数据在就一定会解码，不能误判成"流没来"而弹重试）；
-    //   - 连缓冲都没有 → 再等 extraMs；仍没有则抛 VIDEO_TIMEOUT，交给上层自动重取题。
-    _waitPlayable(v, extraMs = 6000) {
-        return new Promise((resolve, reject) => {
-            const started = performance.now();
-            const hasBuffered = () => {
-                const sb = this.sourceBuffer;
-                try {
-                    return !!sb && sb.buffered.length > 0
-                        && sb.buffered.end(sb.buffered.length - 1) > 0;
-                }
-                catch (e) {
-                    return false;
-                }
-            };
-            const tick = () => {
-                if (this._streamAborted || this._sessionClosed)
-                    return resolve();
-                if ((v.readyState >= 2 && v.videoWidth) || hasBuffered())
-                    return resolve();
-                if (performance.now() - started >= extraMs) {
-                    const err = new Error("验证视频加载超时");
-                    err.status = 0;
-                    err.code = "VIDEO_TIMEOUT";
-                    return reject(err);
-                }
-                window.setTimeout(tick, 80);
-            };
-            tick();
-        });
-    }
-     
-     
-    _waitBuffered(ready) {
-        const sb = this.sourceBuffer;
-        if (!sb || this._streamAborted)
-            return Promise.resolve();
-        const totalMs = Number((ready && ready.durationMs) || (this.videoStream && this.videoStream.durationMs) || 0);
-        const chunkMs = Number(ready && ready.chunkDurationMs)
-            || (Number(ready && ready.durationMs) / Math.max(1, Number(ready && ready.chunkCount))) || 1000;
-        // v0.3.51：把开播门槛从「缓冲到 1 包」改成【整段预缓冲】。
-        // 旧版只要 1 包（1 秒）就放开按住，而视频体积远大于本链路带宽（现场实测后端入口
-        // ~110KB/s，视频需 ~840KB/s，见 _chunkGate 注释）→ 用户一按就播，缓冲恰好在
-        // 提示段（2 秒）结束处用尽 → 画面冻住；v0.3.49 起计时又只用 v.currentTime，
-        // 冻住后进度不再推进 → 永久"卡住/黑屏"。先把整段取完再放行，起播后就不可能欠载。
-        //
-        // 放行条件（任一满足即可，避免弱网下无限等）：
-        //   - 缓冲已覆盖整段（留 0.25s 余量：MSE 末尾常差最后一帧）；
-        //   - 取片循环已结束（成功=整段到手；失败时上层会显示"视频流中断"）；
-        //   - 兜底超时 15s。
-        const totalS = totalMs > 0 ? totalMs / 1000 : 0;
-        const target = totalS > 1 ? totalS - 0.25 : Math.max(0.2, chunkMs / 1000);
-        return new Promise((resolve) => {
-            const started = performance.now();
-            let done = false;
-            const finish = () => {
-                if (done)
-                    return;
-                done = true;
-                resolve();
-            };
-            const tick = () => {
-                if (done)
-                    return;
-                if (this._streamAborted)
-                    return finish();
-                let buffered = 0;
-                try {
-                    if (sb.buffered.length)
-                        buffered = sb.buffered.end(sb.buffered.length - 1);
-                }
-                catch (e) {   }
-                if (buffered >= target)
-                    return finish();
-                if (performance.now() - started >= 15000)
-                    return finish();
-                window.setTimeout(tick, 80);
-            };
-            // 取片循环 settle（成功/失败都算）即可放行：成功时缓冲必然已覆盖整段。
-            this._pullDone?.then(finish, finish);
-            tick();
-        });
-    }
-     
-     
-    _backoff(attempt, isConflict) {
-        const base = isConflict ? 300 : 200;
-        const ms = Math.min(base * Math.pow(2, Math.max(0, attempt - 1)), 2000);
-        return new Promise((resolve) => window.setTimeout(resolve, ms));
-    }
-     
-     
-     
-     
-     
-    async _prepareVideoFallback(mime, ready) {
-        this._streamAborted = false;
-        this.status.textContent = "正在下载验证题…";
-        const total = Number(ready.chunkCount || this.videoStream?.chunkCount || 0);
-        const limit = total > 0 ? total : Number.MAX_SAFE_INTEGER;
-        const parts = [];
-        const win = this._chunkWindow(ready);
-        const waitFor = this._chunkGate(ready);
-        let index = 0;
-        let retried = 0;
-        while (index < limit) {
-            if (this._streamAborted)
-                throw new Error("视频下载已中止");
-            await waitFor(index);
-             
-             
-            const batch = [];
-            for (let i = index; i < Math.min(limit, index + win); i++) {
-                batch.push(videoChunk(this.apiBase, this.challengeId, i, this.sessionId));
-            }
-            let list;
-            try {
-                list = await Promise.all(batch);
-            }
-            catch (e) {
-                 
-                 
-                if (retried < 6) {
-                    retried++;
-                    await this._backoff(retried, e && e.status === 409);
-                    continue;
-                }
-                throw e;
-            }
-            retried = 0;
-            let done = false;
-            for (const chunk of list) {
-                parts.push(this._decodeChunk(chunk.data));
-                if (chunk.final) {
-                    done = true;
-                    break;
-                }
-            }
-            index += list.length;
-            if (done)
-                break;
-        }
-        const size = parts.reduce((n, p) => n + p.length, 0);
-        if (!size)
-            throw this._playbackUnsupported("视频分包为空");
-        const bytes = new Uint8Array(size);
-        let offset = 0;
-        for (const p of parts) {
-            bytes.set(p, offset);
-            offset += p.length;
-        }
-        let url = "";
-        let v = null;
-        try {
-            const blob = new Blob([bytes], { type: mime });
-            url = URL.createObjectURL(blob);
-            v = document.createElement("video");
-            v.src = url;
-            v.muted = true;
-            v.playsInline = true;
-            v.setAttribute("playsinline", "");
-            v.preload = "auto";
-             
-            v.style.cssText = "position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
-            this.canvas.parentElement?.appendChild(v);
-            this.videoEl = v;
-            this.videoUrl = url;
-            this.mediaSource = null;
-            this.sourceBuffer = null;
-             
-            await new Promise((resolve, reject) => {
-                if (v.readyState >= 1)
-                    return resolve();
-                const done = () => resolve();
-                v.addEventListener("loadedmetadata", done, { once: true });
-                v.addEventListener("durationchange", done, { once: true });
-                v.addEventListener("error", () => reject(this._playbackUnsupported("视频无法解码")), { once: true });
-                window.setTimeout(done, 8000);
-            });
-            if (!v.videoWidth || !v.duration)
-                throw this._playbackUnsupported("视频元数据不可用");
-        }
-        catch (e) {
-            if (v)
-                v.remove();
-            if (url)
-                URL.revokeObjectURL(url);
-            this.videoEl = null;
-            this.videoUrl = "";
-            throw e.code === "PLAYBACK_UNSUPPORTED" ? e : this._playbackUnsupported(e && e.message);
-        }
-        this.status.textContent = "";
-        return v;
-    }
     _playbackUnsupported(message) {
         const err = new Error(message || "当前浏览器无法播放该视频编码");
         err.status = 0;
@@ -1088,158 +728,6 @@ class WidgetSession {
     }
      
      
-     
-     
-     
-     
-    _chunkWindow(ready) {
-        const w = Number(ready && ready.window);
-        return Number.isFinite(w) && w >= 1 ? Math.floor(w) : 1;
-    }
-     
-    _chunkGate(ready) {
-        const chunkMs = Number(ready && ready.chunkDurationMs)
-            || (Number(ready && ready.durationMs) / Math.max(1, Number(ready && ready.chunkCount))) || 1000;
-        // v0.3.51：修「预览一播完就饿死 / 冻一帧」。根因**不是**取片节奏，而是
-        // 【视频体积 ≫ 链路带宽】：现场实测后端入口只有 ~110KB/s，而视频按 1 包/秒播放、
-        // 每包 base64 后上百 KB → "边播边下"必然在中途欠载。故策略整体反转：
-        // 【尽服务端闸门允许地尽快把整段预取完】，配合 _waitBuffered 的"整段预缓冲后才
-        // 放开按住"，视频一旦起播就再也不会欠载。
-        //
-        //   - 服务端闸门仍是唯一限速：第 i 包 ≥ base + (i + win - 1)×包时长 − minPrefetch。
-        //     base 取【本端收到 /video/ready 回包的时刻】（见 _prepareVideo），它天然晚于
-        //     服务端的 video_ready_ms，故本端算出的最早时刻必然晚于服务端 → 不会撞 409，
-        //     也就不必靠 409 退避去试探（那会污染服务端的 video_gate_blocks 留证计数）。
-        //   - 【去掉】v0.3.49 的"缓冲最多领先 4 包（capMs）"上限：它的本意是"用户还没按
-        //     按钮时别把整段提走"，但那个约束对脚本毫无作用（脚本自己写客户端），却让
-        //     正常用户在小带宽链路上必然饿死 —— 是个只伤自己的限制。防抢跑靠服务端闸门。
-        const leadMs = Math.max(1, Number(ready && ready.minPrefetch) || 3) * 1000;
-        const base = Number(this._readyRespAt) || 0;
-        // 一次并发取 win 包，本地闸门必须按这批里【最后一包】的服务端最早时刻放行，
-        // 否则第 2 包会比服务端闸门早到 → 撞 409（虽然会退避重试，但白白污染留证计数）。
-        const win = Math.max(1, this._chunkWindow(ready));
-        return (idx) => new Promise((resolve) => {
-            const i = Math.max(0, Number(idx) || 0);
-            // 按本批最后一包（i + win - 1）的服务端最早时刻放行。
-            const earliest = base > 0 ? base + (i + win - 1) * chunkMs - leadMs : 0;
-            const tick = () => {
-                if (this._streamAborted)
-                    return resolve();
-                if (base <= 0 || performance.now() >= earliest)
-                    return resolve();
-                // 不加"超时兜底"：schedOk 随墙钟必然到期；会话销毁时 _streamAborted 放行。
-                window.setTimeout(tick, 60);
-            };
-            tick();
-        });
-    }
-    async _pullChunks(ready) {
-        const total = Number(ready.chunkCount || this.videoStream?.chunkCount || 0);
-        const limit = total > 0 ? total : Number.MAX_SAFE_INTEGER;
-        const win = this._chunkWindow(ready);
-        const waitFor = this._chunkGate(ready);
-        let index = 0;
-        let retried = 0;
-        let first = true;
-        const appendErrors = [];
-        while (index < limit) {
-            if (this._streamAborted)
-                return;
-            if (appendErrors.length)
-                throw appendErrors[0];
-            await waitFor(index);
-             
-             
-            const batch = [];
-            for (let i = index; i < Math.min(limit, index + win); i++) {
-                batch.push(videoChunk(this.apiBase, this.challengeId, i, this.sessionId));
-            }
-            let list;
-            try {
-                list = await Promise.all(batch);
-            }
-            catch (e) {
-                 
-                 
-                if (retried < 6) {
-                    retried++;
-                    await this._backoff(retried, e && e.status === 409);
-                    continue;
-                }
-                throw e;
-            }
-            retried = 0;
-            for (const chunk of list) {
-                if (this._streamAborted)
-                    return;
-                const appended = this._enqueueAppend(this._decodeChunk(chunk.data));
-                appended.catch((e) => appendErrors.push(e));
-                if (first) {
-                    first = false;
-                     
-                    appended.then(() => this._markFirstChunk?.(), (e) => this._markFirstChunk?.(e));
-                }
-                if (chunk.final) {
-                     
-                    await appended.catch(() => { });
-                    if (appendErrors.length)
-                        throw appendErrors[0];
-                    const ms = this.mediaSource;
-                    if (ms && ms.readyState === "open") {
-                        try {
-                            ms.endOfStream();
-                        }
-                        catch (e) {   }
-                    }
-                    return;
-                }
-            }
-            index += list.length;
-        }
-    }
-     
-     
-     
-     
-    _enqueueAppend(bytes) {
-        return new Promise((resolve, reject) => {
-            this._appendQueue.push({ bytes, resolve, reject });
-            this._pumpAppend();
-        });
-    }
-    _pumpAppend() {
-        if (this._appending)
-            return;
-        const sb = this.sourceBuffer;
-        const item = this._appendQueue.shift();
-        if (!sb || !item)
-            return;
-        this._appending = true;
-        const onEnd = () => {
-            sb.removeEventListener("updateend", onEnd);
-            this._appending = false;
-            item.resolve();
-            this._pumpAppend();
-        };
-        sb.addEventListener("updateend", onEnd);
-        try {
-            sb.appendBuffer(item.bytes);
-        }
-        catch (e) {
-            sb.removeEventListener("updateend", onEnd);
-            this._appending = false;
-            item.reject(e);
-            this._pumpAppend();
-        }
-    }
-    _decodeChunk(base64) {
-        const bin = atob(base64 || "");
-        const bytes = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) {
-            bytes[i] = bin.charCodeAt(i);
-        }
-        return bytes;
-    }
      
      
      
@@ -1780,34 +1268,13 @@ class WidgetSession {
         window.clearInterval(this.streamTimer);
         this.streamTimer = 0;
          
-        this._streamAborted = true;
-        this._markFirstChunk?.();
-        this._markFirstChunk = null;
-        this._pullDone = null;
+
          
-        const pending = this._appendQueue.splice(0, this._appendQueue.length);
-        this._appending = false;
-        pending.forEach((it) => it.reject(new Error("session destroyed")));
+
         this.renderer?.stop();
         this.tracker?.stop();
          
-        if (this.mediaSource && this.sourceBuffer) {
-            try {
-                if (this.mediaSource.readyState === "open") {
-                    this.mediaSource.removeSourceBuffer(this.sourceBuffer);
-                }
-            }
-            catch (e) {   }
-        }
-        this.sourceBuffer = null;
-        if (this.mediaSource && this.mediaSource.readyState === "open") {
-            try {
-                this.mediaSource.endOfStream();
-            }
-            catch (e) {   }
-        }
-        this.mediaSource = null;
-        this.videoStream = null;
+
          
         if (this.videoEl) {
             try {
@@ -2029,8 +1496,8 @@ export function mount(el, opts) {
          
         const resetSession = () => {
             // v0.3.48：重建会话前必须先销毁旧会话。旧实现直接 new WidgetSession 覆盖变量，
-            // 旧会话的 _pullChunks 拉流循环 / streamTimer / 那个 1px <video> 元素都会滞留
-            // （持续占后端取片额度、DOM 元素越堆越多），自动重取题时会不断累积。
+            // 旧会话的 streamTimer / 那个 1px <video> 元素都会滞留（DOM 元素越堆越多），
+            // 自动重取题时会不断累积。
             try {
                 session?.destroy();
             }

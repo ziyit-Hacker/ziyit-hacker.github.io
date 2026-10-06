@@ -339,19 +339,15 @@ export function submitStreamChunk(apiBase, challengeId, sessionId, iv, ciphertex
 
  
  
-export function videoReady(apiBase, challengeId, sessionId) {
-    return postJson(apiBase, "/video/ready", { challengeId, sessionId });
-}
+
 
  
  
-export function videoChunk(apiBase, challengeId, index, sessionId) {
-    return postJson(apiBase, "/video/chunk", { challengeId, index, sessionId });
-}
 
-// 非分包模式（后端 VIDEO_CHUNKED=False）视频二进制直下：GET /video 取回整段 MP4 原始字节，
-// 省掉 base64 的 33% 膨胀。鉴权与 /video/ready|/video/chunk 同源（api-key 或票据头 +
-// sessionId 会话绑定），故必须走这里——返回 ArrayBuffer，上层直接 new Blob 交给 <video>。
+
+// 整段标准 MP4 二进制直下：GET /video 取回整段 MP4 原始字节，省掉 base64 的 33% 膨胀。
+// 鉴权为 api-key 或票据头 + sessionId 会话绑定，故必须走这里——返回 ArrayBuffer，
+// 上层直接 new Blob 交给 <video>。
 // 路径优先用后端下发的 challenge.videoUrl；缺省时回落到 /video?challengeId=…。
 // 错误沿用 readError 的语义（403/404/410 带 status 抛出），供上层按现有分支显式提示。
 export async function videoBinary(apiBase, challengeId, sessionId, videoUrl) {
