@@ -32,7 +32,10 @@ export function makeCluster(count, half) {
 export function paintFullNoise(buf) {
     const { data } = buf;
     for (let i = 0; i < data.length; i += 4) {
-        const v = (Math.random() * 256) | 0;
+        // v0.3.58：本地底噪与后端视频同构 —— 纯二值 0/255（不再取 0~255 中间灰）。
+        // 每帧逐像素随机，与后端二值噪点颗粒度/分布一致，切换时不会有观感跳变，
+        // 也保证"每个像素只在最低/最高亮度上，不出现灰色"。
+        const v = Math.random() < 0.5 ? 0 : 255;
         data[i] = v;
         data[i + 1] = v;
         data[i + 2] = v;

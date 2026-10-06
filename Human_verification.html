@@ -684,12 +684,10 @@
   <script type="module" src="https://ziyit-hacker.github.io/Human_verification/main.js"></script>
   <script>
     (function () {
-      // 后端地址只从 cookie（ziyit_api_base_ok）读，其次 localStorage 覆盖，最后才用这条兜底；
-      // 不再读 backend.txt 去探测“哪一条才是后端”。
-      var DEFAULT_BASE = 'https://ziyitstudio.ccwu.cc';
       var BASE_COOKIE = 'ziyit_api_base_ok';
-      var BASE_URL = DEFAULT_BASE;
+      var BASE_URL = '';
       var backendPromise = null;
+      var fileBases = [];
 
       function readCookie(name) {
         try {
@@ -724,9 +722,29 @@
         if (b === customBase()) return;
         writeCookie(BASE_COOKIE, b);
       }
+      function backendTxtUrl() {
+        try { return new URL('./backend.txt', location.href).href; } catch (e) { return 'backend.txt'; }
+      }
+      function parseFileBases(txt) {
+        var out = [];
+        String(txt || '').split(/\r?\n/).forEach(function (line) {
+          var m = line.trim().match(/https?:\/\/[^\s]+/i);
+          if (!m) return;
+          var u = m[0].replace(/\/+$/, '');
+          if (out.indexOf(u) === -1) out.push(u);
+        });
+        return out;
+      }
+      function loadFileBases() {
+        return fetch(backendTxtUrl(), { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': '1' } })
+          .then(function (res) { return res.ok ? res.text() : ''; })
+          .catch(function () { return ''; })
+          .then(function (txt) { fileBases = parseFileBases(txt); return fileBases; });
+      }
       function invalidateBase() {
-        BASE_URL = DEFAULT_BASE;
+        BASE_URL = '';
         backendPromise = null;
+        fileBases = [];
         clearCookie(BASE_COOKIE);
       }
       function baseCandidates() {
@@ -738,13 +756,12 @@
         }
         add(BASE_URL);
         add(baseCookie());
-        add(DEFAULT_BASE);
+        fileBases.forEach(function (b) { if (list.indexOf(b) === -1) list.push(b); });
         return list;
       }
 
       function backendReady() {
         if (backendPromise) return backendPromise;
-        var cached = customBase() || baseCookie();
         function probe(b) {
           return new Promise(function (resolve) {
             var done = false;
@@ -759,23 +776,22 @@
         function pick(list) {
           var i = 0;
           function next() {
-            if (i >= list.length) return Promise.resolve(list[list.length - 1] || DEFAULT_BASE);
+            if (i >= list.length) return Promise.resolve('');
             var b = list[i++];
-            // 已经是最后一条（兜底地址）：no-cors 探测连 530 / 404 错误页也算“通”，探了没意义
-            if (i >= list.length) return Promise.resolve(b);
             return probe(b).then(function (ok) { return ok ? b : next(); });
           }
           return next();
         }
-        if (cached) {
-          rememberBase(cached);
-          backendPromise = Promise.resolve(BASE_URL);
-          return backendPromise;
-        }
-        var list = baseCandidates();
-        backendPromise = pick(list)
-          .then(function (b) { rememberBase(b || DEFAULT_BASE); return BASE_URL; })
-          .catch(function () { return BASE_URL; });
+        // cookie 里上次可用的地址由 baseCandidates() 排在最前；它不可用就顺延试 backend.txt 的地址集，
+        // 全都不可用才算真正不可用（清掉 cookie，下次请求重新拉 backend.txt 再判断）。
+        backendPromise = loadFileBases().then(function () {
+          return pick(baseCandidates()).then(function (b) {
+            BASE_URL = b || '';
+            if (b) rememberBase(b);
+            else clearCookie(BASE_COOKIE);
+            return BASE_URL;
+          });
+        }).catch(function () { return BASE_URL; });
         return backendPromise;
       }
 

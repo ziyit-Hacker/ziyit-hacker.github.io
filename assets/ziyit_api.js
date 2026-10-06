@@ -1,23 +1,53 @@
 (function () {
-    // 后端地址只从 cookie（ziyit_api_base_ok）读，其次 localStorage 覆盖，最后才用这条兜底；
-    // 不再读 backend.txt 去探测“哪一条才是后端”。
-    var DEFAULT_BASE = 'https://ziyitstudio.ccwu.cc';
-
-     
+    // 后端地址不写死：localStorage 覆盖 → cookie 里上次可用的地址 → <repo>/backend.txt 候选列表
+    // （每行一条，顺序即优先级）。当前地址连不上或 5xx 时自动换下一条；全试完仍失败就清缓存，
+    // 下一次请求重新拉 backend.txt 重新判断。
     var BASE_COOKIE = 'ziyit_api_base_ok';
     var BASE_COOKIE_DAYS = 7;
+
+    // 取脚本自身 URL，用来定位 <repo>/backend.txt（与页面所在层级无关）。
+    var SCRIPT_SRC = '';
+    try { SCRIPT_SRC = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
 
      
     var resolvedBase = '';
     var readyBasePromise = null;
+    var fileBases = [];
 
     function backendReady() {
         if (readyBasePromise) return readyBasePromise;
-        // 地址只认 cookie / localStorage 覆盖；都没有时用兜底地址，并立刻写回 cookie 供后续直接读取
-        resolvedBase = cachedBase() || DEFAULT_BASE;
-        rememberBase(resolvedBase);
-        readyBasePromise = Promise.resolve(resolvedBase);
+        readyBasePromise = loadFileBases().then(function () {
+            resolvedBase = cachedBase() || fileBases[0] || '';
+            if (resolvedBase) rememberBase(resolvedBase);
+            return resolvedBase;
+        });
         return readyBasePromise;
+    }
+
+    // <repo>/backend.txt：每行一条后端地址，顺序即优先级；地址表由仓库维护，前台不写死任何域名。
+    function backendTxtUrl() {
+        if (SCRIPT_SRC) {
+            try { return new URL('../backend.txt', SCRIPT_SRC).href; } catch (e) {}
+        }
+        return 'backend.txt';
+    }
+
+    function parseFileBases(txt) {
+        var out = [];
+        String(txt || '').split(/\r?\n/).forEach(function (line) {
+            var m = line.trim().match(/https?:\/\/[^\s]+/i);
+            if (!m) return;
+            var u = m[0].replace(/\/+$/, '');
+            if (out.indexOf(u) === -1) out.push(u);
+        });
+        return out;
+    }
+
+    function loadFileBases() {
+        return fetch(backendTxtUrl(), { cache: 'no-store', headers: { 'ngrok-skip-browser-warning': '1' } })
+            .then(function (res) { return res.ok ? res.text() : ''; })
+            .catch(function () { return ''; })
+            .then(function (txt) { fileBases = parseFileBases(txt); return fileBases; });
     }
 
     function getBases() {
@@ -28,7 +58,7 @@
         } catch (e) {}
         var cookie = getBaseCookie();
         if (cookie && list.indexOf(cookie) === -1) list.push(cookie);
-        if (list.indexOf(DEFAULT_BASE) === -1) list.push(DEFAULT_BASE);
+        fileBases.forEach(function (b) { if (list.indexOf(b) === -1) list.push(b); });
         return list;
     }
 
@@ -78,13 +108,14 @@
     function invalidateBase() {
         resolvedBase = '';
         readyBasePromise = null;
+        fileBases = [];
         clearBaseCookie();
     }
 
     function currentBase() {
         if (resolvedBase) return resolvedBase;
         var bases = getBases();
-        return bases[0] || DEFAULT_BASE;
+        return bases[0] || '';
     }
 
     function orderedBases() {
@@ -269,12 +300,15 @@
      
     function imageBlobUrl(url) {
         if (!url) return Promise.resolve('');
-        if (!isBackendUrl(url)) return Promise.resolve(url);
-        return fetch(url, { headers: { 'ngrok-skip-browser-warning': '1' } }).then(function (res) {
-            if (!res.ok) throw new Error('图片加载失败(' + res.status + ')');
-            return res.blob();
-        }).then(function (blob) {
-            return URL.createObjectURL(blob);
+        // 后端地址表是动态的（backend.txt），先等它就绪再判断，避免把后端图片当外链直连
+        return backendReady().then(function () {
+            if (!isBackendUrl(url)) return url;
+            return fetch(url, { headers: { 'ngrok-skip-browser-warning': '1' } }).then(function (res) {
+                if (!res.ok) throw new Error('图片加载失败(' + res.status + ')');
+                return res.blob();
+            }).then(function (blob) {
+                return URL.createObjectURL(blob);
+            });
         });
     }
 
@@ -363,6 +397,10 @@
             options.headers['Authorization'] = 'Bearer ' + token;
         }
         var bases = orderedBases();
+        if (!bases.length) {
+            invalidateBase();
+            throw new Error('未配置后端地址：backend.txt 为空或不可读');
+        }
         var start = baseIndex || 0;
         if (start >= bases.length) start = 0;
 
@@ -1949,7 +1987,7 @@
     }
 
     window.ZIYIT_API = {
-        BASE: DEFAULT_BASE,
+        BASE: '',
         backendReady: backendReady,
         base: currentBase,
         getBases: getBases,

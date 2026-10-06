@@ -3,6 +3,16 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.48 — 2026-10-06
+### 变更
+- **后端地址不再写死，恢复 `<repo>/backend.txt` 动态地址表**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js) / [Human_verification/api.js](file:///f:/Code/html/ziyit/Human_verification/api.js) / [Human_verification.html](file:///f:/Code/html/ziyit/Human_verification.html)）：三处各自的兜底常量 `DEFAULT_BASE = 'https://ziyitstudio.ccwu.cc'` 一律删除，解析链改为「`localStorage['ziyit_api_base']` 覆盖 → Cookie `ziyit_api_base_ok`（上次可用地址）→ `backend.txt` 候选列表（每行一条，顺序即优先级）」。cookie 里的地址不可用时顺延试 `backend.txt` 的地址集，**全部都不可用才算真正不可用**（清 cookie，下一次请求重新拉 `backend.txt` 再判断）。
+  - `assets/ziyit_api.js`：新增 `backendTxtUrl()`（由 `document.currentScript.src` 定位 `../backend.txt`，与页面层级无关）/`parseFileBases()`/`loadFileBases()`；`backendReady()` 先加载地址表再定地址；`getBases()` 追加 `fileBases`；`currentBase()` 不再回落常量；`invalidateBase()` 一并清空 `fileBases`；`doRequest()` 在地址表为空时抛「未配置后端地址」；导出项 `BASE` 由常量改为 `''`；`imageBlobUrl()` 先 `await backendReady()` 再判断是否后端地址（地址表动态化后，避免后端图片被当外链直连）。
+  - `Human_verification/api.js`：同款改造（`backendTxtUrl()` 用 `import.meta.url`）；新增 `isBaseDown(err)`——网络层失败或网关类 5xx（502/503/504/530）才算「地址不可用」，此时才换下一条候选，后端明确回的 4xx/500 不换。
+  - `Human_verification.html` 内联副本同款改造（`backend.txt` 相对 `location.href`）。
+### 说明
+- `backend.txt` 现含 2 条候选（`ziyitstudio.ccwu.cc`、ngrok 隧道）；改地址只需改这一个文件，前台任何位置都不再出现写死的后端域名。
+- 只改前端三处与本文件；**后端一行未改**；三个文件语法/类型诊断均无报错。
+
 ## v1.47 — 2026-10-05
 ### 变更
 - **接入后端「访问量榜单」接口**（前端，配合后端已上线的 `/backrooms/hot/{type}`）：

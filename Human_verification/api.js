@@ -1,13 +1,15 @@
 const TICKET_HEADER = "x-phantom-ticket";
 
-// 后端地址只从 cookie（ziyit_api_base_ok）读，其次 localStorage 覆盖，最后才用这条兜底；
-// 不再读 backend.txt 去探测“哪一条才是后端”。
-const DEFAULT_BASE = "https://ziyitstudio.ccwu.cc";
+// 后端地址不写死，解析顺序：localStorage 覆盖 → cookie（ziyit_api_base_ok，上次可用的地址）
+// → <repo>/backend.txt 候选列表（每行一条，顺序即优先级）。
+// cookie 里的地址不可用时继续试 backend.txt 的地址集，全都不可用才算真正不可用；
+// 全试完仍失败会 invalidateBase() 清缓存，下一次请求重新拉 backend.txt 重新判断。
 const BASE_COOKIE = "ziyit_api_base_ok";
 const BASE_COOKIE_DAYS = 7;
 
 let resolvedBase = "";
 let backendPromise = null;
+let loadedBases = [];
 
 function readCookie(name) {
     try {
@@ -64,7 +66,39 @@ function rememberBase(base) {
 function invalidateBase() {
     resolvedBase = "";
     backendPromise = null;
+    loadedBases = [];
     clearCookie(BASE_COOKIE);
+}
+
+// <repo>/backend.txt：每行一条后端地址，顺序即优先级；地址表由仓库维护，前台不写死任何域名。
+function backendTxtUrl() {
+    try {
+        return new URL("../backend.txt", import.meta.url).href;
+    }
+    catch (e) {
+        return "backend.txt";
+    }
+}
+
+function parseBases(txt) {
+    const out = [];
+    String(txt || "").split(/\r?\n/).forEach((line) => {
+        const m = line.trim().match(/https?:\/\/[^\s]+/i);
+        if (!m) return;
+        const u = m[0].replace(/\/+$/, "");
+        if (out.indexOf(u) === -1) out.push(u);
+    });
+    return out;
+}
+
+function loadBases() {
+    return fetch(backendTxtUrl(), {
+        cache: "no-store",
+        headers: { "ngrok-skip-browser-warning": "1" },
+    }).then((res) => (res.ok ? res.text() : "")).catch(() => "").then((txt) => {
+        loadedBases = parseBases(txt);
+        return loadedBases;
+    });
 }
 
 function baseCandidates(primary) {
@@ -76,8 +110,14 @@ function baseCandidates(primary) {
     };
     add(primary);
     add(baseCookie());
-    add(DEFAULT_BASE);
+    loadedBases.forEach(add);
     return list;
+}
+
+// “地址不可用”（而不是后端明确回错）：网络层失败，或网关类 5xx（隧道/网关挂了）。
+function isBaseDown(err) {
+    if (!err || !err.status) return true;
+    return err.status === 502 || err.status === 503 || err.status === 504 || err.status === 530;
 }
 
 function probeBase(base, timeoutMs = 3000) {
@@ -96,27 +136,36 @@ function probeBase(base, timeoutMs = 3000) {
     });
 }
 
+// 逐条探测，返回第一个连得上的；全都连不上返回 ""（不再回落到任何写死地址）。
 async function pickBase(bases) {
     for (let i = 0; i < bases.length; i++) {
-        // 已经是最后一条（兜底地址）：no-cors 探测连 530 / 404 错误页也算“通”，探了没意义
-        if (i === bases.length - 1) return bases[i];
         if (await probeBase(bases[i])) return bases[i];
     }
-    return DEFAULT_BASE;
+    return "";
 }
 
 export function backendReady() {
     if (!backendPromise) {
         const cached = cachedBase();
-        if (cached) {
-            resolvedBase = cached;
-            backendPromise = Promise.resolve(cached);
-        } else {
-            backendPromise = pickBase(baseCandidates("")).then((picked) => {
-                rememberBase(picked);
+        backendPromise = loadBases().then((bases) => {
+            // 先试 cookie 里上次可用的地址；它不可用再顺延到 backend.txt 的地址集。
+            if (cached) {
+                return pickBase([cached].concat(bases)).then((ok) => {
+                    if (ok) {
+                        rememberBase(ok);   // 记住真正连得上的那条（cookie 失效时可能是候选表里的下一条）
+                        return ok;
+                    }
+                    // 全部不可用：清掉 cookie 里的失效地址，交由上层给出明确错误
+                    resolvedBase = "";
+                    clearCookie(BASE_COOKIE);
+                    return "";
+                });
+            }
+            return pickBase(bases).then((picked) => {
+                if (picked) rememberBase(picked);
                 return picked;
             });
-        }
+        });
     }
     return backendPromise;
 }
@@ -124,7 +173,7 @@ export function backendReady() {
 export function apiBase() {
     const custom = customBase();
     if (custom) return custom;
-    return resolvedBase || baseCookie() || DEFAULT_BASE;
+    return resolvedBase || baseCookie() || loadedBases[0] || "";
 }
 
 let ticket = { token: "", expiresAt: 0 };
@@ -288,6 +337,10 @@ async function postToBase(base, path, body, exp) {
 async function postJson(apiBaseArg, path, body) {
     const exp = expHeaders();
     const list = baseCandidates(apiBaseArg);
+    if (!list.length) {
+        invalidateBase();
+        throw new Error("未配置后端地址：backend.txt 为空或不可读");
+    }
     let lastErr = null;
     for (let i = 0; i < list.length; i++) {
         try {
@@ -297,7 +350,7 @@ async function postJson(apiBaseArg, path, body) {
         } catch (err) {
             lastErr = err;
              
-            if (err && err.status) throw err;
+            if (!isBaseDown(err)) throw err;
             if (i + 1 >= list.length) {
                  
                 invalidateBase();
@@ -358,6 +411,10 @@ export async function videoBinary(apiBase, challengeId, sessionId, videoUrl) {
         return await getBinary("", path, exp);
     }
     const list = baseCandidates(apiBase);
+    if (!list.length) {
+        invalidateBase();
+        throw new Error("未配置后端地址：backend.txt 为空或不可读");
+    }
     let lastErr = null;
     for (let i = 0; i < list.length; i++) {
         try {
@@ -367,7 +424,7 @@ export async function videoBinary(apiBase, challengeId, sessionId, videoUrl) {
         }
         catch (err) {
             lastErr = err;
-            if (err && err.status) throw err;
+            if (!isBaseDown(err)) throw err;
             if (i + 1 >= list.length) {
                 invalidateBase();
                 throw err;
