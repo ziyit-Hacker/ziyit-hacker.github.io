@@ -9,9 +9,12 @@
   - `assets/ziyit_api.js`：新增 `backendTxtUrl()`（由 `document.currentScript.src` 定位 `../backend.txt`，与页面层级无关）/`parseFileBases()`/`loadFileBases()`；`backendReady()` 先加载地址表再定地址；`getBases()` 追加 `fileBases`；`currentBase()` 不再回落常量；`invalidateBase()` 一并清空 `fileBases`；`doRequest()` 在地址表为空时抛「未配置后端地址」；导出项 `BASE` 由常量改为 `''`；`imageBlobUrl()` 先 `await backendReady()` 再判断是否后端地址（地址表动态化后，避免后端图片被当外链直连）。
   - `Human_verification/api.js`：同款改造（`backendTxtUrl()` 用 `import.meta.url`）；新增 `isBaseDown(err)`——网络层失败或网关类 5xx（502/503/504/530）才算「地址不可用」，此时才换下一条候选，后端明确回的 4xx/500 不换。
   - `Human_verification.html` 内联副本同款改造（`backend.txt` 相对 `location.href`）。
+- **修复体验页「无法查询资格」**（[Human_verification_experience.html](file:///f:/Code/html/ziyit/Human_verification_experience.html)）：`renderStatus()` 里遗留一行死语句 `if (!allowed && !enough && !d.hasKey) { }`，`enough` 从未声明 → 每次渲染都抛 `ReferenceError: enough is not defined`，被 `loadStatus()` 的 `.catch` 接住，卡片恒显示「查询失败：enough is not defined」，只要 `/experience/status` 通就必然查不出资格。删除该空语句。
+- **两个动态地址表的连带回归**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)）：`imageBlobUrl()`、`downloadMod()` 改为先 `await backendReady()` 再取候选地址——否则地址表尚未加载时会被误判成「连不上」。
 ### 说明
 - `backend.txt` 现含 2 条候选（`ziyitstudio.ccwu.cc`、ngrok 隧道）；改地址只需改这一个文件，前台任何位置都不再出现写死的后端域名。
-- 只改前端三处与本文件；**后端一行未改**；三个文件语法/类型诊断均无报错。
+- 体验页自身不含地址逻辑，`import` 本地 `./Human_verification/api.js` 共用同一套 cookie 优先解析。
+- 只改前端与本文件；**后端一行未改**；相关文件语法/类型诊断均无报错。
 
 ## v1.47 — 2026-10-05
 ### 变更

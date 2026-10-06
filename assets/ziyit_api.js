@@ -611,21 +611,24 @@
 
     function downloadMod(modId) {
         var token = getToken();
-        var bases = getBases();
-        var i = 0;
-        function attempt() {
-            if (i >= bases.length) return Promise.reject(new Error('connection failed'));
-            var base = bases[i++];
-            return fetch(base + '/mods/' + modId + '/download', {
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'ngrok-skip-browser-warning': '1'
-                }
-            }).catch(function () {
-                return attempt();
-            });
-        }
-        return attempt();
+        // 地址表是动态的（backend.txt），先等就绪再取候选，避免地址表还没加载就被判成连不上
+        return backendReady().then(function () {
+            var bases = getBases();
+            var i = 0;
+            function attempt() {
+                if (i >= bases.length) return Promise.reject(new Error('connection failed'));
+                var base = bases[i++];
+                return fetch(base + '/mods/' + modId + '/download', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'ngrok-skip-browser-warning': '1'
+                    }
+                }).catch(function () {
+                    return attempt();
+                });
+            }
+            return attempt();
+        });
     }
 
     function requestDeletion() {
