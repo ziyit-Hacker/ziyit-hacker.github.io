@@ -356,6 +356,7 @@
                 window.location.href = "./user/";
                 return;
             }
+            
             statusCard.innerHTML = '<h2>体验资格</h2><div class="loading-box">正在查询体验资格…</div>';
             startBtn.disabled = true;
             fetch(apiBase() + "/experience/status", {
