@@ -349,6 +349,67 @@ export function videoChunk(apiBase, challengeId, index, sessionId) {
     return postJson(apiBase, "/video/chunk", { challengeId, index, sessionId });
 }
 
+// 非分包模式（后端 VIDEO_CHUNKED=False）视频二进制直下：GET /video 取回整段 MP4 原始字节，
+// 省掉 base64 的 33% 膨胀。鉴权与 /video/ready|/video/chunk 同源（api-key 或票据头 +
+// sessionId 会话绑定），故必须走这里——返回 ArrayBuffer，上层直接 new Blob 交给 <video>。
+// 路径优先用后端下发的 challenge.videoUrl；缺省时回落到 /video?challengeId=…。
+// 错误沿用 readError 的语义（403/404/410 带 status 抛出），供上层按现有分支显式提示。
+export async function videoBinary(apiBase, challengeId, sessionId, videoUrl) {
+    const exp = expHeaders();
+    const path = videoPath(videoUrl, challengeId, sessionId);
+    if (/^https?:\/\//i.test(path)) {
+        // 后端给了绝对地址：直接拉，不再走 base 探测。
+        return await getBinary("", path, exp);
+    }
+    const list = baseCandidates(apiBase);
+    let lastErr = null;
+    for (let i = 0; i < list.length; i++) {
+        try {
+            const buf = await getBinary(list[i], path, exp);
+            rememberBase(list[i]);
+            return buf;
+        }
+        catch (err) {
+            lastErr = err;
+            if (err && err.status) throw err;
+            if (i + 1 >= list.length) {
+                invalidateBase();
+                throw err;
+            }
+        }
+    }
+    throw lastErr;
+}
+
+function videoPath(videoUrl, challengeId, sessionId) {
+    const u = String(videoUrl || "").trim();
+    if (u) return u.charAt(0) === "/" || /^https?:\/\//i.test(u) ? u : "/" + u;
+    const q = "challengeId=" + encodeURIComponent(challengeId || "")
+        + (sessionId ? "&sessionId=" + encodeURIComponent(sessionId) : "");
+    return "/video?" + q;
+}
+
+async function getBinary(base, path, exp) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+        const res = await fetch(`${base}${path}`, {
+            method: "GET",
+            credentials: "include",
+            headers: { ...(exp || (await authHeaders(base))) },
+        });
+        if (res.ok) {
+            return res.arrayBuffer();
+        }
+        // 401：票据过期，清掉重取一次（与 postToBase 同策略）。
+        if (res.status === 401 && !exp && !explicitApiKey() && attempt === 0) {
+            ticket = { token: "", expiresAt: 0 };
+            sessionCaps = { ...PERMISSIVE_CAPS };
+            continue;
+        }
+        throw await readError(res);
+    }
+    throw new Error("请求失败：票据重取后仍未通过");
+}
+
  
  
  

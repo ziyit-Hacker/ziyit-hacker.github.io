@@ -1,5 +1,5 @@
 import { CONFIG, isMobileViewport } from "./config.js";
-import { isMethodNotAllowed, requestChallenge, requestPowChallenge, sessionInfo, submitPowStream, submitVerify, submitStreamChunk, verifyPow, videoChunk, videoReady, } from "./api.js";
+import { isMethodNotAllowed, requestChallenge, requestPowChallenge, sessionInfo, submitPowStream, submitVerify, submitStreamChunk, verifyPow, videoBinary, videoChunk, videoReady, } from "./api.js";
 import { decrypt, deriveSessionKey, encrypt, generateClientKeyPair, importServerPublic, } from "./crypto.js";
 import { installAntidebug } from "./antidebug.js";
 import { PhantomRenderer } from "./renderer.js";
@@ -714,7 +714,9 @@ class WidgetSession {
     async _prepareVideo(challenge) {
         const vs = challenge && challenge.videoStream;
         if (!vs || !vs.chunkCount) {
-            throw new Error("挑战缺少分包视频信息");
+            // 非分包模式（后端 VIDEO_CHUNKED=False）：整段 MP4 由 /video 以二进制直下，
+            // 前端不再解 base64、不走就绪握手、不逐包拉取。分包路径原样保留。
+            return await this._prepareVideoBinary(challenge);
         }
         this.videoStream = vs;
         const mime = vs.mime || challenge.videoMime || "video/mp4";
@@ -818,6 +820,64 @@ class WidgetSession {
          
         await this._waitBuffered(ready);
         await this._waitPlayable(v);
+        return v;
+    }
+     
+     
+    // 非分包模式（后端 VIDEO_CHUNKED=False）：GET /video 二进制直下整段 MP4。
+    // 与分包路径完全分流——不调 /video/ready、不调 /video/chunk、不做 MSE、不做整段
+    // 预缓冲：拿到 arrayBuffer 直接转 Blob 交给 <video>。HTTP 错误（403/404/410 等）
+    // 原样带 status 抛出，交给上层现有的 403/410 分支显式提示。
+    async _prepareVideoBinary(challenge) {
+        const remote = challenge && challenge.videoUrl;
+        if (!remote) {
+            throw new Error("挑战缺少视频信息");
+        }
+        const mime = challenge.videoMime || "video/mp4";
+        this.status.textContent = "正在下载验证题…";
+        let v = null;
+        let url = "";
+        try {
+            const buf = await videoBinary(this.apiBase, this.challengeId || challenge.challengeId, this.sessionId || challenge.sessionId, remote);
+            url = URL.createObjectURL(new Blob([buf], { type: mime }));
+            v = document.createElement("video");
+            v.src = url;
+            v.muted = true;
+            v.playsInline = true;
+            v.setAttribute("playsinline", "");
+            v.preload = "auto";
+             
+             
+            v.style.cssText = "position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
+            this.canvas.parentElement?.appendChild(v);
+            this.videoEl = v;
+            this.videoUrl = url;
+            this.videoStream = null;
+            await new Promise((resolve, reject) => {
+                if (v.readyState >= 1)
+                    return resolve();
+                const done = () => resolve();
+                v.addEventListener("loadedmetadata", done, { once: true });
+                v.addEventListener("durationchange", done, { once: true });
+                v.addEventListener("error", () => reject(this._playbackUnsupported("视频无法解码")), { once: true });
+                window.setTimeout(done, 8000);
+            });
+            if (!v.videoWidth || !v.duration)
+                throw this._playbackUnsupported("视频元数据不可用");
+        }
+        catch (e) {
+            if (v)
+                v.remove();
+            if (url)
+                URL.revokeObjectURL(url);
+            this.videoEl = null;
+            this.videoUrl = "";
+            // HTTP 错误（带 status）与编码不支持原样上抛，其余（解码/元数据异常）归类为不支持。
+            if (e && (e.status || e.code === "PLAYBACK_UNSUPPORTED"))
+                throw e;
+            throw this._playbackUnsupported(e && e.message);
+        }
+        this.status.textContent = "";
         return v;
     }
      
