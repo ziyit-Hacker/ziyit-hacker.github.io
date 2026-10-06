@@ -122,16 +122,27 @@ function isBaseDown(err) {
 
 function probeBase(base, timeoutMs = 3000) {
     return new Promise((resolve) => {
+        const ctrl = new AbortController();
         let done = false;
-        const timer = setTimeout(() => {
-            if (!done) { done = true; resolve(false); }
-        }, timeoutMs);
+        const finish = (ok) => {
+            if (done) return;
+            done = true;
+            // 超时必须真的把请求掐掉：否则连不上的地址会一直占着浏览器对该域名的
+            // 并发连接名额（同域上限 6 条），后续正式请求会被排到它们后面，看起来就是
+            // "整个验证都卡住不动"。
+            if (!ok) {
+                try { ctrl.abort(); } catch (e) { }
+            }
+            resolve(ok);
+        };
+        const timer = setTimeout(() => finish(false), timeoutMs);
         try {
-            fetch(base + "/", { method: "GET", mode: "no-cors", cache: "no-store" })
-                .then(() => { if (!done) { done = true; clearTimeout(timer); resolve(true); } })
-                .catch(() => { if (!done) { done = true; clearTimeout(timer); resolve(false); } });
+            fetch(base + "/", { method: "GET", mode: "no-cors", cache: "no-store", signal: ctrl.signal })
+                .then(() => { clearTimeout(timer); finish(true); })
+                .catch(() => { clearTimeout(timer); finish(false); });
         } catch (e) {
-            if (!done) { done = true; clearTimeout(timer); resolve(false); }
+            clearTimeout(timer);
+            finish(false);
         }
     });
 }
@@ -222,16 +233,27 @@ export function isMethodNotAllowed(e) {
 async function fetchTicket(base) {
      
      
-    const res = await fetch(`${base}/session`, {
+    const { res, done } = await fetchWithDeadline(`${base}/session`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: "{}",
-    });
-    if (!res.ok) {
-        throw await readError(res);
+    }, { timeoutMessage: "会话建立超时，请检查网络后重试" });
+    let data = null;
+    try {
+        if (!res.ok) {
+            throw await readError(res);
+        }
+        data = await res.json();
     }
-    const data = await res.json();
+    catch (e) {
+        if (isAbortError(e))
+            throw timeoutError("会话建立超时，请检查网络后重试");
+        throw e;
+    }
+    finally {
+        done();
+    }
     if (!data || !data.ticket) {
         throw new Error("session 响应缺少 ticket");
     }
@@ -312,7 +334,7 @@ function expHeaders() {
 
 async function postToBase(base, path, body, exp) {
     for (let attempt = 0; attempt < 2; attempt++) {
-        const res = await fetch(`${base}${path}`, {
+        const { res, done } = await fetchWithDeadline(`${base}${path}`, {
             method: "POST",
              
              
@@ -320,16 +342,27 @@ async function postToBase(base, path, body, exp) {
             headers: { "Content-Type": "application/json", ...(exp || (await authHeaders(base))) },
             body: JSON.stringify(body),
         });
-        if (res.ok) {
-            return res.json();
+        try {
+            if (res.ok) {
+                return await res.json();
+            }
+            // 401：票据过期，清掉重取一次（与 getBinary 同策略）。
+            if (res.status === 401 && !exp && !explicitApiKey() && attempt === 0) {
+                ticket = { token: "", expiresAt: 0 };
+                sessionCaps = { ...PERMISSIVE_CAPS };
+                continue;
+            }
+            throw await readError(res);
         }
-         
-        if (res.status === 401 && !exp && !explicitApiKey() && attempt === 0) {
-            ticket = { token: "", expiresAt: 0 };
-            sessionCaps = { ...PERMISSIVE_CAPS };
-            continue;
+        catch (e) {
+            // 计时器到点会 abort 掉正在读的 body：统一成可重试的超时提示。
+            if (isAbortError(e))
+                throw timeoutError("请求超时，请检查网络后重试");
+            throw e;
         }
-        throw await readError(res);
+        finally {
+            done();
+        }
     }
     throw new Error("请求失败：票据重取后仍未通过");
 }
@@ -403,12 +436,13 @@ export function submitStreamChunk(apiBase, challengeId, sessionId, iv, ciphertex
 // 上层直接 new Blob 交给 <video>。
 // 路径优先用后端下发的 challenge.videoUrl；缺省时回落到 /video?challengeId=…。
 // 错误沿用 readError 的语义（403/404/410 带 status 抛出），供上层按现有分支显式提示。
-export async function videoBinary(apiBase, challengeId, sessionId, videoUrl) {
+// opts（可选）：{ signal：外部取消（用户中途换 PoW / 关闭弹窗）、onProgress(loaded,total) }
+export async function videoBinary(apiBase, challengeId, sessionId, videoUrl, opts) {
     const exp = expHeaders();
     const path = videoPath(videoUrl, challengeId, sessionId);
     if (/^https?:\/\//i.test(path)) {
         // 后端给了绝对地址：直接拉，不再走 base 探测。
-        return await getBinary("", path, exp);
+        return await getBinary("", path, exp, opts);
     }
     const list = baseCandidates(apiBase);
     if (!list.length) {
@@ -418,12 +452,14 @@ export async function videoBinary(apiBase, challengeId, sessionId, videoUrl) {
     let lastErr = null;
     for (let i = 0; i < list.length; i++) {
         try {
-            const buf = await getBinary(list[i], path, exp);
+            const buf = await getBinary(list[i], path, exp, opts);
             rememberBase(list[i]);
             return buf;
         }
         catch (err) {
             lastErr = err;
+            // 用户主动取消：不是"地址不可用"，直接退出，别去试下一个候选地址。
+            if (isAbortError(err)) throw err;
             if (!isBaseDown(err)) throw err;
             if (i + 1 >= list.length) {
                 invalidateBase();
@@ -451,23 +487,167 @@ function videoPath(videoUrl, challengeId, sessionId) {
     return "/video?" + q;
 }
 
-async function getBinary(base, path, exp) {
+// ---- 请求上限：任何请求都不许「永远等下去」 ----
+// fetch 本身没有超时。公网入口半死不活时（TCP 连得上、一个字节都不回）调用方会永远停在
+// loading —— 现场实测：隧道对 57B 的 JSON 都能 20 秒不回，验证视频（3.9MB 无损噪点）
+// 更是永远下不完，弹窗就一直卡在「正在下载验证题…」。
+// 这里只管「不许无限等」，不做性能约束：
+//   · timeoutMs —— 等【响应头】的总上限（连头都不回 = 链路废了，直接换下一个候选地址）；
+//   · idleMs    —— 读 body 时【两次收到字节之间】的上限（字节还在流就一直是活的，
+//                  正常但慢的下载不会被误杀）。
+// 超时统一抛 code="TIMEOUT"，由上层显示可点的重试。
+const DEFAULT_TIMEOUT_MS = 60000;
+const VIDEO_HEADER_TIMEOUT_MS = 45000;
+const VIDEO_IDLE_TIMEOUT_MS = 30000;
+
+function timeoutError(message, code) {
+    const err = new Error(message);
+    err.code = code || "TIMEOUT";
+    return err;
+}
+
+function isAbortError(err) {
+    return !!err && (err.name === "AbortError" || err.code === "ABORTED");
+}
+
+// 返回 { res, ctrl, done }：done() 必须在本条请求彻底用完（body 读完 / 读出错）之后调用，
+// 用来撤掉计时器与外部 signal 的监听。
+async function fetchWithDeadline(url, init, opts) {
+    const o = opts || {};
+    const totalMs = Number(o.timeoutMs) > 0 ? Number(o.timeoutMs) : DEFAULT_TIMEOUT_MS;
+    const ctrl = new AbortController();
+    const outer = o.signal;
+    const relay = () => {
+        try {
+            ctrl.abort();
+        }
+        catch (e) { }
+    };
+    if (outer) {
+        if (outer.aborted)
+            relay();
+        else
+            outer.addEventListener("abort", relay, { once: true });
+    }
+    let timedOut = false;
+    const timer = window.setTimeout(() => {
+        timedOut = true;
+        relay();
+    }, totalMs);
+    const done = () => {
+        window.clearTimeout(timer);
+        if (outer)
+            outer.removeEventListener("abort", relay);
+    };
+    try {
+        const res = await fetch(url, { ...(init || {}), signal: ctrl.signal });
+        return { res, ctrl, done };
+    }
+    catch (e) {
+        done();
+        if (timedOut)
+            throw timeoutError(o.timeoutMessage || "请求超时，请检查网络后重试");
+        throw e;
+    }
+}
+
+// 读响应体：带上面那个 idle 看门狗与进度回调。返回 ArrayBuffer。
+async function readBodyWithWatchdog(res, opts) {
+    const o = opts || {};
+    const ctrl = o.ctrl;
+    const idleMs = Number(o.idleMs) > 0 ? Number(o.idleMs) : VIDEO_IDLE_TIMEOUT_MS;
+    const total = Number(res.headers.get("content-length")) || 0;
+    if (!res.body || typeof res.body.getReader !== "function") {
+        return await res.arrayBuffer();
+    }
+    let timedOut = false;
+    let timer = 0;
+    const arm = () => {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+            timedOut = true;
+            try {
+                ctrl.abort();
+            }
+            catch (e) { }
+        }, idleMs);
+    };
+    arm();
+    const reader = res.body.getReader();
+    const chunks = [];
+    let loaded = 0;
+    try {
+        for (;;) {
+            const step = await reader.read();
+            if (step.done)
+                break;
+            if (step.value && step.value.length) {
+                chunks.push(step.value);
+                loaded += step.value.length;
+                arm();
+                try {
+                    o.onProgress?.(loaded, total);
+                }
+                catch (e) { }
+            }
+        }
+    }
+    catch (e) {
+        if (timedOut)
+            throw timeoutError(o.timeoutMessage || "下载中断（网络太慢），请重试", o.timeoutCode);
+        throw e;
+    }
+    finally {
+        window.clearTimeout(timer);
+        try {
+            reader.releaseLock();
+        }
+        catch (e) { }
+    }
+    const out = new Uint8Array(loaded);
+    let off = 0;
+    for (let i = 0; i < chunks.length; i++) {
+        out.set(chunks[i], off);
+        off += chunks[i].length;
+    }
+    return out.buffer;
+}
+
+// opts：{ signal（外部取消）、onProgress(loaded,total)、headerTimeoutMs、idleMs }
+async function getBinary(base, path, exp, opts) {
+    const o = opts || {};
     for (let attempt = 0; attempt < 2; attempt++) {
-        const res = await fetch(`${base}${path}`, {
+        const { res, ctrl, done } = await fetchWithDeadline(`${base}${path}`, {
             method: "GET",
             credentials: "include",
             headers: { ...(exp || (await authHeaders(base))) },
+        }, {
+            timeoutMs: Number(o.headerTimeoutMs) > 0 ? Number(o.headerTimeoutMs) : VIDEO_HEADER_TIMEOUT_MS,
+            signal: o.signal,
+            timeoutMessage: "验证题下载超时，请点击刷新重试",
+            timeoutCode: "VIDEO_TIMEOUT",
         });
-        if (res.ok) {
-            return res.arrayBuffer();
+        try {
+            if (res.ok) {
+                return await readBodyWithWatchdog(res, {
+                    ctrl,
+                    idleMs: o.idleMs,
+                    onProgress: o.onProgress,
+                    timeoutMessage: "验证题下载中断（网络太慢），请点击刷新重试",
+                    timeoutCode: "VIDEO_TIMEOUT",
+                });
+            }
+            // 401：票据过期，清掉重取一次（与 postToBase 同策略）。
+            if (res.status === 401 && !exp && !explicitApiKey() && attempt === 0) {
+                ticket = { token: "", expiresAt: 0 };
+                sessionCaps = { ...PERMISSIVE_CAPS };
+                continue;
+            }
+            throw await readError(res);
         }
-        // 401：票据过期，清掉重取一次（与 postToBase 同策略）。
-        if (res.status === 401 && !exp && !explicitApiKey() && attempt === 0) {
-            ticket = { token: "", expiresAt: 0 };
-            sessionCaps = { ...PERMISSIVE_CAPS };
-            continue;
+        finally {
+            done();
         }
-        throw await readError(res);
     }
     throw new Error("请求失败：票据重取后仍未通过");
 }

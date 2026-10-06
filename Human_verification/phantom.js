@@ -337,6 +337,8 @@ class WidgetSession {
          
         this._powTask = null;
         this._powAbort = null;
+        // 正在进行的整段视频下载（AbortController）：换 PoW / 关弹窗时用它掐断。
+        this._videoAbort = null;
          
         this._a11ySwitched = false;
         this._powAltUnavailable = false;
@@ -476,6 +478,10 @@ class WidgetSession {
             this.bindInteraction();
         }
         catch (e) {
+            // 用户中途点了「换一种方式验证」或关掉弹窗：本次拖拽流程作废（视频下载被
+            // abort 掉就是这条路），UI 已交给 PoW / 弹窗收尾，别弹"初始化失败"吓人。
+            if (this._sessionClosed || this._a11ySwitched)
+                return;
             this.onError(e);
             const code = (e && e.status) || 0;
             if (e && e.code === "PLAYBACK_UNSUPPORTED") {
@@ -668,6 +674,9 @@ class WidgetSession {
      
     // 整段标准 MP4 直下：GET /video 取原始字节 → Blob → <video>（不再走 MSE / fMP4 分包）。
     // HTTP 错误（403/404/410 等）带 status 原样上抛，交给上层现有分支显式提示。
+    // v0.3.58：整段视频体积大（无损二值噪点，PC 约 3.9MB）且公网入口可能很慢，
+    // 故这里显示下载进度、并暴露 _videoAbort——用户中途点「换一种方式验证」时立刻掐断，
+    // 不必等这段字节下完（PoW 的报文很小，走的通）。
     async _prepareVideo(challenge) {
         const remote = challenge && challenge.videoUrl;
         if (!remote) {
@@ -675,10 +684,25 @@ class WidgetSession {
         }
         const mime = challenge.videoMime || "video/mp4";
         this.status.textContent = "正在下载验证题…";
+        this._videoAbort?.abort();
+        const ctrl = new AbortController();
+        this._videoAbort = ctrl;
         let v = null;
         let url = "";
         try {
-            const buf = await videoBinary(this.apiBase, this.challengeId || challenge.challengeId, this.sessionId || challenge.sessionId, remote);
+            const buf = await videoBinary(this.apiBase, this.challengeId || challenge.challengeId, this.sessionId || challenge.sessionId, remote, {
+                signal: ctrl.signal,
+                onProgress: (loaded, total) => {
+                    if (this._sessionClosed || this._a11ySwitched)
+                        return;
+                    const mb = (n) => (n / 1048576).toFixed(1);
+                    this.status.textContent = total > 0
+                        ? `正在下载验证题… ${Math.min(99, Math.floor(loaded * 100 / total))}%（${mb(loaded)}/${mb(total)}MB）`
+                        : `正在下载验证题… ${mb(loaded)}MB`;
+                },
+            });
+            if (this._sessionClosed || this._a11ySwitched)
+                return null;
             url = URL.createObjectURL(new Blob([buf], { type: mime }));
             v = document.createElement("video");
             v.src = url;
@@ -711,10 +735,18 @@ class WidgetSession {
                 URL.revokeObjectURL(url);
             this.videoEl = null;
             this.videoUrl = "";
-            // HTTP 错误（带 status）与编码不支持原样上抛，其余（解码/元数据异常）归类为不支持。
-            if (e && (e.status || e.code === "PLAYBACK_UNSUPPORTED"))
+            // 用户中途换 PoW / 关弹窗导致的取消：这是预期中断，原样上抛，由 start() 静默收尾。
+            if (this._sessionClosed || this._a11ySwitched)
+                throw e;
+            // HTTP 错误（带 status）、超时（TIMEOUT）与编码不支持原样上抛，交给上层显式提示；
+            // 其余（解码/元数据异常）归类为不支持。
+            if (e && (e.status || e.code === "PLAYBACK_UNSUPPORTED" || e.code === "TIMEOUT"))
                 throw e;
             throw this._playbackUnsupported(e && e.message);
+        }
+        finally {
+            if (this._videoAbort === ctrl)
+                this._videoAbort = null;
         }
         this.status.textContent = "";
         return v;
@@ -1085,6 +1117,10 @@ class WidgetSession {
         this._a11ySwitched = true;
         this._unbind?.();
         this._unbind = () => { };
+        // 拖拽流程可能正卡在"下载验证视频"上（整段 MP4 体积大、公网入口慢）：立刻掐断，
+        // 否则这几十 MB 的字节会继续占着链路，PoW 的小报文也得排在它后面 —— 用户看到的就是
+        // "按了换一种方式验证却毫无反应"。
+        this._videoAbort?.abort();
         this.renderer?.pause();
         this.overlay.classList.add("phantom-hidden");
         this.activateBtn.classList.remove("phantom-holding");
@@ -1256,6 +1292,9 @@ class WidgetSession {
     destroy() {
         this._sessionClosed = true;
         this._unbind();
+        // 正在下载验证视频的话立刻掐断：关掉弹窗后没有理由继续占着链路。
+        this._videoAbort?.abort();
+        this._videoAbort = null;
          
          
         const powAbort = this._powAbort;
