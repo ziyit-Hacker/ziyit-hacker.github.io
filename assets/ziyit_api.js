@@ -1413,6 +1413,74 @@
     }
 
      
+    var VISITOR_KEY = 'ziyit_visitor_id';
+
+    function getVisitorId() {
+        try {
+            var v = localStorage.getItem(VISITOR_KEY);
+            if (!v || !/^[0-9A-Za-z_-]{8,64}$/.test(v)) {
+                v = '';
+                if (window.crypto && crypto.getRandomValues) {
+                    var a = new Uint8Array(8);
+                    crypto.getRandomValues(a);
+                    for (var i = 0; i < a.length; i++) v += ('0' + a[i].toString(16)).slice(-2);
+                }
+                if (!v) v = (Date.now().toString(36) + Math.random().toString(36).slice(2)).slice(0, 24);
+                localStorage.setItem(VISITOR_KEY, v);
+            }
+            return v;
+        } catch (e) { return ''; }
+    }
+
+     
+    function backroomsTypeHot(type, limit) {
+        var q = limit ? ('?limit=' + encodeURIComponent(limit)) : '';
+        return request('/backrooms/hot/' + encodeURIComponent(type) + q);
+    }
+
+     
+    function backroomsHotRender(opts) {
+        var o = opts || {};
+        var type = o.type || 'level';
+        var el = (typeof o.container === 'string') ? document.getElementById(o.container) : o.container;
+        if (!el) return;
+        var onOpen = o.onOpen || function (id) {
+            if (window.ZIYIT_API && ZIYIT_API.backroomsTypeOpen) ZIYIT_API.backroomsTypeOpen(type, id);
+        };
+        function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        function col(title, list, showVisitors) {
+            var body = (list && list.length) ? list.map(function (it) {
+                var n = showVisitors
+                    ? ((Number(it.visitors) || 0) + ' 人 / ' + (Number(it.views) || 0) + ' 次')
+                    : ((Number(it.views) || 0) + ' 次');
+                return '<li><a href="javascript:void(0)" data-hot-open="' + esc(it.id) + '">' + esc(it.id) + '</a>'
+                    + (it.name ? ' - “' + esc(it.name) + '”' : '')
+                    + '<span class="br-hot-num">' + n + '</span></li>';
+            }).join('') : '<li class="br-hot-empty">暂无数据</li>';
+            return '<div class="br-hot-col"><h5>' + title + '</h5><ol>' + body + '</ol></div>';
+        }
+        function shell(inner) {
+            return '<h4><span>访问量榜单<span class="import"><span style="white-space: pre-wrap;">&#32;</span></span></span></h4>'
+                + '<div class="br-hot-lists">' + inner + '</div>';
+        }
+        el.innerHTML = shell('<div class="br-hot-col"><h5>加载中…</h5></div>');
+        el.addEventListener('click', function (e) {
+            var a = e.target && e.target.closest ? e.target.closest('a[data-hot-open]') : null;
+            if (!a) return;
+            e.preventDefault();
+            onOpen(a.getAttribute('data-hot-open'));
+        });
+        return backroomsTypeHot(type, 3).then(function (d) {
+            d = d || {};
+            el.innerHTML = shell(col('访问人数 Top 3', d.byVisitors, true)
+                + col('访问次数 Top 3', d.byViews, false)
+                + col('综合 Top 3', d.byOverall, true));
+        }).catch(function () {
+            el.innerHTML = shell('<div class="br-hot-col"><h5>加载失败</h5></div>');
+        });
+    }
+
+     
     function backroomsTypeMeta(type, id) {
         return request(backroomsPrefix(type) + '/' + encodeURIComponent(id) + '/meta');
     }
@@ -1463,6 +1531,7 @@
         return fetchApi(backroomsPrefix(type) + '/' + encodeURIComponent(id), {
             headers: {
                 'ngrok-skip-browser-warning': '1',
+                'X-Ziyit-Visitor': getVisitorId(),
                 'Authorization': token ? 'Bearer ' + token : ''
             }
         }).then(function (res) {
@@ -2049,6 +2118,8 @@
         backroomsOpenLevel: backroomsOpenLevel,
         backroomsPrefix: backroomsPrefix,
         backroomsTypeList: backroomsTypeList,
+        backroomsTypeHot: backroomsTypeHot,
+        backroomsHotRender: backroomsHotRender,
         backroomsTypeMeta: backroomsTypeMeta,
         backroomsTypeView: backroomsTypeView,
         backroomsTypeOpen: backroomsTypeOpen,

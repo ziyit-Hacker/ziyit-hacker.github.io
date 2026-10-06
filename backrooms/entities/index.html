@@ -553,6 +553,7 @@
                                                 href="#6">Entity 600-699</a><a href="#7">Entity 700-799</a><a
                                                 href="#8">Entity 800-899</a><a href="#9">Entity 900-999</a><a href="#archive">未收录 / 已下架</a></p>
                                     </div>
+                                    <div class="intro-block br-hot" id="br-hot"></div>
                                 </div>
                                                                                                 <div id="br-count" class="br-list-meta"></div>
                                 <div id="br-list"><div class="ziyit-loader"><div class="loader-title"><img src="../../assets/logo.ico" alt="ZIYIT" class="loader-logo">ZIYIT</div><div class="loader-bar"><div class="loader-fill"></div></div></div></div>
@@ -571,6 +572,14 @@
                                 #br-list .br-archive>h2 span{color:#b04141}
                                 #br-list .br-archive ul>li{color:#8a5a5a}
                                 #br-list ul ul{margin:4px 0 0;padding-left:22px;list-style:circle}
+                                .br-hot{margin-top:14px}
+                                .br-hot .br-hot-lists{display:flex;flex-wrap:wrap;gap:16px}
+                                .br-hot .br-hot-col{flex:1 1 200px;min-width:180px}
+                                .br-hot .br-hot-col h5{margin:0 0 6px;font-size:14px;color:var(--ziyit-primary,#0078d4)}
+                                .br-hot .br-hot-col ol{margin:0;padding-left:22px}
+                                .br-hot .br-hot-col li{margin:2px 0;font-size:13px;line-height:1.6}
+                                .br-hot .br-hot-num{margin-left:6px;color:#888;font-size:12px}
+                                .br-hot .br-hot-empty{color:#999;list-style:none}
                                 </style>
                                 <script>
                                 (function () {
@@ -736,6 +745,9 @@
                                         });
                                     }
                                     load();
+                                    if (window.ZIYIT_API && ZIYIT_API.backroomsHotRender) {
+                                        ZIYIT_API.backroomsHotRender({ type: TYPE, container: 'br-hot', onOpen: openDoc });
+                                    }
                                     (function () {
                                         var m = location.search.match(new RegExp('[?&]' + OPEN_PARAM + '=([^&]*)'));
                                         if (!m) return;

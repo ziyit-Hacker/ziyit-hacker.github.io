@@ -3,6 +3,16 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.47 — 2026-10-05
+### 变更
+- **接入后端「访问量榜单」接口**（前端，配合后端已上线的 `/backrooms/hot/{type}`）：
+  - [ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)：新增访客标识 `getVisitorId()`（localStorage `ziyit_visitor_id`，crypto 随机 UUID，匿名去重计数用）、`backroomsTypeHot(type, limit)`、`backroomsHotRender(opts)`（渲染「访问人数 Top3 / 访问次数 Top3 / 综合 Top3」三栏，条目点击复用调用方传入的 `onOpen`）；并在 `backroomsTypeOpen()` 的请求头补 `X-Ziyit-Visitor`；最后把 `backroomsTypeHot` / `backroomsHotRender` 加入导出。
+  - 四个分类列表页（normal-levels / entities / objects / phenomena）：在「快速跳转」块后插入 `<div class="intro-block br-hot" id="br-hot"></div>`，内联 `<style>` 追加 `.br-hot*` 样式，脚本 IIFE 内 `load();` 之后调用 `ZIYIT_API.backroomsHotRender({ type: TYPE, container: 'br-hot', onOpen: openDoc })`。
+### 说明
+- 仅在「已公开收录」文档上计数（后端侧），作者/管理员看审核稿不计；无访问记录时三栏显示「暂无数据」。
+- 线上接口实测：`GET /backrooms/hot/level?limit=3` 返回 200 且已带数据。
+- 只改前端 `assets/ziyit_api.js` 与四个 `index.html` 及本文件；**后端一行未改**；`node --check` 与四页内联脚本 `new Function` 均通过。
+
 ## v1.46 — 2026-10-05
 ### 变更
 - **层级列表页：停用遗留的 `merge()` 注入脚本**（[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)）：页面尾部第二个 `<script>` 中的 `merge()` 会再次请求同一接口 `/backrooms/levels`，对每个「非纯数字」条目按**原始 ID** 追加 `<li><a class="dyn-level">` 到「特殊层级」区块的 `<ul>`。而主列表已按 v1.39 规则过滤掉 `Level-909-0`、`Level-11latest` 这类小数/后缀条目，`findExisting()` 自然找不到对应锚点 → 于是又插入一条原样带 `-` 的条目。v1.41–v1.45 的过滤与去重都作用在 `render()` 的 `items` 上，管不到这段渲染后直接操作 DOM 的注入，所以此前修复对它无效。
