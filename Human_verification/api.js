@@ -383,7 +383,16 @@ export async function videoBinary(apiBase, challengeId, sessionId, videoUrl) {
 
 function videoPath(videoUrl, challengeId, sessionId) {
     const u = String(videoUrl || "").trim();
-    if (u) return u.charAt(0) === "/" || /^https?:\/\//i.test(u) ? u : "/" + u;
+    if (u) {
+        const path = u.charAt(0) === "/" || /^https?:\/\//i.test(u) ? u : "/" + u;
+        // v0.3.57：/video 的会话绑定按 query 里的 sessionId 硬校验，缺了它一律 403。
+        // 后端下发的 videoUrl 可能只带 challengeId，前端这里兜底补上（已有则不重复拼）。
+        if (sessionId && !/[?&]sessionId=/.test(path)) {
+            return path + (path.indexOf("?") === -1 ? "?" : "&")
+                + "sessionId=" + encodeURIComponent(sessionId);
+        }
+        return path;
+    }
     const q = "challengeId=" + encodeURIComponent(challengeId || "")
         + (sessionId ? "&sessionId=" + encodeURIComponent(sessionId) : "");
     return "/video?" + q;

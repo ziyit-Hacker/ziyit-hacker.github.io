@@ -150,10 +150,14 @@
                 return false;
             }
             if (status === 403) {
-                 
+                // v0.3.56：403 以前是【静默重开验证】——用户看到"已通过"却提交失败，页面
+                // 一点提示都没有，根本不知道发生了什么（后端 4 种原因：验证未通过/记录不存在/
+                // 会话不匹配/来源不匹配，全被吞掉）。这里把原因显式弹出来。
                 resetCaptcha();
                 if (captchaTip) captchaTip.style.display = 'block';
                 st.pendingSubmit = true;
+                alert('人机验证未通过或已失效，请重新完成一次验证后再提交。\n(403: '
+                    + (raw || 'verification required') + ')');
                 if (typeof st.open === 'function') st.open();
                 return false;
             }
