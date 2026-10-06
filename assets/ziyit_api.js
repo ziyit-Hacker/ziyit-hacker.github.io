@@ -726,8 +726,12 @@
     }
 
      
-    function adminPromoteUser(userId, type) {
-        return post('/admin/users/' + userId + '/promote', { type: type });
+    // days 仅对 type='vip' 有效：0 / 缺省 = 永久，正整数 = 从当前到期时间往后叠加天数
+    // （后端 AdminPromoteRequest.days，合法区间 0-36500）。
+    function adminPromoteUser(userId, type, days) {
+        const body = { type: type };
+        if (type === 'vip') body.days = Number.isFinite(days) ? days : 0;
+        return post('/admin/users/' + userId + '/promote', body);
     }
 
      

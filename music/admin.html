@@ -1479,6 +1479,11 @@
                     <option value="admin">升级为管理员（type=admin）</option>
                 </select>
             </div>
+            <div class="form-group" id="promote-days-group">
+                <label class="form-label">VIP 有效期（天）</label>
+                <input type="number" class="form-input" id="promote-days" min="0" max="36500" step="1" value="0">
+                <div style="color:var(--ziyit-text-secondary);font-size:12px;margin-top:4px;">0 = 永久；正整数 = 从当前到期时间往后叠加（1-36500 天）</div>
+            </div>
             <div class="modal-actions">
                 <button type="button" class="user-btn danger" id="cancel-promote-user">取消</button>
                 <button type="button" class="user-btn success" id="confirm-promote-user">确认升级</button>

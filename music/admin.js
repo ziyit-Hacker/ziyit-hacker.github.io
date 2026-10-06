@@ -257,6 +257,7 @@ document.addEventListener('DOMContentLoaded', function () {
      
     document.getElementById('cancel-promote-user').addEventListener('click', closePromoteModal);
     document.getElementById('confirm-promote-user').addEventListener('click', confirmPromoteUser);
+    document.getElementById('promote-type').addEventListener('change', syncPromoteFields);
 });
 
  
@@ -4376,7 +4377,15 @@ function openPromoteModal(user) {
     promoteTarget = user;
     document.getElementById('promote-username').value = user.username || '-';
     document.getElementById('promote-type').value = 'vip';
+    document.getElementById('promote-days').value = '0';
+    syncPromoteFields();
     document.getElementById('promote-user-modal').classList.add('active');
+}
+
+// 「有效期（天）」只在升级为 VIP 时有意义（升级管理员走 level，不走天数）。
+function syncPromoteFields() {
+    var isVip = document.getElementById('promote-type').value === 'vip';
+    document.getElementById('promote-days-group').style.display = isVip ? '' : 'none';
 }
 
 function closePromoteModal() {
@@ -4388,11 +4397,25 @@ function confirmPromoteUser() {
     if (!promoteTarget) return;
     const type = document.getElementById('promote-type').value;
     const userId = promoteTarget.userId;
+    // 有效期天数：留空按 0（永久）处理；只接受 0-36500 的整数，越界/非数字当场拦下（与后端口径一致）。
+    let days = null;
+    if (type === 'vip') {
+        const raw = document.getElementById('promote-days').value.trim();
+        days = raw === '' ? 0 : Number(raw);
+        if (!Number.isInteger(days) || days < 0 || days > 36500) {
+            alert('有效期天数不合法：0 表示永久，或填 1-36500 的整数');
+            return;
+        }
+    }
     const btn = document.getElementById('confirm-promote-user');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-inline"></span>提交中...';
-    ZIYIT_API.adminPromoteUser(userId, type).then(function () {
-        alert(promoteTarget.username + ' 已升级为' + (type === 'admin' ? '管理员' : 'VIP用户'));
+    ZIYIT_API.adminPromoteUser(userId, type, days).then(function (res) {
+        const done = type === 'admin'
+            ? '管理员'
+            : (days === 0 ? '永久 VIP' : days + ' 天 VIP');
+        alert(promoteTarget.username + ' 已升级为' + done
+            + (res && res.vipExpireAt ? '（到期 ' + res.vipExpireAt + '）' : ''));
         closePromoteModal();
         loadUsers();
     }).catch(function (err) {
