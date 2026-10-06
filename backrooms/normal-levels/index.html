@@ -573,7 +573,6 @@
                                     <li>图书馆
                                         <ul>
                                             <li><a href="/backrooms/normal-levels/">层级</a></li>
-                                            <li><a href="/backrooms/sub-layers/">子区集</a></li>
                                             <li><a href="/backrooms/entities/">实体</a></li>
                                             <li><a href="/backrooms/objects/">物品</a></li>
                                             <li><a href="/backrooms/phenomena/">现象</a></li>
@@ -591,7 +590,6 @@
                                     <li>图书馆
                                         <ul>
                                             <li><a href="/backrooms/normal-levels/">层级</a></li>
-                                            <li><a href="/backrooms/sub-layers/">子区集</a></li>
                                             <li><a href="/backrooms/entities/">实体</a></li>
                                             <li><a href="/backrooms/objects/">物品</a></li>
                                             <li><a href="/backrooms/phenomena/">现象</a></li>
@@ -627,7 +625,6 @@
                                         <h2><span>更多层级<span class="moremark"><span
                                                         style="white-space: pre-wrap;">&#32;</span></span></span></h2>
                                         <ul>
-                                            <li><strong><a href="/backrooms/sub-layers/">子区集</a></strong></li>
                                             <li><strong><a href="mailto:ziyitstudio@qq.com">提交层级</a></strong></li>
                                             <li><strong><a href="../../">返回首页</a></strong></li>
                                         </ul>
@@ -739,8 +736,9 @@
                                     }
                                     function anchorOf(key) { return key === 'special' ? '10' : String(Number(key) / 100); }
                                     function render(items) {
-                                        // 只列纯整数层级与特殊条目；原始 ID 带额外 - 的（小数/后缀，如 Level-0-1、Level-909-0、Level-11latest）不显示
-                                        items = items.filter(function (it) { var p = parseId(it); return p.dec === null && p.suffix === null; });
+                                        // 小数子层级（如 Level-0-1、Level-909-0）作为父层级的子条目正常显示；
+                                        // 仅隐藏「非数字后缀」的变体条目（如 Level-11latest），避免与父层级重复
+                                        items = items.filter(function (it) { var p = parseId(it); return p.suffix === null; });
                                         // 同一文档可能返回多条（状态不同，或 ID 带隐形字符/变体破折号）：按「归一化显示名」去重、公开状态优先，保证条目唯一
                                         var seenIdx = {}, uniq = [];
                                         items.forEach(function (it) {

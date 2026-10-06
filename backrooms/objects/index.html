@@ -495,7 +495,6 @@
             <li>图书馆
                 <ul>
                     <li><a href="/backrooms/normal-levels/">层级</a></li>
-                    <li><a href="/backrooms/sub-layers/">子区集</a></li>
                     <li><a href="/backrooms/entities/">实体</a></li>
                     <li><a href="/backrooms/objects/">物品</a></li>
                     <li><a href="/backrooms/phenomena/">现象</a></li>
@@ -513,7 +512,6 @@
             <li>图书馆
                 <ul>
                     <li><a href="/backrooms/normal-levels/">层级</a></li>
-                    <li><a href="/backrooms/sub-layers/">子区集</a></li>
                     <li><a href="/backrooms/entities/">实体</a></li>
                     <li><a href="/backrooms/objects/">物品</a></li>
                     <li><a href="/backrooms/phenomena/">现象</a></li>
@@ -650,8 +648,9 @@
                                     }
                                     function anchorOf(key) { return key === 'special' ? '10' : String(Number(key) / 100); }
                                     function render(items) {
-                                        // 只列纯整数层级与特殊条目；原始 ID 带额外 - 的（小数/后缀）不显示
-                                        items = items.filter(function (it) { var p = parseId(it); return p.dec === null && p.suffix === null; });
+                                        // 小数子层级（如 Object-0-1）作为父条目的子项正常显示；
+                                        // 仅隐藏「非数字后缀」的变体条目，避免与父条目重复
+                                        items = items.filter(function (it) { var p = parseId(it); return p.suffix === null; });
                                         // 同一文档可能返回多条（状态不同，或 ID 带隐形字符/变体破折号）：按「归一化显示名」去重、公开状态优先，保证条目唯一
                                         var seenIdx = {}, uniq = [];
                                         items.forEach(function (it) {
