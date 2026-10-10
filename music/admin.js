@@ -3023,23 +3023,30 @@ function publishRcuUpdate() {
     const isDelta = document.getElementById('rcu-is-delta').checked;
     const allowDowngrade = document.getElementById('rcu-allow-downgrade').checked;
     const sha = (document.getElementById('rcu-sha256').value || '').trim().toUpperCase();
-    if (!file) { alert('请先选择 .7z 更新包'); return; }
+    if (!file) { alert('请先选择 .rcu 更新包'); return; }
     if (!version) { alert('请填写版本号'); return; }
     if (isDelta && !baseVersion) { alert('增量包必须填写 baseVersion'); return; }
     statusEl.textContent = sha ? '正在上传...' : '正在计算 sha256 ...';
     const prep = sha ? Promise.resolve(sha) : rcuSha256Hex(file);
     prep.then(function (digest) {
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('version', version);
-        fd.append('channel', channel);
-        fd.append('sha256', digest);
-        if (isLts) fd.append('isLts', 'true');
-        if (isDelta) fd.append('isDelta', 'true');
-        if (baseVersion) fd.append('baseVersion', baseVersion);
-        if (allowDowngrade) fd.append('allowDowngrade', 'true');
-        statusEl.textContent = '正在上传（' + rcuFmtSize(file.size) + '）...';
-        return ZIYIT_API.rcuPublish(fd);
+        // 包体先分片（target=updates，单片 ≤1MB），再带 uploadId 调 /updates
+        statusEl.textContent = '正在分片上传（' + rcuFmtSize(file.size) + '）...';
+        return ZIYIT_API.rcuPublish(file, {
+            version: version,
+            sha256: digest,
+            channel: channel,
+            isLts: isLts,
+            isDelta: isDelta,
+            baseVersion: baseVersion,
+            allowDowngrade: allowDowngrade
+        }, {
+            sha256: digest,
+            fileName: file.name,
+            onProgress: function (done, total) {
+                statusEl.textContent = '正在分片上传 ' + Math.round(done / total * 100)
+                    + '%（' + rcuFmtSize(done) + ' / ' + rcuFmtSize(total) + '）...';
+            }
+        });
     }).then(function (res) {
         const warn = (res && res.result === 'warn_unsigned')
             ? '（注意：包内 manifest.json 未签名，已按告警放行）' : '';

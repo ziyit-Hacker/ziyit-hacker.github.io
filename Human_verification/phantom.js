@@ -1,5 +1,5 @@
 import { CONFIG, isMobileViewport } from "./config.js";
-import { isMethodNotAllowed, requestChallenge, requestPowChallenge, sessionInfo, submitPowStream, submitVerify, submitStreamChunk, verifyPow, videoBinary, } from "./api.js";
+import { isMethodNotAllowed, requestChallenge, requestPowChallenge, sessionInfo, submitPowStream, submitVerify, submitStreamChunk, verifyPow, videoBinary, videoReady, videoChunk, } from "./api.js";
 import { decrypt, deriveSessionKey, encrypt, generateClientKeyPair, importServerPublic, } from "./crypto.js";
 import { installAntidebug } from "./antidebug.js";
 import { PhantomRenderer } from "./renderer.js";
@@ -31,6 +31,15 @@ const ALERT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
  
  
 const POW_WORKER_URL = new URL("./pow-worker.js", import.meta.url);
+
+// 标准 base64（后端 base64.b64encode，含 + / =）→ Uint8Array，供 MSE appendBuffer 用。
+function base64ToBytes(b64) {
+    const bin = atob(String(b64 || ""));
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++)
+        out[i] = bin.charCodeAt(i);
+    return out;
+}
 
  
  
@@ -339,6 +348,9 @@ class WidgetSession {
         this._powAbort = null;
         // 正在进行的整段视频下载（AbortController）：换 PoW / 关弹窗时用它掐断。
         this._videoAbort = null;
+        // v0.3.59 分包模式：MediaSource / SourceBuffer 句柄（destroy / 出错时释放）。
+        this._mediaSource = null;
+        this._sourceBuffer = null;
          
         this._a11ySwitched = false;
         this._powAltUnavailable = false;
@@ -446,7 +458,11 @@ class WidgetSession {
              
              
             this.streamIntervalMs = Number(streamCfg.intervalMs) > 0 ? Number(streamCfg.intervalMs) : 50;
-            const videoEl = await this._prepareVideo(challenge);
+            // v0.3.59：分包模式下 /challenge 不再下发 videoUrl，只给 videoStream 元数据；
+            // 按它是否有值决定走分包（MSE）还是旧的整段直下分支。
+            const videoEl = (challenge && challenge.videoStream)
+                ? await this._prepareVideoChunked(challenge)
+                : await this._prepareVideo(challenge);
              
             if (this._sessionClosed || this._a11ySwitched)
                 return;
@@ -672,6 +688,218 @@ class WidgetSession {
      
      
      
+    // v0.3.59 分包下发还原：/challenge 只给 videoStream 元数据（无 videoUrl）。
+    // 前端流程：POST /video/ready 就绪握手 → 按后端「取片节奏闸门」逐包 POST /video/chunk
+    // → MediaSource + SourceBuffer 边下边 append（首包含 ftyp+moov 初始化段，之后每包
+    // 一个 moof+mdat 分片）。仍把可播放的 <video> 交给 renderer（renderer 依赖
+    // currentTime 推进 + drawImage 抽帧）。
+    // 不支持 MSE 的浏览器（如老版 iOS）：退化为「取完整段 → Blob → <video>」，
+    // 网络行为（逐包 / 受闸门限速）完全一致，只是本地不再用 MSE 拼装。
+    async _prepareVideoChunked(challenge) {
+        const meta = (challenge && challenge.videoStream) || {};
+        const cid = this.challengeId || (challenge && challenge.challengeId);
+        const sid = this.sessionId || (challenge && challenge.sessionId);
+        if (!cid)
+            throw new Error("挑战缺少会话信息");
+        this.status.textContent = "正在加载验证题…";
+        this._videoAbort?.abort();
+        const ctrl = new AbortController();
+        this._videoAbort = ctrl;
+        const aborted = () => ctrl.signal.aborted || this._sessionClosed || this._a11ySwitched;
+        let v = null;
+        let url = "";
+        try {
+            const ready = await videoReady(this.apiBase, cid, sid);
+            if (aborted())
+                return null;
+            const mime = ready.mime || meta.mime || "video/mp4";
+            const codec = ready.codec || meta.codec || "";
+            const type = codec ? `${mime}; codecs="${codec}"` : mime;
+            const count = Number(ready.chunkCount || meta.chunkCount) || 0;
+            if (!count)
+                throw this._playbackUnsupported("视频分包信息不可用");
+            const chunkMs = Number(ready.chunkDurationMs || meta.chunkDurationMs) || 0;
+            // 闸门「允许超前量」由后端以【秒】下发（= round(VIDEO_GATE_MIN_PREFETCH_MS/1000)），
+            // 这里换成毫秒，与后端 `index × 每包时长 − 超前量` 的最早可取时刻对齐。
+            const leadMs = Math.max(0, Number(ready.minPrefetch) || 0) * 1000;
+            const gateOn = ready.gateEnforce !== false;
+            const t0 = performance.now();
+            const useMse = typeof window.MediaSource !== "undefined"
+                && window.MediaSource.isTypeSupported(type);
+
+            let ms = null;
+            let sb = null;
+            v = document.createElement("video");
+            v.muted = true;
+            v.playsInline = true;
+            v.setAttribute("playsinline", "");
+            v.preload = "auto";
+            v.style.cssText = "position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
+            this.canvas.parentElement?.appendChild(v);
+            this.videoEl = v;
+
+            if (useMse) {
+                ms = new window.MediaSource();
+                url = URL.createObjectURL(ms);
+                v.src = url;
+                this.videoUrl = url;
+                this._mediaSource = ms;
+                await new Promise((resolve, reject) => {
+                    ms.addEventListener("sourceopen", () => resolve(), { once: true });
+                    ms.addEventListener("error", () => reject(this._playbackUnsupported("流式播放器初始化失败")), { once: true });
+                });
+                if (aborted())
+                    return null;
+                sb = ms.addSourceBuffer(type);
+                sb.mode = "segments";
+                this._sourceBuffer = sb;
+            }
+
+            const ordered = []; // 退化路径（无 MSE）才需要：按序拼成整段 Blob
+            for (let i = 0; i < count; i++) {
+                if (aborted())
+                    return null;
+                const bytes = await this._fetchVideoChunk(cid, sid, i, { gateOn, t0, chunkMs, leadMs, aborted });
+                if (aborted() || !bytes)
+                    return null;
+                if (useMse)
+                    await this._appendSourceBuffer(sb, bytes);
+                else
+                    ordered.push(bytes);
+                if (!aborted()) {
+                    this.status.textContent = `正在加载验证题… ${Math.min(99, Math.floor((i + 1) * 100 / count))}%`;
+                }
+            }
+            if (aborted())
+                return null;
+
+            if (useMse) {
+                try {
+                    if (ms.readyState === "open")
+                        ms.endOfStream();
+                }
+                catch (e) { }
+            }
+            else {
+                url = URL.createObjectURL(new Blob(ordered, { type: mime }));
+                v.src = url;
+                this.videoUrl = url;
+            }
+
+            await new Promise((resolve, reject) => {
+                if (v.readyState >= 1 && v.videoWidth)
+                    return resolve();
+                const done = () => resolve();
+                v.addEventListener("loadedmetadata", done, { once: true });
+                v.addEventListener("durationchange", done, { once: true });
+                v.addEventListener("error", () => reject(this._playbackUnsupported("视频无法解码")), { once: true });
+                window.setTimeout(done, 8000);
+            });
+            if (aborted())
+                return null;
+            if (!v.videoWidth)
+                throw this._playbackUnsupported("视频元数据不可用");
+        }
+        catch (e) {
+            try {
+                if (v)
+                    v.remove();
+            }
+            catch (_e) { }
+            try {
+                if (url)
+                    URL.revokeObjectURL(url);
+            }
+            catch (_e) { }
+            this._teardownMedia();
+            this.videoEl = null;
+            this.videoUrl = "";
+            // 用户中途换 PoW / 关弹窗导致的取消：预期中断，原样上抛，由 start() 静默收尾。
+            if (this._sessionClosed || this._a11ySwitched)
+                throw e;
+            // HTTP 错误（带 status）、超时（TIMEOUT）与编码不支持原样上抛，交给上层显式提示；
+            // 其余（解码 / 元数据异常）归类为不支持。
+            if (e && (e.status || e.code === "PLAYBACK_UNSUPPORTED" || e.code === "TIMEOUT"))
+                throw e;
+            throw this._playbackUnsupported(e && e.message);
+        }
+        finally {
+            if (this._videoAbort === ctrl)
+                this._videoAbort = null;
+        }
+        this.status.textContent = "";
+        return v;
+    }
+    // 等到第 index 包「按闸门允许的最早时刻」再取回该包（base64 → 字节）。
+    // 超速（409）按 500/1000ms 退避重试同一包，吸收网络 / 时钟抖动，避免个别包抖动
+    // 让整题失败；其余错误（403/404/410/超时）原样上抛。
+    async _fetchVideoChunk(challengeId, sessionId, index, opt) {
+        const { gateOn, t0, chunkMs, leadMs, aborted } = opt;
+        if (gateOn) {
+            const earliest = t0 + Math.max(0, index * chunkMs - leadMs);
+            for (;;) {
+                const wait = earliest - performance.now();
+                if (wait <= 0)
+                    break;
+                if (aborted())
+                    return null;
+                await new Promise((r) => window.setTimeout(r, Math.min(wait, 250)));
+            }
+        }
+        let lastErr = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            if (aborted())
+                return null;
+            try {
+                const res = await videoChunk(this.apiBase, challengeId, sessionId, index);
+                return base64ToBytes(res && res.data);
+            }
+            catch (e) {
+                lastErr = e;
+                if (e && e.status === 409 && attempt < 2) {
+                    await new Promise((r) => window.setTimeout(r, 500 * (attempt + 1)));
+                    continue;
+                }
+                throw e;
+            }
+        }
+        throw lastErr;
+    }
+    // 序化写入 SourceBuffer：update 期间再调 appendBuffer 会抛，必须等 updateend。
+    _appendSourceBuffer(sb, bytes) {
+        return new Promise((resolve, reject) => {
+            const onEnd = () => { cleanup(); resolve(); };
+            const onErr = () => { cleanup(); reject(new Error("视频分片写入失败")); };
+            const cleanup = () => {
+                sb.removeEventListener("updateend", onEnd);
+                sb.removeEventListener("error", onErr);
+            };
+            sb.addEventListener("updateend", onEnd);
+            sb.addEventListener("error", onErr);
+            try {
+                sb.appendBuffer(bytes);
+            }
+            catch (e) {
+                cleanup();
+                reject(e);
+            }
+        });
+    }
+    // 释放 MediaSource：open 态且不在 update 中时结束流，随后清空句柄引用
+    // （video 元素移除 + URL 撤销由调用方 destroy() 负责）。
+    _teardownMedia() {
+        const ms = this._mediaSource;
+        const sb = this._sourceBuffer;
+        this._mediaSource = null;
+        this._sourceBuffer = null;
+        if (!ms)
+            return;
+        try {
+            if (ms.readyState === "open" && (!sb || !sb.updating))
+                ms.endOfStream();
+        }
+        catch (e) { }
+    }
     // 整段标准 MP4 直下：GET /video 取原始字节 → Blob → <video>（不再走 MSE / fMP4 分包）。
     // HTTP 错误（403/404/410 等）带 status 原样上抛，交给上层现有分支显式提示。
     // v0.3.58：整段视频体积大（无损二值噪点，PC 约 3.9MB）且公网入口可能很慢，
@@ -1312,6 +1540,10 @@ class WidgetSession {
 
         this.renderer?.stop();
         this.tracker?.stop();
+
+        // v0.3.59 分包模式：先释放 MediaSource（open 且空闲时 endOfStream），
+        // 再走下面统一的 video 元素移除 / URL 撤销。
+        this._teardownMedia();
          
 
          

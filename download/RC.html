@@ -3427,18 +3427,22 @@
                 if (!modName) { alert('请填写 MOD 名称'); return; }
                 if (!modVersion) { alert('请填写版本号'); return; }
 
-                const fd = new FormData();
-                fd.append('file', file);
-                fd.append('modName', modName);
-                fd.append('modVersion', modVersion);
-                fd.append('modDescription', modDescription);
-                fd.append('isDLC', isDLC ? 'true' : 'false');
-
                 const btn = this;
                 const oldText = btn.textContent;
                 btn.textContent = '上传中...';
                 btn.disabled = true;
-                ZIYIT_API.uploadMod(fd).then(function (res) {
+                // 包体先分片（target=mods，单片 ≤1MB），再带 uploadId 调 /mods/upload
+                ZIYIT_API.uploadMod(file, {
+                    modName: modName,
+                    modVersion: modVersion,
+                    modDescription: modDescription,
+                    isDLC: isDLC
+                }, {
+                    fileName: file.name,
+                    onProgress: function (done, total) {
+                        btn.textContent = '上传中 ' + Math.round(done / total * 100) + '%';
+                    }
+                }).then(function (res) {
                     const q = res && res.quota;
                     const head = (res && res.created) ? 'MOD 上传成功' : 'MOD 已更新为 ' + (res && res.modVersion);
                     const idText = (res && res.modId != null) ? '（MODID ' + res.modId + '）' : '';

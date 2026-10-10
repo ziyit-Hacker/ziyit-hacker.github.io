@@ -590,18 +590,93 @@
         return post('/mods/submit', payload);
     }
 
+    // ---- 分片上传（v0.3.59 后端安全修复）：所有大包上传统一走这里 ----
+    // 后端协议：POST /uploads/init（target/size/sha256/fileName）→ PUT /uploads/{id}/{index}
+    //           （单片数据 ≤ 1MB）→ POST /uploads/{id}/complete；失败可 DELETE /uploads/{id} 中断。
+    // 业务接口不再收 file，改为收 uploadId（如 /mods/upload、/backrooms/*、/updates）。
+    var UPLOAD_CHUNK_BYTES = 1024 * 1024;
+
+    function sha256Hex(buf) {
+        if (!(window.crypto && window.crypto.subtle)) {
+            return Promise.reject(new Error('当前环境不支持 WebCrypto，无法计算 sha256'));
+        }
+        return window.crypto.subtle.digest('SHA-256', buf).then(function (digest) {
+            return Array.prototype.map.call(new Uint8Array(digest), function (b) {
+                return ('00' + b.toString(16)).slice(-2);
+            }).join('').toUpperCase();
+        });
+    }
+
+    // 把 File 分片传到后端，成功返回 {uploadId, sha256, size}；调用方再带 uploadId 调业务接口。
+    // opts.sha256：已算好的整包 sha256（有就跳过本地计算，避免大文件再读一遍）。
+    // opts.fileName：交给后端的原始文件名（backrooms 用它校验 .html 后缀，必填）。
+    // opts.onProgress(done, total)：每片成功后回调。
+    function uploadChunked(file, target, opts) {
+        opts = opts || {};
+        var fileName = opts.fileName || file.name || '';
+        var shaPromise = opts.sha256 ? Promise.resolve(String(opts.sha256).toUpperCase())
+            : file.arrayBuffer().then(sha256Hex);
+        return shaPromise.then(function (sha) {
+            var fd = new FormData();
+            fd.append('target', target);
+            fd.append('size', String(file.size));
+            fd.append('sha256', sha);
+            if (fileName) fd.append('fileName', fileName);
+            return request('/uploads/init', { method: 'POST', body: fd }).then(function (init) {
+                var chunkSize = Number(init.chunkSize) || UPLOAD_CHUNK_BYTES;
+                var total = Number(init.totalChunks) || 0;
+                var uploadId = init.uploadId;
+
+                function sendChunk(i) {
+                    if (i >= total) return Promise.resolve();
+                    var blob = file.slice(i * chunkSize, Math.min((i + 1) * chunkSize, file.size));
+                    var cf = new FormData();
+                    cf.append('file', blob, 'chunk-' + i);
+                    return request('/uploads/' + uploadId + '/' + i, {
+                        method: 'PUT', body: cf, __timeoutMs: 120000
+                    }).then(function () {
+                        if (opts.onProgress) {
+                            try { opts.onProgress(Math.min((i + 1) * chunkSize, file.size), file.size); } catch (e) {}
+                        }
+                        return sendChunk(i + 1);
+                    });
+                }
+
+                return sendChunk(0)
+                    .then(function () { return request('/uploads/' + uploadId + '/complete', { method: 'POST' }); })
+                    .then(function (done) {
+                        return {
+                            uploadId: uploadId,
+                            sha256: (done && done.sha256) || sha,
+                            size: (done && done.size) || file.size
+                        };
+                    });
+            });
+        });
+    }
+
+    // 中断分片上传并清理服务端临时文件（幂等）。
+    function uploadAbort(uploadId) {
+        return request('/uploads/' + encodeURIComponent(uploadId), { method: 'DELETE' });
+    }
+
     // 我上传的 MOD 列表 + 上传配额：{mods:[...], quota:{limit,used,remaining,unlimited,reason}}
     function myMods() {
         return request('/mods/mine');
     }
 
-    // 直接把 .rcm 传到后端（multipart）——不再需要先把文件传到网盘/对象存储再贴链接。
-    // 不设 Content-Type，交给浏览器自动带上 multipart boundary；体积大，单独放宽超时。
-    function uploadMod(formData) {
-        return request('/mods/upload', {
-            method: 'POST',
-            body: formData,
-            __timeoutMs: 300000
+    // 上传 MOD（.rcm）：包体先分片（target=mods），再带 uploadId 调业务接口。
+    // meta: { modName, modVersion, modDescription, isDLC }；不要再往 FormData 里塞 file。
+    function uploadMod(file, meta, opts) {
+        meta = meta || {};
+        return uploadChunked(file, 'mods', opts).then(function (up) {
+            var fd = new FormData();
+            fd.append('uploadId', up.uploadId);
+            fd.append('modName', meta.modName == null ? '' : String(meta.modName));
+            fd.append('modVersion', meta.modVersion == null ? '' : String(meta.modVersion));
+            fd.append('modDescription', meta.modDescription == null ? '' : String(meta.modDescription));
+            fd.append('isDLC', meta.isDLC ? 'true' : 'false');
+            return request('/mods/upload', { method: 'POST', body: fd, __timeoutMs: 300000 });
         });
     }
 
@@ -1243,9 +1318,23 @@
     function rcuRevokedList() {
         return request('/updates/revoked');
     }
-    // 发布 RCU 包：multipart/form-data。切勿手写 Content-Type，交给浏览器带 boundary。
-    function rcuPublish(formData) {
-        return request('/updates', { method: 'POST', body: formData });
+    // 发布 RCU 包：包体先分片（target=updates），再带 uploadId 调业务接口；不要再塞 file。
+    // meta: { version, sha256?, channel?, isLts?, isDelta?, baseVersion?, allowDowngrade? }
+    function rcuPublish(file, meta, opts) {
+        meta = meta || {};
+        return uploadChunked(file, 'updates', opts).then(function (up) {
+            var fd = new FormData();
+            fd.append('uploadId', up.uploadId);
+            fd.append('version', meta.version == null ? '' : String(meta.version));
+            fd.append('sha256', meta.sha256 ? String(meta.sha256).toUpperCase() : up.sha256);
+            fd.append('size', String(up.size));
+            fd.append('channel', meta.channel || 'stable');
+            if (meta.isLts) fd.append('isLts', 'true');
+            if (meta.isDelta) fd.append('isDelta', 'true');
+            if (meta.baseVersion) fd.append('baseVersion', String(meta.baseVersion));
+            if (meta.allowDowngrade) fd.append('allowDowngrade', 'true');
+            return request('/updates', { method: 'POST', body: fd });
+        });
     }
     function rcuRevokeAdd(payload) {
         return post('/updates/revoked', payload);
@@ -1253,7 +1342,7 @@
     function rcuRevokeRemove(version) {
         return request('/updates/revoked/' + encodeURIComponent(version), { method: 'DELETE' });
     }
-    // 带管理员凭据下载 .7z：浏览器直开链接带不上 Authorization，只能走 fetch + blob。
+    // 带管理员凭据下载 RCU 包：浏览器直开链接带不上 Authorization，只能走 fetch + blob。
     function rcuDownload(version) {
         var token = getToken();
         return fetchApi('/updates/' + encodeURIComponent(version) + '/download', {
@@ -1267,12 +1356,24 @@
                 e.status = res.status;
                 throw e;
             }
-            return res.blob();
-        }).then(function (blob) {
-            var url = URL.createObjectURL(blob);
+            // 文件名以服务端 Content-Disposition 为准（新包 .rcu / 历史包 .7z），读不到才回退 .rcu
+            var name = version + '.rcu';
+            var cd = null;
+            try {
+                cd = res.headers.get('Content-Disposition') || res.headers.get('content-disposition');
+            } catch (_e) {}
+            if (cd) {
+                var m = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(cd);
+                if (m && m[1]) {
+                    try { name = decodeURIComponent(m[1]); } catch (_e2) { name = m[1]; }
+                }
+            }
+            return res.blob().then(function (blob) { return { blob: blob, name: name }; });
+        }).then(function (out) {
+            var url = URL.createObjectURL(out.blob);
             var a = document.createElement('a');
             a.href = url;
-            a.download = version + '.7z';
+            a.download = out.name;
             document.body.appendChild(a);
             a.click();
             a.remove();
@@ -1537,19 +1638,33 @@
 
      
      
-    function backroomsTypeSubmit(type, docId, name, file) {
-        var fd = new FormData();
-        fd.append(type === 'level' ? 'levelId' : 'docId', docId);
-        fd.append('name', name);
-        fd.append('file', file);
-        return request(backroomsPrefix(type), { method: 'POST', body: fd });
+    // 提交/修改文档：包体先分片（target=backrooms），再带 uploadId 调业务接口。
+    // fileName 必带（后端据此校验 .html 后缀），默认取 file.name。
+    function backroomsTypeSubmit(type, docId, name, file, opts) {
+        opts = opts || {};
+        return uploadChunked(file, 'backrooms', {
+            sha256: opts.sha256,
+            fileName: opts.fileName || file.name
+        }).then(function (up) {
+            var fd = new FormData();
+            fd.append(type === 'level' ? 'levelId' : 'docId', docId);
+            fd.append('name', name);
+            fd.append('uploadId', up.uploadId);
+            return request(backroomsPrefix(type), { method: 'POST', body: fd });
+        });
     }
 
-    function backroomsTypeUpdate(type, docId, name, file) {
-        var fd = new FormData();
-        if (name) fd.append('name', name);
-        fd.append('file', file);
-        return request(backroomsPrefix(type) + '/' + encodeURIComponent(docId), { method: 'PUT', body: fd });
+    function backroomsTypeUpdate(type, docId, name, file, opts) {
+        opts = opts || {};
+        return uploadChunked(file, 'backrooms', {
+            sha256: opts.sha256,
+            fileName: opts.fileName || file.name
+        }).then(function (up) {
+            var fd = new FormData();
+            if (name) fd.append('name', name);
+            fd.append('uploadId', up.uploadId);
+            return request(backroomsPrefix(type) + '/' + encodeURIComponent(docId), { method: 'PUT', body: fd });
+        });
     }
 
     function backroomsTypeDelete(type, docId) {
@@ -2048,6 +2163,10 @@
         submitMod: submitMod,
         myMods: myMods,
         uploadMod: uploadMod,
+        // 分片上传原语：大包（MOD / backrooms 文档 / 图片 / RCU）统一走这三个
+        sha256Hex: sha256Hex,
+        uploadChunked: uploadChunked,
+        uploadAbort: uploadAbort,
         sendVerifyEmail: sendVerifyEmail,
         downloadMod: downloadMod,
         requestDeletion: requestDeletion,

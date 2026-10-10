@@ -975,9 +975,12 @@
                     }
                     pickBtn.disabled = true;
                     showAvatarResult('上传中…（服务器会自动压缩）', true);
-                    const fd = new FormData();
-                    fd.append('file', file);
-                    ZIYIT_API.request('/img/upload', { method: 'POST', body: fd }).then(function (data) {
+                    // 包体先分片（target=img，单片 ≤1MB），再带 uploadId 调 /img/upload
+                    ZIYIT_API.uploadChunked(file, 'img', { fileName: file.name }).then(function (up) {
+                        const fd = new FormData();
+                        fd.append('uploadId', up.uploadId);
+                        return ZIYIT_API.request('/img/upload', { method: 'POST', body: fd });
+                    }).then(function (data) {
                         const id = (data && data.id) || '';
                         if (!id) {
                             pickBtn.disabled = false;

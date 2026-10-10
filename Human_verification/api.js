@@ -470,6 +470,18 @@ export async function videoBinary(apiBase, challengeId, sessionId, videoUrl, opt
     throw lastErr;
 }
 
+// v0.3.59 分包下发（后端 VIDEO_CHUNKED=True）：/challenge 只回 videoStream 元数据、不再给
+// videoUrl。前端先 POST /video/ready 做就绪握手（后端记录起取时间、拉片游标归零），
+// 再用 POST /video/chunk 按预取窗口逐包拉取（每包 chunkFrames 帧的 fMP4 片段）。
+// 两接口同样要求票据 / 会话绑定，故都走 postJson（自动带票据、401 重取、换候选地址）。
+export function videoReady(apiBase, challengeId, sessionId) {
+    return postJson(apiBase, "/video/ready", { challengeId, sessionId });
+}
+
+export function videoChunk(apiBase, challengeId, sessionId, index) {
+    return postJson(apiBase, "/video/chunk", { challengeId, sessionId, index });
+}
+
 function videoPath(videoUrl, challengeId, sessionId) {
     const u = String(videoUrl || "").trim();
     if (u) {

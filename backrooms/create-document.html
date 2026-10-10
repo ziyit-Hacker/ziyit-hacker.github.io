@@ -2308,9 +2308,12 @@
                 if (!window.ZIYIT_API) { toast('API 组件未加载'); return; }
                 var status = $('img-mgr-status');
                 status.textContent = '上传中…';
-                var fd = new FormData();
-                fd.append('file', file);
-                ZIYIT_API.request('/img/upload', { method: 'POST', body: fd }).then(function (data) {
+                // 包体先分片（target=img，单片 ≤1MB），再带 uploadId 调 /img/upload
+                ZIYIT_API.uploadChunked(file, 'img', { fileName: file.name }).then(function (up) {
+                    var fd = new FormData();
+                    fd.append('uploadId', up.uploadId);
+                    return ZIYIT_API.request('/img/upload', { method: 'POST', body: fd });
+                }).then(function (data) {
                     status.textContent = '';
                     toast('上传成功' + (data && data.id ? '：' + data.id : ''));
                     loadImageManager();
