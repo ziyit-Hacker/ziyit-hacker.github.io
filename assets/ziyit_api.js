@@ -2107,6 +2107,7 @@
     window.ZIYIT_API = {
         BASE: '',
         backendReady: backendReady,
+        // 当前实际使用的后端地址（异步解析后才有值）；页面需要展示/拼接地址时用它，不要写死域名
         base: currentBase,
         getBases: getBases,
         getToken: getToken,

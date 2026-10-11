@@ -137,8 +137,16 @@ function probeBase(base, timeoutMs = 3000) {
         };
         const timer = setTimeout(() => finish(false), timeoutMs);
         try {
-            fetch(base + "/", { method: "GET", mode: "no-cors", cache: "no-store", signal: ctrl.signal })
-                .then(() => { clearTimeout(timer); finish(true); })
+            // 探测必须能识破“隧道挂了”：Cloudflare 1033 / ngrok 断线时错误页没有 CORS 头，
+            // 用 no-cors 探测会把它当“通”从而选中一条死地址；这里改用普通 CORS 请求 + ngrok 跳过头，
+            // 只有真正拿到后端响应（status < 500）才算可用。
+            fetch(base + "/", {
+                method: "GET",
+                cache: "no-store",
+                signal: ctrl.signal,
+                headers: { "ngrok-skip-browser-warning": "1" },
+            })
+                .then((res) => { clearTimeout(timer); finish(res.status < 500); })
                 .catch(() => { clearTimeout(timer); finish(false); });
         } catch (e) {
             clearTimeout(timer);
@@ -365,6 +373,35 @@ async function postToBase(base, path, body, exp) {
         }
     }
     throw new Error("请求失败：票据重取后仍未通过");
+}
+
+// 带候选地址回退的请求（给页面直接调用）：地址不可用（网络失败 / 跨域被拒 / 网关类 5xx）才顺延
+// 下一条候选，后端明确回的业务状态码（401/403/404/…）原样把响应交给调用方判断。
+export async function requestWithFallback(path, options) {
+    const list = baseCandidates(apiBase());
+    if (!list.length) {
+        invalidateBase();
+        throw new Error("未配置后端地址：backend.txt 为空或不可读");
+    }
+    let lastErr = null;
+    for (let i = 0; i < list.length; i++) {
+        const opts = Object.assign({}, options || {});
+        opts.headers = Object.assign({ "ngrok-skip-browser-warning": "1" }, (options && options.headers) || {});
+        try {
+            const res = await fetch(list[i] + path, opts);
+            if (res.status >= 500) throw await readError(res);
+            rememberBase(list[i]);
+            return res;
+        } catch (err) {
+            lastErr = err;
+            if (!isBaseDown(err)) throw err;
+            if (i + 1 >= list.length) {
+                invalidateBase();
+                throw err;
+            }
+        }
+    }
+    throw lastErr;
 }
 
 async function postJson(apiBaseArg, path, body) {

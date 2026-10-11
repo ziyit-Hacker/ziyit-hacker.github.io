@@ -279,7 +279,7 @@
 
     <script type="module">
         import { mount } from "./Human_verification/phantom.js";
-        import { consumeVerify, setExperienceChannel, backendReady, apiBase } from "./Human_verification/api.js";
+        import { consumeVerify, setExperienceChannel, backendReady, apiBase, requestWithFallback } from "./Human_verification/api.js";
 
         var statusCard = document.getElementById("statusCard");
         var expKeyInput = document.getElementById("expKey");
@@ -359,36 +359,34 @@
             
             statusCard.innerHTML = '<h2>体验资格</h2><div class="loading-box">正在查询体验资格…</div>';
             startBtn.disabled = true;
-            fetch(apiBase() + "/experience/status", {
-                headers: { "Authorization": "Bearer " + token }
-            }).then(function (res) {
+            try {
+                // 走带回退的请求：cookie 里的地址失效时自动顺延到 backend.txt 的地址集
+                var res = await requestWithFallback("/experience/status", {
+                    headers: { "Authorization": "Bearer " + token }
+                });
                 if (res.status === 401) {
                     alert("登录已失效，请重新登录");
                     window.location.href = "./user/";
-                    return null;
+                    return;
                 }
                 if (res.status === 404) {
                     statusCard.innerHTML = '<h2>体验资格</h2><div class="error-box">体验模式当前已关闭。</div>';
-                    return null;
+                    return;
                 }
-                return res.json().then(function (data) {
-                    if (!res.ok) {
-                        var detail = (data && data.detail) || ("查询失败 " + res.status);
-                        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
-                    }
-                    return data;
-                });
-            }).then(function (data) {
-                if (!data) return;
+                var data = await res.json().catch(function () { return null; });
+                if (!res.ok) {
+                    var detail = (data && data.detail) || ("查询失败 " + res.status);
+                    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+                }
                 status = data;
-                if (data.apiKeyPattern) {
+                if (data && data.apiKeyPattern) {
                     try { keyPattern = new RegExp(data.apiKeyPattern); } catch (e) { keyPattern = null; }
                 }
                 renderStatus();
-            }).catch(function (err) {
+            } catch (err) {
                 statusCard.innerHTML = '<h2>体验资格</h2><div class="error-box">查询失败：' +
                     esc((err && err.message) || err) + '</div>';
-            });
+            }
         }
 
         var keyPattern = null;

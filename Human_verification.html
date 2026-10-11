@@ -767,8 +767,8 @@
             var done = false;
             var timer = setTimeout(function () { if (!done) { done = true; resolve(false); } }, 3000);
             try {
-              fetch(b + '/', { method: 'GET', mode: 'no-cors', cache: 'no-store' })
-                .then(function () { if (!done) { done = true; clearTimeout(timer); resolve(true); } })
+              fetch(b + '/', { method: 'GET', cache: 'no-store', headers: { 'ngrok-skip-browser-warning': '1' } })
+                .then(function (res) { if (!done) { done = true; clearTimeout(timer); resolve(res.status < 500); } })
                 .catch(function () { if (!done) { done = true; clearTimeout(timer); resolve(false); } });
             } catch (e) { if (!done) { done = true; clearTimeout(timer); resolve(false); } }
           });
