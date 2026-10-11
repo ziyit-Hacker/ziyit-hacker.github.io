@@ -5,6 +5,9 @@
     var BASE_COOKIE = 'ziyit_api_base_ok';
     var BASE_COOKIE_DAYS = 7;
 
+    // 匿名接口（注册 / 登录）：登录前调用，永远不附带登录票据
+    var _ANON_AUTH_PATH = /^\/auth\/(register|login)(\/|\?|$)/;
+
     // 取脚本自身 URL，用来定位 <repo>/backend.txt（与页面所在层级无关）。
     var SCRIPT_SRC = '';
     try { SCRIPT_SRC = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
@@ -392,8 +395,11 @@
         options = options || {};
         options.headers = options.headers || {};
         options.headers['ngrok-skip-browser-warning'] = '1';
+        // 注册/登录这类「匿名即可调用」的接口不附带登录票据：后端这两个端点根本不读
+        // Authorization，但带上其他账号的票据会触发后端「按用户记录接口调用」的中间件，
+        // 于是出现「登录某账号后注册报 5xx / 403、退出登录或换账号就正常」这类与账号绑定的怪象。
         var token = enrollToken || getToken();
-        if (token) {
+        if (token && !_ANON_AUTH_PATH.test(path)) {
             options.headers['Authorization'] = 'Bearer ' + token;
         }
         var bases = orderedBases();
