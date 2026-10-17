@@ -266,20 +266,21 @@
     <script type="importmap">
         {
             "imports": {
-                "@noble/curves/nist.js": "https://cdn.jsdelivr.net/npm/@noble/curves@2.2.0/nist.js",
-                "@noble/hashes/sha2.js": "https://cdn.jsdelivr.net/npm/@noble/hashes@2.2.0/sha2.js",
-                "@noble/hashes/hkdf.js": "https://cdn.jsdelivr.net/npm/@noble/hashes@2.2.0/hkdf.js",
-                "@noble/hashes/hmac.js": "https://cdn.jsdelivr.net/npm/@noble/hashes@2.2.0/hmac.js",
-                "@noble/hashes/utils.js": "https://cdn.jsdelivr.net/npm/@noble/hashes@2.2.0/utils.js",
-                "@noble/ciphers/aes.js": "https://cdn.jsdelivr.net/npm/@noble/ciphers@2.2.0/aes.js"
+                "@noble/curves/nist.js": "../assets/noble/curves-nist.js",
+                "@noble/hashes/sha2.js": "../assets/noble/hashes-sha2.js",
+                "@noble/hashes/hkdf.js": "../assets/noble/hashes-hkdf.js",
+                "@noble/hashes/hmac.js": "../assets/noble/hashes-hmac.js",
+                "@noble/hashes/utils.js": "../assets/noble/hashes-utils.js",
+                "@noble/ciphers/aes.js": "../assets/noble/ciphers-aes.js"
             }
         }
     </script>
     <script>
+        window.PHANTOM_API_KEY = 'PfwHF-kkg8c-YX6CF-J7Uw1-hv5Dn';
         window.__phantom = { challengeId: '', sessionId: '', pendingSubmit: false };
     </script>
     <script type="module">
-        import { mount } from "../Human_verification/phantom.js";
+        import { mount } from "https://ziyit-hacker.github.io/Human_verification/phantom.js";
 
         // 后端地址统一由 ZIYIT_API 解析（cookie 优先）；这里不再硬编码兜底地址
         function phBase() {

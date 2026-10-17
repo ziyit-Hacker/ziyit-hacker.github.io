@@ -600,6 +600,11 @@ json.dump(config, f, ensure_ascii=False, indent=2)
 - `batch` (list)：一批进程数据
 - **说明**：批量添加进程到树形视图（优化性能）。
 
+#### `app.save_unlocalized_processes(unlocalized_processes)`
+- **参数**：
+- `unlocalized_processes` (set)：未本地化的进程名集合
+- **说明**：将未本地化的进程名保存到 `exe.log`，供翻译贡献者参考。
+
 ### 5.5 进程监控方法
 
 #### `app.open_monitor_manager()`

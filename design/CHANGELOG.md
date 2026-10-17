@@ -11,12 +11,6 @@
   - `Human_verification.html` 内联副本同款改造（`backend.txt` 相对 `location.href`）。
 - **修复体验页「无法查询资格」**（[Human_verification_experience.html](file:///f:/Code/html/ziyit/Human_verification_experience.html)）：`renderStatus()` 里遗留一行死语句 `if (!allowed && !enough && !d.hasKey) { }`，`enough` 从未声明 → 每次渲染都抛 `ReferenceError: enough is not defined`，被 `loadStatus()` 的 `.catch` 接住，卡片恒显示「查询失败：enough is not defined」，只要 `/experience/status` 通就必然查不出资格。删除该空语句。
 - **两个动态地址表的连带回归**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)）：`imageBlobUrl()`、`downloadMod()` 改为先 `await backendReady()` 再取候选地址——否则地址表尚未加载时会被误判成「连不上」。
-- **修复体验页「无法查询验证资格 / 无法完成人机验证」**：`loadStatus()` 原为裸 `fetch(apiBase() + "/experience/status")`，**没有候选地址回退**；而当前 cookie / `backend.txt` 首选域名 `ziyitstudio.ccwu.cc` 的 Cloudflare 隧道已停（Error 1033 → 530，2026-10-11 实测），跨域请求被浏览器直接拒 → 资格查询恒失败 → `status` 保持 null → 开始按钮永久 disabled。现改为走新增的 `requestWithFallback()`。
-  - `Human_verification/api.js` 新增导出 `requestWithFallback(path, options)`：按候选顺序请求，地址不可用（网络失败 / 跨域被拒 / 网关类 5xx）才顺延下一条，后端明确回的业务状态码（401/403/404）原样交给调用方。
-  - `probeBase()` 由 `no-cors` 改为**普通 CORS 请求 + `ngrok-skip-browser-warning` 头**，并以 `status < 500` 判定可用；`Human_verification.html` 内联 probe 同步。原因：`no-cors` 会把 Cloudflare 530 错误页也算「通」，导致探测选中一条死地址。
-- **`injection.html` 示例不再写死后端域名**：curl / JavaScript / Python 三份示例里的 `https://ziyitstudio.ccwu.cc/injection/detect` 改为 `__BASE__/injection/detect` 占位，运行时由 `ZIYIT_API.backendReady()` → `ZIYIT_API.base()` 填入当前解析到的地址，解析不到则显示 `<后端域名>`（反转此前「接入地址统一写本站域名」的做法）。
-- **修复注册页「登录某账号就报 5xx / 403，退出登录或换账号正常」**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js#L395-L401)）：后端 `/auth/register` 端点本身不读 `Authorization`，唯一随「登录哪个账号」变化的输入就是登录票据；而后端 `record_user_api` 中间件（`main.py:1077`）会对每个带票据的请求按用户写一份调用记录，于是注册请求被账号绑定。现在 `doRequest()` 新增匿名接口白名单 `_ANON_AUTH_PATH`（`/auth/register`、`/auth/login`），这两条路径**不再附带登录票据**。
-- **注册页不再从线上 CDN 拉人机验证包**（[user/register.html](file:///f:/Code/html/ziyit/user/register.html#L282)）：原先 `import { mount } from "https://ziyit-hacker.github.io/Human_verification/phantom.js"` 写死了线上地址，导致本地打开注册页时跑的是**线上旧 phantom/api（兜底仍是已死的 ngrok）**，而体验页跑的是本地新包 —— 环境表现不一致，且旧包缺少非分包二进制、候选地址回退等修复。改为 `../Human_verification/phantom.js`，与 `../assets/ziyit_api.js` 同源同版本。
 ### 说明
 - `backend.txt` 现含 2 条候选（`ziyitstudio.ccwu.cc`、ngrok 隧道）；改地址只需改这一个文件，前台任何位置都不再出现写死的后端域名。
 - 体验页自身不含地址逻辑，`import` 本地 `./Human_verification/api.js` 共用同一套 cookie 优先解析。
