@@ -332,7 +332,7 @@ function expHeaders() {
     return h;
 }
 
-async function postToBase(base, path, body, exp) {
+async function postToBase(base, path, body, exp, opts) {
     for (let attempt = 0; attempt < 2; attempt++) {
         const { res, done } = await fetchWithDeadline(`${base}${path}`, {
             method: "POST",
@@ -341,7 +341,7 @@ async function postToBase(base, path, body, exp) {
             credentials: "include",
             headers: { "Content-Type": "application/json", ...(exp || (await authHeaders(base))) },
             body: JSON.stringify(body),
-        });
+        }, opts);
         try {
             if (res.ok) {
                 return await res.json();
@@ -356,8 +356,12 @@ async function postToBase(base, path, body, exp) {
         }
         catch (e) {
             // 计时器到点会 abort 掉正在读的 body：统一成可重试的超时提示。
-            if (isAbortError(e))
+            if (isAbortError(e)) {
+                // 外部取消（用户换 PoW / 关闭弹窗）：原样上抛，别伪装成超时
+                if (opts && opts.signal && opts.signal.aborted)
+                    throw e;
                 throw timeoutError("请求超时，请检查网络后重试");
+            }
             throw e;
         }
         finally {
@@ -367,7 +371,7 @@ async function postToBase(base, path, body, exp) {
     throw new Error("请求失败：票据重取后仍未通过");
 }
 
-async function postJson(apiBaseArg, path, body) {
+async function postJson(apiBaseArg, path, body, opts) {
     const exp = expHeaders();
     const list = baseCandidates(apiBaseArg);
     if (!list.length) {
@@ -377,12 +381,13 @@ async function postJson(apiBaseArg, path, body) {
     let lastErr = null;
     for (let i = 0; i < list.length; i++) {
         try {
-            const data = await postToBase(list[i], path, body, exp);
+            const data = await postToBase(list[i], path, body, exp, opts);
             rememberBase(list[i]);
             return data;
         } catch (err) {
             lastErr = err;
-             
+            // 用户主动取消：不是"地址不可用"，直接退出，别去试下一个候选地址
+            if (isAbortError(err)) throw err;
             if (!isBaseDown(err)) throw err;
             if (i + 1 >= list.length) {
                  
@@ -474,12 +479,12 @@ export async function videoBinary(apiBase, challengeId, sessionId, videoUrl, opt
 // videoUrl。前端先 POST /video/ready 做就绪握手（后端记录起取时间、拉片游标归零），
 // 再用 POST /video/chunk 按预取窗口逐包拉取（每包 chunkFrames 帧的 fMP4 片段）。
 // 两接口同样要求票据 / 会话绑定，故都走 postJson（自动带票据、401 重取、换候选地址）。
-export function videoReady(apiBase, challengeId, sessionId) {
-    return postJson(apiBase, "/video/ready", { challengeId, sessionId });
+export function videoReady(apiBase, challengeId, sessionId, opts) {
+    return postJson(apiBase, "/video/ready", { challengeId, sessionId }, opts);
 }
 
-export function videoChunk(apiBase, challengeId, sessionId, index) {
-    return postJson(apiBase, "/video/chunk", { challengeId, sessionId, index });
+export function videoChunk(apiBase, challengeId, sessionId, index, opts) {
+    return postJson(apiBase, "/video/chunk", { challengeId, sessionId, index }, opts);
 }
 
 function videoPath(videoUrl, challengeId, sessionId) {

@@ -458,11 +458,13 @@ class WidgetSession {
              
              
             this.streamIntervalMs = Number(streamCfg.intervalMs) > 0 ? Number(streamCfg.intervalMs) : 50;
-            // v0.3.59：分包模式下 /challenge 不再下发 videoUrl，只给 videoStream 元数据；
-            // 按它是否有值决定走分包（MSE）还是旧的整段直下分支。
+            // 入口分流（优先级固定）：videoStream → 分包加载；否则 videoUrl → GET /video 整段直下；
+            // 两者都没有有效值 → 不注入 <video>，保持画布本地渲染。
             const videoEl = (challenge && challenge.videoStream)
                 ? await this._prepareVideoChunked(challenge)
-                : await this._prepareVideo(challenge);
+                : (challenge && challenge.videoUrl)
+                    ? await this._prepareVideo(challenge)
+                    : null;
              
             if (this._sessionClosed || this._a11ySwitched)
                 return;
@@ -688,13 +690,13 @@ class WidgetSession {
      
      
      
-    // v0.3.59 分包下发还原：/challenge 只给 videoStream 元数据（无 videoUrl）。
-    // 前端流程：POST /video/ready 就绪握手 → 按后端「取片节奏闸门」逐包 POST /video/chunk
-    // → MediaSource + SourceBuffer 边下边 append（首包含 ftyp+moov 初始化段，之后每包
-    // 一个 moof+mdat 分片）。仍把可播放的 <video> 交给 renderer（renderer 依赖
-    // currentTime 推进 + drawImage 抽帧）。
-    // 不支持 MSE 的浏览器（如老版 iOS）：退化为「取完整段 → Blob → <video>」，
-    // 网络行为（逐包 / 受闸门限速）完全一致，只是本地不再用 MSE 拼装。
+    // v0.3.61 分包下发：/challenge 只给 videoStream 元数据（无 videoUrl）。
+    // 严格按后端契约执行：POST /video/ready 握手 → 按「闸门节奏」并发预取（并发度 = 后端下发的
+    // window，默认 2）→ MSE 边下边 append，首包落地即移交渲染器、其余包后台继续 → 全部写完才
+    // endOfStream。不支持 MSE 的浏览器：同样的取片节奏，但本地攒齐后拼成整段 Blob。
+    // 红线：① 必须先 /video/ready（跳过必 409 not_opened）；② 在途请求不超过 window
+    //      （超了 409 out_of_order）；③ 不早于 i × chunkDurationMs − minPrefetch×1000 取片；
+    //      ④ 视频计时一律用 video.currentTime（见 renderer）；⑤ 分片 data 按标准 base64 解。
     async _prepareVideoChunked(challenge) {
         const meta = (challenge && challenge.videoStream) || {};
         const cid = this.challengeId || (challenge && challenge.challengeId);
@@ -708,8 +710,21 @@ class WidgetSession {
         const aborted = () => ctrl.signal.aborted || this._sessionClosed || this._a11ySwitched;
         let v = null;
         let url = "";
+        // MSE 边下边播：首包移交渲染器后，后台泵仍在跑，_videoAbort 必须保留到泵结束，
+        // 否则 destroy() 掐不断剩余分片请求。
+        let keepAbort = false;
         try {
-            const ready = await videoReady(this.apiBase, cid, sid);
+            let ready = null;
+            try {
+                ready = await videoReady(this.apiBase, cid, sid, { signal: ctrl.signal });
+            }
+            catch (e) {
+                // 404 = 后端关闭了分包（video not ready / chunking disabled）：
+                // 回退整段 videoUrl（GET /video）；连 videoUrl 都没有就降级画布本地渲染。
+                if (e && e.status === 404)
+                    return await this._fallbackFromChunked(challenge, aborted);
+                throw e;
+            }
             if (aborted())
                 return null;
             const mime = ready.mime || meta.mime || "video/mp4";
@@ -723,6 +738,9 @@ class WidgetSession {
             // 这里换成毫秒，与后端 `index × 每包时长 − 超前量` 的最早可取时刻对齐。
             const leadMs = Math.max(0, Number(ready.minPrefetch) || 0) * 1000;
             const gateOn = ready.gateEnforce !== false;
+            // 并发预取窗口：后端下发，默认 2；超过它一定 409 out_of_order
+            const win = Math.max(1, Math.floor(Number(ready.window ?? meta.window) || 2));
+            // 红线③：t0 必须在 /video/ready 完全返回之后才打点（闸门的时间基准）
             const t0 = performance.now();
             const useMse = typeof window.MediaSource !== "undefined"
                 && window.MediaSource.isTypeSupported(type);
@@ -755,32 +773,50 @@ class WidgetSession {
                 this._sourceBuffer = sb;
             }
 
-            const ordered = []; // 退化路径（无 MSE）才需要：按序拼成整段 Blob
-            for (let i = 0; i < count; i++) {
-                if (aborted())
-                    return null;
-                const bytes = await this._fetchVideoChunk(cid, sid, i, { gateOn, t0, chunkMs, leadMs, aborted });
-                if (aborted() || !bytes)
-                    return null;
-                if (useMse)
-                    await this._appendSourceBuffer(sb, bytes);
-                else
-                    ordered.push(bytes);
-                if (!aborted()) {
-                    this.status.textContent = `正在加载验证题… ${Math.min(99, Math.floor((i + 1) * 100 / count))}%`;
-                }
-            }
-            if (aborted())
-                return null;
+            // 分包泵：在途请求 ≤ win（后端 window，默认 2），按 index 顺序写入。
+            // MSE 路径首包 append 完成即返回 <video>（边下边播），其余分片后台继续，
+            // 全部写完才 endOfStream；无 MSE 时按同样的闸门/并发节奏取片后拼整段 Blob。
+            let firstReady = null;
+            let handedOff = false;
+            const firstReadyP = new Promise((resolve) => { firstReady = resolve; });
+            const pumped = this._pumpVideoChunks({
+                challengeId: cid,
+                sessionId: sid,
+                count,
+                win,
+                gateOn,
+                t0,
+                chunkMs,
+                leadMs,
+                signal: ctrl.signal,
+                aborted,
+                useMse,
+                sourceBuffer: sb,
+                mediaSource: ms,
+                mime,
+                onFirst: () => firstReady(),
+                onProgress: (done) => {
+                    if (aborted() || handedOff)
+                        return;
+                    this.status.textContent = `正在加载验证题… ${Math.min(99, Math.floor(done * 100 / count))}%`;
+                },
+            });
+            // 先挂一个空 catch：MSE 首包后本函数就返回了，后台泵的失败由
+            // _onChunkPumpError 收敛，不能变成 unhandledrejection。
+            pumped.catch(() => { });
 
             if (useMse) {
-                try {
-                    if (ms.readyState === "open")
-                        ms.endOfStream();
-                }
-                catch (e) { }
+                await Promise.race([firstReadyP, pumped]);
+                if (aborted())
+                    return null;
+                handedOff = true;
+                // 首包刚 append 完时缓冲不一定就绪；有限等待可播数据（超时交给下面的元数据兜底）。
+                await this._waitBuffered(v, { aborted });
             }
             else {
+                const ordered = await pumped;
+                if (aborted() || !ordered)
+                    return null;
                 url = URL.createObjectURL(new Blob(ordered, { type: mime }));
                 v.src = url;
                 this.videoUrl = url;
@@ -799,8 +835,24 @@ class WidgetSession {
                 return null;
             if (!v.videoWidth)
                 throw this._playbackUnsupported("视频元数据不可用");
+            if (useMse) {
+                // 边下边播：此刻把 video 交给渲染器，剩余分片继续后台加载；
+                // _videoAbort 保留到泵结束（destroy() 才能掐断在途请求）。
+                keepAbort = true;
+                pumped.then(
+                    () => { if (this._videoAbort === ctrl) this._videoAbort = null; },
+                    (e) => {
+                        // 先按错误码收敛，再释放 abort 句柄（_onChunkPumpError 靠它判断会话是否还活着）。
+                        this._onChunkPumpError(e, ctrl);
+                        if (this._videoAbort === ctrl) this._videoAbort = null;
+                    });
+            }
         }
         catch (e) {
+            // 404 要走整段回退，先别 abort；其余失败 / 取消立刻掐断后台泵。
+            if (!(e && e.status === 404)) {
+                try { ctrl.abort(); } catch (_e) { }
+            }
             try {
                 if (v)
                     v.remove();
@@ -814,6 +866,10 @@ class WidgetSession {
             this._teardownMedia();
             this.videoEl = null;
             this.videoUrl = "";
+            // 404：分包不可用（题目已清理 / 后端关闭分包）→ 回退整段 videoUrl 或画布，
+            // 不把用户留在「初始化失败」页。
+            if (e && e.status === 404)
+                return await this._fallbackFromChunked(challenge, aborted);
             // 用户中途换 PoW / 关弹窗导致的取消：预期中断，原样上抛，由 start() 静默收尾。
             if (this._sessionClosed || this._a11ySwitched)
                 throw e;
@@ -824,17 +880,153 @@ class WidgetSession {
             throw this._playbackUnsupported(e && e.message);
         }
         finally {
-            if (this._videoAbort === ctrl)
+            // 边下边播时后台泵还没结束，_videoAbort 交给泵的 settle 回调清理。
+            if (!keepAbort && this._videoAbort === ctrl)
                 this._videoAbort = null;
         }
         this.status.textContent = "";
         return v;
     }
+    // /video/ready 404：后端关闭 / 未开启分包。优先回退整段 videoUrl（GET /video）；
+    // 两者都没有就返回 null，保持画布本地渲染（不把用户丢在错误页）。
+    async _fallbackFromChunked(challenge, aborted) {
+        if (!challenge || !challenge.videoUrl)
+            return null;
+        if (aborted && aborted())
+            return null;
+        try {
+            return await this._prepareVideo(challenge);
+        }
+        catch (e) {
+            // 回退下载也失败：HTTP 错误（401/403/410…）交给 start() 按错误码分流；
+            // 其余（解码 / 网络 / 用户取消）降级画布，不阻断验证流程。
+            if (e && e.status)
+                throw e;
+            return null;
+        }
+    }
+    // 分包预取泵（边下边播的核心）：
+    //   · 在途请求数 ≤ win（后端 window，默认 2；超了后端 409 out_of_order）；
+    //   · 取片顺序仍由 _fetchVideoChunk 的闸门保证（index × chunkDurationMs − minPrefetch），
+    //     这里只是把「等闸门」的包提前放进流水线，不改变每包的最早可取时刻；
+    //   · MSE：按 index 顺序串行 append（update 期间不能再 append），首包落地触发 onFirst，
+    //     让调用方立刻把 <video> 交给渲染器；全部写完再 endOfStream；
+    //   · 无 MSE：同样节奏取片，按序返回字节数组，由调用方拼整段 Blob。
+    _pumpVideoChunks(opt) {
+        const { challengeId, sessionId, count, win, gateOn, t0, chunkMs, leadMs, signal, aborted,
+                useMse, sourceBuffer, mediaSource, onFirst, onProgress } = opt;
+        const slots = new Map();
+        let next = 0;
+        let inflight = 0;
+        let failure = null;
+        let wake = null;
+        const notify = () => {
+            const w = wake;
+            wake = null;
+            if (w)
+                w();
+        };
+        const launch = () => {
+            while (!failure && !aborted() && next < count && inflight < win) {
+                const index = next++;
+                inflight++;
+                const slot = this._fetchVideoChunk(challengeId, sessionId, index, {
+                    gateOn, t0, chunkMs, leadMs, signal, aborted,
+                }).then((bytes) => {
+                    inflight--;
+                    launch();
+                    notify();
+                    return bytes;
+                }, (e) => {
+                    inflight--;
+                    failure = e || new Error("视频分片加载失败");
+                    notify();
+                    throw failure;
+                });
+                slot.catch(() => { }); // 失败由消费端 await 抛出；避免无人消费时变成 unhandledrejection
+                slots.set(index, slot);
+            }
+        };
+        const waitSlot = (index) => new Promise((resolve) => {
+            const check = () => {
+                if (slots.has(index) || failure)
+                    return resolve();
+                wake = check;
+            };
+            check();
+        });
+        launch();
+        return (async () => {
+            const ordered = useMse ? null : [];
+            for (let i = 0; i < count; i++) {
+                if (aborted())
+                    return null;
+                if (!slots.has(i))
+                    await waitSlot(i);
+                if (aborted())
+                    return null;
+                if (failure)
+                    throw failure;
+                const slot = slots.get(i);
+                slots.delete(i);
+                const bytes = await slot;
+                if (aborted() || !bytes)
+                    return null;
+                if (useMse)
+                    await this._appendSourceBuffer(sourceBuffer, bytes);
+                else
+                    ordered.push(bytes);
+                launch(); // 消费掉一个槽位后立刻补位，保持预取窗口
+                if (i === 0 && onFirst)
+                    onFirst();
+                if (onProgress)
+                    onProgress(i + 1);
+            }
+            if (aborted())
+                return null;
+            if (useMse) {
+                try {
+                    if (mediaSource.readyState === "open")
+                        mediaSource.endOfStream();
+                }
+                catch (e) { }
+                return null;
+            }
+            return ordered;
+        })();
+    }
+    // 首包已交给渲染器后，后台泵失败的收敛点（不能再影响已返回的 <video>）。
+    // 错误码语义与 start() 一致：410 / 404 重新取题；403 按 _classify403 分流；
+    // 401 刷新票据重新取题；其余（409 重试耗尽 / 超时）也重新取题，避免卡在残片。
+    _onChunkPumpError(e, ctrl) {
+        if (!e || this._videoAbort !== ctrl || this._sessionClosed || this._a11ySwitched)
+            return;
+        const code = (e && e.status) || 0;
+        this.onError(e);
+        if (code === 410 || code === 404 || code === 401) {
+            this.status.textContent = code === 410
+                ? "验证已过期，正在重新取题…"
+                : (code === 404 ? "验证题已失效，正在重新取题…" : "会话已刷新，正在重新取题…");
+            this.scheduleRetry(800, "auto-restart");
+        }
+        else if (code === 403) {
+            const cls = this._classify403(e);
+            this.status.textContent = cls.text;
+            if (cls.kind === "env" || cls.kind === "points" || cls.kind === "method")
+                this.turnIntoRetryButton();
+            else
+                this.scheduleRetry(800, "auto-restart");
+        }
+        else {
+            this.status.textContent = "验证题加载中断，正在重新取题…";
+            this.scheduleRetry(800, "auto-restart");
+        }
+    }
     // 等到第 index 包「按闸门允许的最早时刻」再取回该包（base64 → 字节）。
     // 超速（409）按 500/1000ms 退避重试同一包，吸收网络 / 时钟抖动，避免个别包抖动
     // 让整题失败；其余错误（403/404/410/超时）原样上抛。
     async _fetchVideoChunk(challengeId, sessionId, index, opt) {
-        const { gateOn, t0, chunkMs, leadMs, aborted } = opt;
+        const { gateOn, t0, chunkMs, leadMs, signal, aborted } = opt;
         if (gateOn) {
             const earliest = t0 + Math.max(0, index * chunkMs - leadMs);
             for (;;) {
@@ -851,11 +1043,14 @@ class WidgetSession {
             if (aborted())
                 return null;
             try {
-                const res = await videoChunk(this.apiBase, challengeId, sessionId, index);
+                const res = await videoChunk(this.apiBase, challengeId, sessionId, index, { signal });
                 return base64ToBytes(res && res.data);
             }
             catch (e) {
                 lastErr = e;
+                // 用户取消（换 PoW / 关弹窗）：不是错误，交给泵按 aborted 收尾。
+                if (aborted())
+                    return null;
                 if (e && e.status === 409 && attempt < 2) {
                     await new Promise((r) => window.setTimeout(r, 500 * (attempt + 1)));
                     continue;
@@ -883,6 +1078,35 @@ class WidgetSession {
                 cleanup();
                 reject(e);
             }
+        });
+    }
+    // 等 MSE 真正可播：readyState ≥ HAVE_CURRENT_DATA，或 buffered 已覆盖 currentTime。
+    // 只做有限等待（默认 8s），超时放行——后续元数据等待 / 渲染器会兜底。
+    // 注意：这里的时间只用于「等待上限」，视频进度计时仍只认 video.currentTime。
+    _waitBuffered(v, opt = {}) {
+        const timeoutMs = Number(opt.timeoutMs) > 0 ? Number(opt.timeoutMs) : 8000;
+        const aborted = opt.aborted || (() => false);
+        return new Promise((resolve) => {
+            const deadline = performance.now() + timeoutMs;
+            const tick = () => {
+                if (aborted() || !v)
+                    return resolve();
+                try {
+                    if (v.readyState >= 2)
+                        return resolve();
+                    const b = v.buffered;
+                    const t = v.currentTime || 0;
+                    for (let i = 0; i < b.length; i++) {
+                        if (b.start(i) <= t + 0.05 && b.end(i) > t + 0.05)
+                            return resolve();
+                    }
+                }
+                catch (e) { }
+                if (performance.now() >= deadline)
+                    return resolve();
+                window.setTimeout(tick, 100);
+            };
+            tick();
         });
     }
     // 释放 MediaSource：open 态且不在 update 中时结束流，随后清空句柄引用

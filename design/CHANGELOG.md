@@ -3,6 +3,22 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.49 — 2026-10-17
+### 变更
+- **视频挑战入口分流与分包加载系统**（[Human_verification/phantom.js](file:///f:/Code/html/ziyit/Human_verification/phantom.js) / [Human_verification/api.js](file:///f:/Code/html/ziyit/Human_verification/api.js)）：
+  - 入口三路分流：`challenge.videoStream` → 分包加载；否则 `challenge.videoUrl` → `GET /video` 整段 Blob；两者皆无 → 不注入 `<video>`，保持画布本地渲染。
+  - 分包严格按契约执行：`POST /video/ready` 握手 → `type = mime; codecs="…"` + `MediaSource.isTypeSupported` → 1px 隐藏 `<video>`（`muted/playsinline/preload=auto`）→ `sourceopen` / `addSourceBuffer` / `mode="segments"` → **ready 完全返回后才打 `t0`** → 逐包 `POST /video/chunk`（闸门 `t0 + max(0, i×chunkDurationMs − minPrefetch×1000)`）→ 标准 `atob` 解 base64 → MSE 等 `updateend`，无 MSE 按序缓存 → `endOfStream()`（`readyState==="open"`）或整段 `Blob` → `loadedmetadata` 8s 兜底且 `videoWidth > 0` 后交给渲染器。
+  - **六.1 并发预取**：新增 `_pumpVideoChunks()`，在途请求数受后端下发的 `window` 限流（默认 2），替换原纯串行 `for`；每包仍严格遵守闸门时刻，409 由 `_fetchVideoChunk` 按 500/1000ms 退避重试（最多 3 次）。
+  - **六.2 边下边播**：MSE 路径首包 `appendBuffer` 完成即返回 `<video>` 交给渲染器，其余分片在后台泵继续，全部写完才 `endOfStream()`；`_videoAbort` 保留到泵结束，`destroy()` 仍可随时掐断在途请求。
+  - **六.3 补全 `_waitBuffered()`**：首包后有限等待 `readyState ≥ 2` 或 `buffered` 覆盖 `currentTime`（上限 8s），超时交由元数据等待兜底；视频进度计时仍只认 `video.currentTime`（未引入墙钟）。
+  - **六.4 / 四.错误码**：`/video/ready` 404 → `_fallbackFromChunked()` 回退 `GET /video`，无 `videoUrl` 则降级画布；分片 404 同样回退；410 / 401 → 800ms 后重新取题；403 → `_classify403` 分流（环境/点数/方式类转重试按钮，其余自动重取）；首包移交后后台泵的失败由 `_onChunkPumpError()` 按同一套错误码收敛，不会静默卡在残片。
+  - `api.js` 的 `postJson` / `postToBase` / `videoReady` / `videoChunk` 打通 `opts.signal`：`AbortController.abort()` 真正掐断在途请求，取消不再伪装成超时；`_fetchVideoChunk` 在取消时返回 `null` 交由泵静默收尾。
+- **渲染器配套**（[Human_verification/renderer.js](file:///f:/Code/html/ziyit/Human_verification/renderer.js)）：外部 `<video>` 注入、`start()` 归零 `currentTime` + `play().catch()`、计时只认 `video.currentTime`、`pause()/stop()` 同步 `video.pause()`——已在 v0.3.49 起的现网版本满足，本次核对未改。
+### 说明
+- 未改动后端一行；`/video/ready` 的 `window`（默认 2）/ `minPrefetch`（秒）/ `gateEnforce` 均按后端下发生效。
+- `node --check`（以 `.mjs` 方式校验 `phantom.js` / `api.js`）通过，`phantom.js` 诊断无报错。
+- 本次未做真机/浏览器端功能自测，仅做静态语法与类型诊断校验。
+
 ## v1.48 — 2026-10-06
 ### 变更
 - **后端地址不再写死，恢复 `<repo>/backend.txt` 动态地址表**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js) / [Human_verification/api.js](file:///f:/Code/html/ziyit/Human_verification/api.js) / [Human_verification.html](file:///f:/Code/html/ziyit/Human_verification.html)）：三处各自的兜底常量 `DEFAULT_BASE = 'https://ziyitstudio.ccwu.cc'` 一律删除，解析链改为「`localStorage['ziyit_api_base']` 覆盖 → Cookie `ziyit_api_base_ok`（上次可用地址）→ `backend.txt` 候选列表（每行一条，顺序即优先级）」。cookie 里的地址不可用时顺延试 `backend.txt` 的地址集，**全部都不可用才算真正不可用**（清 cookie，下一次请求重新拉 `backend.txt` 再判断）。
