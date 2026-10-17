@@ -279,7 +279,7 @@
 
     <script type="module">
         import { mount } from "./Human_verification/phantom.js";
-        import { consumeVerify, setExperienceChannel, backendReady, apiBase } from "./Human_verification/api.js";
+        import { consumeVerify, setExperienceChannel, backendReady, apiBase, requestWithFallback } from "./Human_verification/api.js";
 
         var statusCard = document.getElementById("statusCard");
         var expKeyInput = document.getElementById("expKey");
@@ -359,7 +359,9 @@
             
             statusCard.innerHTML = '<h2>体验资格</h2><div class="loading-box">正在查询体验资格…</div>';
             startBtn.disabled = true;
-            fetch(apiBase() + "/experience/status", {
+            // 资格查询走候选地址回退：Cookie 里的地址失效时自动改试其他地址（最多 3 轮），
+            // 不再用 apiBase() 裸拼一个地址硬连。
+            requestWithFallback("/experience/status", {
                 headers: { "Authorization": "Bearer " + token }
             }).then(function (res) {
                 if (res.status === 401) {

@@ -46,7 +46,8 @@ function baseCookie() {
 }
 
 function cachedBase() {
-    return customBase() || baseCookie();
+    // 优先用 cookie 里上次真正连通的地址；localStorage 仅作手动覆盖的补充。
+    return baseCookie() || customBase();
 }
 
 function rememberBase(base) {
@@ -101,6 +102,10 @@ function loadBases() {
     });
 }
 
+// 候选地址顺序固定：Cookie（上次可用）→ localStorage 覆盖 → 调用方指定 → backend.txt。
+// 任何一处地址不可用时按这个顺序继续试，全部失败后再从 Cookie 重新开始，最多 3 轮。
+const MAX_BASE_ROUNDS = 3;
+
 function baseCandidates(primary) {
     const list = [];
     const add = (u) => {
@@ -108,10 +113,15 @@ function baseCandidates(primary) {
         const v = String(u).replace(/\/+$/, "");
         if (list.indexOf(v) === -1) list.push(v);
     };
-    add(primary);
     add(baseCookie());
+    add(customBase());
+    add(primary);
     loadedBases.forEach(add);
     return list;
+}
+
+function sleep(ms) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 // “地址不可用”（而不是后端明确回错）：网络层失败，或网关类 5xx（隧道/网关挂了）。
@@ -137,8 +147,16 @@ function probeBase(base, timeoutMs = 3000) {
         };
         const timer = setTimeout(() => finish(false), timeoutMs);
         try {
-            fetch(base + "/", { method: "GET", mode: "no-cors", cache: "no-store", signal: ctrl.signal })
-                .then(() => { clearTimeout(timer); finish(true); })
+            // 必须用普通 CORS 请求：no-cors 连 Cloudflare 1033/530 的错误页都会成功，
+            // 会把已经挂掉的隧道误判成“可用”。根路径返回 <500（含 404）都算服务在线。
+            fetch(base + "/", {
+                method: "GET",
+                mode: "cors",
+                cache: "no-store",
+                headers: { "ngrok-skip-browser-warning": "1" },
+                signal: ctrl.signal,
+            })
+                .then((res) => { clearTimeout(timer); finish(res.status < 500); })
                 .catch(() => { clearTimeout(timer); finish(false); });
         } catch (e) {
             clearTimeout(timer);
@@ -147,10 +165,17 @@ function probeBase(base, timeoutMs = 3000) {
     });
 }
 
-// 逐条探测，返回第一个连得上的；全都连不上返回 ""（不再回落到任何写死地址）。
+// 逐条探测，返回第一个连得上的；一轮全挂就按 Cookie → 其他地址再重试，
+// 最多 3 轮；全都连不上返回 ""（不再回落到任何写死地址）。
 async function pickBase(bases) {
-    for (let i = 0; i < bases.length; i++) {
-        if (await probeBase(bases[i])) return bases[i];
+    for (let round = 0; round < MAX_BASE_ROUNDS; round++) {
+        for (let i = 0; i < bases.length; i++) {
+            // 首轮给足 3s；后续轮次地址大概率还是挂的，缩短到 1.5s 只做快速复检。
+            if (await probeBase(bases[i], round === 0 ? 3000 : 1500))
+                return bases[i];
+        }
+        if (round < MAX_BASE_ROUNDS - 1)
+            await sleep(300);
     }
     return "";
 }
@@ -182,9 +207,11 @@ export function backendReady() {
 }
 
 export function apiBase() {
+    const cookie = baseCookie();
+    if (cookie) return cookie;
     const custom = customBase();
     if (custom) return custom;
-    return resolvedBase || baseCookie() || loadedBases[0] || "";
+    return resolvedBase || loadedBases[0] || "";
 }
 
 let ticket = { token: "", expiresAt: 0 };
@@ -379,23 +406,24 @@ async function postJson(apiBaseArg, path, body, opts) {
         throw new Error("未配置后端地址：backend.txt 为空或不可读");
     }
     let lastErr = null;
-    for (let i = 0; i < list.length; i++) {
-        try {
-            const data = await postToBase(list[i], path, body, exp, opts);
-            rememberBase(list[i]);
-            return data;
-        } catch (err) {
-            lastErr = err;
-            // 用户主动取消：不是"地址不可用"，直接退出，别去试下一个候选地址
-            if (isAbortError(err)) throw err;
-            if (!isBaseDown(err)) throw err;
-            if (i + 1 >= list.length) {
-                 
-                invalidateBase();
-                throw err;
+    // Cookie → 其他候选地址，一轮全挂后再从 Cookie 开始，最多 3 轮。
+    for (let round = 0; round < MAX_BASE_ROUNDS; round++) {
+        for (let i = 0; i < list.length; i++) {
+            try {
+                const data = await postToBase(list[i], path, body, exp, opts);
+                rememberBase(list[i]);
+                return data;
+            } catch (err) {
+                lastErr = err;
+                // 用户主动取消：不是"地址不可用"，直接退出，别去试下一个候选地址
+                if (isAbortError(err)) throw err;
+                if (!isBaseDown(err)) throw err;
             }
         }
+        if (round < MAX_BASE_ROUNDS - 1)
+            await sleep(300);
     }
+    invalidateBase();
     throw lastErr;
 }
 
@@ -436,6 +464,50 @@ export function submitStreamChunk(apiBase, challengeId, sessionId, iv, ciphertex
  
 
 
+// 页面级裸请求（如体验页 /experience/status）：同样按「Cookie → 其他候选地址」顺序，
+// 一轮全挂后再从 Cookie 开始，最多 3 轮。只把网络层失败 / 网关类 5xx 当作地址不可用，
+// 后端明确返回的 4xx / 500 原样交给调用方处理（401/404 等有业务含义）。
+export async function requestWithFallback(path, options = {}) {
+    await backendReady();
+    const list = baseCandidates(resolvedBase);
+    if (!list.length) {
+        invalidateBase();
+        throw new Error("未配置后端地址：backend.txt 为空或不可读");
+    }
+    let lastErr = null;
+    for (let round = 0; round < MAX_BASE_ROUNDS; round++) {
+        for (let i = 0; i < list.length; i++) {
+            if (options.signal && options.signal.aborted)
+                throw new DOMException("Aborted", "AbortError");
+            try {
+                const res = await fetch(list[i] + path, {
+                    ...options,
+                    headers: {
+                        "ngrok-skip-browser-warning": "1",
+                        ...(options.headers || {}),
+                    },
+                });
+                if (isBaseDown({ status: res.status })) {
+                    lastErr = new Error(`后端地址不可用（${res.status}）`);
+                    lastErr.status = res.status;
+                    continue;
+                }
+                rememberBase(list[i]);
+                return res;
+            }
+            catch (err) {
+                lastErr = err;
+                if (isAbortError(err)) throw err;
+                if (!isBaseDown(err)) throw err;
+            }
+        }
+        if (round < MAX_BASE_ROUNDS - 1)
+            await sleep(300);
+    }
+    invalidateBase();
+    throw lastErr || new Error("后端地址全部不可用");
+}
+
 // 整段标准 MP4 二进制直下：GET /video 取回整段 MP4 原始字节，省掉 base64 的 33% 膨胀。
 // 鉴权为 api-key 或票据头 + sessionId 会话绑定，故必须走这里——返回 ArrayBuffer，
 // 上层直接 new Blob 交给 <video>。
@@ -455,23 +527,25 @@ export async function videoBinary(apiBase, challengeId, sessionId, videoUrl, opt
         throw new Error("未配置后端地址：backend.txt 为空或不可读");
     }
     let lastErr = null;
-    for (let i = 0; i < list.length; i++) {
-        try {
-            const buf = await getBinary(list[i], path, exp, opts);
-            rememberBase(list[i]);
-            return buf;
-        }
-        catch (err) {
-            lastErr = err;
-            // 用户主动取消：不是"地址不可用"，直接退出，别去试下一个候选地址。
-            if (isAbortError(err)) throw err;
-            if (!isBaseDown(err)) throw err;
-            if (i + 1 >= list.length) {
-                invalidateBase();
-                throw err;
+    // Cookie → 其他候选地址，一轮全挂后再从 Cookie 开始，最多 3 轮。
+    for (let round = 0; round < MAX_BASE_ROUNDS; round++) {
+        for (let i = 0; i < list.length; i++) {
+            try {
+                const buf = await getBinary(list[i], path, exp, opts);
+                rememberBase(list[i]);
+                return buf;
+            }
+            catch (err) {
+                lastErr = err;
+                // 用户主动取消：不是"地址不可用"，直接退出，别去试下一个候选地址。
+                if (isAbortError(err)) throw err;
+                if (!isBaseDown(err)) throw err;
             }
         }
+        if (round < MAX_BASE_ROUNDS - 1)
+            await sleep(300);
     }
+    invalidateBase();
     throw lastErr;
 }
 

@@ -14,12 +14,81 @@
     var readyBasePromise = null;
     var fileBases = [];
 
+    // 单条地址探活：必须用普通 CORS 请求。no-cors 连 Cloudflare 1033/530 的错误页都会
+    // 成功，会把已经挂掉的隧道误判成“可用”；根路径返回 <500（含 404）都算服务在线。
+    function probeBase(base, timeoutMs) {
+        return new Promise(function (resolve) {
+            if (typeof AbortController === 'undefined') return resolve(true);
+            var ctrl = new AbortController();
+            var done = false;
+            function finish(ok) {
+                if (done) return;
+                done = true;
+                if (!ok) { try { ctrl.abort(); } catch (e) {} }
+                resolve(ok);
+            }
+            var timer = setTimeout(function () { finish(false); }, timeoutMs || 2000);
+            try {
+                fetch(base + '/', {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-store',
+                    headers: { 'ngrok-skip-browser-warning': '1' },
+                    signal: ctrl.signal
+                }).then(function (res) {
+                    clearTimeout(timer);
+                    finish(res.status < 500);
+                }, function () {
+                    clearTimeout(timer);
+                    finish(false);
+                });
+            } catch (e) {
+                clearTimeout(timer);
+                finish(false);
+            }
+        });
+    }
+
+    // Cookie → 其他候选地址，一轮全挂后再从 Cookie 开始，最多 3 轮。
+    function pickBase(bases) {
+        var round = 0;
+        function scanRound() {
+            var i = 0;
+            var p = new Promise(function (resolve) {
+                function step() {
+                    if (i >= bases.length) return resolve('');
+                    var b = bases[i++];
+                    probeBase(b, round === 0 ? 2000 : 1000).then(function (ok) {
+                        if (ok) resolve(b);
+                        else step();
+                    });
+                }
+                step();
+            });
+            return p.then(function (found) {
+                if (found) return found;
+                round++;
+                if (round >= 3) return '';
+                return new Promise(function (r) { setTimeout(r, 300); }).then(scanRound);
+            });
+        }
+        return scanRound();
+    }
+
     function backendReady() {
         if (readyBasePromise) return readyBasePromise;
         readyBasePromise = loadFileBases().then(function () {
-            resolvedBase = cachedBase() || fileBases[0] || '';
-            if (resolvedBase) rememberBase(resolvedBase);
-            return resolvedBase;
+            var bases = getBases();
+            if (!bases.length) {
+                resolvedBase = '';
+                return '';
+            }
+            return pickBase(bases).then(function (b) {
+                resolvedBase = b || '';
+                if (b) rememberBase(b);
+                else clearBaseCookie();
+                return resolvedBase;
+            });
         });
         return readyBasePromise;
     }
@@ -52,12 +121,16 @@
 
     function getBases() {
         var list = [];
+        // 顺序固定：Cookie（上次可用）→ localStorage 覆盖 → backend.txt 地址集。
+        var cookie = getBaseCookie();
+        if (cookie) list.push(cookie);
         try {
             var custom = localStorage.getItem('ziyit_api_base');
-            if (custom) list.push(String(custom).replace(/\/+$/, ''));
+            if (custom) {
+                var c = String(custom).replace(/\/+$/, '');
+                if (list.indexOf(c) === -1) list.push(c);
+            }
         } catch (e) {}
-        var cookie = getBaseCookie();
-        if (cookie && list.indexOf(cookie) === -1) list.push(cookie);
         fileBases.forEach(function (b) { if (list.indexOf(b) === -1) list.push(b); });
         return list;
     }
@@ -93,7 +166,7 @@
     }
 
     function cachedBase() {
-        return customBase() || getBaseCookie();
+        return getBaseCookie() || customBase();
     }
 
      

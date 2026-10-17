@@ -681,7 +681,7 @@
       }
     }
   </script>
-  <script type="module" src="https://ziyit-hacker.github.io/Human_verification/main.js"></script>
+  <script type="module" src="./Human_verification/main.js"></script>
   <script>
     (function () {
       var BASE_COOKIE = 'ziyit_api_base_ok';
@@ -754,36 +754,69 @@
           var v = String(u).replace(/\/+$/, '');
           if (list.indexOf(v) === -1) list.push(v);
         }
-        add(BASE_URL);
+        // 顺序固定：Cookie（上次可用）→ localStorage 覆盖 → 当前解析地址 → backend.txt。
         add(baseCookie());
+        add(customBase());
+        add(BASE_URL);
         fileBases.forEach(function (b) { if (list.indexOf(b) === -1) list.push(b); });
         return list;
       }
 
       function backendReady() {
         if (backendPromise) return backendPromise;
-        function probe(b) {
+        // 普通 CORS 探活：no-cors 会把 Cloudflare 1033/530 的错误页误判成可用；
+        // 根路径返回 <500（含 404）都算服务在线。
+        function probe(b, timeoutMs) {
           return new Promise(function (resolve) {
+            var ctrl = null;
+            try { ctrl = new AbortController(); } catch (e) { }
             var done = false;
-            var timer = setTimeout(function () { if (!done) { done = true; resolve(false); } }, 3000);
+            function finish(ok) {
+              if (done) return;
+              done = true;
+              if (!ok && ctrl) { try { ctrl.abort(); } catch (e) { } }
+              resolve(ok);
+            }
+            var timer = setTimeout(function () { finish(false); }, timeoutMs || 2000);
             try {
-              fetch(b + '/', { method: 'GET', mode: 'no-cors', cache: 'no-store' })
-                .then(function () { if (!done) { done = true; clearTimeout(timer); resolve(true); } })
-                .catch(function () { if (!done) { done = true; clearTimeout(timer); resolve(false); } });
-            } catch (e) { if (!done) { done = true; clearTimeout(timer); resolve(false); } }
+              fetch(b + '/', {
+                method: 'GET',
+                mode: 'cors',
+                cache: 'no-store',
+                headers: { 'ngrok-skip-browser-warning': '1' },
+                signal: ctrl ? ctrl.signal : undefined
+              })
+                .then(function (res) { clearTimeout(timer); finish(res.status < 500); })
+                .catch(function () { clearTimeout(timer); finish(false); });
+            } catch (e) { clearTimeout(timer); finish(false); }
           });
         }
         function pick(list) {
-          var i = 0;
-          function next() {
-            if (i >= list.length) return Promise.resolve('');
-            var b = list[i++];
-            return probe(b).then(function (ok) { return ok ? b : next(); });
+          var round = 0;
+          function scanRound() {
+            var i = 0;
+            var p = new Promise(function (resolve) {
+              function step() {
+                if (i >= list.length) return resolve('');
+                var b = list[i++];
+                probe(b, round === 0 ? 2000 : 1000).then(function (ok) {
+                  if (ok) resolve(b);
+                  else step();
+                });
+              }
+              step();
+            });
+            return p.then(function (found) {
+              if (found) return found;
+              round++;
+              if (round >= 3) return '';
+              return new Promise(function (r) { setTimeout(r, 300); }).then(scanRound);
+            });
           }
-          return next();
+          return scanRound();
         }
-        // cookie 里上次可用的地址由 baseCandidates() 排在最前；它不可用就顺延试 backend.txt 的地址集，
-        // 全都不可用才算真正不可用（清掉 cookie，下次请求重新拉 backend.txt 再判断）。
+        // Cookie → 其他地址，一轮全挂后再从 Cookie 开始，最多 3 轮；
+        // 全都不可用才清 cookie，下次请求重新拉 backend.txt 再判断。
         backendPromise = loadFileBases().then(function () {
           return pick(baseCandidates()).then(function (b) {
             BASE_URL = b || '';
@@ -847,21 +880,31 @@
           await backendReady();
           var list = baseCandidates();
           var response = null, data = null;
-          for (var i = 0; i < list.length; i++) {
-            try {
-              response = await fetch(list[i] + '/api-key/free', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer ' + token
-                }
-              });
-              data = await response.json();
-              rememberBase(list[i]);
-              break;
-            } catch (e) {
-              if (i + 1 >= list.length) { invalidateBase(); throw e; }
+          // Cookie → 其他地址，一轮全挂后再从 Cookie 开始，最多 3 轮。
+          for (var round = 0; round < 3 && !response; round++) {
+            for (var i = 0; i < list.length; i++) {
+              try {
+                var r = await fetch(list[i] + '/api-key/free', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                  }
+                });
+                // 网关类 5xx（隧道/Cloudflare 挂了）→ 换下一个候选地址
+                if (r.status >= 500) continue;
+                response = r;
+                data = await r.json();
+                rememberBase(list[i]);
+                break;
+              } catch (e) { }
             }
+            if (!response && round < 2)
+              await new Promise(function (res) { setTimeout(res, 300); });
+          }
+          if (!response) {
+            invalidateBase();
+            throw new Error('后端地址全部不可用');
           }
           if (!response.ok) {
             var detail = data.detail || data.message || '请重试';

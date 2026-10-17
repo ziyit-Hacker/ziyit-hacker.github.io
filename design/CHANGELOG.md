@@ -3,6 +3,19 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.50 — 2026-10-17
+### 变更
+- **后端地址彻底去硬编码，统一「Cookie 优先 → 其他候选 → 最多 3 轮」**（[Human_verification/api.js](file:///f:/Code/html/ziyit/Human_verification/api.js) / [assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js) / [Human_verification.html](file:///f:/Code/html/ziyit/Human_verification.html)）：
+  - 候选顺序统一改为 **Cookie `ziyit_api_base_ok`（上次可用）→ `localStorage['ziyit_api_base']` → `backend.txt` 地址集**；`cachedBase()` / `apiBase()` / `getBases()` 同步调整。
+  - `postJson` / `videoBinary` / `pickBase` / `assets` 的 `backendReady()` 全部改为**一轮全挂后回到 Cookie 重新开始，最多 3 轮**，不再出现「试完一遍就永久失败」。
+  - 探活改为**普通 CORS 请求**并判定 `status < 500`：`no-cors` 会把 Cloudflare 1033/530 的错误页当成成功，导致已经挂掉的隧道被误判为「可用」而持续被访问。
+  - 新增 `requestWithFallback(path, options)`：页面级裸请求（体验页 `/experience/status`）也走同一套 Cookie 优先 + 3 轮回退，不再用 `apiBase() + path` 单点硬连。
+- **移除源码中最后一处写死的后端域名**（[injection.html](file:///f:/Code/html/ziyit/injection.html)）：curl / JavaScript / Python 三份示例由 `https://ziyitstudio.ccwu.cc/...` 改为 `__BASE__/injection/detect`，页面运行时用 `ZIYIT_API.backendReady()` 选出的可用地址填充。
+- **前端脚本引用改回相对路径**（[user/register.html](file:///f:/Code/html/ziyit/user/register.html) / [Human_verification.html](file:///f:/Code/html/ziyit/Human_verification.html)）：`phantom.js` / `main.js` 不再从 `https://ziyit-hacker.github.io/...` 绝对地址加载，避免本地或预览环境跑到旧版打包代码（旧版仍带 `DEFAULT_BASE` 写死地址）。
+### 说明
+- `backend.txt` 仍是唯一的地址清单，前台不再出现任何写死的后端域名；新增/下线隧道只改该文件。
+- 只改前端与本文件；**后端一行未改**；`api.js`（`.mjs` 方式）、`assets/ziyit_api.js` 的 `node --check` 通过，`Human_verification.html` / `injection.html` 内联脚本 `new Function` 校验通过。
+
 ## v1.49 — 2026-10-17
 ### 变更
 - **视频挑战入口分流与分包加载系统**（[Human_verification/phantom.js](file:///f:/Code/html/ziyit/Human_verification/phantom.js) / [Human_verification/api.js](file:///f:/Code/html/ziyit/Human_verification/api.js)）：
