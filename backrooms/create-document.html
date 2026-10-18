@@ -1576,15 +1576,20 @@
             }
 
             var SITE_BASE = 'https://ziyit-hacker.github.io';
+            // 导出时把后端图片保留成相对路径，交给导出文档里的运行时脚本按可用地址补全
+            var imgExportMode = false;
 
              
             function toAbsUrl(u) {
                 u = String(u == null ? '' : u).trim();
                 if (!u) return u;
+                u = imgPath(u);
                 if (/^(https?:)?\/\//i.test(u) || /^data:/i.test(u) || /^#/i.test(u)
                     || /^javascript:/i.test(u) || /^mailto:/i.test(u)) return u;
                 var p = u.replace(/^\.\.?\/+/, '');
                 if (!/^\//.test(p)) p = '/' + p;
+                // 后端图片：预览时拼当前可用地址；导出时保留 /img/... 相对路径
+                if (/^\/img\//i.test(p)) return imgExportMode ? p : imgAbsUrl(p);
                 return SITE_BASE + p;
             }
 
@@ -2187,24 +2192,156 @@
              
              
             var imgMgr = { target: 'copy' };
+            // 当前可用的后端地址：只存内存，绝不写进文档。
+            var imgBase = '';
+            var imgBaseLoading = null;
 
              
-            function imgApiBase() {
-                try { if (window.ZIYIT_API && ZIYIT_API.base) return ZIYIT_API.base(); } catch (e) { }
-                try { return localStorage.getItem('ziyit_api_base') || ''; } catch (e) { return ''; }
+            // 图片地址永远不冻结：先用 Cookie 里上次可用的地址，不可用再换候选，
+            // 一轮全挂回到 Cookie 重来，最多 3 轮（由 ZIYIT_API.resolveBase 保证）。
+            function ensureImgBase(force) {
+                if (imgBase && !force) return Promise.resolve(imgBase);
+                if (imgBaseLoading && !force) return imgBaseLoading;
+                if (!window.ZIYIT_API) return Promise.resolve(imgBase);
+                var p = ZIYIT_API.resolveBase ? ZIYIT_API.resolveBase() : ZIYIT_API.backendReady();
+                imgBaseLoading = Promise.resolve(p).then(function (b) {
+                    imgBase = b || '';
+                    imgBaseLoading = null;
+                    return imgBase;
+                }, function () {
+                    imgBaseLoading = null;
+                    return imgBase;
+                });
+                return imgBaseLoading;
+            }
+
+             
+            // 旧草稿/粘贴内容里可能残留某个后端域名的绝对图片地址（/img/{64位hex}），
+            // 统一还原成相对路径；本站自身域名与外部图床地址保持原样。
+            function imgPath(u) {
+                u = String(u == null ? '' : u).trim();
+                if (!u) return '';
+                var m = u.match(/^https?:\/\/([^/]+)(\/img\/[0-9a-f]{32,})([?#][^\s"']*)?$/i);
+                if (!m) return u;
+                if (m[1].toLowerCase() === 'ziyit-hacker.github.io') return u;
+                return m[2] + (m[3] || '');
             }
 
              
             function imgAbsUrl(p) {
-                p = String(p == null ? '' : p);
+                p = imgPath(p);
+                if (!p) return '';
                 if (/^(https?:)?\/\//i.test(p) || /^data:/i.test(p)) return p;
-                return imgApiBase() + p;
+                if (p.charAt(0) !== '/') p = '/' + p;
+                return (imgBase || '') + p;
+            }
+
+            // 导出文档打开时再解析图片域名：Cookie（上次可用）→ backend.txt 候选，
+            // 一轮全挂后回到 Cookie 重来，最多 3 轮；拿不到就保持 /img/... 相对路径。
+            function imgResolverRuntime() {
+                function cookieBase() {
+                    var m = document.cookie.match(/(?:^|;\s*)ziyit_api_base_ok=([^;]*)/);
+                    var c = m ? decodeURIComponent(m[1]) : '';
+                    c = String(c).replace(/\/+$/, '');
+                    return /^https?:\/\//i.test(c) ? c : '';
+                }
+                function fileBases() {
+                    return fetch('https://ziyit-hacker.github.io/backend.txt', {
+                        cache: 'no-store',
+                        headers: { 'ngrok-skip-browser-warning': '1' }
+                    }).then(function (r) { return r.ok ? r.text() : ''; })
+                        .catch(function () { return ''; })
+                        .then(function (txt) {
+                            var out = [];
+                            String(txt || '').split(/\r?\n/).forEach(function (line) {
+                                var m = line.trim().match(/https?:\/\/[^\s]+/i);
+                                if (!m) return;
+                                var u = m[0].replace(/\/+$/, '');
+                                if (out.indexOf(u) === -1) out.push(u);
+                            });
+                            return out;
+                        });
+                }
+                function probe(base, timeoutMs) {
+                    return new Promise(function (resolve) {
+                        var ctrl = new AbortController();
+                        var done = false;
+                        var timer = setTimeout(function () { finish(false); }, timeoutMs);
+                        function finish(ok) {
+                            if (done) return;
+                            done = true;
+                            clearTimeout(timer);
+                            if (!ok) { try { ctrl.abort(); } catch (e) { } }
+                            resolve(ok);
+                        }
+                        fetch(base + '/', {
+                            method: 'GET', mode: 'cors', cache: 'no-store',
+                            headers: { 'ngrok-skip-browser-warning': '1' },
+                            signal: ctrl.signal
+                        }).then(function (r) { finish(r.status < 500); })
+                            .catch(function () { finish(false); });
+                    });
+                }
+                function pick(list) {
+                    var round = 0;
+                    function scan() {
+                        var i = 0;
+                        return new Promise(function (resolve) {
+                            function step() {
+                                if (i >= list.length) { resolve(''); return; }
+                                var b = list[i++];
+                                probe(b, round === 0 ? 2500 : 1200).then(function (ok) {
+                                    if (ok) resolve(b); else step();
+                                });
+                            }
+                            step();
+                        }).then(function (found) {
+                            if (found) return found;
+                            round++;
+                            if (round >= 3) return '';
+                            return new Promise(function (r) { setTimeout(r, 300); }).then(scan);
+                        });
+                    }
+                    return scan();
+                }
+                function apply(base) {
+                    if (!base) return;
+                    var imgs = document.querySelectorAll('img[src^="/img/"]');
+                    for (var i = 0; i < imgs.length; i++) {
+                        var p = imgs[i].getAttribute('src');
+                        if (!p || p.indexOf(base) === 0) continue;
+                        imgs[i].setAttribute('src', base + p);
+                    }
+                    var els = document.querySelectorAll('[style*="/img/"]');
+                    for (var j = 0; j < els.length; j++) {
+                        var s = els[j].getAttribute('style') || '';
+                        if (s.indexOf(base) !== -1) continue;
+                        els[j].setAttribute('style', s.replace(/url\((['"]?)(\/img\/)/g, function (m, q, p) {
+                            return 'url(' + q + base + p;
+                        }));
+                    }
+                }
+                function run() {
+                    var api = window.ZIYIT_API;
+                    if (api && api.resolveBase) {
+                        Promise.resolve(api.resolveBase()).then(apply).catch(function () { });
+                        return;
+                    }
+                    fileBases().then(function (list) {
+                        var c = cookieBase();
+                        if (c && list.indexOf(c) === -1) list.unshift(c);
+                        return list.length ? pick(list) : '';
+                    }).then(apply).catch(function () { });
+                }
+                if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+                else run();
             }
 
             function openImageManager(target) {
                 imgMgr.target = target || 'copy';
                 $('img-mgr-overlay').classList.remove('hidden');
-                loadImageManager();
+                // 先按 Cookie → 候选地址探一次，缩略图才不会指向死地址
+                ensureImgBase(true).then(loadImageManager, loadImageManager);
             }
 
             function closeImageManager() {
@@ -2242,7 +2379,7 @@
                 }
                 grid.innerHTML = '';
                 images.forEach(function (im) {
-                    var path = im.url || ('/img/' + (im.id || ''));
+                    var path = imgPath(im.url || ('/img/' + (im.id || '')));
                     var tile = document.createElement('div');
                     tile.className = 'img-mgr-tile';
                     tile.innerHTML = '<img src="' + escHtml(imgAbsUrl(path)) + '" alt="' + escHtml(im.id || '') + '">'
@@ -2262,15 +2399,15 @@
 
              
             function useImage(im) {
-                var path = im.url || ('/img/' + (im.id || ''));
-                var abs = imgAbsUrl(path);
+                // 文档里只存 /img/{id} 这类路径，域名在预览/导出/打开文档时再动态解析
+                var path = imgPath(im.url || ('/img/' + (im.id || '')));
                 if (imgMgr.target === 'sdImage') {
-                    doc.sd.image = abs;
+                    doc.sd.image = path;
                     render();
                     closeImageManager();
                     toast('已设为生存难度菱形图');
                 } else if (imgMgr.target === 'descImage') {
-                    doc.descImages.push({ image: abs, alt: '图片', caption: '' });
+                    doc.descImages.push({ image: path, alt: '图片', caption: '' });
                     render();
                     closeImageManager();
                     toast('已添加到描述区图片');
@@ -2281,7 +2418,7 @@
 
              
             function copyImagePath(im) {
-                var path = im.url || ('/img/' + (im.id || ''));
+                var path = imgPath(im.url || ('/img/' + (im.id || '')));
                 function done() { toast('已复制图片地址：' + path); }
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(path).then(done, function () { fallbackCopy(path); done(); });
@@ -2586,7 +2723,7 @@
                     var imgEl = b.querySelector('img');
                     var cap = b.querySelector('.scp-image-caption');
                     doc.descImages.push({
-                        image: imgEl ? (imgEl.getAttribute('src') || '') : '',
+                        image: imgEl ? imgPath(imgEl.getAttribute('src') || '') : '',
                         alt: imgEl ? (imgEl.getAttribute('alt') || '') : '',
                         caption: cap ? cap.textContent.replace(/\s+/g, ' ').trim() : ''
                     });
@@ -2801,7 +2938,7 @@
                             url = cm ? cm[0].replace(/["']+$/, '') : '';
                         }
                         if (/[{$]/.test(url)) url = '';
-                        doc.sd.image = url || '';
+                        doc.sd.image = url ? imgPath(url) : '';
                     }
                     var lis = sdEl.querySelectorAll('.bottom-box li');
                     var sdKeys = ['one', 'two', 'three'];
@@ -2905,7 +3042,7 @@
                             url = cm ? cm[0].replace(/["']+$/, '') : '';
                         }
                         if (/[{$]/.test(url)) url = '';
-                        doc.sd.image = url || '';
+                        doc.sd.image = url ? imgPath(url) : '';
                     }
                     var lis = sdEl.querySelectorAll('.bottom-box li');
                     var sdKeys = ['one', 'two', 'three'];
@@ -3131,7 +3268,7 @@
                 renderList('exit-list', doc.exitItems, 'exitItem');
 
                 if (doc.sd.image) {
-                    $('f-sd-image-thumb').src = doc.sd.image;
+                    $('f-sd-image-thumb').src = imgAbsUrl(doc.sd.image);
                     $('f-sd-image-thumb').style.display = 'block';
                 } else {
                     $('f-sd-image-thumb').style.display = 'none';
@@ -3242,7 +3379,7 @@
                 return doc.descImages.map(function (img, i) {
                     if (!img.image) return '';
                     return '<div class="scp-image-block block-right" style="width:300px;">'
-                        + '<a class="editable" data-field="descImage:' + i + '" style="display:block;"><img src="' + escHtml(img.image) + '" alt="' + escHtml(img.alt) + '" class="image"></a>'
+                        + '<a class="editable" data-field="descImage:' + i + '" style="display:block;"><img src="' + escHtml(imgAbsUrl(img.image)) + '" alt="' + escHtml(img.alt) + '" class="image"></a>'
                         + '<div class="scp-image-caption"><a class="editable" data-field="descCaption:' + i + '">' + escHtml(img.caption) + '</a></div>'
                         + '</div>';
                 }).join('');
@@ -3292,7 +3429,9 @@
              
              
             function diamondImgHtml(cls, image) {
-                var img = image == null ? doc.sd.image : image;
+                var raw = image == null ? doc.sd.image : image;
+                // 预览用当前可用地址；导出模式下保留 toAbsUrl 给出的相对路径
+                var img = raw ? (imgExportMode ? raw : imgAbsUrl(raw)) : '';
                 if (!img) {
                     return '<div class="diamondy diamond-image ' + escHtml(cls) + ' {$image}"'
                         + ' style="--custom-image: url(&quot;{$image}&quot;)"></div>';
@@ -3552,7 +3691,7 @@
                         + '<button type="button" class="file-btn row-del">🗑 删除</button>'
                         + '</div>'
                         + '<input type="text" placeholder="图片说明（可选）" class="row-cap" value="' + escHtml(img.caption) + '">'
-                        + '<img class="img-thumb row-thumb" alt="" style="' + (img.image ? '' : 'display:none;') + '" src="' + escHtml(img.image) + '">';
+                        + '<img class="img-thumb row-thumb" alt="" style="' + (img.image ? '' : 'display:none;') + '" src="' + escHtml(imgAbsUrl(img.image)) + '">';
                     box.appendChild(row);
 
                     var urlInput = row.querySelector('.row-url');
@@ -3842,7 +3981,7 @@
                     initPresetSelect();
                     render();
                 });
-                bindInput('f-sd-image', function (v) { doc.sd.image = v; render(); });
+                bindInput('f-sd-image', function (v) { doc.sd.image = imgPath(v); render(); });
                 bindInput('f-sd-one', function (v) { doc.sd.one = v; render(); });
                 bindInput('f-sd-two', function (v) { doc.sd.two = v; render(); });
                 bindInput('f-sd-three', function (v) { doc.sd.three = v; render(); });
@@ -4030,7 +4169,13 @@
                 if (bind != null) code = bind.code;
                 var rid = bind != null ? bind.id : boundRatingId(code);
                 if (rid != null) toast('已绑定评分 ' + code + '（ID ' + rid + '）');
-                var html = buildFullHtml(rid, code);
+                var html;
+                try {
+                    imgExportMode = true;
+                    html = buildFullHtml(rid, code);
+                } finally {
+                    imgExportMode = false;
+                }
                 var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
                 var url = URL.createObjectURL(blob);
                 var a = document.createElement('a');
@@ -4243,6 +4388,10 @@
                     var sc = p.createElement('script');
                     sc.textContent = RATING_WIDGET_JS;
                     p.body.appendChild(sc);
+                    // 图片地址运行时解析：打开文档时按 Cookie → 候选 → 3 轮补全 /img/...
+                    var ir = p.createElement('script');
+                    ir.textContent = '(' + imgResolverRuntime.toString() + ')();';
+                    p.body.appendChild(ir);
                 }
 
                  
@@ -4311,6 +4460,7 @@
                         + typeBodyHtml(false) + '\n')
                     + absolutizeHtml(doc.footerCode.replace(/<\/script/gi, '<\\/script'))
                     + '<script>' + RATING_WIDGET_JS + '<\/script>\n'
+                    + '<script>' + '(' + imgResolverRuntime.toString() + ')();' + '<\/script>\n'
                     + '</div>\n</div>\n<\/body>\n<\/html>';
             }
 
@@ -4323,6 +4473,8 @@
                     initPresetSelect();
                     bindEvents();
                     render();
+                    // 先按 Cookie → 候选地址探一次，预览里的 /img/... 才能补全成可用地址
+                    ensureImgBase().then(function () { render(); });
                      
                      
                     if (doc.type === 'levels') setTimeout(loadTemplate, 300);

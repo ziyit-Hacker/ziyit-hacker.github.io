@@ -3,6 +3,23 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.51 — 2026-10-17
+### 变更
+- **后室文档生成器图片地址去硬编码**（[backrooms/create-document.html](file:///f:/Code/html/ziyit/backrooms/create-document.html)）：
+  - 新增 `ensureImgBase(force)`：图片取址改为 **Cookie `ziyit_api_base_ok`（上次可用）→ localStorage 覆盖 → `backend.txt` 候选**，一轮全挂后回到 Cookie 重来，**最多 3 轮**；地址只存在内存里，绝不写进文档。
+  - 新增 `imgPath()`：把旧草稿/粘贴内容里的 `https://任意后端/img/{64位hex}` 还原成 `/img/{id}`（本站域名与外部图床地址不动）。
+  - 插入图片（生存难度菱形图 / 描述区图片）时只存相对路径；预览缩略图、菱形图、描述图统一经 `imgAbsUrl()` 用当前可用地址补全。
+  - 导出改为相对路径落地：`imgExportMode` 下 `/img/...` 不再拼域名，导出文档末尾注入 `imgResolverRuntime()` 脚本，打开文档时按同一套「Cookie → 候选 → 3 轮」探测并回写 `img[src^="/img/"]` 与 `url(/img/...)`；拿不到地址就保持相对路径。
+  - 导入模板 / 导入已导出 HTML 时同步归一化 `doc.sd.image` 与描述区图片路径。
+- **`ZIYIT_API.resolveBase()`**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)）：强制重新探活并返回可用地址（复用 `pickBase` 的 3 轮逻辑），成功后同步 `resolvedBase` 与 Cookie，供生成器与导出文档运行时调用。
+- **生产后端已有文档同步修复**（`D:\ZIYIT主页后端业务代码\backrooms_levels\files\level-114514.html`，仅本次授权的 HTML 文档）：
+  - 6 处写死的 `https://willian-unheady-rawly.ngrok-free.dev/img/{id}` → `/img/{id}`；
+  - 修复被拼坏的菱形图地址（重复 `https://ziyit-hacker.github.io/&quot;` 前缀）；
+  - 文档末尾注入同款运行时解析脚本（`id="ziyit-img-resolve"`）。
+### 说明
+- 本次只改生产后端的 HTML 文档，**未改任何后端代码**；修改前已备份到 `%TEMP%\level-114514.html.bak`。
+- `node --check assets/ziyit_api.js` 通过；`create-document.html` 6 个内联脚本块 `new Function` 校验通过；生产文档内解析脚本 `new Function` 校验通过。
+
 ## v1.50 — 2026-10-17
 ### 变更
 - **后端地址彻底去硬编码，统一「Cookie 优先 → 其他候选 → 最多 3 轮」**（[Human_verification/api.js](file:///f:/Code/html/ziyit/Human_verification/api.js) / [assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js) / [Human_verification.html](file:///f:/Code/html/ziyit/Human_verification.html)）：

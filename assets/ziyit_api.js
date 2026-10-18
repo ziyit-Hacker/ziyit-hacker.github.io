@@ -93,6 +93,27 @@
         return readyBasePromise;
     }
 
+    // 强制重新探活并返回当前可用地址：Cookie（上次可用）→ localStorage 覆盖 → backend.txt，
+    // 一轮全挂后回到 Cookie 重来，最多 3 轮（轮次由 pickBase 保证）。
+    // 文档生成器拼图片地址、导出文档运行时重写图片 src 都用它，避免把某一刻的域名写死进产物。
+    function resolveBase() {
+        return loadFileBases().then(function () {
+            var bases = getBases();
+            if (!bases.length) {
+                resolvedBase = '';
+                return '';
+            }
+            return pickBase(bases).then(function (b) {
+                resolvedBase = b || '';
+                if (b) rememberBase(b);
+                else clearBaseCookie();
+                // 让后续 request()/base() 立即沿用这次结果，不再拿旧缓存去连
+                readyBasePromise = Promise.resolve(resolvedBase);
+                return resolvedBase;
+            });
+        });
+    }
+
     // <repo>/backend.txt：每行一条后端地址，顺序即优先级；地址表由仓库维护，前台不写死任何域名。
     function backendTxtUrl() {
         if (SCRIPT_SRC) {
@@ -2180,6 +2201,7 @@
     window.ZIYIT_API = {
         BASE: '',
         backendReady: backendReady,
+        resolveBase: resolveBase,
         base: currentBase,
         getBases: getBases,
         getToken: getToken,
