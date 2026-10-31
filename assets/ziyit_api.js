@@ -1021,8 +1021,11 @@
     }
 
      
-    function guideChat(message) {
+    function guideChat(message, source) {
         var token = getToken();
+        var body = { message: message };
+        // 带来源（如聊天墙 ?source=backrooms）时，请求体固定追加 source 字段
+        if (source) body.source = source;
         return fetchApi('/guide/chat', {
             method: 'POST',
             headers: {
@@ -1030,7 +1033,7 @@
                 'ngrok-skip-browser-warning': '1',
                 'Authorization': token ? 'Bearer ' + token : ''
             },
-            body: JSON.stringify({ message: message })
+            body: JSON.stringify(body)
         }).then(function (res) {
             return res.json().catch(function () { return null; }).then(function (data) {
                 if (!res.ok) {
@@ -1051,8 +1054,11 @@
      
      
      
-    function guideChatStream(message, onEvent) {
+    function guideChatStream(message, onEvent, source) {
         var token = getToken();
+        var body = { message: message };
+        // 带来源（如聊天墙 ?source=backrooms）时，请求体固定追加 source 字段
+        if (source) body.source = source;
         return fetchApiRaw('/guide/chat/stream', {
             method: 'POST',
             cache: 'no-store',
@@ -1062,7 +1068,7 @@
                 'ngrok-skip-browser-warning': '1',
                 'Authorization': token ? 'Bearer ' + token : ''
             },
-            body: JSON.stringify({ message: message })
+            body: JSON.stringify(body)
         }).then(function (res) {
             if (!res.ok) {
                  

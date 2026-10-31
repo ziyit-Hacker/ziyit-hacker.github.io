@@ -91,6 +91,18 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('reset-pricing').addEventListener('click', resetPricing);
 
      
+    document.querySelector('[data-section="ai-pricing-management"]').addEventListener('click', function () {
+        switchSection('ai-pricing-management');
+        updateSystemInfo('切换到 AI 工具权重');
+        loadAiPricing();
+    });
+    document.getElementById('refresh-ai-pricing').addEventListener('click', function () {
+        loadAiPricing();
+        updateSystemInfo('AI 工具权重已刷新');
+    });
+    document.getElementById('save-ai-pricing').addEventListener('click', saveAiPricing);
+
+     
     document.querySelector('[data-section="injection-management"]').addEventListener('click', function () {
         switchSection('injection-management');
         updateSystemInfo('切换到防注入检测');
@@ -2185,6 +2197,127 @@ function resetPricing() {
         updateSystemInfo('已恢复默认价目表');
     }).catch(function (err) {
         alert('恢复失败: ' + ((err && err.data && err.data.detail) || (err && err.message) || err));
+    }).finally(function () { btn.disabled = false; });
+}
+
+// ------------------------------------------------------------
+// AI 工具权重：GET/PUT /admin/ai/pricing（仅 Lv.3+）
+// 只提交改动过的工具；PUT 返回保存后的完整 ai 配置段。
+// ------------------------------------------------------------
+let aiPricingOriginal = {};   // tool -> 权重
+let aiPricingShape = 'array'; // 后端 toolWeights 是数组还是对象
+
+function aiWeightValue(v) {
+    const n = Number(v);
+    return isFinite(n) ? n : 0;
+}
+
+function aiPricingAi(cfg) {
+    // GET/PUT 可能返回 {ai:{...}} 或直接返回 ai 配置段
+    return (cfg && cfg.ai) ? cfg.ai : (cfg || {});
+}
+
+function loadAiPricing() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可访问 AI 工具权重'); return; }
+    const panel = document.getElementById('ai-pricing-panel');
+    panel.innerHTML = loadingHTML();
+    return ZIYIT_API.request('/admin/ai/pricing').then(function (cfg) {
+        renderAiPricingForm(cfg);
+    }).catch(function (err) {
+        panel.innerHTML = '<p style="padding:20px;color:var(--ziyit-danger);">加载失败: ' +
+            escAdmin((err && err.data && err.data.detail) || (err && err.message) || err) + '</p>';
+    });
+}
+
+function renderAiPricingForm(cfg) {
+    const ai = aiPricingAi(cfg);
+    const weights = ai.toolWeights;
+    const labels = ai.aiToolLabels || {};
+    aiPricingOriginal = {};
+    aiPricingShape = Array.isArray(weights) ? 'array' : 'object';
+
+    const entries = [];
+    if (Array.isArray(weights)) {
+        weights.forEach(function (item) {
+            if (item == null) return;
+            if (typeof item === 'object') {
+                const tool = item.tool || item.name || item.key;
+                if (!tool) return;
+                entries.push([tool, aiWeightValue(item.weight != null ? item.weight : item.value)]);
+            } else {
+                entries.push([String(item), 0]);
+            }
+        });
+    } else if (weights && typeof weights === 'object') {
+        Object.keys(weights).forEach(function (tool) {
+            entries.push([tool, aiWeightValue(weights[tool])]);
+        });
+    }
+
+    if (!entries.length) {
+        document.getElementById('ai-pricing-panel').innerHTML =
+            '<p style="padding:20px;color:var(--ziyit-text-secondary);">后端暂未返回 toolWeights 配置。</p>';
+        renderAiPricingMeta(ai);
+        return;
+    }
+
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">';
+    entries.forEach(function (pair) {
+        const tool = pair[0];
+        aiPricingOriginal[tool] = pair[1];
+        html += '<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--border-color);border-radius:8px;padding:10px 12px;">' +
+            '<span style="flex:1;font-size:14px;">' + escAdmin(labels[tool] || tool) +
+            ' <span style="font-size:12px;color:var(--ziyit-text-secondary);">' + escAdmin(tool) + '</span></span>' +
+            '<input type="number" class="form-input ai-weight" data-tool="' + escAdmin(tool) + '" step="0.01" min="0" style="max-width:110px;" value="' + escAdmin(pair[1]) + '">' +
+            '</div>';
+    });
+    html += '</div>';
+    document.getElementById('ai-pricing-panel').innerHTML = html;
+    renderAiPricingMeta(ai);
+}
+
+function renderAiPricingMeta(ai) {
+    const meta = document.getElementById('ai-pricing-meta');
+    const when = ai && ai.updatedAt ? new Date(Number(ai.updatedAt)).toLocaleString() : '从未修改';
+    const who = (ai && ai.updatedBy != null && ai.updatedBy !== '') ? ai.updatedBy : '—';
+    meta.textContent = '最后修改：' + when + '（' + who + '）';
+}
+
+function saveAiPricing() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可修改 AI 工具权重'); return; }
+    const inputs = document.querySelectorAll('#ai-pricing-panel .ai-weight');
+    const changed = {};
+    let hasChanged = false;
+    inputs.forEach(function (input) {
+        const tool = input.getAttribute('data-tool');
+        const val = aiWeightValue(input.value);
+        if (aiPricingOriginal[tool] !== val) {
+            changed[tool] = val;
+            hasChanged = true;
+        }
+    });
+    if (!hasChanged) {
+        alert('没有改动需要保存');
+        return;
+    }
+    // 只提交被修改的工具，并保持与读取时相同的 toolWeights 形状
+    const payloadWeights = aiPricingShape === 'array'
+        ? Object.keys(changed).map(function (tool) { return { tool: tool, weight: changed[tool] }; })
+        : changed;
+
+    const btn = document.getElementById('save-ai-pricing');
+    btn.disabled = true;
+    ZIYIT_API.request('/admin/ai/pricing', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toolWeights: payloadWeights })
+    }).then(function (cfg) {
+        renderAiPricingForm(cfg);
+        updateSystemInfo('AI 工具权重已保存');
+    }).catch(function (err) {
+        const msg = (err && err.status === 403) ? '权限不足（需 Lv.3+ 管理员）'
+            : ((err && err.data && err.data.detail) || (err && err.message) || err);
+        alert('保存失败: ' + msg);
     }).finally(function () { btn.disabled = false; });
 }
 

@@ -566,6 +566,17 @@
                 count: document.getElementById('guide-count')
             };
 
+            // ?source=backrooms：后续所有聊天请求体都要带上 source；
+            // ?prompt=...：从聊天墙「我也要问这个」跳转而来，加载完成后自动填入并发送。
+            var PAGE_SOURCE = '';
+            var PAGE_PROMPT = '';
+            try {
+                var pageQuery = new URLSearchParams(location.search);
+                PAGE_SOURCE = pageQuery.get('source') || '';
+                PAGE_PROMPT = pageQuery.get('prompt') || '';
+            } catch (e) { }
+            var autoPromptSent = false;
+
              
             function esc(s) {
                 return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -585,6 +596,13 @@
                 document.body.appendChild(t);
                 setTimeout(function () { t.style.transition = 'opacity .3s'; t.style.opacity = '0'; }, 2400);
                 setTimeout(function () { t.remove(); }, 2800);
+            }
+
+            // 后端 cost 字段 = 本轮扣除点数
+            function showCost(cost) {
+                var n = Number(cost);
+                if (!isFinite(n) || n <= 0) return;
+                showToast('本次消耗 ' + n + ' 点');
             }
 
             function scrollBottom() {
@@ -989,7 +1007,8 @@
              
              
             var streamState = null;      
-            var streamRendered = false;  
+            var streamRendered = false;
+            var streamCostShown = false;  
 
              
             function streamBubble() {
@@ -1053,6 +1072,11 @@
                     f.text = ev.reply || '';
                     f.body.innerHTML = mdToHtml(f.text);
                     streamRendered = true;
+                    // 流式接口的消耗点数在 final 事件里
+                    if (ev.cost != null) {
+                        streamCostShown = true;
+                        showCost(ev.cost);
+                    }
                 } else if (t === 'error') {
                      
                     streamDrop();
@@ -1064,7 +1088,8 @@
             function streamChat(message) {
                 streamDrop();
                 streamRendered = false;
-                if (!ZIYIT_API.guideChatStream) return ZIYIT_API.guideChat(message);
+                streamCostShown = false;
+                if (!ZIYIT_API.guideChatStream) return ZIYIT_API.guideChat(message, PAGE_SOURCE);
                 var done = null;
                 var errMsg = '';
                 return ZIYIT_API.guideChatStream(message, function (ev) {
@@ -1072,7 +1097,7 @@
                     if (ev.type === 'done') { done = ev; return; }
                     if (ev.type === 'error') errMsg = ev.message || '';
                     handleStreamEvent(ev);
-                }).then(function () {
+                }, PAGE_SOURCE).then(function () {
                     if (done) { finishStream(); return done; }
                      
                     streamDrop();
@@ -1083,7 +1108,7 @@
                     streamDrop();
                      
                     if (err && (err.status === 404 || err.status === 405 || err.noStream)) {
-                        return ZIYIT_API.guideChat(message);
+                        return ZIYIT_API.guideChat(message, PAGE_SOURCE);
                     }
                     throw err;
                 });
@@ -1123,9 +1148,23 @@
                 });
             }
 
+            // 聊天墙「我也要问这个」：填充输入框并自动发送（URLSearchParams 已解码一次）
+            function maybeAutoPrompt() {
+                if (autoPromptSent || !PAGE_PROMPT) return;
+                autoPromptSent = true;
+                var text = String(PAGE_PROMPT).slice(0, 500).trim();
+                if (!text) return;
+                el.input.value = text;
+                if (el.count) el.count.textContent = text.length + ' / 500';
+                setTimeout(function () { send(); }, 0);
+            }
+
              
             function handleChatReply(d, userText) {
                 if (!d) return;
+                // 非流式响应在结果里带 cost；流式已在 final 事件里提示过，避免重复
+                if (d.cost != null && !streamCostShown) showCost(d.cost);
+                streamCostShown = false;
                  
                 if (d.content != null && d.reply == null) d.reply = d.content;
                  
@@ -1430,6 +1469,7 @@
                     el.messages.innerHTML = '';
                     if (!d || !d.messages || !d.messages.length) {
                         addSys('您好，我是 ZIYIT 客服助手，请问有什么可以帮您？');
+                        maybeAutoPrompt();
                         return;
                     }
                     if (d.sessionId) G.sessionId = d.sessionId;
@@ -1450,9 +1490,11 @@
                         G.rendered[id] = true;
                         renderServerMessage(m, false);
                     });
+                    maybeAutoPrompt();
                 }).catch(function (err) {
                     if (err && err.status === 404) {
                         addSys('您好，我是 ZIYIT 客服助手，请问有什么可以帮您？');
+                        maybeAutoPrompt();
                         return;
                     }
                     handleError(err, false);

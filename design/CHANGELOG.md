@@ -3,6 +3,25 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.52 — 2026-10-31
+### 变更
+- **guide 页接入 source / cost / prompt**（[guide.html](file:///f:/Code/html/ziyit/guide.html)）：
+  - 用 `new URLSearchParams(location.search)` 读取 `source` 与 `prompt`；命中 `?source=backrooms` 时，后续所有 `/guide/chat`、`/guide/chat/stream` 请求体固定携带 `source: "backrooms"`。
+  - 新增 `showCost(cost)`：非流式响应解析结果里的 `cost`，流式响应监听 `final` 事件里的 `cost`，统一提示「本次消耗 X 点」；用 `streamCostShown` 避免 `done` 结果重复提示。
+  - `?prompt=<encodeURIComponent(question)>` 进入时，历史消息加载完成后自动填入输入框并触发发送（`maybeAutoPrompt`，最长 500 字，仅触发一次）。
+- **聊天墙页面上线**（[chatwall.html](file:///f:/Code/html/ziyit/chatwall.html)，新增）：
+  - `GET {API}/api/chatwall?limit=20` 拉取公开只读列表，`setInterval` 固定 30 秒轮询。
+  - 分享按钮 `POST {API}/api/chatwall/share`，请求体 `{question, answer}`；登录态优先 Cookie `guide_token`，其次站点通用 token 走 `Authorization: Bearer`；提交前做非空校验（后端空内容返回 400），成功后按返回的 `{id, cost}` 提示消耗并刷新列表。
+  - 列表项「我也要问这个」跳转 `guide.html?prompt=<encodeURIComponent(question)>`。
+- **admin 新增「AI 工具权重」（仅 Lv.3+）**（[music/admin.html](file:///f:/Code/html/ziyit/music/admin.html) / [music/admin.js](file:///f:/Code/html/ziyit/music/admin.js)）：
+  - 侧边栏新增 `data-level="3"` 的「AI 工具权重」入口，沿用 `canAccess(3)` 控制可见与操作。
+  - `GET /admin/ai/pricing` 读取配置，按 `toolWeights` 逐项生成数字输入框，显示名取 `aiToolLabels[tool]`（缺失时回退 tool）。
+  - 保存 `PUT /admin/ai/pricing` 仅提交被修改的工具；兼容 `toolWeights` 为数组（`[{tool, weight}]`）或对象两种形状；403 提示「权限不足（需 Lv.3+ 管理员）」。
+- **`ZIYIT_API` 聊天接口透传 source**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)）：`guideChat(message, source)` / `guideChatStream(message, onEvent, source)` 在请求体中按需追加 `source` 字段。
+### 说明
+- `node --check assets/ziyit_api.js`、`node --check music/admin.js` 通过；`guide.html`（1 个）、`chatwall.html`（2 个）内联脚本 `new Function` 校验通过。
+- 未改动后端代码，未改动上述三个页面以外的逻辑。
+
 ## v1.51 — 2026-10-17
 ### 变更
 - **后室文档生成器图片地址去硬编码**（[backrooms/create-document.html](file:///f:/Code/html/ziyit/backrooms/create-document.html)）：

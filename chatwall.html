@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天墙 - ZIYIT</title>
+    <meta name="description" content="ZIYIT 聊天墙：浏览公开问答，一键把感兴趣的问题带到客服助手继续提问。">
+    <meta name="author" content="ZIYIT STUDIO">
+    <link rel="icon" href="./assets/ziyit.png" type="image/x-icon">
+    <script>
+        (function () {
+            var pref = 'auto';
+            try {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
+                if (m) pref = decodeURIComponent(m[1]) || 'auto';
+            } catch (e) { }
+            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-pref', pref);
+        })();
+    </script>
+    <link rel="stylesheet" href="./assets/ziyit-theme.css">
+    <script src="./assets/ziyit_api.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: var(--ziyit-bg);
+            color: var(--ziyit-text-primary);
+        }
+
+        .page {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 28px 20px 60px;
+        }
+
+        .page-head {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .page-head h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .page-sub {
+            margin: 6px 0 20px;
+            color: var(--ziyit-text-secondary);
+            font-size: 14px;
+        }
+
+        .btn {
+            border: 1px solid var(--ziyit-border);
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            border-radius: 8px;
+            padding: 9px 18px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .btn:hover {
+            border-color: var(--ziyit-primary);
+            color: var(--ziyit-primary);
+        }
+
+        .btn.primary {
+            background: var(--ziyit-primary);
+            border-color: var(--ziyit-primary);
+            color: #fff;
+        }
+
+        .btn.primary:hover {
+            background: var(--ziyit-primary-dark);
+            color: #fff;
+        }
+
+        .btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .wall-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .wall-card {
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .wall-q {
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            word-break: break-word;
+        }
+
+        .wall-a {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--ziyit-text-secondary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .wall-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .wall-time {
+            font-size: 12px;
+            color: var(--ziyit-text-disabled);
+        }
+
+        .wall-empty,
+        .wall-error {
+            padding: 40px 16px;
+            text-align: center;
+            color: var(--ziyit-text-secondary);
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 10px;
+        }
+
+        .modal-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .modal-mask.show {
+            display: flex;
+        }
+
+        .modal {
+            width: 100%;
+            max-width: 560px;
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            padding: 22px;
+        }
+
+        .modal h2 {
+            margin: 0 0 16px;
+            font-size: 18px;
+        }
+
+        .modal label {
+            display: block;
+            font-size: 13px;
+            margin: 12px 0 6px;
+            color: var(--ziyit-text-secondary);
+        }
+
+        .modal textarea {
+            width: 100%;
+            min-height: 96px;
+            resize: vertical;
+            padding: 10px 12px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            background: var(--ziyit-bg);
+            color: var(--ziyit-text-primary);
+            font-size: 14px;
+            line-height: 1.6;
+            font-family: inherit;
+        }
+
+        .modal textarea:focus {
+            outline: none;
+            border-color: var(--ziyit-primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            top: 24px;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, .82);
+            color: #fff;
+            font-size: 14px;
+            padding: 10px 18px;
+            border-radius: 8px;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity .25s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <div class="page-head">
+            <div>
+                <h1>聊天墙</h1>
+            </div>
+            <button class="btn primary" id="open-share">分享我的问答</button>
+        </div>
+        <p class="page-sub">公开只读的问答列表，每 30 秒自动刷新；点「我也要问这个」可带着该问题继续提问。</p>
+
+        <div class="wall-list" id="wall-list">
+            <div class="wall-empty">加载中…</div>
+        </div>
+    </div>
+
+    <div class="modal-mask" id="share-mask">
+        <div class="modal">
+            <h2>分享到聊天墙</h2>
+            <label for="share-question">问题</label>
+            <textarea id="share-question" maxlength="500" placeholder="输入要公开的问题"></textarea>
+            <label for="share-answer">回答</label>
+            <textarea id="share-answer" maxlength="2000" placeholder="输入对应的回答"></textarea>
+            <div class="modal-actions">
+                <button class="btn" id="cancel-share">取消</button>
+                <button class="btn primary" id="submit-share">提交</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        (function () {
+            var listEl = document.getElementById('wall-list');
+            var maskEl = document.getElementById('share-mask');
+            var qEl = document.getElementById('share-question');
+            var aEl = document.getElementById('share-answer');
+            var submitEl = document.getElementById('submit-share');
+            var toastEl = document.getElementById('toast');
+            var toastTimer = null;
+            var loading = false;
+
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
+            function toast(text) {
+                toastEl.textContent = text;
+                toastEl.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2600);
+            }
+
+            // 后端地址：Cookie 里上次可用的 → 候选地址；一轮全挂后回到 Cookie 重来，最多 3 轮
+            function resolveApiBase() {
+                if (window.ZIYIT_API && ZIYIT_API.resolveBase) return ZIYIT_API.resolveBase();
+                if (window.ZIYIT_API && ZIYIT_API.backendReady) return ZIYIT_API.backendReady();
+                return Promise.resolve('');
+            }
+
+            // 分享接口登录态：优先 guide_token，其次站点通用 token
+            function authToken() {
+                var m = document.cookie.match(/(?:^|;\s*)guide_token=([^;]*)/);
+                var t = m ? decodeURIComponent(m[1]) : '';
+                if (t) return t;
+                try { return ZIYIT_API.getToken ? ZIYIT_API.getToken() : ''; } catch (e) { return ''; }
+            }
+
+            function renderList(items) {
+                if (!items.length) {
+                    listEl.innerHTML = '<div class="wall-empty">还没有公开问答，来分享第一条吧。</div>';
+                    return;
+                }
+                listEl.innerHTML = items.map(function (it) {
+                    var q = it && it.question != null ? it.question : '';
+                    var a = it && it.answer != null ? it.answer : '';
+                    var t = it && (it.createdAt || it.created_at || it.time || '');
+                    return '<article class="wall-card">' +
+                        '<div class="wall-q">' + esc(q) + '</div>' +
+                        '<div class="wall-a">' + esc(a) + '</div>' +
+                        '<div class="wall-foot">' +
+                        '<span class="wall-time">' + esc(t) + '</span>' +
+                        '<button class="btn wall-ask" data-question="' + esc(q) + '">我也要问这个</button>' +
+                        '</div></article>';
+                }).join('');
+            }
+
+            function loadWall() {
+                if (loading) return;
+                loading = true;
+                resolveApiBase().then(function (base) {
+                    if (!base) throw new Error('后端地址不可用');
+                    return fetch(base + '/api/chatwall?limit=20', {
+                        method: 'GET',
+                        cache: 'no-store',
+                        headers: { 'ngrok-skip-browser-warning': '1' }
+                    }).then(function (res) {
+                        if (!res.ok) throw new Error('加载失败（' + res.status + '）');
+                        return res.json();
+                    });
+                }).then(function (data) {
+                    var items = Array.isArray(data) ? data
+                        : (data && (data.items || data.list || data.data)) || [];
+                    renderList(Array.isArray(items) ? items : []);
+                }).catch(function (err) {
+                    listEl.innerHTML = '<div class="wall-error">' +
+                        esc((err && err.message) || '加载失败') + '，稍后自动重试</div>';
+                }).finally(function () {
+                    loading = false;
+                });
+            }
+
+            function openShare() {
+                maskEl.classList.add('show');
+                qEl.focus();
+            }
+
+            function closeShare() {
+                maskEl.classList.remove('show');
+            }
+
+            function submitShare() {
+                var question = String(qEl.value || '').trim();
+                var answer = String(aEl.value || '').trim();
+                // 空内容后端会返回 400，这里先拦掉
+                if (!question || !answer) {
+                    toast('问题和回答都不能为空');
+                    return;
+                }
+                submitEl.disabled = true;
+                resolveApiBase().then(function (base) {
+                    if (!base) throw new Error('后端地址不可用');
+                    var token = authToken();
+                    var headers = {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': '1'
+                    };
+                    if (token) headers['Authorization'] = 'Bearer ' + token;
+                    return fetch(base + '/api/chatwall/share', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({ question: question, answer: answer })
+                    }).then(function (res) {
+                        return res.json().catch(function () { return null; }).then(function (data) {
+                            if (!res.ok) {
+                                throw new Error((data && data.detail) || ('提交失败（' + res.status + '）'));
+                            }
+                            return data || {};
+                        });
+                    });
+                }).then(function (data) {
+                    var msg = '分享成功';
+                    if (data && data.cost != null) msg += '，本次消耗 ' + Number(data.cost) + ' 点';
+                    toast(msg);
+                    qEl.value = '';
+                    aEl.value = '';
+                    closeShare();
+                    loadWall();
+                }).catch(function (err) {
+                    toast((err && err.message) || '提交失败');
+                }).finally(function () {
+                    submitEl.disabled = false;
+                });
+            }
+
+            document.getElementById('open-share').addEventListener('click', openShare);
+            document.getElementById('cancel-share').addEventListener('click', closeShare);
+            submitEl.addEventListener('click', submitShare);
+            maskEl.addEventListener('click', function (e) {
+                if (e.target === maskEl) closeShare();
+            });
+
+            // 列表项按钮：带问题跳转到 guide.html，由 guide 页自动填入并发送
+            listEl.addEventListener('click', function (e) {
+                var btn = e.target.closest('.wall-ask');
+                if (!btn) return;
+                location.href = 'guide.html?prompt=' + encodeURIComponent(btn.getAttribute('data-question') || '');
+            });
+
+            loadWall();
+            // 固定 30 秒轮询刷新列表
+            setInterval(loadWall, 30000);
+        })();
+    </script>
+</body>
+
+</html>
