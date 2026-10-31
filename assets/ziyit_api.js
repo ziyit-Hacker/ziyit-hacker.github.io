@@ -14,6 +14,11 @@
     var readyBasePromise = null;
     var fileBases = [];
 
+    // 探活超时：ziyitstudio.ccwu.cc 这类隧道冷启动 + CORS 预检要等好几秒，
+    // 超时设短了会被误判为“后端不可达”，所以首轮给足 12 秒，后续轮次 8 秒。
+    var PROBE_TIMEOUT_MS = 12000;
+    var PROBE_RETRY_TIMEOUT_MS = 8000;
+
     // 单条地址探活：必须用普通 CORS 请求。no-cors 连 Cloudflare 1033/530 的错误页都会
     // 成功，会把已经挂掉的隧道误判成“可用”；根路径返回 <500（含 404）都算服务在线。
     function probeBase(base, timeoutMs) {
@@ -58,7 +63,7 @@
                 function step() {
                     if (i >= bases.length) return resolve('');
                     var b = bases[i++];
-                    probeBase(b, round === 0 ? 2000 : 1000).then(function (ok) {
+                    probeBase(b, round === 0 ? PROBE_TIMEOUT_MS : PROBE_RETRY_TIMEOUT_MS).then(function (ok) {
                         if (ok) resolve(b);
                         else step();
                     });

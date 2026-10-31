@@ -13,6 +13,7 @@
 ### 说明
 - 后端地址不硬编码：聊天墙统一走 `ZIYIT_API.resolveBase()`（Cookie → localStorage → `backend.txt`，内部最多 3 轮）；`apiFetch()` 在网络失败时重新探址重试，整体最多 3 轮，列表与分享接口都使用。
 - 加载状态改为骨架屏（`.wall-skeleton` 渐变动画），不再显示“加载中”文字。
+- **`ZIYIT_API` 探活超时放宽**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)）：首轮 2s → 12s、后续轮次 1s → 8s。`ziyitstudio.ccwu.cc` 冷启动与 CORS 预检耗时较长，原来的 2 秒会被误判为「后端不可达」并反复切换地址。
 - `chatwall.html` 内联脚本语法与 Cookie 分片/读取/追加逻辑已用 Node 模拟校验通过（含超容量裁剪）。
 
 ## v1.52 — 2026-10-31
