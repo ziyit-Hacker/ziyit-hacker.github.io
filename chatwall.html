@@ -688,37 +688,58 @@
                 return t == null ? '' : String(t).replace('T', ' ').replace(/\.\d+Z?$/, '').replace(/\+00:00$/, '');
             }
 
-            function messageHtml(it, isReply) {
+            var MAX_REPLY_DEPTH = 5;
+
+            function messageHtml(it, depth) {
+                depth = depth || 0;
                 var id = itemId(it);
                 var u = itemUser(it);
                 var content = itemContent(it);
-                var canAsk = !isReply && content;
-                return (isReply ? '<div class="reply-item" data-id="' + esc(id) + '">' : '<article class="wall-card" data-id="' + esc(id) + '">') +
-                    '<img class="avatar" src="' + esc(avatarSrc(u)) + '" alt="' + esc(u.name) + '" onerror="this.src=\'' + DEFAULT_AVATAR + '\'">' +
-                    (isReply
-                        ? '<div class="reply-body"><div class="reply-meta"><span class="reply-nick">' + esc(u.name) + '</span><span>' + esc(fmtTime(it.createdAt)) + '</span></div>' +
-                        '<div class="reply-text">' + esc(content) + '</div>' +
-                        '<div class="msg-actions"><button class="act like' + (isLiked(it) ? ' liked' : '') + '" data-like="' + esc(id) + '">♡ <span class="like-count">' + likeCount(it) + '</span></button>' +
-                        '<button class="act quote" data-quote="' + esc(content) + '">引用给 AI 客服</button></div></div>'
-                        : '<div class="msg-head"><span class="nickname">' + esc(u.name) + '</span><span class="wall-time">' + esc(fmtTime(it.createdAt)) + '</span></div>' +
+                var likedCls = isLiked(it) ? ' liked' : '';
+                var likeBtn = '<button class="act like' + likedCls + '" data-like="' + esc(id) + '">♡' +
+                    (depth === 0 ? ' 点赞' : '') + ' <span class="like-count">' + likeCount(it) + '</span></button>';
+                var quoteBtn = content ? '<button class="act quote" data-quote="' + esc(content) + '">引用给 AI 客服</button>' : '';
+                // 最多 5 层：第 5 层不再提供“回复”
+                var canNest = depth < MAX_REPLY_DEPTH;
+                var replyBtn = canNest
+                    ? '<button class="act reply-toggle" data-reply-toggle="' + esc(id) + '" data-nick="' + esc(u.name) + '">回复' + (replyCount(it) ? ' ' + replyCount(it) : '') + '</button>'
+                    : '';
+                var children = '<div class="replies" data-replies="' + esc(id) + '" style="display:none;"></div>';
+                var editor = canNest
+                    ? '<div class="reply-editor" data-editor="' + esc(id) + '">' +
+                    '<textarea maxlength="500" placeholder="回复 ' + esc(u.name) + '…"></textarea>' +
+                    '<div class="reply-editor-foot"><button class="btn" data-cancel-reply="' + esc(id) + '">取消</button>' +
+                    '<button class="btn primary" data-send-reply="' + esc(id) + '">回复</button></div></div>'
+                    : '';
+
+                if (depth === 0) {
+                    return '<article class="wall-card" data-id="' + esc(id) + '">' +
+                        '<div class="msg-head"><span class="nickname">' + esc(u.name) + '</span><span class="wall-time">' + esc(fmtTime(it.createdAt)) + '</span></div>' +
                         '<div class="wall-content">' +
                         (it.question != null && it.content == null
                             ? '<div class="wall-q">' + esc(it.question) + '</div><div class="wall-a">' + esc(it.answer || '') + '</div>'
                             : esc(content)) +
                         '</div>' +
-                        '<div class="msg-actions">' +
-                        '<button class="act like' + (isLiked(it) ? ' liked' : '') + '" data-like="' + esc(id) + '">♡ 点赞 <span class="like-count">' + likeCount(it) + '</span></button>' +
-                        '<button class="act reply-toggle" data-reply-toggle="' + esc(id) + '">回复' + (replyCount(it) ? ' ' + replyCount(it) : '') + '</button>' +
-                        '<button class="act quote" data-quote="' + esc(content) + '">引用给 AI 客服</button>' +
-                        (canAsk ? '<button class="act ask" data-question="' + esc(content) + '">我也要问这个</button>' : '') +
-                        '</div>' +
-                        '<div class="replies" data-replies="' + esc(id) + '" style="display:none;"></div>' +
-                        '<div class="reply-editor" data-editor="' + esc(id) + '">' +
-                        '<textarea maxlength="500" placeholder="回复 ' + esc(u.name) + '…"></textarea>' +
-                        '<div class="reply-editor-foot"><button class="btn" data-cancel-reply="' + esc(id) + '">取消</button>' +
-                        '<button class="btn primary" data-send-reply="' + esc(id) + '">回复</button></div>' +
-                        '</div>') +
-                    (isReply ? '</div>' : '</article>');
+                        '<div class="msg-actions">' + likeBtn + replyBtn + quoteBtn +
+                        (content ? '<button class="act ask" data-question="' + esc(content) + '">我也要问这个</button>' : '') +
+                        '</div>' + children + editor + '</article>';
+                }
+                return '<div class="reply-item" data-id="' + esc(id) + '" data-depth="' + depth + '">' +
+                    '<img class="avatar" src="' + esc(avatarSrc(u)) + '" alt="' + esc(u.name) + '" onerror="this.src=\'' + DEFAULT_AVATAR + '\'">' +
+                    '<div class="reply-body"><div class="reply-meta"><span class="reply-nick">' + esc(u.name) + '</span><span>' + esc(fmtTime(it.createdAt)) + '</span></div>' +
+                    '<div class="reply-text">' + esc(content) + '</div>' +
+                    '<div class="msg-actions">' + likeBtn + replyBtn + quoteBtn + '</div>' +
+                    children + editor + '</div></div>';
+            }
+
+            // 当前回复容器所在的层级：容器外层有几个 .reply-item，子节点就是第几层
+            function depthOfContainer(box) {
+                var d = 0, n = box;
+                while (n && n !== listEl) {
+                    if (n.classList && n.classList.contains('reply-item')) d++;
+                    n = n.parentElement;
+                }
+                return d;
             }
 
             function renderList(list) {
@@ -729,7 +750,7 @@
                         : '<div class="wall-empty">还没有公开消息，来发第一条吧。</div>';
                     return;
                 }
-                listEl.innerHTML = list.map(function (it) { return messageHtml(it, false); }).join('');
+                listEl.innerHTML = list.map(function (it) { return messageHtml(it, 0); }).join('');
                 // 重新拉取已展开消息的回复
                 Object.keys(expanded).forEach(function (id) {
                     if (expanded[id]) loadReplies(id, true);
@@ -797,7 +818,20 @@
                     return res.json().catch(function () { return null; }).then(function (data) {
                         if (!res.ok) {
                             var detail = data && (data.detail || data.message);
-                            var e = new Error(detail || (res.status === 429 ? '请求过于频繁，请稍后再试' : ('请求失败（' + res.status + '）')));
+                            var msg = detail;
+                            if (res.status === 429) {
+                                var wait = res.headers.get('Retry-After');
+                                msg = '请求过于频繁，请' + (wait ? ' ' + wait + ' 秒后' : '稍后') + '再试';
+                            } else if (res.status === 404) {
+                                msg = detail || '目标不存在，可能已被删除';
+                            } else if (res.status === 400) {
+                                msg = detail || '内容不符合要求（不能为空或超过 500 字）';
+                            } else if (res.status >= 500) {
+                                msg = detail || '服务器繁忙，请稍后再试';
+                            } else if (!msg) {
+                                msg = '请求失败（' + res.status + '）';
+                            }
+                            var e = new Error(msg);
                             e.status = res.status;
                             throw e;
                         }
@@ -856,7 +890,11 @@
                     cache: 'no-store',
                     headers: { 'ngrok-skip-browser-warning': '1' }
                 }).then(function (res) {
-                    if (!res.ok) throw new Error('回复加载失败（' + res.status + '）');
+                    if (!res.ok) {
+                        var e = new Error('回复加载失败（' + res.status + '）');
+                        e.status = res.status;
+                        throw e;
+                    }
                     return res.json();
                 }).then(function (data) {
                     repliesMap[parentId] = parseItems(data);
@@ -864,6 +902,14 @@
                     var btn = listEl.querySelector('[data-reply-toggle="' + parentId + '"]');
                     if (btn) btn.textContent = '回复' + (repliesMap[parentId].length ? ' ' + repliesMap[parentId].length : '');
                 }).catch(function (err) {
+                    if (err && err.status === 404) {
+                        // 父消息已被淘汰或删除：收起并刷新列表
+                        box.style.display = 'none';
+                        expanded[parentId] = false;
+                        toast('该消息不存在，可能已被删除');
+                        loadWall({ quiet: true });
+                        return;
+                    }
                     box.innerHTML = '<div class="wall-error">' + esc((err && err.message) || '回复加载失败') + '</div>';
                 });
             }
@@ -871,10 +917,20 @@
             function renderReplies(parentId) {
                 var box = listEl.querySelector('[data-replies="' + parentId + '"]');
                 if (!box) return;
+                var depth = depthOfContainer(box) + 1;
                 var list = repliesMap[parentId] || [];
                 box.innerHTML = list.length
-                    ? list.map(function (r) { return messageHtml(r, true); }).join('')
+                    ? list.map(function (r) { return messageHtml(r, depth); }).join('')
                     : '<div class="reply-item"><div class="reply-body"><div class="reply-text" style="color:var(--ziyit-text-secondary);">还没有回复</div></div></div>';
+                // 已展开的下一层继续渲染
+                list.forEach(function (r) {
+                    var cid = itemId(r);
+                    if (!expanded[cid]) return;
+                    var sub = box.querySelector('[data-replies="' + cid + '"]');
+                    if (!sub) return;
+                    sub.style.display = 'block';
+                    if (repliesMap[cid]) renderReplies(cid);
+                });
             }
 
             function sendReply(parentId) {
@@ -1009,7 +1065,12 @@
                 if (editor) {
                     editor.classList.add('show');
                     var ta = editor.querySelector('textarea');
-                    if (ta) ta.focus();
+                    if (ta) {
+                        // 约定：引用某人时在正文里写「回复 @用户名：…」
+                        var nick = t.getAttribute('data-nick') || '';
+                        if (nick && !ta.value) ta.value = '回复 @' + nick + '：';
+                        ta.focus();
+                    }
                 }
             });
 

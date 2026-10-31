@@ -9,8 +9,11 @@
   - 发布框（500 字上限 + 实时计数）、搜索框（回车/按钮触发，带结果统计）、消息卡片展示昵称、头像、时间、正文、点赞数。
   - 每条消息支持点赞、回复（内联回复列表 + 回复编辑框）、展开/收起回复；「我也要问这个」跳转 `guide.html?prompt=...`。
   - 新增「引用给 AI 客服」：消息（含回复）带 `data-quote`，跳转 `guide.html?quote=...`；guide 只把原消息按「引用聊天墙消息：「…」」格式预填到输入框并聚焦，**不自动发送**，由用户补充问题后自行发送。
+  - 楼中楼按 `parentId` 组树：点开某楼用 `?parentId=<id>` 逐层拉取（每层一次请求，最多 5 层，第 5 层不再显示“回复”）；`replyCount` 只表示直接子节点数。
+  - 回复任意消息时输入框自动前缀「回复 @用户名：…」；列表字段以 `author:{userId,username,avatarUrl}` 为准（不读裸 `userId`）。
+  - 错误提示按状态码区分：400（空/超长/超 5 层）、404（父消息或点赞目标不存在）、429（读取 `Retry-After` 提示剩余秒数）、500（服务器繁忙）。
   - 未登录（无 `ZIYIT_API.getToken()`）时发布/回复/点赞统一拦截并提示，点击后跳转 `/user/` 登录。
-  - 接口限流返回 429 时提示「请求过于频繁」；点赞结果与本地列表同步，30 秒轮询保持最新。
+  - 点赞结果与本地列表同步，30 秒轮询保持最新。
 - **按域名请求策略**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)）：新增 `HOST_POLICIES`，`ziyitstudio.ccwu.cc` 超时 45 秒、最多 3 次重试；其他地址沿用 20 秒 / 2 次。
 ### 说明
 - 聊天墙发布/回复统一 `POST /api/chatwall/share`（`{content, parentId?}`），点赞 `POST /api/chatwall/like`（`{id}`），搜索走 `GET /api/chatwall?q=...&limit=20`，回复列表走 `GET /api/chatwall?parentId=...`；后端改造方案见本次交付说明。
