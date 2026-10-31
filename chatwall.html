@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>聊天墙 - ZIYIT</title>
-    <meta name="description" content="ZIYIT 聊天墙：浏览公开问答，一键把感兴趣的问题带到客服助手继续提问。">
+    <meta name="description" content="ZIYIT 聊天墙：公开问答留言板，可发布、回复、点赞与搜索。">
     <meta name="author" content="ZIYIT STUDIO">
     <link rel="icon" href="./assets/ziyit.png" type="image/x-icon">
     <script>
@@ -35,7 +35,7 @@
         }
 
         .page {
-            max-width: 960px;
+            max-width: 860px;
             margin: 0 auto;
             padding: 28px 20px 60px;
         }
@@ -55,7 +55,7 @@
         }
 
         .page-sub {
-            margin: 6px 0 20px;
+            margin: 6px 0 18px;
             color: var(--ziyit-text-secondary);
             font-size: 14px;
         }
@@ -92,6 +92,94 @@
             cursor: not-allowed;
         }
 
+        /* 发布框 */
+        .composer {
+            background: var(--ziyit-bg-card);
+            border: 1px solid var(--ziyit-border);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+
+        .composer-main {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .composer textarea {
+            flex: 1;
+            min-height: 84px;
+            resize: vertical;
+            padding: 10px 12px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            background: var(--ziyit-bg);
+            color: var(--ziyit-text-primary);
+            font-size: 14px;
+            line-height: 1.6;
+            font-family: inherit;
+        }
+
+        .composer textarea:focus {
+            outline: none;
+            border-color: var(--ziyit-primary);
+        }
+
+        .composer-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .composer-tip {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+        }
+
+        .composer-tip.warn {
+            color: var(--ziyit-danger);
+        }
+
+        .counter {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+            margin-left: auto;
+            margin-right: 10px;
+        }
+
+        /* 搜索 */
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 9px 12px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 8px;
+            background: var(--ziyit-bg-card);
+            color: var(--ziyit-text-primary);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--ziyit-primary);
+        }
+
+        .search-meta {
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+            margin: -6px 0 12px;
+        }
+
+        /* 列表 */
         .wall-list {
             display: grid;
             gap: 14px;
@@ -126,89 +214,151 @@
             background: var(--ziyit-bg-card);
             border: 1px solid var(--ziyit-border);
             border-radius: 10px;
-            padding: 18px;
+            padding: 16px 18px;
         }
 
-        .wall-q {
-            font-size: 16px;
-            font-weight: 600;
-            line-height: 1.6;
-            margin-bottom: 10px;
-            word-break: break-word;
-        }
-
-        .wall-a {
-            font-size: 14px;
-            line-height: 1.7;
-            color: var(--ziyit-text-secondary);
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        .wall-foot {
+        .msg-head {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-top: 14px;
-            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--ziyit-bg);
+            border: 1px solid var(--ziyit-border);
+            flex: 0 0 auto;
+        }
+
+        .nickname {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
         }
 
         .wall-time {
             font-size: 12px;
             color: var(--ziyit-text-disabled);
+            margin-left: auto;
+            white-space: nowrap;
         }
 
-        .wall-empty,
-        .wall-error {
-            padding: 40px 16px;
-            text-align: center;
+        .wall-content {
+            font-size: 15px;
+            line-height: 1.75;
+            color: var(--ziyit-text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .wall-content .wall-q {
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .wall-content .wall-a {
             color: var(--ziyit-text-secondary);
-            border: 1px dashed var(--ziyit-border);
-            border-radius: 10px;
         }
 
-        .modal-mask {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, .45);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            z-index: 100;
-        }
-
-        .modal-mask.show {
+        .msg-actions {
             display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
         }
 
-        .modal {
-            width: 100%;
-            max-width: 560px;
-            background: var(--ziyit-bg-card);
-            border: 1px solid var(--ziyit-border);
-            border-radius: 12px;
-            padding: 22px;
-        }
-
-        .modal h2 {
-            margin: 0 0 16px;
-            font-size: 18px;
-        }
-
-        .modal label {
-            display: block;
+        .act {
+            border: 0;
+            background: transparent;
+            color: var(--ziyit-text-secondary);
             font-size: 13px;
-            margin: 12px 0 6px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all .18s;
+        }
+
+        .act:hover {
+            background: var(--ziyit-bg);
+            color: var(--ziyit-primary);
+        }
+
+        .act.liked {
+            color: var(--ziyit-primary);
+            font-weight: 600;
+        }
+
+        .act:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+        /* 回复区 */
+        .replies {
+            margin-top: 12px;
+            padding-left: 14px;
+            border-left: 2px solid var(--ziyit-border);
+            display: grid;
+            gap: 10px;
+        }
+
+        .reply-item {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .reply-item .avatar {
+            width: 26px;
+            height: 26px;
+        }
+
+        .reply-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .reply-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
             color: var(--ziyit-text-secondary);
         }
 
-        .modal textarea {
+        .reply-nick {
+            font-weight: 600;
+            color: var(--ziyit-text-primary);
+            font-size: 13px;
+        }
+
+        .reply-text {
+            font-size: 14px;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-top: 3px;
+        }
+
+        .reply-editor {
+            margin-top: 8px;
+            display: none;
+        }
+
+        .reply-editor.show {
+            display: block;
+        }
+
+        .reply-editor textarea {
             width: 100%;
-            min-height: 96px;
+            min-height: 64px;
             resize: vertical;
-            padding: 10px 12px;
+            padding: 8px 10px;
             border: 1px solid var(--ziyit-border);
             border-radius: 8px;
             background: var(--ziyit-bg);
@@ -218,16 +368,26 @@
             font-family: inherit;
         }
 
-        .modal textarea:focus {
+        .reply-editor textarea:focus {
             outline: none;
             border-color: var(--ziyit-primary);
         }
 
-        .modal-actions {
+        .reply-editor-foot {
             display: flex;
+            align-items: center;
             justify-content: flex-end;
-            gap: 10px;
-            margin-top: 18px;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .wall-empty,
+        .wall-error {
+            padding: 40px 16px;
+            text-align: center;
+            color: var(--ziyit-text-secondary);
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 10px;
         }
 
         .toast {
@@ -242,11 +402,22 @@
             border-radius: 8px;
             z-index: 200;
             opacity: 0;
+            pointer-events: none;
             transition: opacity .25s;
         }
 
         .toast.show {
             opacity: 1;
+        }
+
+        @media (max-width: 560px) {
+            .page {
+                padding: 20px 14px 48px;
+            }
+
+            .composer-main {
+                gap: 8px;
+            }
         }
     </style>
 </head>
@@ -257,9 +428,26 @@
             <div>
                 <h1>聊天墙</h1>
             </div>
-            <button class="btn primary" id="open-share">分享我的问答</button>
         </div>
-        <p class="page-sub">公开只读的问答列表，每 30 秒自动刷新；点「我也要问这个」可带着该问题继续提问。</p>
+        <p class="page-sub">公开留言板：发布 500 字以内的消息，可回复、点赞；每 30 秒自动刷新。</p>
+
+        <div class="composer" id="composer">
+            <div class="composer-main">
+                <textarea id="composer-input" maxlength="500" placeholder="说点什么…（发布、回复、点赞需要登录）"></textarea>
+            </div>
+            <div class="composer-foot">
+                <span class="composer-tip" id="composer-tip"></span>
+                <span class="counter" id="composer-count">0 / 500</span>
+                <button class="btn primary" id="composer-send">发布</button>
+            </div>
+        </div>
+
+        <div class="search-bar">
+            <input type="search" id="wall-search" maxlength="100" placeholder="搜索聊天墙内容…">
+            <button class="btn" id="wall-search-btn">搜索</button>
+            <button class="btn" id="wall-search-clear">清除</button>
+        </div>
+        <div class="search-meta" id="search-meta"></div>
 
         <div class="wall-list" id="wall-list">
             <div class="wall-skeleton">
@@ -270,32 +458,33 @@
         </div>
     </div>
 
-    <div class="modal-mask" id="share-mask">
-        <div class="modal">
-            <h2>分享到聊天墙</h2>
-            <label for="share-question">问题</label>
-            <textarea id="share-question" maxlength="500" placeholder="输入要公开的问题"></textarea>
-            <label for="share-answer">回答</label>
-            <textarea id="share-answer" maxlength="2000" placeholder="输入对应的回答"></textarea>
-            <div class="modal-actions">
-                <button class="btn" id="cancel-share">取消</button>
-                <button class="btn primary" id="submit-share">提交</button>
-            </div>
-        </div>
-    </div>
-
     <div class="toast" id="toast"></div>
 
     <script>
         (function () {
             var listEl = document.getElementById('wall-list');
-            var maskEl = document.getElementById('share-mask');
-            var qEl = document.getElementById('share-question');
-            var aEl = document.getElementById('share-answer');
-            var submitEl = document.getElementById('submit-share');
             var toastEl = document.getElementById('toast');
             var toastTimer = null;
             var loading = false;
+            var pendingReload = false;
+
+            var composerEl = document.getElementById('composer');
+            var inputEl = document.getElementById('composer-input');
+            var countEl = document.getElementById('composer-count');
+            var tipEl = document.getElementById('composer-tip');
+            var sendEl = document.getElementById('composer-send');
+            var searchEl = document.getElementById('wall-search');
+            var searchBtn = document.getElementById('wall-search-btn');
+            var searchClear = document.getElementById('wall-search-clear');
+            var searchMeta = document.getElementById('search-meta');
+
+            var query = '';
+            var items = [];
+            var expanded = {};      // 已展开回复的消息 id
+            var repliesMap = {};    // id -> 回复数组
+            var lastBase = '';
+            var DEFAULT_AVATAR = './assets/ziyit.png';
+            var MAX_LEN = 500;
 
             function esc(s) {
                 return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -307,7 +496,19 @@
                 toastEl.textContent = text;
                 toastEl.classList.add('show');
                 clearTimeout(toastTimer);
-                toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2600);
+                toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2800);
+            }
+
+            // 登录态：未登录不能发布 / 回复 / 点赞
+            function isLoggedIn() {
+                try { return !!(window.ZIYIT_API && ZIYIT_API.getToken && ZIYIT_API.getToken()); } catch (e) { return false; }
+            }
+
+            function requireLogin(action) {
+                if (isLoggedIn()) return true;
+                toast('请先登录后再' + action);
+                setTimeout(function () { location.href = '/user/'; }, 900);
+                return false;
             }
 
             // 聊天墙历史消息存 Cookie：单条 Cookie 编码后约 4KB，按编码后 3000 字分片，最多 10 片（约 30KB）
@@ -351,17 +552,16 @@
                 return chunks;
             }
 
-            function saveWallCache(items) {
-                var list = items.slice(0, 20);
+            function saveWallCache(list) {
+                var arr = list.slice(0, 20);
                 var json = '';
-                // 超出 Cookie 总容量时丢弃最旧的消息，保证 JSON 完整
-                while (list.length) {
-                    json = JSON.stringify(list);
+                while (arr.length) {
+                    json = JSON.stringify(arr);
                     if (encodeURIComponent(json).length <= CACHE_MAX_BYTES) break;
-                    list.pop();
+                    arr.pop();
                 }
                 clearWallCache();
-                if (!list.length) return;
+                if (!arr.length) return;
                 var chunks = splitWallCache(json);
                 chunks.forEach(function (c, idx) { setCookie(CACHE_PREFIX + idx, c, CACHE_TTL); });
                 setCookie(CACHE_PREFIX + 'n', String(chunks.length), CACHE_TTL);
@@ -378,31 +578,55 @@
                 } catch (e) { return []; }
             }
 
-            // 新分享的问答先落到 Cookie，下次打开立刻能看到
             function appendWallCache(item) {
-                var list = readWallCache();
-                list.unshift(item);
-                saveWallCache(list);
+                var cached = readWallCache();
+                cached.unshift(item);
+                saveWallCache(cached);
             }
 
-            // 后端地址：Cookie 里上次可用的 → 候选地址；一轮全挂后回到 Cookie 重来，最多 3 轮
+            // 后端地址：Cookie 里上次可用的 → localStorage → backend.txt；一轮全挂后回到 Cookie 重来，最多 3 轮
             function resolveApiBase() {
                 if (window.ZIYIT_API && ZIYIT_API.resolveBase) return ZIYIT_API.resolveBase();
                 if (window.ZIYIT_API && ZIYIT_API.backendReady) return ZIYIT_API.backendReady();
                 return Promise.resolve('');
             }
 
-            // 请求封装：地址按 Cookie → localStorage → backend.txt 探测（resolveBase 内部最多 3 轮），
-            // 网络失败时再重新探址重试，整体最多 3 轮
+            // 请求封装：ccwu 域名给更长超时与更多重试（见 ziyit_api.js 的 BASE_POLICIES）
             function apiFetch(path, options) {
+                options = options || {};
+                var host = '';
+                function policyOf(base) {
+                    try { host = new URL(base).hostname; } catch (e) { host = ''; }
+                    var slow = host === 'ziyitstudio.ccwu.cc' || /(^|\.)ccwu\.cc$/.test(host);
+                    return slow
+                        ? { timeout: 45000, retries: 3 }
+                        : { timeout: 20000, retries: 2 };
+                }
+                function once(base, timeout, attempt) {
+                    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+                    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, timeout) : null;
+                    var opts = {};
+                    for (var k in options) opts[k] = options[k];
+                    if (ctrl) opts.signal = ctrl.signal;
+                    return fetch(base + path, opts).then(function (res) {
+                        if (timer) clearTimeout(timer);
+                        return res;
+                    }, function (err) {
+                        if (timer) clearTimeout(timer);
+                        throw err;
+                    });
+                }
                 function run(attempt) {
                     return resolveApiBase().then(function (base) {
                         if (!base) {
                             if (attempt < 3) return run(attempt + 1);
                             throw new Error('后端地址不可用');
                         }
-                        return fetch(base + path, options).catch(function (err) {
-                            if (attempt < 3) return run(attempt + 1);
+                        lastBase = base;
+                        var policy = policyOf(base);
+                        return once(base, policy.timeout, attempt).catch(function (err) {
+                            // 网络层失败或超时：换/重试，最多 policy.retries 次
+                            if (attempt < policy.retries) return run(attempt + 1);
                             throw err;
                         });
                     });
@@ -410,132 +634,402 @@
                 return run(1);
             }
 
-            // 分享接口登录态：优先 guide_token，其次站点通用 token
-            function authToken() {
-                var m = document.cookie.match(/(?:^|;\s*)guide_token=([^;]*)/);
-                var t = m ? decodeURIComponent(m[1]) : '';
-                if (t) return t;
-                try { return ZIYIT_API.getToken ? ZIYIT_API.getToken() : ''; } catch (e) { return ''; }
+            function parseItems(data) {
+                var arr = Array.isArray(data) ? data : (data && (data.items || data.list || data.data)) || [];
+                return Array.isArray(arr) ? arr : [];
             }
 
-            function renderList(items) {
-                if (!items.length) {
-                    listEl.innerHTML = '<div class="wall-empty">还没有公开问答，来分享第一条吧。</div>';
+            function itemId(it) {
+                return it && it.id != null ? String(it.id) : '';
+            }
+
+            function itemContent(it) {
+                if (!it) return '';
+                if (it.content != null && it.content !== '') return String(it.content);
+                var q = it.question != null ? String(it.question) : '';
+                var a = it.answer != null ? String(it.answer) : '';
+                return [q, a].filter(function (x) { return x; }).join('\n');
+            }
+
+            function itemUser(it) {
+                var a = (it && it.author) || {};
+                return {
+                    name: a.username || a.name || it.username || '匿名用户',
+                    avatar: a.avatarUrl || a.avatar || it.avatarUrl || ''
+                };
+            }
+
+            function avatarSrc(u) {
+                var raw = u && u.avatar ? String(u.avatar) : '';
+                if (!raw) return DEFAULT_AVATAR;
+                if (/^https?:\/\//i.test(raw)) return raw;
+                if (raw.charAt(0) === '/') return (lastBase || '') + raw;
+                return raw;
+            }
+
+            function likeCount(it) {
+                var n = it && (it.likes != null ? it.likes : it.likeCount);
+                n = Number(n);
+                return isFinite(n) && n > 0 ? n : 0;
+            }
+
+            function isLiked(it) {
+                return !!(it && (it.liked || it.likedByMe));
+            }
+
+            function replyCount(it) {
+                var n = it && (it.replyCount != null ? it.replyCount : it.replies);
+                if (Array.isArray(n)) return n.length;
+                n = Number(n);
+                return isFinite(n) && n > 0 ? n : 0;
+            }
+
+            function fmtTime(t) {
+                return t == null ? '' : String(t).replace('T', ' ').replace(/\.\d+Z?$/, '').replace(/\+00:00$/, '');
+            }
+
+            function messageHtml(it, isReply) {
+                var id = itemId(it);
+                var u = itemUser(it);
+                var content = itemContent(it);
+                var canAsk = !isReply && content;
+                return (isReply ? '<div class="reply-item" data-id="' + esc(id) + '">' : '<article class="wall-card" data-id="' + esc(id) + '">') +
+                    '<img class="avatar" src="' + esc(avatarSrc(u)) + '" alt="' + esc(u.name) + '" onerror="this.src=\'' + DEFAULT_AVATAR + '\'">' +
+                    (isReply
+                        ? '<div class="reply-body"><div class="reply-meta"><span class="reply-nick">' + esc(u.name) + '</span><span>' + esc(fmtTime(it.createdAt)) + '</span></div>' +
+                        '<div class="reply-text">' + esc(content) + '</div>' +
+                        '<div class="msg-actions"><button class="act like' + (isLiked(it) ? ' liked' : '') + '" data-like="' + esc(id) + '">♡ <span class="like-count">' + likeCount(it) + '</span></button>' +
+                        '<button class="act quote" data-quote="' + esc(content) + '">引用给 AI 客服</button></div></div>'
+                        : '<div class="msg-head"><span class="nickname">' + esc(u.name) + '</span><span class="wall-time">' + esc(fmtTime(it.createdAt)) + '</span></div>' +
+                        '<div class="wall-content">' +
+                        (it.question != null && it.content == null
+                            ? '<div class="wall-q">' + esc(it.question) + '</div><div class="wall-a">' + esc(it.answer || '') + '</div>'
+                            : esc(content)) +
+                        '</div>' +
+                        '<div class="msg-actions">' +
+                        '<button class="act like' + (isLiked(it) ? ' liked' : '') + '" data-like="' + esc(id) + '">♡ 点赞 <span class="like-count">' + likeCount(it) + '</span></button>' +
+                        '<button class="act reply-toggle" data-reply-toggle="' + esc(id) + '">回复' + (replyCount(it) ? ' ' + replyCount(it) : '') + '</button>' +
+                        '<button class="act quote" data-quote="' + esc(content) + '">引用给 AI 客服</button>' +
+                        (canAsk ? '<button class="act ask" data-question="' + esc(content) + '">我也要问这个</button>' : '') +
+                        '</div>' +
+                        '<div class="replies" data-replies="' + esc(id) + '" style="display:none;"></div>' +
+                        '<div class="reply-editor" data-editor="' + esc(id) + '">' +
+                        '<textarea maxlength="500" placeholder="回复 ' + esc(u.name) + '…"></textarea>' +
+                        '<div class="reply-editor-foot"><button class="btn" data-cancel-reply="' + esc(id) + '">取消</button>' +
+                        '<button class="btn primary" data-send-reply="' + esc(id) + '">回复</button></div>' +
+                        '</div>') +
+                    (isReply ? '</div>' : '</article>');
+            }
+
+            function renderList(list) {
+                items = list;
+                if (!list.length) {
+                    listEl.innerHTML = query
+                        ? '<div class="wall-empty">没有找到匹配的内容</div>'
+                        : '<div class="wall-empty">还没有公开消息，来发第一条吧。</div>';
                     return;
                 }
-                listEl.innerHTML = items.map(function (it) {
-                    var q = it && it.question != null ? it.question : '';
-                    var a = it && it.answer != null ? it.answer : '';
-                    var t = it && (it.createdAt || it.created_at || it.time || '');
-                    return '<article class="wall-card">' +
-                        '<div class="wall-q">' + esc(q) + '</div>' +
-                        '<div class="wall-a">' + esc(a) + '</div>' +
-                        '<div class="wall-foot">' +
-                        '<span class="wall-time">' + esc(t) + '</span>' +
-                        '<button class="btn wall-ask" data-question="' + esc(q) + '">我也要问这个</button>' +
-                        '</div></article>';
-                }).join('');
+                listEl.innerHTML = list.map(function (it) { return messageHtml(it, false); }).join('');
+                // 重新拉取已展开消息的回复
+                Object.keys(expanded).forEach(function (id) {
+                    if (expanded[id]) loadReplies(id, true);
+                });
             }
 
-            function loadWall() {
-                if (loading) return;
+            function updateListCount() {
+                if (query) {
+                    searchMeta.textContent = '搜索「' + query + '」：' + items.length + ' 条结果';
+                } else {
+                    searchMeta.textContent = '';
+                }
+            }
+
+            function loadWall(opts) {
+                opts = opts || {};
+                if (loading) {
+                    pendingReload = true;
+                    return;
+                }
                 loading = true;
-                apiFetch('/api/chatwall?limit=20', {
+                var q = query ? '&q=' + encodeURIComponent(query) : '';
+                apiFetch('/api/chatwall?limit=20' + q, {
                     method: 'GET',
                     cache: 'no-store',
                     headers: { 'ngrok-skip-browser-warning': '1' }
                 }).then(function (res) {
-                    if (!res.ok) throw new Error('加载失败（' + res.status + '）');
+                    if (!res.ok) {
+                        var e = new Error('加载失败（' + res.status + '）');
+                        e.status = res.status;
+                        throw e;
+                    }
                     return res.json();
                 }).then(function (data) {
-                    var items = Array.isArray(data) ? data
-                        : (data && (data.items || data.list || data.data)) || [];
-                    items = Array.isArray(items) ? items : [];
-                    if (items.length) saveWallCache(items);
-                    renderList(items);
+                    var list = parseItems(data);
+                    if (!query && list.length) saveWallCache(list);
+                    renderList(list);
+                    updateListCount();
                 }).catch(function (err) {
-                    // 后端暂不可用时保留 Cookie 里的历史消息
                     if (listEl.querySelector('.wall-card')) return;
                     listEl.innerHTML = '<div class="wall-error">' +
-                        esc((err && err.message) || '加载失败') + '，稍后自动重试</div>';
+                        esc((err && err.status === 429) ? '请求过于频繁，请稍后再试' : ((err && err.message) || '加载失败')) +
+                        '，稍后自动重试</div>';
                 }).finally(function () {
                     loading = false;
+                    if (pendingReload) {
+                        pendingReload = false;
+                        loadWall();
+                    }
                 });
             }
 
-            function openShare() {
-                maskEl.classList.add('show');
-                qEl.focus();
-            }
-
-            function closeShare() {
-                maskEl.classList.remove('show');
-            }
-
-            function submitShare() {
-                var question = String(qEl.value || '').trim();
-                var answer = String(aEl.value || '').trim();
-                // 空内容后端会返回 400，这里先拦掉
-                if (!question || !answer) {
-                    toast('问题和回答都不能为空');
-                    return;
-                }
-                submitEl.disabled = true;
-                var token = authToken();
-                var headers = {
-                    'Content-Type': 'application/json',
-                    'ngrok-skip-browser-warning': '1'
-                };
-                if (token) headers['Authorization'] = 'Bearer ' + token;
-                apiFetch('/api/chatwall/share', {
+            function postJson(path, body) {
+                return apiFetch(path, {
                     method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify({ question: question, answer: answer })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': '1',
+                        'Authorization': 'Bearer ' + (function () {
+                            try { return ZIYIT_API.getToken ? ZIYIT_API.getToken() : ''; } catch (e) { return ''; }
+                        })()
+                    },
+                    body: JSON.stringify(body)
                 }).then(function (res) {
                     return res.json().catch(function () { return null; }).then(function (data) {
                         if (!res.ok) {
-                            throw new Error((data && data.detail) || ('提交失败（' + res.status + '）'));
+                            var detail = data && (data.detail || data.message);
+                            var e = new Error(detail || (res.status === 429 ? '请求过于频繁，请稍后再试' : ('请求失败（' + res.status + '）')));
+                            e.status = res.status;
+                            throw e;
                         }
                         return data || {};
                     });
-                }).then(function (data) {
-                    var msg = '分享成功';
-                    if (data && data.cost != null) msg += '，本次消耗 ' + Number(data.cost) + ' 点';
-                    toast(msg);
-                    // 先写进 Cookie 并展示，列表接口返回后再用服务端数据覆盖
-                    appendWallCache({ question: question, answer: answer, createdAt: new Date().toLocaleString('zh-CN') });
-                    renderList(readWallCache());
-                    qEl.value = '';
-                    aEl.value = '';
-                    closeShare();
-                    loadWall();
-                }).catch(function (err) {
-                    toast((err && err.message) || '提交失败');
-                }).finally(function () {
-                    submitEl.disabled = false;
                 });
             }
 
-            document.getElementById('open-share').addEventListener('click', openShare);
-            document.getElementById('cancel-share').addEventListener('click', closeShare);
-            submitEl.addEventListener('click', submitShare);
-            maskEl.addEventListener('click', function (e) {
-                if (e.target === maskEl) closeShare();
+            function publishMessage(content, parentId) {
+                var body = { content: content };
+                if (parentId) body.parentId = parentId;
+                return postJson('/api/chatwall/share', body);
+            }
+
+            function sendMain() {
+                var text = String(inputEl.value || '').trim();
+                if (!requireLogin('发布消息')) return;
+                if (!text) {
+                    toast('消息内容不能为空');
+                    return;
+                }
+                if (text.length > MAX_LEN) {
+                    toast('单条消息不能超过 ' + MAX_LEN + ' 字');
+                    return;
+                }
+                sendEl.disabled = true;
+                publishMessage(text).then(function (data) {
+                    toast('发布成功');
+                    appendWallCache({
+                        id: data && data.id,
+                        content: text,
+                        createdAt: new Date().toLocaleString('zh-CN'),
+                        author: { username: '我', avatarUrl: '' },
+                        likes: 0
+                    });
+                    inputEl.value = '';
+                    countEl.textContent = '0 / ' + MAX_LEN;
+                    loadWall({ quiet: true });
+                }).catch(function (err) {
+                    toast((err && err.message) || '发布失败');
+                }).finally(function () {
+                    sendEl.disabled = false;
+                });
+            }
+
+            function loadReplies(parentId, keepOpen) {
+                var box = listEl.querySelector('[data-replies="' + parentId + '"]');
+                if (!box) return;
+                box.style.display = 'block';
+                expanded[parentId] = true;
+                if (keepOpen && repliesMap[parentId]) {
+                    renderReplies(parentId);
+                }
+                apiFetch('/api/chatwall?limit=50&parentId=' + encodeURIComponent(parentId), {
+                    method: 'GET',
+                    cache: 'no-store',
+                    headers: { 'ngrok-skip-browser-warning': '1' }
+                }).then(function (res) {
+                    if (!res.ok) throw new Error('回复加载失败（' + res.status + '）');
+                    return res.json();
+                }).then(function (data) {
+                    repliesMap[parentId] = parseItems(data);
+                    renderReplies(parentId);
+                    var btn = listEl.querySelector('[data-reply-toggle="' + parentId + '"]');
+                    if (btn) btn.textContent = '回复' + (repliesMap[parentId].length ? ' ' + repliesMap[parentId].length : '');
+                }).catch(function (err) {
+                    box.innerHTML = '<div class="wall-error">' + esc((err && err.message) || '回复加载失败') + '</div>';
+                });
+            }
+
+            function renderReplies(parentId) {
+                var box = listEl.querySelector('[data-replies="' + parentId + '"]');
+                if (!box) return;
+                var list = repliesMap[parentId] || [];
+                box.innerHTML = list.length
+                    ? list.map(function (r) { return messageHtml(r, true); }).join('')
+                    : '<div class="reply-item"><div class="reply-body"><div class="reply-text" style="color:var(--ziyit-text-secondary);">还没有回复</div></div></div>';
+            }
+
+            function sendReply(parentId) {
+                if (!requireLogin('回复')) return;
+                var editor = listEl.querySelector('[data-editor="' + parentId + '"]');
+                if (!editor) return;
+                var ta = editor.querySelector('textarea');
+                var btn = editor.querySelector('[data-send-reply="' + parentId + '"]');
+                var text = String(ta.value || '').trim();
+                if (!text) {
+                    toast('回复内容不能为空');
+                    return;
+                }
+                if (text.length > MAX_LEN) {
+                    toast('回复不能超过 ' + MAX_LEN + ' 字');
+                    return;
+                }
+                btn.disabled = true;
+                publishMessage(text, parentId).then(function () {
+                    toast('回复成功');
+                    ta.value = '';
+                    editor.classList.remove('show');
+                    delete repliesMap[parentId];
+                    loadReplies(parentId, true);
+                }).catch(function (err) {
+                    toast((err && err.message) || '回复失败');
+                }).finally(function () {
+                    btn.disabled = false;
+                });
+            }
+
+            function toggleLike(id, btn) {
+                if (!requireLogin('点赞')) return;
+                btn.disabled = true;
+                postJson('/api/chatwall/like', { id: id }).then(function (data) {
+                    var liked = data && data.liked != null ? !!data.liked : true;
+                    var count = data && data.likes != null ? Number(data.likes) : null;
+                    var span = btn.querySelector('.like-count');
+                    if (count == null) {
+                        count = Math.max(0, likeCount({ likes: Number(span.textContent) }) + (liked ? 1 : -1));
+                    }
+                    span.textContent = count;
+                    btn.classList.toggle('liked', liked);
+                    // 同步本地数据，轮询回来前保持显示一致
+                    items.forEach(function (it) { if (itemId(it) === id) { it.likes = count; it.liked = liked; } });
+                    Object.keys(repliesMap).forEach(function (pid) {
+                        (repliesMap[pid] || []).forEach(function (it) { if (itemId(it) === id) { it.likes = count; it.liked = liked; } });
+                    });
+                }).catch(function (err) {
+                    toast((err && err.message) || '点赞失败');
+                }).finally(function () {
+                    btn.disabled = false;
+                });
+            }
+
+            // ---------------- 事件绑定 ----------------
+            inputEl.addEventListener('input', function () {
+                countEl.textContent = inputEl.value.length + ' / ' + MAX_LEN;
+            });
+            sendEl.addEventListener('click', sendMain);
+            inputEl.addEventListener('keydown', function (e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') sendMain();
             });
 
-            // 列表项按钮：带问题跳转到 guide.html，由 guide 页自动填入并发送
-            listEl.addEventListener('click', function (e) {
-                var btn = e.target.closest('.wall-ask');
-                if (!btn) return;
-                location.href = 'guide.html?prompt=' + encodeURIComponent(btn.getAttribute('data-question') || '');
+            searchBtn.addEventListener('click', function () {
+                query = String(searchEl.value || '').trim().slice(0, 100);
+                expanded = {};
+                repliesMap = {};
+                listEl.innerHTML = '<div class="wall-skeleton"><div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div></div>';
+                loadWall();
             });
+            searchClear.addEventListener('click', function () {
+                searchEl.value = '';
+                query = '';
+                expanded = {};
+                repliesMap = {};
+                loadWall();
+            });
+            searchEl.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') searchBtn.click();
+            });
+
+            listEl.addEventListener('click', function (e) {
+                var t = e.target.closest ? e.target.closest('button') : null;
+                if (!t) return;
+
+                var likeId = t.getAttribute('data-like');
+                if (likeId) { toggleLike(likeId, t); return; }
+
+                var toggleId = t.getAttribute('data-reply-toggle');
+                if (toggleId) {
+                    var box = listEl.querySelector('[data-replies="' + toggleId + '"]');
+                    if (box && box.style.display !== 'none') {
+                        box.style.display = 'none';
+                        expanded[toggleId] = false;
+                    } else {
+                        loadReplies(toggleId);
+                    }
+                    return;
+                }
+
+                var sendReplyId = t.getAttribute('data-send-reply');
+                if (sendReplyId) { sendReply(sendReplyId); return; }
+
+                var cancelId = t.getAttribute('data-cancel-reply');
+                if (cancelId) {
+                    var editor = listEl.querySelector('[data-editor="' + cancelId + '"]');
+                    if (editor) editor.classList.remove('show');
+                    return;
+                }
+
+                // 引用给 AI 客服：跳到 guide 并预填输入框（不自动发送）
+                var quote = t.getAttribute('data-quote');
+                if (quote != null) {
+                    location.href = 'guide.html?quote=' + encodeURIComponent(quote);
+                    return;
+                }
+
+                var question = t.getAttribute('data-question');
+                if (question != null) {
+                    location.href = 'guide.html?prompt=' + encodeURIComponent(question);
+                }
+            });
+
+            // 点“回复”展开编辑框（收起时不再弹出）
+            listEl.addEventListener('click', function (e) {
+                var t = e.target.closest ? e.target.closest('[data-reply-toggle]') : null;
+                if (!t) return;
+                var id = t.getAttribute('data-reply-toggle');
+                if (!expanded[id]) return;
+                var editor = listEl.querySelector('[data-editor="' + id + '"]');
+                if (editor) {
+                    editor.classList.add('show');
+                    var ta = editor.querySelector('textarea');
+                    if (ta) ta.focus();
+                }
+            });
+
+            function refreshLoginTip() {
+                if (isLoggedIn()) {
+                    tipEl.textContent = '已登录：可发布、回复、点赞';
+                    tipEl.classList.remove('warn');
+                } else {
+                    tipEl.innerHTML = '未登录只能浏览，<a href="/user/" style="color:var(--ziyit-primary);">去登录</a>';
+                    tipEl.classList.add('warn');
+                }
+            }
+            refreshLoginTip();
 
             // 先展示 Cookie 里的历史消息，再用接口数据刷新
             var cachedWall = readWallCache();
             if (cachedWall.length) renderList(cachedWall);
             loadWall();
-            // 固定 30 秒轮询刷新列表
-            setInterval(loadWall, 30000);
+            // 固定 30 秒轮询刷新列表（搜索时按当前关键词刷新）
+            setInterval(function () { loadWall({ quiet: true }); }, 30000);
         })();
     </script>
 </body>

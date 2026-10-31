@@ -228,11 +228,28 @@
 
     var REQUEST_TIMEOUT_MS = 20000;
 
+    // 按后端域名区分的请求策略：ccwu 隧道冷启动 / 跨域预检较慢，给更长超时与更多重试。
+    // 其余地址沿用默认值，避免拖慢普通请求。
+    var DEFAULT_POLICY = { timeout: REQUEST_TIMEOUT_MS, retries: 2 };
+    var HOST_POLICIES = {
+        'ziyitstudio.ccwu.cc': { timeout: 45000, retries: 3 }
+    };
+
+    function policyFor(base) {
+        var host = '';
+        try { host = new URL(base).hostname; } catch (e) { host = ''; }
+        for (var k in HOST_POLICIES) {
+            if (host === k || host.slice(-(k.length + 1)) === '.' + k) return HOST_POLICIES[k];
+        }
+        return DEFAULT_POLICY;
+    }
+
     function fetchWithTimeout(url, options) {
         if (typeof AbortController === 'undefined') return fetch(url, options);
         var ctrl = new AbortController();
-        // 上传 .rcm 这类大请求体要走更久，允许调用方用 __timeoutMs 覆盖默认 20 秒
-        var timeoutMs = (options && options.__timeoutMs) || REQUEST_TIMEOUT_MS;
+        // 上传 .rcm 这类大请求体要走更久，允许调用方用 __timeoutMs 覆盖默认值
+        var policy = policyFor(url);
+        var timeoutMs = (options && options.__timeoutMs) || policy.timeout;
         var timer = setTimeout(function () { ctrl.abort(); }, timeoutMs);
         var opts = {};
         for (var k in options) opts[k] = options[k];
@@ -250,7 +267,19 @@
     // 先等 backendReady() 定好地址，否则会拿缓存里的旧地址硬连，表现就是“连接失败”。
     function fetchApi(path, options) {
         return backendReady().then(function () {
-            return fetchWithTimeout(currentBase() + path, options);
+            var base = currentBase();
+            var policy = policyFor(base);
+            var attempt = 0;
+            function run() {
+                attempt++;
+                return fetchWithTimeout(base + path, options).catch(function (err) {
+                    // 只对网络层失败/超时重试；后端已回的错误（带 status）直接抛
+                    if (err && err.status) throw err;
+                    if (attempt < policy.retries) return run();
+                    throw err;
+                });
+            }
+            return run();
         }).catch(function (err) {
             // 连不上（不是后端回的错）：清掉缓存地址按 cookie / 兜底重新解析一次
             if (err && err.status) throw err;

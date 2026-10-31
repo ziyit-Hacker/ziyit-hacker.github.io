@@ -3,6 +3,19 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.54 — 2026-10-31
+### 变更
+- **聊天墙升级为评论区交互**（[chatwall.html](file:///f:/Code/html/ziyit/chatwall.html)）：
+  - 发布框（500 字上限 + 实时计数）、搜索框（回车/按钮触发，带结果统计）、消息卡片展示昵称、头像、时间、正文、点赞数。
+  - 每条消息支持点赞、回复（内联回复列表 + 回复编辑框）、展开/收起回复；「我也要问这个」跳转 `guide.html?prompt=...`。
+  - 新增「引用给 AI 客服」：消息（含回复）带 `data-quote`，跳转 `guide.html?quote=...`；guide 只把原消息按「引用聊天墙消息：「…」」格式预填到输入框并聚焦，**不自动发送**，由用户补充问题后自行发送。
+  - 未登录（无 `ZIYIT_API.getToken()`）时发布/回复/点赞统一拦截并提示，点击后跳转 `/user/` 登录。
+  - 接口限流返回 429 时提示「请求过于频繁」；点赞结果与本地列表同步，30 秒轮询保持最新。
+- **按域名请求策略**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)）：新增 `HOST_POLICIES`，`ziyitstudio.ccwu.cc` 超时 45 秒、最多 3 次重试；其他地址沿用 20 秒 / 2 次。
+### 说明
+- 聊天墙发布/回复统一 `POST /api/chatwall/share`（`{content, parentId?}`），点赞 `POST /api/chatwall/like`（`{id}`），搜索走 `GET /api/chatwall?q=...&limit=20`，回复列表走 `GET /api/chatwall?parentId=...`；后端改造方案见本次交付说明。
+- Cookie 历史缓存、骨架屏加载态、后端地址探测顺序（Cookie → localStorage → `backend.txt`）保持不变。
+
 ## v1.53 — 2026-10-31
 ### 变更
 - **聊天墙历史消息存 Cookie**（[chatwall.html](file:///f:/Code/html/ziyit/chatwall.html)）：

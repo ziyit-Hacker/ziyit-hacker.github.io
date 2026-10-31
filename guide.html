@@ -567,15 +567,19 @@
             };
 
             // ?source=backrooms：后续所有聊天请求体都要带上 source；
-            // ?prompt=...：从聊天墙「我也要问这个」跳转而来，加载完成后自动填入并发送。
+            // ?prompt=...：从聊天墙「我也要问这个」跳转而来，加载完成后自动填入并发送；
+            // ?quote=...：从聊天墙「引用给 AI 客服」跳转而来，只预填到输入框，不自动发送。
             var PAGE_SOURCE = '';
             var PAGE_PROMPT = '';
+            var PAGE_QUOTE = '';
             try {
                 var pageQuery = new URLSearchParams(location.search);
                 PAGE_SOURCE = pageQuery.get('source') || '';
                 PAGE_PROMPT = pageQuery.get('prompt') || '';
+                PAGE_QUOTE = pageQuery.get('quote') || '';
             } catch (e) { }
             var autoPromptSent = false;
+            var autoQuoteFilled = false;
 
              
             function esc(s) {
@@ -1148,6 +1152,21 @@
                 });
             }
 
+            // 聊天墙「引用给 AI 客服」：把原消息以引用格式预填进输入框，由用户补充问题后自行发送
+            function maybeQuote() {
+                if (autoQuoteFilled || !PAGE_QUOTE) return;
+                autoQuoteFilled = true;
+                var raw = String(PAGE_QUOTE).trim();
+                if (!raw) return;
+                var prefix = '引用聊天墙消息：\n「';
+                var suffix = '」\n';
+                var room = Math.max(0, 500 - prefix.length - suffix.length);
+                var text = prefix + raw.slice(0, room) + suffix;
+                el.input.value = text;
+                if (el.count) el.count.textContent = text.length + ' / 500';
+                try { el.input.focus(); } catch (e) { }
+            }
+
             // 聊天墙「我也要问这个」：填充输入框并自动发送（URLSearchParams 已解码一次）
             function maybeAutoPrompt() {
                 if (autoPromptSent || !PAGE_PROMPT) return;
@@ -1469,6 +1488,7 @@
                     el.messages.innerHTML = '';
                     if (!d || !d.messages || !d.messages.length) {
                         addSys('您好，我是 ZIYIT 客服助手，请问有什么可以帮您？');
+                        maybeQuote();
                         maybeAutoPrompt();
                         return;
                     }
@@ -1490,10 +1510,12 @@
                         G.rendered[id] = true;
                         renderServerMessage(m, false);
                     });
+                    maybeQuote();
                     maybeAutoPrompt();
                 }).catch(function (err) {
                     if (err && err.status === 404) {
                         addSys('您好，我是 ZIYIT 客服助手，请问有什么可以帮您？');
+                        maybeQuote();
                         maybeAutoPrompt();
                         return;
                     }
