@@ -101,6 +101,17 @@ document.addEventListener('DOMContentLoaded', function () {
         updateSystemInfo('AI 工具权重已刷新');
     });
     document.getElementById('save-ai-pricing').addEventListener('click', saveAiPricing);
+    // 恢复到默认：弹窗内两步确认，仅重置输入框（默认值 = 当前已保存配置）
+    document.getElementById('reset-ai-pricing').addEventListener('click', openAiResetModal);
+    document.getElementById('cancel-ai-reset').addEventListener('click', closeAiResetModal);
+    document.getElementById('confirm-ai-reset').addEventListener('click', aiResetFirstConfirm);
+    document.getElementById('back-ai-reset').addEventListener('click', function () { showAiResetStep(1); });
+    document.getElementById('apply-ai-reset').addEventListener('click', applyAiReset);
+    document.querySelectorAll('input[name="ai-reset-scope"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            document.getElementById('ai-reset-tool-group').style.display = radio.value === 'one' ? '' : 'none';
+        });
+    });
 
      
     document.querySelector('[data-section="injection-management"]').addEventListener('click', function () {
@@ -265,6 +276,10 @@ document.addEventListener('DOMContentLoaded', function () {
         updateSystemInfo('成员列表已刷新');
     });
     document.getElementById('backrooms-member-search').addEventListener('input', renderBackroomsMembers);
+    // 添加 / 删除后室成员（仅 Lv.3+）
+    document.getElementById('add-backrooms-member').addEventListener('click', openAddMemberModal);
+    document.getElementById('cancel-add-member').addEventListener('click', closeAddMemberModal);
+    document.getElementById('confirm-add-member').addEventListener('click', submitAddMember);
 
      
     document.getElementById('cancel-promote-user').addEventListener('click', closePromoteModal);
@@ -2206,6 +2221,8 @@ function resetPricing() {
 // ------------------------------------------------------------
 let aiPricingOriginal = {};   // tool -> 权重
 let aiPricingShape = 'array'; // 后端 toolWeights 是数组还是对象
+let aiPricingLabels = {};     // tool -> 展示名称
+let aiResetScope = 'all';     // 恢复范围：all | one
 
 function aiWeightValue(v) {
     const n = Number(v);
@@ -2233,6 +2250,7 @@ function renderAiPricingForm(cfg) {
     const ai = aiPricingAi(cfg);
     const weights = ai.toolWeights;
     const labels = ai.aiToolLabels || {};
+    aiPricingLabels = labels;
     aiPricingOriginal = {};
     aiPricingShape = Array.isArray(weights) ? 'array' : 'object';
 
@@ -2319,6 +2337,63 @@ function saveAiPricing() {
             : ((err && err.data && err.data.detail) || (err && err.message) || err);
         alert('保存失败: ' + msg);
     }).finally(function () { btn.disabled = false; });
+}
+
+// ------------------------------------------------------------
+// 恢复到默认（纯前端）：默认值 = 最近一次从后端加载到的权重，不新增接口
+// 弹窗内两步确认：选范围 → 确认 → 再次确认
+// ------------------------------------------------------------
+function showAiResetStep(step) {
+    document.getElementById('ai-reset-step1').style.display = step === 1 ? '' : 'none';
+    document.getElementById('ai-reset-step2').style.display = step === 2 ? '' : 'none';
+}
+
+function openAiResetModal() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可恢复 AI 工具权重'); return; }
+    const tools = Object.keys(aiPricingOriginal);
+    if (!tools.length) { alert('请先加载 AI 工具权重配置'); return; }
+    const sel = document.getElementById('ai-reset-tool');
+    sel.innerHTML = tools.map(function (tool) {
+        return '<option value="' + escAdmin(tool) + '">' +
+            escAdmin(aiPricingLabels[tool] || tool) + '（' + escAdmin(tool) + '）</option>';
+    }).join('');
+    document.querySelector('input[name="ai-reset-scope"][value="all"]').checked = true;
+    document.getElementById('ai-reset-tool-group').style.display = 'none';
+    document.getElementById('ai-reset-warning').textContent = '';
+    showAiResetStep(1);
+    document.getElementById('ai-reset-modal').classList.add('active');
+}
+
+function closeAiResetModal() {
+    document.getElementById('ai-reset-modal').classList.remove('active');
+}
+
+function aiResetFirstConfirm() {
+    const scopeEl = document.querySelector('input[name="ai-reset-scope"]:checked');
+    const scope = scopeEl ? scopeEl.value : 'all';
+    const tool = document.getElementById('ai-reset-tool').value;
+    if (scope === 'one' && !tool) { alert('请选择要恢复的工具'); return; }
+    aiResetScope = scope;
+    const target = scope === 'all' ? '全部工具' : ('「' + (aiPricingLabels[tool] || tool) + '」');
+    document.getElementById('ai-reset-warning').textContent =
+        '即将把' + target + '的输入框恢复为默认值（当前已保存的配置）。' +
+        '此操作不会立即写回后端，需要再点「保存」才会生效。确定继续吗？';
+    showAiResetStep(2);
+}
+
+function applyAiReset() {
+    const inputs = document.querySelectorAll('#ai-pricing-panel .ai-weight');
+    const tool = document.getElementById('ai-reset-tool').value;
+    let count = 0;
+    inputs.forEach(function (input) {
+        const t = input.getAttribute('data-tool');
+        if (aiResetScope === 'one' && t !== tool) return;
+        if (aiPricingOriginal[t] == null) return;
+        input.value = aiPricingOriginal[t];
+        count++;
+    });
+    closeAiResetModal();
+    updateSystemInfo(count ? ('已恢复 ' + count + ' 个工具的默认值（尚未保存）') : '没有可恢复的工具');
 }
 
 // ------------------------------------------------------------
@@ -4486,6 +4561,7 @@ function renderBackroomsMembers() {
                     + '<option value="Member"' + (m.permission === 'Member' ? ' selected' : '') + '>Member</option>'
                     + '<option value="Admin"' + (m.permission === 'Admin' ? ' selected' : '') + '>Admin</option>'
                     + '</select>'
+                    + '<button class="user-btn danger member-del" data-idx="' + idx + '">删除</button>'
                 : '<span class="user-status ' + permCls + '" style="margin: 0;">' + (isLocked ? '不可编辑' : (canAccess(2) ? '只读' : '')) + '</span>')
             + '</div></div>';
     });
@@ -4506,7 +4582,70 @@ function renderBackroomsMembers() {
                 });
             });
         });
+        area.querySelectorAll('.member-del').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const m = list[parseInt(btn.getAttribute('data-idx'), 10)];
+                if (m) removeBackroomsMember(m);
+            });
+        });
     }
+}
+
+// 添加后室成员：ID 必填，类型只能是 Member / Admin
+function openAddMemberModal() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可添加后室成员'); return; }
+    document.getElementById('member-add-id').value = '';
+    document.getElementById('member-add-email').value = '';
+    document.getElementById('member-add-perm').value = 'Member';
+    document.getElementById('add-backrooms-member-modal').classList.add('active');
+}
+
+function closeAddMemberModal() {
+    document.getElementById('add-backrooms-member-modal').classList.remove('active');
+}
+
+function submitAddMember() {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可添加后室成员'); return; }
+    const id = (document.getElementById('member-add-id').value || '').trim();
+    const email = (document.getElementById('member-add-email').value || '').trim();
+    const permission = document.getElementById('member-add-perm').value;
+    if (!id) { alert('成员 ID / 用户名不能为空'); return; }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('邮箱格式不正确'); return; }
+    if (backroomsMembers.some(function (m) { return String(m.id) === id; })) {
+        alert('该成员已存在，请直接修改类型或先删除');
+        return;
+    }
+    const btn = document.getElementById('confirm-add-member');
+    btn.disabled = true;
+    ZIYIT_API.adminAddBackroomsMember({ userId: id, email: email, permission: permission }).then(function () {
+        closeAddMemberModal();
+        loadBackroomsMembers();
+        updateSystemInfo('已添加后室成员 ' + id);
+    }).catch(function (err) {
+        const msg = (err && err.status === 403) ? '权限不足（需 Lv.3+ 管理员）'
+            : ((err && err.data && err.data.detail) || (err && err.message) || err);
+        alert('添加失败: ' + msg);
+    }).finally(function () {
+        btn.disabled = false;
+    });
+}
+
+// 删除后室成员：Adminstrator 由系统保留，不允许删除
+function removeBackroomsMember(m) {
+    if (!canAccess(3)) { alert('仅 Lv.3+ 管理员可删除后室成员'); return; }
+    if (String(m.permission).toLowerCase() === 'adminstrator') {
+        alert('Adminstrator 为系统保留成员，不可删除');
+        return;
+    }
+    if (!confirm('确定删除后室成员「' + m.id + '」吗？此操作不可撤销。')) return;
+    ZIYIT_API.adminRemoveBackroomsMember(m.id).then(function () {
+        loadBackroomsMembers();
+        updateSystemInfo('已删除后室成员 ' + m.id);
+    }).catch(function (err) {
+        const msg = (err && err.status === 403) ? '权限不足（需 Lv.3+ 管理员）'
+            : ((err && err.data && err.data.detail) || (err && err.message) || err);
+        alert('删除失败: ' + msg);
+    });
 }
 
  

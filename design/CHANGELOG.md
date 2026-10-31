@@ -15,6 +15,10 @@
   - 未登录（无 `ZIYIT_API.getToken()`）时发布/回复/点赞统一拦截并提示，点击后跳转 `/user/` 登录。
   - 点赞结果与本地列表同步，30 秒轮询保持最新。
 - **按域名请求策略**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)）：新增 `HOST_POLICIES`，`ziyitstudio.ccwu.cc` 超时 45 秒、最多 3 次重试；其他地址沿用 20 秒 / 2 次。
+- **后室成员管理支持添加/删除**（[admin.html](file:///f:/Code/html/ziyit/music/admin.html)、[admin.js](file:///f:/Code/html/ziyit/music/admin.js)）：Lv.3+ 显示「添加成员」按钮与每条记录的「删除」按钮；添加弹窗校验 ID 必填、邮箱格式、ID 重复；Adminstrator 不可删除；403 提示权限不足。
+  - 新增 API 封装：`ZIYIT_API.adminAddBackroomsMember()`（`POST /admin/backrooms/members`，body `{userId, permission, email?}`）、`adminRemoveBackroomsMember()`（`DELETE /admin/backrooms/members?userId=...`），后端接口待实现。
+- **AI 工具权重新增「恢复到默认」**（[admin.html](file:///f:/Code/html/ziyit/music/admin.html)、[admin.js](file:///f:/Code/html/ziyit/music/admin.js)）：点击打开弹窗，可选「全部恢复」或「只恢复一个工具」（下拉按 `aiToolLabels` 显示名称）；两步确认（确认恢复 → 再次确认恢复）后才执行。
+  - 纯前端实现：默认值 = 最近一次从后端加载到的配置，不新增/不调用新接口，仅重置输入框；需再点「保存」才会通过现有 `PUT /admin/ai/pricing` 写回。
 ### 说明
 - 聊天墙发布/回复统一 `POST /api/chatwall/share`（`{content, parentId?}`），点赞 `POST /api/chatwall/like`（`{id}`），搜索走 `GET /api/chatwall?q=...&limit=20`，回复列表走 `GET /api/chatwall?parentId=...`；后端改造方案见本次交付说明。
 - Cookie 历史缓存、骨架屏加载态、后端地址探测顺序（Cookie → localStorage → `backend.txt`）保持不变。

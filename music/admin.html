@@ -391,6 +391,7 @@
                         <h2>AI 工具权重</h2>
                         <div style="display:flex;gap:10px;">
                             <button class="user-btn" id="refresh-ai-pricing">刷新</button>
+                            <button class="user-btn danger" id="reset-ai-pricing">恢复到默认</button>
                             <button class="user-btn success" id="save-ai-pricing">保存</button>
                         </div>
                     </div>
@@ -1094,7 +1095,10 @@
                 <section id="backrooms-members" class="content-section">
                     <div class="section-header">
                         <h2>后室成员管理</h2>
-                        <button class="user-btn" id="refresh-backrooms-members">刷新列表</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="user-btn" id="refresh-backrooms-members">刷新列表</button>
+                            <button class="user-btn success" id="add-backrooms-member">添加成员</button>
+                        </div>
                     </div>
                     <div class="user-controls">
                         <input type="text" class="user-search" id="backrooms-member-search" placeholder="搜索 ID / 类型 / 邮箱...">
@@ -1114,7 +1118,7 @@
                             </div>
                         </div>
                     </div>
-                    <p style="padding: 8px 2px; color: var(--ziyit-text-secondary); font-size: 13px;">Adminstrator 类型成员不可编辑（仅 Lv.3+ 可修改 Admin/Member 类型）。</p>
+                    <p style="padding: 8px 2px; color: var(--ziyit-text-secondary); font-size: 13px;">Adminstrator 类型成员不可编辑、不可删除（仅 Lv.3+ 可添加/删除成员，可修改 Admin/Member 类型）。</p>
                 </section>
 
                 
@@ -1486,6 +1490,69 @@
     </div>
 
     
+    <!-- 添加后室成员（仅 Lv.3+） -->
+    <div class="modal" id="add-backrooms-member-modal">
+        <div class="modal-content">
+            <div class="modal-header">添加后室成员</div>
+            <div class="form-group">
+                <label class="form-label">成员 ID / 用户名</label>
+                <input type="text" class="form-input" id="member-add-id" maxlength="64" placeholder="必填，对应 user.json 中的 ID">
+            </div>
+            <div class="form-group">
+                <label class="form-label">邮箱（可选）</label>
+                <input type="text" class="form-input" id="member-add-email" maxlength="120" placeholder="选填，用于标识成员">
+            </div>
+            <div class="form-group">
+                <label class="form-label">成员类型</label>
+                <select class="form-select" id="member-add-perm">
+                    <option value="Member">Member</option>
+                    <option value="Admin">Admin</option>
+                </select>
+                <div style="color:var(--ziyit-text-secondary);font-size:12px;margin-top:4px;">Adminstrator 由系统保留，不能通过此入口添加。</div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn danger" id="cancel-add-member">取消</button>
+                <button type="button" class="user-btn success" id="confirm-add-member">确认添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 恢复 AI 工具权重（仅重置输入框，默认值 = 当前已保存的配置，不新增后端接口） -->
+    <div class="modal" id="ai-reset-modal">
+        <div class="modal-content">
+            <div class="modal-header">恢复到默认</div>
+            <div id="ai-reset-step1">
+                <div class="form-group">
+                    <label class="form-label">恢复范围</label>
+                    <label style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+                        <input type="radio" name="ai-reset-scope" value="all" checked> 全部恢复
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+                        <input type="radio" name="ai-reset-scope" value="one"> 只恢复一个工具
+                    </label>
+                </div>
+                <div class="form-group" id="ai-reset-tool-group" style="display:none;">
+                    <label class="form-label">选择工具</label>
+                    <select class="form-select" id="ai-reset-tool"></select>
+                </div>
+                <div style="color:var(--ziyit-text-secondary);font-size:12px;margin-bottom:10px;">
+                    默认值取当前已保存的配置，仅重置输入框；需要再点「保存」才会写回后端。
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="user-btn" id="cancel-ai-reset">取消</button>
+                    <button type="button" class="user-btn danger" id="confirm-ai-reset">确认恢复</button>
+                </div>
+            </div>
+            <div id="ai-reset-step2" style="display:none;">
+                <p id="ai-reset-warning" style="line-height:1.8;margin:6px 0 14px;"></p>
+                <div class="modal-actions">
+                    <button type="button" class="user-btn" id="back-ai-reset">返回</button>
+                    <button type="button" class="user-btn danger" id="apply-ai-reset">再次确认恢复</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal" id="promote-user-modal">
         <div class="modal-content">
             <div class="modal-header">升级用户</div>

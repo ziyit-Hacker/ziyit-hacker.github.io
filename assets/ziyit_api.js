@@ -988,6 +988,21 @@
         return put('/admin/backrooms/members', { userId: userId, permission: permission });
     }
 
+    // 添加后室成员（Lv.3+）：userId 必填，permission 只能是 Member / Admin
+    function adminAddBackroomsMember(member) {
+        const body = {
+            userId: member && member.userId,
+            permission: (member && member.permission) || 'Member'
+        };
+        if (member && member.email) body.email = member.email;
+        return post('/admin/backrooms/members', body);
+    }
+
+    // 删除后室成员（Lv.3+）：Adminstrator 由系统保留，不可删除
+    function adminRemoveBackroomsMember(userId) {
+        return request('/admin/backrooms/members?userId=' + encodeURIComponent(userId), { method: 'DELETE' });
+    }
+
      
     function adminListOnline() {
         return request('/admin/online');
@@ -2327,6 +2342,8 @@
         adminPromoteUser: adminPromoteUser,
         adminListBackroomsMembers: adminListBackroomsMembers,
         adminUpdateBackroomsMember: adminUpdateBackroomsMember,
+        adminAddBackroomsMember: adminAddBackroomsMember,
+        adminRemoveBackroomsMember: adminRemoveBackroomsMember,
         adminListOnline: adminListOnline,
         adminChatSend: adminChatSend,
         adminChatInbox: adminChatInbox,
