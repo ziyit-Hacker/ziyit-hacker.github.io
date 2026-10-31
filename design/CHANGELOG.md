@@ -3,6 +3,18 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.53 — 2026-10-31
+### 变更
+- **聊天墙历史消息存 Cookie**（[chatwall.html](file:///f:/Code/html/ziyit/chatwall.html)）：
+  - 列表接口返回后把问答写入 Cookie（`ziyit_cw_0..n` + 片数 `ziyit_cw_n`），按 URL 编码后 3000 字分片、最多 10 片（约 30KB），超出时丢弃最旧条目，有效期 30 天。
+  - 打开页面先渲染 Cookie 里的历史消息，再用接口数据刷新；接口不可用时保留本地历史；分享成功先把新问答写入 Cookie 并展示。
+- **后室主页与列表页新增「聊天墙」「AI 助手」入口**（[backrooms/index.html](file:///f:/Code/html/ziyit/backrooms/index.html)、[levels.html](file:///f:/Code/html/ziyit/backrooms/levels.html)、[all-levels.html](file:///f:/Code/html/ziyit/backrooms/all-levels.html)、[groups-list.html](file:///f:/Code/html/ziyit/backrooms/groups-list.html)、[normal-levels/index.html](file:///f:/Code/html/ziyit/backrooms/normal-levels/index.html)、[entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)、[phenomena/index.html](file:///f:/Code/html/ziyit/backrooms/phenomena/index.html)、[必读/index.html](file:///f:/Code/html/ziyit/backrooms/必读/index.html)）：
+  - 桌面端与移动端顶部导航同时加两个入口：`/chatwall.html` 与 `/guide.html?source=backrooms`（AI 客服页并透传后室来源）。
+### 说明
+- 后端地址不硬编码：聊天墙统一走 `ZIYIT_API.resolveBase()`（Cookie → localStorage → `backend.txt`，内部最多 3 轮）；`apiFetch()` 在网络失败时重新探址重试，整体最多 3 轮，列表与分享接口都使用。
+- 加载状态改为骨架屏（`.wall-skeleton` 渐变动画），不再显示“加载中”文字。
+- `chatwall.html` 内联脚本语法与 Cookie 分片/读取/追加逻辑已用 Node 模拟校验通过（含超容量裁剪）。
+
 ## v1.52 — 2026-10-31
 ### 变更
 - **guide 页接入 source / cost / prompt**（[guide.html](file:///f:/Code/html/ziyit/guide.html)）：

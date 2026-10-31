@@ -97,6 +97,31 @@
             gap: 14px;
         }
 
+        /* 加载状态：骨架屏，不显示“加载中”文字 */
+        .wall-skeleton {
+            display: grid;
+            gap: 14px;
+        }
+
+        .wall-skeleton .sk-card {
+            height: 116px;
+            border: 1px solid var(--ziyit-border);
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--ziyit-bg-card) 25%, var(--ziyit-bg) 50%, var(--ziyit-bg-card) 75%);
+            background-size: 200% 100%;
+            animation: wall-sk 1.2s ease-in-out infinite;
+        }
+
+        @keyframes wall-sk {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
         .wall-card {
             background: var(--ziyit-bg-card);
             border: 1px solid var(--ziyit-border);
@@ -237,7 +262,11 @@
         <p class="page-sub">公开只读的问答列表，每 30 秒自动刷新；点「我也要问这个」可带着该问题继续提问。</p>
 
         <div class="wall-list" id="wall-list">
-            <div class="wall-empty">加载中…</div>
+            <div class="wall-skeleton">
+                <div class="sk-card"></div>
+                <div class="sk-card"></div>
+                <div class="sk-card"></div>
+            </div>
         </div>
     </div>
 
@@ -281,11 +310,104 @@
                 toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2600);
             }
 
+            // 聊天墙历史消息存 Cookie：单条 Cookie 编码后约 4KB，按编码后 3000 字分片，最多 10 片（约 30KB）
+            var CACHE_PREFIX = 'ziyit_cw_';
+            var CACHE_MAX_CHUNKS = 10;
+            var CACHE_CHUNK_BYTES = 3000;
+            var CACHE_MAX_BYTES = CACHE_MAX_CHUNKS * CACHE_CHUNK_BYTES;
+            var CACHE_TTL = 60 * 60 * 24 * 30; // 30 天
+
+            function setCookie(name, val, maxAge) {
+                document.cookie = name + '=' + encodeURIComponent(val) +
+                    '; path=/; max-age=' + maxAge + '; SameSite=Lax';
+            }
+
+            function getCookie(name) {
+                var m = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
+                if (!m) return '';
+                try { return decodeURIComponent(m[1]); } catch (e) { return ''; }
+            }
+
+            function clearWallCache() {
+                for (var i = 0; i < CACHE_MAX_CHUNKS; i++) setCookie(CACHE_PREFIX + i, '', 0);
+                setCookie(CACHE_PREFIX + 'n', '', 0);
+            }
+
+            // 按 URL 编码后的长度分片，避免中文把单条 Cookie 撑爆
+            function splitWallCache(json) {
+                var chunks = [], cur = '', curLen = 0;
+                for (var i = 0; i < json.length; i++) {
+                    var ch = json.charAt(i);
+                    var enc = encodeURIComponent(ch);
+                    if (curLen + enc.length > CACHE_CHUNK_BYTES && cur) {
+                        chunks.push(cur);
+                        cur = '';
+                        curLen = 0;
+                    }
+                    cur += ch;
+                    curLen += enc.length;
+                }
+                if (cur) chunks.push(cur);
+                return chunks;
+            }
+
+            function saveWallCache(items) {
+                var list = items.slice(0, 20);
+                var json = '';
+                // 超出 Cookie 总容量时丢弃最旧的消息，保证 JSON 完整
+                while (list.length) {
+                    json = JSON.stringify(list);
+                    if (encodeURIComponent(json).length <= CACHE_MAX_BYTES) break;
+                    list.pop();
+                }
+                clearWallCache();
+                if (!list.length) return;
+                var chunks = splitWallCache(json);
+                chunks.forEach(function (c, idx) { setCookie(CACHE_PREFIX + idx, c, CACHE_TTL); });
+                setCookie(CACHE_PREFIX + 'n', String(chunks.length), CACHE_TTL);
+            }
+
+            function readWallCache() {
+                var n = parseInt(getCookie(CACHE_PREFIX + 'n'), 10);
+                if (!n || n > CACHE_MAX_CHUNKS) return [];
+                var json = '';
+                for (var i = 0; i < n; i++) json += getCookie(CACHE_PREFIX + i);
+                try {
+                    var v = JSON.parse(json);
+                    return Array.isArray(v) ? v : [];
+                } catch (e) { return []; }
+            }
+
+            // 新分享的问答先落到 Cookie，下次打开立刻能看到
+            function appendWallCache(item) {
+                var list = readWallCache();
+                list.unshift(item);
+                saveWallCache(list);
+            }
+
             // 后端地址：Cookie 里上次可用的 → 候选地址；一轮全挂后回到 Cookie 重来，最多 3 轮
             function resolveApiBase() {
                 if (window.ZIYIT_API && ZIYIT_API.resolveBase) return ZIYIT_API.resolveBase();
                 if (window.ZIYIT_API && ZIYIT_API.backendReady) return ZIYIT_API.backendReady();
                 return Promise.resolve('');
+            }
+
+            // 请求封装：地址按 Cookie → localStorage → backend.txt 探测（resolveBase 内部最多 3 轮），
+            // 网络失败时再重新探址重试，整体最多 3 轮
+            function apiFetch(path, options) {
+                function run(attempt) {
+                    return resolveApiBase().then(function (base) {
+                        if (!base) {
+                            if (attempt < 3) return run(attempt + 1);
+                            throw new Error('后端地址不可用');
+                        }
+                        return fetch(base + path, options).catch(function (err) {
+                            if (attempt < 3) return run(attempt + 1);
+                            throw err;
+                        });
+                    });
+                }
+                return run(1);
             }
 
             // 分享接口登录态：优先 guide_token，其次站点通用 token
@@ -318,21 +440,22 @@
             function loadWall() {
                 if (loading) return;
                 loading = true;
-                resolveApiBase().then(function (base) {
-                    if (!base) throw new Error('后端地址不可用');
-                    return fetch(base + '/api/chatwall?limit=20', {
-                        method: 'GET',
-                        cache: 'no-store',
-                        headers: { 'ngrok-skip-browser-warning': '1' }
-                    }).then(function (res) {
-                        if (!res.ok) throw new Error('加载失败（' + res.status + '）');
-                        return res.json();
-                    });
+                apiFetch('/api/chatwall?limit=20', {
+                    method: 'GET',
+                    cache: 'no-store',
+                    headers: { 'ngrok-skip-browser-warning': '1' }
+                }).then(function (res) {
+                    if (!res.ok) throw new Error('加载失败（' + res.status + '）');
+                    return res.json();
                 }).then(function (data) {
                     var items = Array.isArray(data) ? data
                         : (data && (data.items || data.list || data.data)) || [];
-                    renderList(Array.isArray(items) ? items : []);
+                    items = Array.isArray(items) ? items : [];
+                    if (items.length) saveWallCache(items);
+                    renderList(items);
                 }).catch(function (err) {
+                    // 后端暂不可用时保留 Cookie 里的历史消息
+                    if (listEl.querySelector('.wall-card')) return;
                     listEl.innerHTML = '<div class="wall-error">' +
                         esc((err && err.message) || '加载失败') + '，稍后自动重试</div>';
                 }).finally(function () {
@@ -358,30 +481,30 @@
                     return;
                 }
                 submitEl.disabled = true;
-                resolveApiBase().then(function (base) {
-                    if (!base) throw new Error('后端地址不可用');
-                    var token = authToken();
-                    var headers = {
-                        'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': '1'
-                    };
-                    if (token) headers['Authorization'] = 'Bearer ' + token;
-                    return fetch(base + '/api/chatwall/share', {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify({ question: question, answer: answer })
-                    }).then(function (res) {
-                        return res.json().catch(function () { return null; }).then(function (data) {
-                            if (!res.ok) {
-                                throw new Error((data && data.detail) || ('提交失败（' + res.status + '）'));
-                            }
-                            return data || {};
-                        });
+                var token = authToken();
+                var headers = {
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': '1'
+                };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                apiFetch('/api/chatwall/share', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ question: question, answer: answer })
+                }).then(function (res) {
+                    return res.json().catch(function () { return null; }).then(function (data) {
+                        if (!res.ok) {
+                            throw new Error((data && data.detail) || ('提交失败（' + res.status + '）'));
+                        }
+                        return data || {};
                     });
                 }).then(function (data) {
                     var msg = '分享成功';
                     if (data && data.cost != null) msg += '，本次消耗 ' + Number(data.cost) + ' 点';
                     toast(msg);
+                    // 先写进 Cookie 并展示，列表接口返回后再用服务端数据覆盖
+                    appendWallCache({ question: question, answer: answer, createdAt: new Date().toLocaleString('zh-CN') });
+                    renderList(readWallCache());
                     qEl.value = '';
                     aEl.value = '';
                     closeShare();
@@ -407,6 +530,9 @@
                 location.href = 'guide.html?prompt=' + encodeURIComponent(btn.getAttribute('data-question') || '');
             });
 
+            // 先展示 Cookie 里的历史消息，再用接口数据刷新
+            var cachedWall = readWallCache();
+            if (cachedWall.length) renderList(cachedWall);
             loadWall();
             // 固定 30 秒轮询刷新列表
             setInterval(loadWall, 30000);
