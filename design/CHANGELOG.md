@@ -15,6 +15,10 @@
   - 未登录（无 `ZIYIT_API.getToken()`）时发布/回复/点赞统一拦截并提示，点击后跳转 `/user/` 登录。
   - 点赞结果与本地列表同步，30 秒轮询保持最新。
 - **按域名请求策略**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)）：新增 `HOST_POLICIES`，`ziyitstudio.ccwu.cc` 超时 45 秒、最多 3 次重试；其他地址沿用 20 秒 / 2 次。
+- **头像资源链路修复**（[assets/ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)、[chatwall.html](file:///f:/Code/html/ziyit/chatwall.html)）：修复头像加载失败回退成旧 LOGO 的问题。
+  - `backendImageUrl()`：相对 `/img/...` 拼当前可用后端地址；指向旧隧道/旧域名的绝对 `/img/...` 改写为当前 base；外部图床不动。
+  - `imageBlobUrl()`：仅 ngrok 域名走 fetch+blob（需 `ngrok-skip-browser-warning`），ccwu 等地址直接交给 `<img>`，避免跨域预检失败/超时导致回退默认图；相对地址在无 base 时直接抛错走回退。
+  - 聊天墙头像同步按 `lastBase` 重写绝对 `/img/...` 地址，兼容历史头像与旧域名。
 - **后室成员管理支持添加/删除**（[admin.html](file:///f:/Code/html/ziyit/music/admin.html)、[admin.js](file:///f:/Code/html/ziyit/music/admin.js)）：Lv.3+ 显示「添加成员」按钮与每条记录的「删除」按钮；添加弹窗校验 ID 必填、邮箱格式、ID 重复；Adminstrator 不可删除；403 提示权限不足。
   - 新增 API 封装：`ZIYIT_API.adminAddBackroomsMember()`（`POST /admin/backrooms/members`，body `{userId, permission, email?}`）、`adminRemoveBackroomsMember()`（`DELETE /admin/backrooms/members?userId=...`），后端接口待实现。
 - **AI 工具权重新增「恢复到默认」**（[admin.html](file:///f:/Code/html/ziyit/music/admin.html)、[admin.js](file:///f:/Code/html/ziyit/music/admin.js)）：点击打开弹窗，可选「全部恢复」或「只恢复一个工具」（下拉按 `aiToolLabels` 显示名称）；两步确认（确认恢复 → 再次确认恢复）后才执行。

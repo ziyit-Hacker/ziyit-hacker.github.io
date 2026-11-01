@@ -426,12 +426,44 @@
     }
 
      
+    // 后端图片地址归一化：
+    // 1) 相对地址 /img/... 在 GitHub Pages 上前端域名下不存在，必须拼当前可用后端地址；
+    // 2) 绝对地址若指向旧隧道/旧域名（例如后端口径写死的 BASE_URL），同样改写为当前 base；
+    // 3) 外部图床地址保持原样。
+    function backendImageUrl(url) {
+        var raw = String(url || '');
+        if (!raw) return '';
+        if (raw.indexOf('blob:') === 0 || raw.indexOf('data:') === 0) return raw;
+        if (raw.charAt(0) === '/') {
+            var b1 = currentBase();
+            return b1 ? b1 + raw : raw;
+        }
+        var m = raw.match(/^https?:\/\/[^\/]+(\/[^?#]*)/i);
+        if (!m) return raw;
+        var path = m[1];
+        // 只重写后端图片路径（/img/...），外部图床不动
+        if (!/^\/img\//i.test(path)) return raw;
+        var b2 = currentBase();
+        return b2 ? b2 + path : raw;
+    }
+
     function imageBlobUrl(url) {
         if (!url) return Promise.resolve('');
+        var raw = String(url);
+        if (raw.indexOf('data:') === 0) return Promise.resolve(raw);
         // 后端地址表是动态的（backend.txt），先等它就绪再判断，避免把后端图片当外链直连
         return backendReady().then(function () {
-            if (!isBackendUrl(url)) return url;
-            return fetch(url, { headers: { 'ngrok-skip-browser-warning': '1' } }).then(function (res) {
+            var target = backendImageUrl(raw);
+            if (!isBackendUrl(target)) return raw;
+            // 相对地址没拿到后端 base：直接抛错交给调用方回退，避免在 GitHub Pages 上 404
+            if (target.charAt(0) === '/') throw new Error('后端地址不可用');
+            // ngrok 免费隧道会给不带 ngrok 头的请求返回拦截页，图片必须 fetch 再转 blob；
+            // ccwu 等其他地址没有这层限制，直接交给 <img>，省掉跨域预检，避免预检失败回退成旧 LOGO。
+            if (!/ngrok/i.test(target)) return target;
+            return fetchWithTimeout(target, {
+                cache: 'no-store',
+                headers: { 'ngrok-skip-browser-warning': '1' }
+            }).then(function (res) {
                 if (!res.ok) throw new Error('图片加载失败(' + res.status + ')');
                 return res.blob();
             }).then(function (blob) {

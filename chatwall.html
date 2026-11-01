@@ -662,8 +662,13 @@
             function avatarSrc(u) {
                 var raw = u && u.avatar ? String(u.avatar) : '';
                 if (!raw) return DEFAULT_AVATAR;
-                if (/^https?:\/\//i.test(raw)) return raw;
                 if (raw.charAt(0) === '/') return (lastBase || '') + raw;
+                if (/^https?:\/\//i.test(raw)) {
+                    // 后端写死的旧域名头像（/img/...）改写到当前可用地址，避免回退成默认图
+                    var m = raw.match(/^https?:\/\/[^\/]+(\/[^?#]*)/i);
+                    if (m && /^\/img\//i.test(m[1]) && lastBase) return lastBase + m[1];
+                    return raw;
+                }
                 return raw;
             }
 
