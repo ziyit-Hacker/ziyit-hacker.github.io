@@ -323,7 +323,12 @@
     var res = await this.fetchImpl(this._url(path), {
       method: method,
       headers: headers,
-      credentials: 'include',
+      // 注意：不能用 credentials:'include'。
+      // 后端对凭证来源返回 Access-Control-Expose-Headers: *，而按 Fetch 规范，带凭证时
+      // 通配符 * 不暴露自定义响应头，导致浏览器把 X-ZS-Encrypted 隐藏，zsec 误把密文
+      // 信封当明文返回（表现为“后端返回正确结果，前端却提示登录响应异常”）。
+      // 业务接口鉴权走 Authorization 头，无需 Cookie，故用 same-origin。
+      credentials: 'same-origin',
       body: JSON.stringify({ iv: bufToB64(iv), data: bufToB64(ct) })
     });
 
