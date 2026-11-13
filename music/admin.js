@@ -1522,11 +1522,8 @@ function saveEditUser(e) {
     };
 
     if (newPassword) {
-        if (typeof CryptoJS !== 'undefined') {
-            body.md5Password = CryptoJS.MD5(newPassword).toString(CryptoJS.enc.Base64);
-        } else {
-            body.md5Password = newPassword;
-        }
+        // 字段名保留 md5Password，值为明文（后端按明文处理）
+        body.md5Password = newPassword;
     }
 
     if (btn) {
@@ -4055,8 +4052,7 @@ function saveAddUser(e) {
         return;
     }
 
-    const md5pwd = (typeof CryptoJS !== 'undefined') ? CryptoJS.MD5(password).toString(CryptoJS.enc.Base64) : password;
-    ZIYIT_API.register(username, email || 'noemail@example.com', md5pwd).then(function () {
+    ZIYIT_API.register(username, email || 'noemail@example.com', password).then(function () {
         alert('用户 ' + username + ' 创建成功');
         closeAddUserModal();
         loadUsers();

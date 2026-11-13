@@ -93,11 +93,8 @@
         if (btn) btn.disabled = true;
         if (dupTip) { dupTip.style.display = 'block'; dupTip.textContent = '正在注册，请稍候…'; }
 
-        const CryptoJS = window.CryptoJS;
-        const md5Password = CryptoJS.MD5(password).toString(CryptoJS.enc.Base64);
-
         try {
-            await ZIYIT_API.register(username, email, md5Password, st.challengeId, st.sessionId);
+            await ZIYIT_API.register(username, email, password, st.challengeId, st.sessionId);
              
             const form = document.querySelector('form');
             const verifyTip = el('verifyTip');

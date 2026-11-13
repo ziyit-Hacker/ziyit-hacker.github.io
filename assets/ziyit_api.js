@@ -263,34 +263,49 @@
         });
     }
 
-    // 绕开 request() 的直连接口（客服 / 申诉 / 用户类型 / backrooms 下载等）统一走这里取址：
-    // 先等 backendReady() 定好地址，否则会拿缓存里的旧地址硬连，表现就是“连接失败”。
+    // 业务接口统一走 zsec 加密信道；被后端排除的接口（下载/人机验证/原图）直连原生 fetch。
     function fetchApi(path, options) {
-        return backendReady().then(function () {
-            var base = currentBase();
-            var policy = policyFor(base);
-            var attempt = 0;
-            function run() {
-                attempt++;
-                return fetchWithTimeout(base + path, options).catch(function (err) {
-                    // 只对网络层失败/超时重试；后端已回的错误（带 status）直接抛
-                    if (err && err.status) throw err;
-                    if (attempt < policy.retries) return run();
-                    throw err;
-                });
-            }
-            return run();
-        }).catch(function (err) {
-            // 连不上（不是后端回的错）：清掉缓存地址按 cookie / 兜底重新解析一次
-            if (err && err.status) throw err;
-            invalidateBase();
+        options = options || {};
+        if (isExcludedPath(path)) {
             return backendReady().then(function () {
-                return fetchWithTimeout(currentBase() + path, options);
+                var base = currentBase();
+                var policy = policyFor(base);
+                var attempt = 0;
+                function run() {
+                    attempt++;
+                    return fetchWithTimeout(base + path, options).catch(function (err) {
+                        if (err && err.status) throw err;
+                        if (attempt < policy.retries) return run();
+                        throw err;
+                    });
+                }
+                return run();
+            }).catch(function (err) {
+                if (err && err.status) throw err;
+                invalidateBase();
+                return backendReady().then(function () {
+                    return fetchWithTimeout(currentBase() + path, options);
+                });
             });
+        }
+        var reqOpts = { method: options.method || 'GET', headers: options.headers };
+        if (options.body) reqOpts.body = options.body;
+        return request(path, reqOpts).then(function (data) {
+            return {
+                ok: true, status: 200,
+                json: function () { return Promise.resolve(data); },
+                text: function () { return Promise.resolve(typeof data === 'string' ? data : JSON.stringify(data)); }
+            };
+        }, function (err) {
+            return {
+                ok: false, status: err && err.status ? err.status : 0,
+                json: function () { return Promise.resolve((err && err.data) || null); },
+                text: function () { return Promise.resolve((err && err.message) || ''); }
+            };
         });
     }
 
-    // 同上，但用裸 fetch（流式 SSE 不能套 20 秒整体超时）。
+    // 流式 SSE 接口走裸 fetch（zsec 会 buffer 响应，破坏流式读取）。
     function fetchApiRaw(path, options) {
         return backendReady().then(function () {
             return fetch(currentBase() + path, options);
@@ -387,9 +402,9 @@
         clearCredentials();
     }
 
-    function setCredentials(username, md5, remember) {
+    function setCredentials(username, password, remember) {
         var days = remember ? 60 : null;
-        setCookie('ziyit_cred', encodeURIComponent(username + '|' + md5), days);
+        setCookie('ziyit_cred', encodeURIComponent(username + '|' + password), days);
     }
 
     function getCredentials() {
@@ -422,6 +437,44 @@
         for (var i = 0; i < bases.length; i++) {
             if (u.indexOf(bases[i]) === 0) return true;
         }
+        return false;
+    }
+
+    // --------------------------------------------------
+    // ZSEC1 加密信道（后端 secure_channel.py）
+    // 业务请求统一走 ZSecureClient：握手 + AES-256-GCM + 序号 + 重协商。
+    // 上传 / 人机验证 / 图片下载 / SSE 流式 走原生 fetch。
+    // --------------------------------------------------
+    var zsecCache = {};
+    function getZsec(base) {
+        if (typeof ZSecureClient === 'undefined' || !base) return null;
+        if (!zsecCache[base]) {
+            try { zsecCache[base] = new ZSecureClient({ baseUrl: base }); }
+            catch (e) { return null; }
+        }
+        return zsecCache[base];
+    }
+
+    // SSE 流式接口：zsec 会把响应 buffer 成 text，破坏流式读取，必须绕开
+    function isSsePath(path) {
+        return /\/(stream|events)(\?|$)/.test(path) || path.indexOf('/guide/chat/stream') === 0;
+    }
+
+    // 与后端 secure_channel._EXCLUDED_* 对齐：这些接口本就走明文通道
+    function isExcludedPath(path) {
+        var p = String(path || '').split('?')[0];
+        var exact = [
+            '/img/upload', '/mods/upload', '/users/avatar', '/updates', '/uploads/init',
+            '/rc/cloud/encrypt', '/challenge', '/session', '/verify', '/verify/consume',
+            '/verify/chunk', '/video', '/video/ready', '/video/chunk', '/pow/challenge',
+            '/pow/stream', '/pow/verify', '/consume-token', '/experience/status', '/health',
+            '/favicon.ico', '/eula', '/confirm', '/email/verify'
+        ];
+        if (exact.indexOf(p) >= 0) return true;
+        if (p.indexOf('/downloads/') === 0 || p.indexOf('/download') === 0 ||
+            p.indexOf('/uploads/') === 0 || p.indexOf('/secure/') === 0) return true;
+        // GET /img/* （除 /img/my）走原图通道
+        if (p.indexOf('/img/') === 0 && p !== '/img/my') return true;
         return false;
     }
 
@@ -553,7 +606,7 @@
         options.headers = options.headers || {};
         options.headers['ngrok-skip-browser-warning'] = '1';
         var token = enrollToken || getToken();
-        if (token) {
+        if (!options.headers['Authorization'] && token) {
             options.headers['Authorization'] = 'Bearer ' + token;
         }
         var bases = orderedBases();
@@ -567,18 +620,40 @@
         return attempt(start);
 
         function attempt(i) {
-            return fetchWithTimeout(bases[i] + path, options).then(function (res) {
-                return res.json().catch(function () { return null; }).then(function (data) {
-                    if (!res.ok) {
-                        var err = new Error(errorText(data && data.detail) || ('请求失败 ' + res.status));
-                        err.status = res.status;
-                        err.data = data;
-                        throw err;
-                    }
-                     
+            var base = bases[i];
+            var useZsec = !options.__plain && !isSsePath(path) && !isExcludedPath(path) && !!getZsec(base);
+
+            function buildErr(data, status, headers) {
+                var err = new Error(errorText(data && data.detail) || ('请求失败 ' + status));
+                err.status = status;
+                err.data = data;
+                try { err.retryAfter = parseInt(headers && headers.get('retry-after') || '0', 10) || 0; } catch (e) {}
+                return err;
+            }
+
+            var p;
+            if (useZsec) {
+                // ZSEC1 加密信道：body 已是 JSON 字符串（post/put）或 undefined（GET/DELETE）
+                var zsecOpts = {
+                    method: options.method || 'GET',
+                    headers: options.headers,
+                    body: options.body
+                };
+                p = getZsec(base).request(path, zsecOpts).then(function (res) {
+                    var data = res.json();
+                    if (!res.ok) throw buildErr(data, res.status, res.headers);
                     return withMeta ? { data: data, date: res.headers.get('date') } : data;
                 });
-            }).catch(function (err) {
+            } else {
+                p = fetchWithTimeout(base + path, options).then(function (res) {
+                    return res.json().catch(function () { return null; }).then(function (data) {
+                        if (!res.ok) throw buildErr(data, res.status, res.headers);
+                        return withMeta ? { data: data, date: res.headers.get('date') } : data;
+                    });
+                });
+            }
+
+            return p.catch(function (err) {
                 if (err && err.status) {
                     var isLoginPath = path.indexOf('/auth/login') === 0;
                      
@@ -589,6 +664,14 @@
                      
                     var sentToken = String((options.headers && options.headers['Authorization']) || '').replace(/^Bearer\s+/i, '');
                     var rememberNow = getRememberToken();
+                    // 503：后端 bcrypt 并发排队满，不是凭据错误，按 0.5/1/2s 退避重试，勿清表单
+                    if (err.status === 503 && (options.__backoff || 0) < 3) {
+                        options.__backoff = (options.__backoff || 0) + 1;
+                        var delay = [500, 1000, 2000][options.__backoff - 1] || 2000;
+                        return new Promise(function (r) { setTimeout(r, delay); }).then(function () {
+                            return attempt(i);
+                        });
+                    }
                     if (err.status === 401 && isAuthRejected && !retried && !enrollToken && !isLoginPath
                         && rememberNow && sentToken === rememberNow) {
                          
@@ -614,7 +697,7 @@
                         clearToken();
                         handleUnauthorized();
                     }
-                    if (err.status >= 500 && i + 1 < bases.length) return switchTo(i);
+                    if (err.status >= 500 && err.status !== 503 && i + 1 < bases.length) return switchTo(i);
                     throw err;
                 }
                  
@@ -659,12 +742,13 @@
     }
 
      
-    function login(username, md5Password, remember) {
-        return post('/auth/login', { username: username, password: md5Password, remember: !!remember });
+    // 密码一律提交明文：仅在 ZSEC1 加密信道内传输，后端收明文后 SHA-256 → bcrypt 落库。
+    function login(username, password, remember) {
+        return post('/auth/login', { username: username, password: password, remember: !!remember });
     }
 
-    function register(username, email, md5Password, challengeId, sessionId) {
-        var body = { username: username, email: email, password: md5Password };
+    function register(username, email, password, challengeId, sessionId) {
+        var body = { username: username, email: email, password: password };
          
         if (challengeId) body.challengeId = challengeId;
         if (sessionId) body.sessionId = sessionId;
@@ -688,8 +772,8 @@
         return put('/users/profile', profile);
     }
 
-    function updatePassword(oldMd5, newMd5) {
-        return put('/users/password', { old_password: oldMd5, new_password: newMd5 });
+    function updatePassword(oldPassword, newPassword) {
+        return put('/users/password', { old_password: oldPassword, new_password: newPassword });
     }
 
     function updateEmail(newEmail) {
@@ -1282,16 +1366,19 @@
         options.headers['Content-Type'] = 'application/json';
         options.headers['ngrok-skip-browser-warning'] = '1';
         if (token) options.headers['Authorization'] = 'Bearer ' + token;
-        return fetchApi(path, options).then(function (res) {
-            return res.json().catch(function () { return null; }).then(function (data) {
-                if (!res.ok) {
-                    var err = new Error(errorText(data && data.detail) || ('请求失败 ' + res.status));
-                    err.status = res.status;
-                    err.data = data;
-                    throw err;
-                }
-                return data;
-            });
+        var reqOpts = { method: options.method || 'GET', headers: options.headers };
+        if (options.body) reqOpts.body = options.body;
+        // 复用 zsec 加密信道；包装成 fetch 风格响应以便调用方沿用 .json() 流程
+        return request(path, reqOpts).then(function (data) {
+            return {
+                ok: true, status: 200,
+                json: function () { return Promise.resolve(data); }
+            };
+        }, function (err) {
+            return {
+                ok: false, status: err && err.status ? err.status : 0,
+                json: function () { return Promise.resolve((err && err.data) || null); }
+            };
         });
     }
 
@@ -2296,6 +2383,7 @@
         resolveBase: resolveBase,
         base: currentBase,
         getBases: getBases,
+        xss: (typeof XssGuard !== 'undefined') ? XssGuard : null,
         getToken: getToken,
         setToken: setToken,
         clearToken: clearToken,

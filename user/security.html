@@ -12,6 +12,8 @@
     <link rel="canonical" href="https://ziyit-hacker.github.io/user/security.html">
     <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
     <script src="../assets/f12check.js"></script>
+    <script src="../assets/zsec_client.js"></script>
+    <script src="../assets/xss_guard.js"></script>
     <script src="../assets/ziyit_api.js"></script>
     <script src="../assets/webauthn.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -748,7 +750,7 @@
                 var body = { factor: factor };
                 if (factor === 'password') {
                      
-                    body.password = CryptoJS.MD5(raw).toString(CryptoJS.enc.Base64);
+                    body.password = raw;
                 } else {
                     body.code = raw.trim();
                 }

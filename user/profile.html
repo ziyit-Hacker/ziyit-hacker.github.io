@@ -12,6 +12,8 @@
     <link rel="canonical" href="https://ziyit-hacker.github.io/user/profile.html">
     <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
     <script src="../assets/f12check.js"></script>
+    <script src="../assets/zsec_client.js"></script>
+    <script src="../assets/xss_guard.js"></script>
     <script src="../assets/ziyit_api.js"></script>
     <style>
         * {
@@ -894,7 +896,7 @@
                 }
                 btn.disabled = true;
                 result.style.display = 'none';
-                ZIYIT_API.updatePassword(md5Base64(oldPwd), md5Base64(newPwd)).then(function (data) {
+                ZIYIT_API.updatePassword(oldPwd, newPwd).then(function (data) {
                     const msg = (data && (data.message || data.detail)) || '操作确认邮件已发送到您的邮箱，请点击邮件中的链接，确认后新密码生效';
                     result.textContent = msg;
                     result.className = 'result success';

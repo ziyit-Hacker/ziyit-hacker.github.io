@@ -347,6 +347,8 @@
         </div>
     </div>
 
+    <script src="../assets/zsec_client.js"></script>
+    <script src="../assets/xss_guard.js"></script>
     <script src="../assets/ziyit_api.js"></script>
     <script src="../assets/webauthn.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -361,7 +363,7 @@
         let mfaMethods = [];
         let mfaStepFactors = [];
         let pendingUsername = '';
-        let pendingPasswordMd5 = '';
+        let pendingPassword = '';
         let pendingRemember = false;
 
          
@@ -425,13 +427,12 @@
             }
 
              
-            const md5Hash = CryptoJS.MD5(password).toString(CryptoJS.enc.Base64);
             pendingUsername = username;
-            pendingPasswordMd5 = md5Hash;
+            pendingPassword = password;
             pendingRemember = rememberMe;
 
              
-            ZIYIT_API.login(username, md5Hash, rememberMe)
+            ZIYIT_API.login(username, password, rememberMe)
                 .then(handleLoginResponse)
                 .catch(error => {
                     console.error('登录失败:', error);
@@ -489,10 +490,10 @@
                  
                  
                 ZIYIT_API.clearRememberToken();
-                if (pendingUsername && pendingPasswordMd5) {
+                if (pendingUsername && pendingPassword) {
                      
                      
-                    ZIYIT_API.setCredentials(pendingUsername, pendingPasswordMd5, pendingRemember);
+                    ZIYIT_API.setCredentials(pendingUsername, pendingPassword, pendingRemember);
                 }
             }
             ZIYIT_API.setToken(token, pendingRemember);
@@ -620,7 +621,7 @@
                     return;
                 }
                  
-                body.password = CryptoJS.MD5(pwd).toString(CryptoJS.enc.Base64);
+                body.password = pwd;
             } else {
                 const code = document.getElementById('mfaCode').value.trim();
                 if (!code) {
@@ -688,7 +689,7 @@
                 return;
             }
             pendingUsername = uname;
-            pendingPasswordMd5 = '';
+            pendingPassword = '';
              
             document.getElementById('otherRemember').checked = !!document.getElementById('rememberMe').checked;
             loginFailed = false;

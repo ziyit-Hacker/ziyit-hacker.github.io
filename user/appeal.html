@@ -369,6 +369,8 @@
         </div>
     </div>
 
+    <script src="../assets/zsec_client.js"></script>
+    <script src="../assets/xss_guard.js"></script>
     <script src="../assets/ziyit_api.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script>
@@ -609,11 +611,10 @@
                 if (!password) { el.error.textContent = '请输入密码'; return; }
 
                  
-                var pwB64 = CryptoJS.MD5(password).toString(CryptoJS.enc.Base64);
                 el.submit.disabled = true;
                 el.submit.textContent = '提交中…';
 
-                ZIYIT_API.appealLogin(username, pwB64).then(function (d) {
+                ZIYIT_API.appealLogin(username, password).then(function (d) {
                     var token = d.appealToken || d.token || d.accessToken;
                     if (!token) { throw new Error('未获取到申诉令牌'); }
                     A.token = token;
