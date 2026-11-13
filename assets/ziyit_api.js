@@ -1102,11 +1102,14 @@
     }
 
      
-    function guideChat(message, source) {
+    function guideChat(message, source, opts) {
         var token = getToken();
         var body = { message: message };
         // 带来源（如聊天墙 ?source=backrooms）时，请求体固定追加 source 字段
         if (source) body.source = source;
+        // 双模态：客服 / 后室终端（后端据此切 Prompt 与可用工具）
+        if (opts && opts.mode) body.mode = opts.mode;
+        if (opts && opts.refDoc) body.ref_doc = opts.refDoc;
         return fetchApi('/guide/chat', {
             method: 'POST',
             headers: {
@@ -1135,11 +1138,13 @@
      
      
      
-    function guideChatStream(message, onEvent, source) {
+    function guideChatStream(message, onEvent, source, opts) {
         var token = getToken();
         var body = { message: message };
         // 带来源（如聊天墙 ?source=backrooms）时，请求体固定追加 source 字段
         if (source) body.source = source;
+        if (opts && opts.mode) body.mode = opts.mode;
+        if (opts && opts.refDoc) body.ref_doc = opts.refDoc;
         return fetchApiRaw('/guide/chat/stream', {
             method: 'POST',
             cache: 'no-store',

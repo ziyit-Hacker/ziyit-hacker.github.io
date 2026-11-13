@@ -447,6 +447,84 @@
             }
         }
     </style>
+<style>
+/* ===== 后室终端主题（仅作用于 .backrooms-terminal-theme 作用域） ===== */
+.guide-card.backrooms-terminal-theme{
+  background: rgba(6,20,12,.96);
+  border: 1px solid rgba(142,240,176,.28);
+  box-shadow: 0 0 24px rgba(0,255,120,.08) inset;
+  font-family: "Courier New", Consolas, monospace;
+  position: relative;
+}
+.guide-card.backrooms-terminal-theme .guide-header h1{
+  font-family: "Courier New", Consolas, monospace;
+  letter-spacing: 2px;
+  color: #8ef0b0;
+}
+.guide-card.backrooms-terminal-theme .terminal-status-bar{
+  width: 100%;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #8ef0b0;
+  background: rgba(0,255,120,.06);
+  border-top: 1px solid rgba(142,240,176,.2);
+  padding: 3px 8px;
+  margin-top: 8px;
+  box-sizing: border-box;
+}
+.guide-card.backrooms-terminal-theme .terminal-status-bar::before{
+  content: "● ";
+  color: #4ade80;
+  animation: termBlink 1.4s infinite;
+}
+@keyframes termBlink{0%,100%{opacity:1}50%{opacity:.25}}
+.guide-card.backrooms-terminal-theme .guide-messages{
+  background: rgba(3,12,7,.85);
+  border: 1px solid rgba(142,240,176,.15);
+  position: relative;
+}
+.guide-card.backrooms-terminal-theme .guide-messages::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgba(0,0,0,.14) 0 1px, transparent 1px 3px);
+  opacity: .35;
+}
+.guide-card.backrooms-terminal-theme .g-msg{
+  border-radius: 2px;
+  background: rgba(10,32,20,.9);
+  color: #9ef5bb;
+  border: 1px solid rgba(142,240,176,.18);
+  font-family: "Courier New", Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.guide-card.backrooms-terminal-theme .g-msg.user{
+  background: rgba(18,48,30,.9);
+  color: #d6ffe4;
+}
+.guide-card.backrooms-terminal-theme .g-msg.sys{
+  background: transparent;
+  border-style: dashed;
+  color: #6fd190;
+}
+.guide-card.backrooms-terminal-theme .guide-input,
+.guide-card.backrooms-terminal-theme .guide-send,
+.guide-card.backrooms-terminal-theme .guide-end{
+  font-family: "Courier New", Consolas, monospace;
+  border-radius: 2px;
+}
+.guide-card.backrooms-terminal-theme .guide-input{
+  background: rgba(3,12,7,.9);
+  color: #b7ffd0;
+  border: 1px solid rgba(142,240,176,.25);
+}
+.guide-card.backrooms-terminal-theme .guide-quota{
+  color: #6fd190;
+  border-color: rgba(142,240,176,.18);
+}
+</style>
 </head>
 
 <body>
@@ -578,6 +656,51 @@
                 PAGE_PROMPT = pageQuery.get('prompt') || '';
                 PAGE_QUOTE = pageQuery.get('quote') || '';
             } catch (e) { }
+            // ---- 双模态：客服 / 后室终端 ----
+            var CHAT_MODE = 'customer_service';
+            var REF_DOC = '';
+            try {
+                CHAT_MODE = (pageQuery.get('mode') || '').trim();
+                REF_DOC = (pageQuery.get('ref_doc') || '').trim();
+                if (!CHAT_MODE) CHAT_MODE = (PAGE_SOURCE === 'backrooms') ? 'backrooms_terminal' : 'customer_service';
+                if (CHAT_MODE !== 'backrooms_terminal') CHAT_MODE = 'customer_service';
+            } catch (e) { }
+            var CHAT_OPTS = { mode: CHAT_MODE, refDoc: REF_DOC };
+
+            function applyChatModeUI() {
+                if (CHAT_MODE !== 'backrooms_terminal') return;
+                var card = document.querySelector('.guide-card');
+                if (card) card.classList.add('backrooms-terminal-theme');
+                var h1 = document.querySelector('.guide-header h1');
+                if (h1) h1.textContent = 'M.E.G. 情报终端';
+                var badge = document.getElementById('guide-status-badge');
+                if (badge) badge.textContent = 'TERMINAL';
+                var header = document.querySelector('.guide-header');
+                if (header && !header.querySelector('.terminal-status-bar')) {
+                    var bar = document.createElement('div');
+                    bar.className = 'terminal-status-bar';
+                    bar.textContent = 'SIGNAL ESTABLISHED';
+                    header.appendChild(bar);
+                }
+                var box = document.getElementById('guide-messages');
+                if (box && !box.dataset.terminalWelcomed) {
+                    box.dataset.terminalWelcomed = '1';
+                    var hint = document.createElement('div');
+                    hint.className = 'g-msg sys';
+                    hint.textContent = '【连接成功】流浪者，我是 ZIYIT 终端。请描述你遇到的层级、实体，或需要解析的文档编号。';
+                    box.innerHTML = '';
+                    box.appendChild(hint);
+                    if (REF_DOC) {
+                        var ref = document.createElement('div');
+                        ref.className = 'g-msg sys';
+                        ref.textContent = '【系统提示】当前正在解析文档：' + REF_DOC;
+                        box.appendChild(ref);
+                    }
+                }
+                var input = document.getElementById('guide-input');
+                if (input && REF_DOC && !input.value) input.value = '请解析文档：' + REF_DOC;
+            }
+            document.addEventListener('DOMContentLoaded', applyChatModeUI);
             var autoPromptSent = false;
             var autoQuoteFilled = false;
 
@@ -780,17 +903,21 @@
                     setLocked(G.lockSeconds - 1);
                     if (G.lockSeconds <= 0) {
                         setLocked(0);
-                        el.quotaText.textContent = '今日剩余 - 次';
+                        el.quotaText.textContent = (CHAT_MODE === 'backrooms_terminal'
+                            ? '【终端算力有限】剩余 - 次' : '今日剩余 - 次');
                     }
                     return;
                 }
                 if (remaining == null) {
-                    el.quotaText.textContent = '今日剩余 - 次';
+                    el.quotaText.textContent = (CHAT_MODE === 'backrooms_terminal'
+                        ? '【终端算力有限】剩余 - 次' : '今日剩余 - 次');
                     el.quotaFill.style.width = '100%';
                     el.quotaReset.textContent = '';
                     return;
                 }
-                el.quotaText.textContent = '今日剩余 ' + remaining + ' 次';
+                el.quotaText.textContent = (CHAT_MODE === 'backrooms_terminal'
+                    ? '【终端算力有限】剩余免费解析次数：' + remaining
+                    : '今日剩余 ' + remaining + ' 次');
                 var pct = limit ? Math.max(0, Math.min(100, Math.round(remaining / limit * 100))) : 100;
                 el.quotaFill.style.width = pct + '%';
                 if (resetIn != null) {
@@ -1093,7 +1220,7 @@
                 streamDrop();
                 streamRendered = false;
                 streamCostShown = false;
-                if (!ZIYIT_API.guideChatStream) return ZIYIT_API.guideChat(message, PAGE_SOURCE);
+                if (!ZIYIT_API.guideChatStream) return ZIYIT_API.guideChat(message, PAGE_SOURCE, CHAT_OPTS);
                 var done = null;
                 var errMsg = '';
                 return ZIYIT_API.guideChatStream(message, function (ev) {
@@ -1101,7 +1228,7 @@
                     if (ev.type === 'done') { done = ev; return; }
                     if (ev.type === 'error') errMsg = ev.message || '';
                     handleStreamEvent(ev);
-                }, PAGE_SOURCE).then(function () {
+                }, PAGE_SOURCE, CHAT_OPTS).then(function () {
                     if (done) { finishStream(); return done; }
                      
                     streamDrop();
@@ -1112,7 +1239,7 @@
                     streamDrop();
                      
                     if (err && (err.status === 404 || err.status === 405 || err.noStream)) {
-                        return ZIYIT_API.guideChat(message, PAGE_SOURCE);
+                        return ZIYIT_API.guideChat(message, PAGE_SOURCE, CHAT_OPTS);
                     }
                     throw err;
                 });
