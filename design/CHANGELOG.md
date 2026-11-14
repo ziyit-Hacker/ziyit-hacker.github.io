@@ -3,6 +3,14 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.59 — 2026-11-14
+### 变更
+- 新增用户端举报入口（`POST /report`）：
+  - 公共模块 [ziyit_report.js](file:///f:/Code/html/ziyit/assets/ziyit_report.js)：举报弹窗（严重程度 1-4 档、问题类型、500 字说明），打开时用 `GET /report/target` 显示「已被举报 N 次」，未登录给出登录链接，分别处理 401/409/429/403。
+  - [chatwall.html](file:///f:/Code/html/ziyit/chatwall.html)：每条消息与回复的操作区右下角新增「举报」，目标类型 `chat_message`。
+  - [all-levels.html](file:///f:/Code/html/ziyit/backrooms/all-levels.html)：层级表格新增「操作」列，每行右侧「举报」，目标类型 `level`；不影响原有行点击打开层级。
+  - [entities/index.html](file:///f:/Code/html/ziyit/backrooms/entities/index.html)、[objects/index.html](file:///f:/Code/html/ziyit/backrooms/objects/index.html)：实体 / 物品列表每条右侧「举报」。后端 `TARGET_TYPES` 目前只接受 `chat_message / level / user`，这两类按 `level` 记录，`targetId` 用条目 ID（如 `Entity 5` / `Object 12`）区分。
+
 ## v1.58 — 2026-11-14
 ### 变更
 - 对齐指南新增的 §6.0 / §6.1：
