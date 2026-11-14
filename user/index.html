@@ -347,9 +347,9 @@
         </div>
     </div>
 
-    <script src="../assets/zsec_client.js"></script>
-    <script src="../assets/xss_guard.js"></script>
-    <script src="../assets/ziyit_api.js"></script>
+    <script src="../assets/zsec_client.js?v=20261114"></script>
+    <script src="../assets/xss_guard.js?v=20261114"></script>
+    <script src="../assets/ziyit_api.js?v=20261114"></script>
     <script src="../assets/webauthn.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
@@ -365,6 +365,55 @@
         let pendingUsername = '';
         let pendingPassword = '';
         let pendingRemember = false;
+        let mfaSubmitting = false;
+
+        // 二步票据持久化：后端 mfaToken 有效 5 分钟，刷新 / 切后台 / 短暂断网回来不该丢票据
+        const MFA_TICKET_KEY = 'ziyit_mfa_ticket';
+        function saveMfaTicket() {
+            try {
+                if (!savedMfaToken) return;
+                sessionStorage.setItem(MFA_TICKET_KEY, JSON.stringify({
+                    token: savedMfaToken, ts: Date.now(), username: pendingUsername || ''
+                }));
+            } catch (e) { }
+        }
+        function restoreMfaTicket() {
+            try {
+                const raw = sessionStorage.getItem(MFA_TICKET_KEY);
+                if (!raw) return;
+                const info = JSON.parse(raw) || {};
+                // 后端票据 5 分钟过期，这里留 30 秒余量
+                if (!info.token || Date.now() - (info.ts || 0) > 270000) { clearMfaTicket(); return; }
+                savedMfaToken = info.token;
+                if (info.username && !pendingUsername) pendingUsername = info.username;
+            } catch (e) { }
+        }
+        function clearMfaTicket() {
+            savedMfaToken = null;
+            try { sessionStorage.removeItem(MFA_TICKET_KEY); } catch (e) { }
+        }
+
+        function isMfaSessionExpired(err) {
+            const detail = loginErrDetail(err);
+            return !!(err && err.status === 401 && /session/i.test(detail) && /(expired|changed|invalid)/i.test(detail));
+        }
+
+        // 二步票据失效（停留过久 / 换网络 / 后端重启）时不打断用户：
+        // 用内存里的账号密码静默重新登录拿新票据，再原样重放这次验证码。
+        function recoverMfaSession() {
+            if (!pendingUsername || !pendingPassword) return Promise.resolve(false);
+            return ZIYIT_API.login(pendingUsername, pendingPassword, wantRemember()).then(function (data) {
+                if (!data) return false;
+                if (data.mfaRequired) {
+                    savedMfaToken = data.mfaToken || null;
+                    mfaMethods = data.methods || mfaMethods;
+                    saveMfaTicket();
+                    return !!savedMfaToken;
+                }
+                handleLoginResponse(data);
+                return false;
+            }).catch(function () { return false; });
+        }
 
          
          
@@ -497,6 +546,7 @@
                 }
             }
             ZIYIT_API.setToken(token, pendingRemember);
+            clearMfaTicket();
             window.location.href = '../';
         }
 
@@ -516,6 +566,7 @@
 
             savedMfaToken = data.mfaToken || savedMfaToken;
             mfaMethods = data.methods || [];
+            saveMfaTicket();
              
             mfaStepFactors = mfaMethods.filter(function (m) {
                 return m === 'password' || m === 'totp' || m === 'recovery' || m === 'email';
@@ -552,7 +603,7 @@
         }
 
          
-        function updateMfaRows() {
+        function updateMfaRows(preserveValue) {
             const factor = document.getElementById('mfaFactor').value;
             const isPwd = factor === 'password';
             document.getElementById('mfaCodeRow').style.display = (factor && !isPwd) ? 'block' : 'none';
@@ -574,8 +625,37 @@
                 label.textContent = '验证码';
                 input.placeholder = '输入验证码';
             }
-            input.value = '';
-            document.getElementById('mfaPassword').value = '';
+            // 自动识别因子时会来回切换，这里要保留用户已经输入的验证码（仅手动切换才清空）
+            if (!preserveValue) {
+                input.value = '';
+                document.getElementById('mfaPassword').value = '';
+            }
+        }
+
+        // 自动识别验证方式：6 位纯数字 → 动态码（若当前是邮箱则维持邮箱），8 位以上字母数字 → 恢复码
+        function detectMfaFactor(value, current) {
+            const v = String(value || '').trim();
+            if (/^\d{6}$/.test(v)) {
+                if (current === 'email' || current === 'password') return current;
+                if (mfaStepFactors.indexOf('totp') >= 0) return 'totp';
+                if (mfaStepFactors.indexOf('email') >= 0) return 'email';
+                return current;
+            }
+            if (/^[A-Za-z0-9]{8,}$/.test(v) && mfaStepFactors.indexOf('recovery') >= 0) return 'recovery';
+            return current;
+        }
+
+        // 只切换验证方式，不自动提交（仍需点「继续验证」）
+        function autoDetectMfaFactor() {
+            const sel = document.getElementById('mfaFactor');
+            const input = document.getElementById('mfaCode');
+            if (!sel || !input || document.getElementById('mfaFactorRow').style.display === 'none') return;
+            const want = detectMfaFactor(input.value, sel.value);
+            if (want && want !== sel.value) {
+                sel.value = want;
+                updateMfaRows(true);
+                input.focus();
+            }
         }
 
         function sendMfaEmailCode() {
@@ -611,6 +691,7 @@
         }
 
         function submitMfaFactor() {
+            if (mfaSubmitting) return;
             const factor = document.getElementById('mfaFactor').value || 'totp';
             const btn = document.getElementById('mfaSubmit');
             const body = { mfaToken: savedMfaToken, factor: factor, remember: wantRemember() };
@@ -637,13 +718,31 @@
                 }
                 body.code = code;
             }
+            mfaSubmitting = true;
             btn.disabled = true;
             ZIYIT_API.loginFactor(body).then(function (data) {
-                if (data && data.mfaToken) savedMfaToken = data.mfaToken;
+                if (data && data.mfaToken) { savedMfaToken = data.mfaToken; saveMfaTicket(); }
                 handleLoginResponse(data);
             }).catch(function (err) {
+                // 票据失效（停留过久 / 换网络 / 后端重启）：静默续票后原样重放一次，避免用户白输验证码
+                if (isMfaSessionExpired(err)) {
+                    return recoverMfaSession().then(function (ok) {
+                        if (!ok) {
+                            showError('验证会话已失效，请点「返回重新登录」重新走一遍');
+                            return;
+                        }
+                        body.mfaToken = savedMfaToken;
+                        return ZIYIT_API.loginFactor(body).then(function (data) {
+                            if (data && data.mfaToken) { savedMfaToken = data.mfaToken; saveMfaTicket(); }
+                            handleLoginResponse(data);
+                        }).catch(function (err2) {
+                            showError(factorErrorText(err2, factor));
+                        });
+                    });
+                }
                 showError(factorErrorText(err, factor));
             }).finally(function () {
+                mfaSubmitting = false;
                 btn.disabled = false;
             });
         }
@@ -738,6 +837,16 @@
             }
         }
 
+        function fetchOtherTicket() {
+            const uname = pendingUsername || currentUsername();
+            if (!uname) return Promise.reject(new Error('请先输入用户名'));
+            const body = savedMfaToken ? { mfaToken: savedMfaToken } : { username: uname };
+            return ZIYIT_API.loginEmailStart(body).then(function (res) {
+                if (res && res.mfaToken) { savedMfaToken = res.mfaToken; saveMfaTicket(); }
+                return res || {};
+            });
+        }
+
         function otherPrep() {
             const f = document.getElementById('otherFactor').value;
             if (!otherNeedsTicket(f)) return;
@@ -750,10 +859,7 @@
             const hint = document.getElementById('otherPrepHint');
             btn.disabled = true;
             hint.textContent = '正在获取…';
-             
-            const body = savedMfaToken ? { mfaToken: savedMfaToken } : { username: uname };
-            ZIYIT_API.loginEmailStart(body).then(function (res) {
-                if (res && res.mfaToken) savedMfaToken = res.mfaToken;
+            fetchOtherTicket().then(function (res) {
                 hint.textContent = f === 'email'
                     ? (((res && res.message) || '验证码已发送，请查收邮箱')
                         + '有效期内重复点「发送」不会发新邮件，直接用收到的那封邮件里的码即可；没收到请查收垃圾邮件。')
@@ -771,6 +877,7 @@
         }
 
         function submitOtherFactor() {
+            if (mfaSubmitting) return;
             const f = document.getElementById('otherFactor').value;
             if (!otherNeedsTicket(f)) return;
             const code = document.getElementById('otherCode').value.trim();
@@ -785,18 +892,44 @@
                     : '2FA 动态码是 6 位数字，请核对后重新输入');
                 return;
             }
-            if (!savedMfaToken) {
-                showError('请先点上方按钮获取验证票据');
-                return;
-            }
             const btn = document.getElementById('otherSubmit');
+            const hint = document.getElementById('otherPrepHint');
+            // 没有票据时自动取一张，不再要求用户先手动点「继续 / 获取验证码」
+            const needTicket = !savedMfaToken;
+            mfaSubmitting = true;
             btn.disabled = true;
-            ZIYIT_API.loginFactor({ mfaToken: savedMfaToken, code: code, factor: f, remember: wantRemember() }).then(function (data) {
-                if (data && data.mfaToken) savedMfaToken = data.mfaToken;
+            if (needTicket && hint) hint.textContent = '正在自动获取验证票据…';
+            const send = function () {
+                return ZIYIT_API.loginFactor({
+                    mfaToken: savedMfaToken, code: code, factor: f, remember: wantRemember()
+                });
+            };
+            (needTicket ? fetchOtherTicket() : Promise.resolve({})).then(function () {
+                if (needTicket && hint) hint.textContent = '';
+                return send();
+            }).then(function (data) {
+                if (data && data.mfaToken) { savedMfaToken = data.mfaToken; saveMfaTicket(); }
                 handleLoginResponse(data);
             }).catch(function (err) {
+                if (needTicket && hint) hint.textContent = '';
+                // 票据失效：静默续票后原样重放一次
+                if (isMfaSessionExpired(err)) {
+                    return recoverMfaSession().then(function (ok) {
+                        if (!ok) {
+                            showError('验证会话已失效，请点「返回重新登录」重新走一遍');
+                            return;
+                        }
+                        return send().then(function (data) {
+                            if (data && data.mfaToken) { savedMfaToken = data.mfaToken; saveMfaTicket(); }
+                            handleLoginResponse(data);
+                        }).catch(function (err2) {
+                            showError(factorErrorText(err2, f));
+                        });
+                    });
+                }
                 showError(factorErrorText(err, f));
             }).finally(function () {
+                mfaSubmitting = false;
                 btn.disabled = false;
             });
         }
@@ -982,12 +1115,15 @@
         mirrorRemember('otherRemember', 'rememberMe');
 
          
+        document.getElementById('mfaCode').addEventListener('input', autoDetectMfaFactor);
         document.getElementById('mfaCode').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 submitMfaFactor();
             }
         });
+        // 刷新 / 从后台切回来时恢复未过期的二步票据，避免重输一遍
+        restoreMfaTicket();
         document.getElementById('mfaPassword').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
