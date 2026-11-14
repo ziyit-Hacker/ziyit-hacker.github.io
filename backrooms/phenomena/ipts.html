@@ -8,42 +8,8 @@
     <script src="../../assets/f12check.js"></script>
     <script type="text/javascript"
         src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/init.combined.js"></script>
-    <script type="text/javascript">
-        var URL_HOST = 'www.wikidot.com';
-        var URL_DOMAIN = 'wikidot.com';
-        var USE_SSL = true;
-        var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-         
-
-        var WIKIREQUEST = {};
-        WIKIREQUEST.info = {};
-
-        WIKIREQUEST.info.domain = "backrooms-wiki-cn.wikidot.com";
-        WIKIREQUEST.info.siteId = 4716348;
-        WIKIREQUEST.info.siteUnixName = "backrooms-wiki-cn";
-        WIKIREQUEST.info.categoryId = 40786773;
-        WIKIREQUEST.info.themeId = 1;
-        WIKIREQUEST.info.requestPageName = "iets";
-        OZONE.request.timestamp = 1762434503;
-        OZONE.request.date = new Date();
-        WIKIREQUEST.info.lang = 'cn';
-        WIKIREQUEST.info.pageUnixName = "iets";
-        WIKIREQUEST.info.pageId = 1331696112;
-        WIKIREQUEST.info.lang = "cn";
-        OZONE.lang = "cn";
-        var isUAMobile = !!/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    </script>
-    <script type="text/javascript">
-
-        require.config({
-            baseUrl: URL_STATIC + '/common--javascript',
-            paths: {
-                'jquery.ui': 'jquery-ui.min',
-                'jquery.form': 'jquery.form'
-            }
-        });
-
-    </script>
+    <script type="text/javascript">var URL_HOST="www.wikidot.com";var URL_DOMAIN="wikidot.com";var USE_SSL=true;var URL_STATIC="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc";var WIKIREQUEST={};WIKIREQUEST.info={};WIKIREQUEST.info.domain="backrooms-wiki-cn.wikidot.com";WIKIREQUEST.info.siteId=4716348;WIKIREQUEST.info.siteUnixName="backrooms-wiki-cn";WIKIREQUEST.info.categoryId=40786773;WIKIREQUEST.info.themeId=1;WIKIREQUEST.info.requestPageName="iets";OZONE.request.timestamp=1762434503;OZONE.request.date=new Date;WIKIREQUEST.info.lang="cn";WIKIREQUEST.info.pageUnixName="iets";WIKIREQUEST.info.pageId=1331696112;WIKIREQUEST.info.lang="cn";OZONE.lang="cn";var isUAMobile=!!/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);</script>
+    <script type="text/javascript">require.config({baseUrl:URL_STATIC+"/common--javascript",paths:{"jquery.ui":"jquery-ui.min","jquery.form":"jquery.form"}});</script>
 
     <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
     <meta name="theme-color" content="#35B1A4" />
@@ -79,37 +45,13 @@
     <link rel="alternate" type="application/wiki" title="Edit this page"
         href="javascript:WIKIDOT.page.listeners.editClick()" />
 
-    <script type="text/javascript">
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-18234656-1']);
-        _gaq.push(['_setDomainName', 'none']);
-        _gaq.push(['_setAllowLinker', true]);
-        _gaq.push(['_trackPageview']);
+    <script type="text/javascript">var _gaq=_gaq||[];_gaq.push(["_setAccount","UA-18234656-1"]);_gaq.push(["_setDomainName","none"]);_gaq.push(["_setAllowLinker",true]);_gaq.push(["_trackPageview"]);_gaq.push(["old._setAccount","UA-68540-5"]);_gaq.push(["old._setDomainName","none"]);_gaq.push(["old._setAllowLinker",true]);_gaq.push(["old._trackPageview"]);_gaq.push(["userTracker._setAccount","UA-290379544-1"]);_gaq.push(["userTracker._trackPageview"]);</script>
 
-        _gaq.push(['old._setAccount', 'UA-68540-5']);
-        _gaq.push(['old._setDomainName', 'none']);
-        _gaq.push(['old._setAllowLinker', true]);
-        _gaq.push(['old._trackPageview']);
-
-        _gaq.push(['userTracker._setAccount', 'UA-290379544-1']);
-        _gaq.push(['userTracker._trackPageview']);
-    </script>
-
-    <script type="text/javascript">
-        window.google_analytics_uacct = 'UA-18234656-1';
-        window.google_analytics_domain_name = 'none';
-    </script>
+    <script type="text/javascript">window.google_analytics_uacct="UA-18234656-1";window.google_analytics_domain_name="none";</script>
 
     <link rel="manifest" href="/onesignal/manifest.json" />
     <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" acync=""></script>
-    <script>
-        var OneSignal = window.OneSignal || [];
-        OneSignal.push(function () {
-            OneSignal.init({
-                appId: null,
-            });
-        });
-    </script>
+    <script>var OneSignal=window.OneSignal||[];OneSignal.push(function(){OneSignal.init({appId:null})});</script>
 
     <meta name="google-adsense-account" content="ca-pub-7805322678042888" />
     <style>
@@ -139,57 +81,7 @@
             <strong><span id="userTypeDisplay"></span></strong>
         </div>
     </div>
-    <script>
-         
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
-
-         
-        async function getUserPermission(username) {
-            try {
-                const response = await fetch('/backrooms/user.json');
-                const userData = await response.json();
-
-                const usernameIndex = userData.Username.indexOf(username);
-                if (usernameIndex !== -1) {
-                    const permission = userData.Permission[usernameIndex];
-                    return { permission };
-                }
-                return null;
-            } catch (error) {
-                console.error('读取用户权限信息失败:', error);
-                return null;
-            }
-        }
-
-         
-        document.addEventListener('DOMContentLoaded', async function () {
-            const authToken = getCookie('authToken') || localStorage.getItem('authToken');
-            const usernameDisplay = document.getElementById('usernameDisplay');
-            const userTypeDisplay = document.getElementById('userTypeDisplay');
-            const pageContent = document.getElementById('page-content');
-
-            if (!authToken) {
-                if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';
-                if (userTypeDisplay) userTypeDisplay.textContent = '';
-            } else {
-                const user = await ZIYIT_API.currentUser();
-                const username = user ? user.username : '';
-                const type = (user && ZIYIT_API.isVip(user)) ? 'ZC' : 'UR';
-                if (usernameDisplay) usernameDisplay.textContent = user ? user.username : '';
-                if (userTypeDisplay) {
-                    try {
-                        userTypeDisplay.textContent = await ZIYIT_API.userType() || (ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户');
-                    } catch (e) {
-                        userTypeDisplay.textContent = ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户';
-                    }
-                }
-            }
-        });
-    </script>
+    <script>function getCookie(name){const value=`; ${document.cookie}`;const parts=value.split(`; ${name}=`);if(parts.length===2)return parts.pop().split(";").shift()}async function getUserPermission(username){try{const response=await fetch("/backrooms/user.json");const userData=await response.json();const usernameIndex=userData.Username.indexOf(username);if(usernameIndex!==-1){const permission=userData.Permission[usernameIndex];return{permission}}return null}catch(error){console.error("读取用户权限信息失败:",error);return null}}document.addEventListener("DOMContentLoaded",async function(){const authToken=getCookie("authToken")||localStorage.getItem("authToken");const usernameDisplay=document.getElementById("usernameDisplay");const userTypeDisplay=document.getElementById("userTypeDisplay");const pageContent=document.getElementById("page-content");if(!authToken){if(usernameDisplay)usernameDisplay.innerHTML='您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';if(userTypeDisplay)userTypeDisplay.textContent=""}else{const user=await ZIYIT_API.currentUser();const username=user?user.username:"";const type=user&&ZIYIT_API.isVip(user)?"ZC":"UR";if(usernameDisplay)usernameDisplay.textContent=user?user.username:"";if(userTypeDisplay){try{userTypeDisplay.textContent=await ZIYIT_API.userType()||(ZIYIT_API.isVip(user)?"VIP用户":"普通用户")}catch(e){userTypeDisplay.textContent=ZIYIT_API.isVip(user)?"VIP用户":"普通用户"}}}});</script>
                         <div id="top-bar">
                             <div class="top-bar">
                                 <ul>
@@ -397,59 +289,7 @@
             width: 100% !important;
         }
     </style>
-    <script>
-         
-        document.addEventListener('DOMContentLoaded', function() {
-             
-            var headerTitle = document.querySelector('#header h1 a span');
-            if (headerTitle) {
-                headerTitle.textContent = "ZIYIT & M.E.G.";
-                headerTitle.innerHTML = "ZIYIT & M.E.G.";
-            }
-            
-             
-            var headerDesc = document.querySelector('#header h2 span');
-            if (headerDesc) {
-                headerDesc.textContent = "让后室生活更美好";
-                headerDesc.innerHTML = "让后室生活更美好";
-            }
-            
-             
-            var metaDesc = document.querySelector('meta[name="description"]');
-            if (metaDesc) {
-                metaDesc.setAttribute('content', '让后室生活更美好');
-            }
-            
-             
-            var ogSiteName = document.querySelector('meta[name="og:site_name"]');
-            if (ogSiteName) {
-                ogSiteName.setAttribute('content', 'ZIYIT & M.E.G.');
-            }
-        });
-        
-         
-        var observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'childList') {
-                    var headerTitle = document.querySelector('#header h1 a span');
-                    var headerDesc = document.querySelector('#header h2 span');
-                    
-                    if (headerTitle && headerTitle.textContent !== "ZIYIT & M.E.G.") {
-                        headerTitle.textContent = "ZIYIT & M.E.G.";
-                    }
-                    
-                    if (headerDesc && headerDesc.textContent !== "让后室生活更美好") {
-                        headerDesc.textContent = "让后室生活更美好";
-                    }
-                }
-            });
-        });
-        
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    </script>
+    <script>document.addEventListener("DOMContentLoaded",function(){var headerTitle=document.querySelector("#header h1 a span");if(headerTitle){headerTitle.textContent="ZIYIT & M.E.G.";headerTitle.innerHTML="ZIYIT & M.E.G."}var headerDesc=document.querySelector("#header h2 span");if(headerDesc){headerDesc.textContent="让后室生活更美好";headerDesc.innerHTML="让后室生活更美好"}var metaDesc=document.querySelector('meta[name="description"]');if(metaDesc){metaDesc.setAttribute("content","让后室生活更美好")}var ogSiteName=document.querySelector('meta[name="og:site_name"]');if(ogSiteName){ogSiteName.setAttribute("content","ZIYIT & M.E.G.")}});var observer=new MutationObserver(function(mutations){mutations.forEach(function(mutation){if(mutation.type==="childList"){var headerTitle=document.querySelector("#header h1 a span");var headerDesc=document.querySelector("#header h2 span");if(headerTitle&&headerTitle.textContent!=="ZIYIT & M.E.G."){headerTitle.textContent="ZIYIT & M.E.G."}if(headerDesc&&headerDesc.textContent!=="让后室生活更美好"){headerDesc.textContent="让后室生活更美好"}}})});observer.observe(document.body,{childList:true,subtree:true});</script>
 </body>
 
 </html>

@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-strip_comments.py —— 批量去掉 HTML / CSS / JS 文件中的注释（Python 实现）
+strip_comments.py —— 批量去掉 HTML / CSS / JS 文件中的注释与空行
 
 特性
 ----
-* JS/CSS：按“词法”扫描，能正确跳过字符串、正则字面量、模板字符串（含 `${}` 嵌套），
-  不会把 "http://x"、'<div class="a/b">'、`a//b` 之类的内容误当注释删除。
+* JS（含 HTML 内联 <script>）默认调用 Terser 处理：
+  - 删除注释、删除空行/多余空白；
+  - `compress: false` + `mangle: false`：**不压缩逻辑、不混淆变量名**，只做“打印级”清理；
+  - 需要保留缩进换行时加 --terser-beautify（仍会删注释和空行）；
+  - 单个脚本 Terser 解析失败（语法特殊 / 顶层 return / JSX 等）时自动回退内置词法去注释，
+    不会因为一处失败中断整批；
+  - 未安装 Terser 时自动用 npx 拉取一次（terser@5）后复用缓存。
+* CSS：仍用内置词法扫描（Terser 只管 JS），能正确跳过字符串里的 /* */。
 * HTML：识别 <!-- --> 注释，以及 <script>/<style> 内部代码、<textarea>/<template>
   等原始文本区域，只在真正的代码位置删注释。
 * 只删“确凿的注释”：
@@ -15,9 +21,8 @@ strip_comments.py —— 批量去掉 HTML / CSS / JS 文件中的注释（Pytho
     <!-- {{...}} -->）默认【保留】，确认要删再加 --strip-functional；
 * 默认【只预览】统计，加 --write 才真正改写；--backup 会在改写前生成 .bak。
 * 数据型 <script>（application/ld+json、application/json 等非 JS 类型）整段原样保留，
-  不做 JS 注释解析，也不会把正文里的 //、http:// 误当注释。
-* 编码：按 UTF-8（含/不含 BOM）处理；遇到无法按 UTF-8 解码的文件回退 GB18030，
-  写回时保持原编码习惯（有 BOM 保留 BOM）。
+  不做 JS 解析，也不会把正文里的 //、http:// 误当注释。
+* 编码：按 UTF-8（含/不含 BOM）处理；遇到无法按 UTF-8 解码的文件回退 GB18030。
 
 用法示例
 --------
@@ -26,13 +31,22 @@ python strip_comments.py Human_verification --write     # 实际去掉该目录�
 python strip_comments.py a.html b.js --dry-run          # 只看 a.html / b.js 会删多少
 python strip_comments.py --ext html js . --write        # 只处理 html/js
 python strip_comments.py . --delete-backups             # 删除范围内所有 .bak 备份
+python strip_comments.py --no-terser . --write          # 不调 Terser，用内置词法去注释
+python strip_comments.py . --write --terser-beautify    # Terser 输出保留换行/缩进
 python strip_comments.py --selftest                     # 跑内置自检（不碰任何文件）
 """
 
 import argparse
+import atexit
+import json
 import os
+import queue
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
+import threading
 
 # ----------------------------- 通用工具 -----------------------------
 
@@ -306,6 +320,293 @@ def strip_js(src):
     return "".join(out), removed_chars, removed_blocks
 
 
+# ----------------------------- Terser 调用 -----------------------------
+
+# 运行在 Node 侧的常驻小助手：逐行读 JSON 请求、调 Terser、逐行回 JSON 结果。
+# compress/mangle 全关，只保留“打印级”清理（去注释、去空白），变量名原样保留。
+_TERSER_HELPER_JS = r"""'use strict';
+var readline = require('readline');
+var terser = null;
+var loadError = '';
+try {
+  terser = require(process.env.TERSER_PATH || 'terser');
+} catch (e) {
+  loadError = String((e && e.message) || e);
+}
+var rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
+var chain = Promise.resolve();
+
+function reply(obj) {
+  process.stdout.write(JSON.stringify(obj) + '\n');
+}
+
+function makeOptions(req, asModule) {
+  return {
+    compress: false,
+    mangle: false,
+    module: !!asModule,
+    ecma: 2022,
+    format: {
+      comments: false,
+      beautify: !!req.beautify,
+      ascii_only: false,
+      semicolons: true,
+      inline_script: true
+    },
+    parse: asModule ? {} : { bare_returns: true }
+  };
+}
+
+rl.on('line', function (line) {
+  line = line.trim();
+  if (!line) return;
+  chain = chain.then(function () {
+    var req = null;
+    try { req = JSON.parse(line); } catch (e) {
+      reply({ id: null, error: 'bad request json' });
+      return;
+    }
+    if (!terser) {
+      reply({ id: req.id, error: 'terser load failed: ' + loadError, fatal: true });
+      return;
+    }
+    function attempt(asModule) {
+      return terser.minify(req.code, makeOptions(req, asModule)).then(function (out) {
+        if (!out || typeof out.code !== 'string') throw new Error('empty output');
+        return out.code;
+      });
+    }
+    attempt(req.module).then(function (code) {
+      reply({ id: req.id, code: code });
+    }, function (err1) {
+      // module 判定可能与实际不符（有 import/export 却是脚本，或反之），换一种再试
+      return attempt(!req.module).then(function (code) {
+        reply({ id: req.id, code: code, alt: true });
+      }, function (err2) {
+        reply({ id: req.id, error: String((err2 && err2.message) || err1 || err2) });
+      });
+    });
+  });
+});
+
+rl.on('close', function () {
+  chain.then(function () { process.exit(0); });
+});
+"""
+
+
+def _find_terser():
+    """定位 terser 包目录：本地 node_modules → npm 全局 → npx 缓存；
+    都没有则用 npx 拉取一次 terser@5 后重查。找不到返回 ""。"""
+    def _ok(p):
+        try:
+            return os.path.isdir(p) and os.path.isfile(os.path.join(p, "package.json"))
+        except OSError:
+            return False
+
+    def _candidates():
+        seen = set()
+        here = os.path.dirname(os.path.abspath(__file__))
+        roots = [here, os.getcwd()]
+        for base in (here, os.getcwd()):
+            cur = base
+            for _ in range(3):
+                cur = os.path.dirname(cur)
+                if cur and cur not in roots:
+                    roots.append(cur)
+        for r in roots:
+            p = os.path.join(r, "node_modules", "terser")
+            if p not in seen:
+                seen.add(p)
+                yield p
+        npm = shutil.which("npm")
+        if npm:
+            try:
+                out = subprocess.run([npm, "root", "-g"], capture_output=True, text=True, timeout=30)
+                if out.returncode == 0 and out.stdout.strip():
+                    p = os.path.join(out.stdout.strip(), "terser")
+                    if p not in seen:
+                        seen.add(p)
+                        yield p
+            except Exception:
+                pass
+        caches = []
+        local = os.environ.get("LOCALAPPDATA")
+        if local:
+            caches.append(os.path.join(local, "npm-cache", "_npx"))
+        caches.append(os.path.join(os.path.expanduser("~"), ".npm", "_npx"))
+        for npx_dir in caches:
+            if not os.path.isdir(npx_dir):
+                continue
+            try:
+                subs = sorted(os.listdir(npx_dir))
+            except OSError:
+                continue
+            for sub in subs:
+                p = os.path.join(npx_dir, sub, "node_modules", "terser")
+                if p not in seen:
+                    seen.add(p)
+                    yield p
+
+    for cand in _candidates():
+        if _ok(cand):
+            return cand
+
+    npx = shutil.which("npx") or shutil.which("npx.cmd")
+    if npx:
+        print("未找到 Terser，正在通过 npx 拉取 terser@5（仅首次需要联网）…")
+        try:
+            subprocess.run([npx, "--yes", "terser@5", "--version"],
+                           capture_output=True, timeout=300, shell=False)
+        except Exception as exc:
+            print("npx 拉取 Terser 失败:", exc)
+        for cand in _candidates():
+            if _ok(cand):
+                return cand
+    return ""
+
+
+class TerserRunner:
+    """常驻 Node 助手进程，批量把 JS 交给 Terser 去注释/去空行（不混淆变量名）。"""
+
+    def __init__(self, beautify=False):
+        self.beautify = bool(beautify)
+        self._proc = None
+        self._helper = None
+        self._lines = None
+        self._seq = 0
+        self._dead = False
+
+    # ---- 进程管理 ----
+    def _start(self):
+        node = shutil.which("node")
+        if not node:
+            self._dead = True
+            return False
+        terser_path = _find_terser()
+        if not terser_path:
+            self._dead = True
+            return False
+        fd, helper = tempfile.mkstemp(prefix="ziyit_terser_", suffix=".cjs")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(_TERSER_HELPER_JS)
+            env = dict(os.environ)
+            env["TERSER_PATH"] = terser_path
+            proc = subprocess.Popen(
+                [node, helper], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL, text=True, encoding="utf-8",
+                bufsize=1, env=env,
+            )
+        except OSError:
+            self._dead = True
+            try:
+                os.remove(helper)
+            except OSError:
+                pass
+            return False
+
+        lines = queue.Queue()
+
+        def _reader(pipe):
+            try:
+                for line in pipe:
+                    lines.put(line)
+            finally:
+                lines.put(None)
+
+        threading.Thread(target=_reader, args=(proc.stdout,), daemon=True).start()
+        self._proc, self._helper, self._lines = proc, helper, lines
+        atexit.register(self.close)
+        # 空探测：确认能正常通信且 terser 可用
+        if self._call("var __terser_probe__ = 1;", False) is None:
+            self.close()
+            self._dead = True
+            return False
+        return True
+
+    def close(self):
+        proc = self._proc
+        self._proc = None
+        if proc is not None:
+            try:
+                proc.stdin.close()
+            except Exception:
+                pass
+            try:
+                proc.wait(timeout=5)
+            except Exception:
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
+        if self._helper:
+            try:
+                os.remove(self._helper)
+            except OSError:
+                pass
+            self._helper = None
+
+    # ---- 对外接口 ----
+    def available(self):
+        if self._dead:
+            return False
+        if self._proc is not None:
+            return True
+        return self._start()
+
+    def minify(self, code, module=False):
+        """返回去注释/去空行后的代码；任何异常返回 None（调用方回退内置词法去注释）。"""
+        if not code or not code.strip():
+            return None
+        if not self.available():
+            return None
+        return self._call(code, module)
+
+    def _call(self, code, module):
+        self._seq += 1
+        req = {"id": self._seq, "code": code, "module": bool(module),
+               "beautify": self.beautify}
+        try:
+            self._proc.stdin.write(json.dumps(req, ensure_ascii=False) + "\n")
+            self._proc.stdin.flush()
+            line = self._lines.get(timeout=180)
+        except Exception:
+            self._dead = True
+            return None
+        if line is None:
+            self._dead = True
+            return None
+        try:
+            res = json.loads(line)
+        except ValueError:
+            self._dead = True
+            return None
+        if res.get("fatal"):
+            self._dead = True
+            return None
+        if res.get("error") or not isinstance(res.get("code"), str):
+            return None
+        return res["code"]
+
+
+# 判断一段 JS 是否属于 ES Module（有 import/export/import.meta）——Terser 解析模式不同
+_MODULE_HINT_RE = re.compile(
+    r"(?:^|[;\s}\)])import\s*(?:[\w{*'\"]|\.\s*meta\b)"
+    r"|\bimport\.meta\b"
+    r"|\bexport\s+(?:default|const|let|var|function|class|async|\{|\*)"
+)
+
+
+def _js_looks_module(code):
+    return bool(_MODULE_HINT_RE.search(code or ""))
+
+
+def _script_is_module(open_tag):
+    m = re.search(r"""\btype\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))""", open_tag, re.IGNORECASE)
+    return bool(m) and (m.group(1) or m.group(2) or m.group(3) or "").strip().lower() == "module"
+
+
 # ----------------------------- CSS 注释去除 -----------------------------
 
 def strip_css(src):
@@ -455,9 +756,11 @@ def _script_is_js(open_tag):
     return False
 
 
-def strip_html(src, keep_functional=True):
+def strip_html(src, keep_functional=True, minify_js=None):
     """去除 HTML 注释，并对 <script>/<style> 内部做 JS/CSS 去注释。
-    keep_functional=True（默认）：保留条件注释等“功能性注释”。"""
+    keep_functional=True（默认）：保留条件注释等“功能性注释”。
+    minify_js(code, is_module) -> str|None：传入时用 Terser 处理内联 JS；
+    返回 None 表示该段回退内置词法去注释。"""
     if not src:
         return src, 0, 0, 0
     n = len(src)
@@ -540,7 +843,14 @@ def strip_html(src, keep_functional=True):
             closing = src[close_at:close_end]
             if tag == "script":
                 if is_js:
-                    stripped, rc, rb = strip_js(body)
+                    stripped = None
+                    if minify_js is not None:
+                        stripped = minify_js(body, _script_is_module(open_tag))
+                    if stripped is None:
+                        stripped, rc, rb = strip_js(body)
+                    else:
+                        rc = max(0, len(body) - len(stripped))
+                        rb = 1 if stripped != body else 0
                 else:
                     stripped, rc, rb = body, 0, 0   # 数据型脚本原样保留
             else:
@@ -599,18 +909,26 @@ def _encode(text, had_bom):
     return data
 
 
-def strip_file(path, ext, keep_functional=True):
+def strip_file(path, ext, keep_functional=True, minify_js=None):
     with open(path, "rb") as f:
         raw = f.read()
     text, bom = _decode(raw)
     if ext in _EXT_JS:
-        new_text, rc, rb = strip_js(text)
-        block_count = rb
+        new_text = None
+        if minify_js is not None:
+            new_text = minify_js(text, ext == "mjs" or _js_looks_module(text))
+        if new_text is None:
+            new_text, rc, rb = strip_js(text)
+            block_count = rb
+        else:
+            rc = max(0, len(text) - len(new_text))
+            block_count = 1 if new_text != text else 0
     elif ext in _EXT_CSS:
         new_text, rc, rb = strip_css(text)
         block_count = rb
     else:
-        new_text, rc, rb, block_count = strip_html(text, keep_functional=keep_functional)
+        new_text, rc, rb, block_count = strip_html(
+            text, keep_functional=keep_functional, minify_js=minify_js)
     if not new_text and text:
         new_text = text  # 防止空结果误删整文件
     return text, new_text, rc, block_count
@@ -792,6 +1110,10 @@ def main(argv=None):
                     help="遍历时跳过的目录名")
     ap.add_argument("--strip-functional", action="store_true",
                     help="同时删除条件注释等“功能性注释”（默认保留）")
+    ap.add_argument("--no-terser", action="store_true",
+                    help="不调用 Terser，使用内置词法去注释（默认调用 Terser）")
+    ap.add_argument("--terser-beautify", action="store_true",
+                    help="Terser 输出保留缩进换行（仍然删注释与空行）")
     ap.add_argument("--selftest", action="store_true", help="运行内置自检后退出")
     ap.add_argument("--delete-backups", action="store_true",
                     help="删除路径范围内所有 .bak 备份后退出（不做清理）")
@@ -813,12 +1135,25 @@ def main(argv=None):
         print("没有找到可处理的文件。")
         return 1
 
+    runner = None
+    minify_js = None
+    if not args.no_terser:
+        runner = TerserRunner(beautify=args.terser_beautify)
+        if runner.available():
+            minify_js = runner.minify
+            print("JS 处理方式: Terser（compress/mangle 已关闭，不混淆变量名）")
+        else:
+            runner = None
+            print("JS 处理方式: 内置词法去注释（未找到可用的 Node.js / Terser）")
+    else:
+        print("JS 处理方式: 内置词法去注释（--no-terser）")
+
     total_rm = 0
     changed = 0
     for path in files:
         keep_functional = not args.strip_functional
         text, new_text, rc, _ = strip_file(path, os.path.splitext(path)[1].lstrip(".").lower(),
-                                           keep_functional=keep_functional)
+                                           keep_functional=keep_functional, minify_js=minify_js)
         if not text or not new_text:
             print("跳过(读取失败/为空):", path)
             continue
@@ -840,6 +1175,8 @@ def main(argv=None):
     print("\n共扫描 %d 个文件，%d 个含注释，累计删除注释约 %d 字符。" % (len(files), changed, total_rm))
     if not args.write:
         print("本次仅预览。确认无误后请加 --write 真正改写（建议先 --backup）。")
+    if runner is not None:
+        runner.close()
     return 0
 
 

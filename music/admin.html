@@ -14,18 +14,7 @@
     <script src="../assets/ziyit_api.js?v=20261114"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./admin.css">
-    <script>
-        (function () {
-            var pref = 'auto';
-            try {
-                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
-                if (m) pref = decodeURIComponent(m[1]) || 'auto';
-            } catch (e) { }
-            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme-pref', pref);
-        })();
-    </script>
+    <script>(function(){var pref="auto";try{var m=document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));if(m)pref=decodeURIComponent(m[1])||"auto"}catch(e){}var dark=pref==="dark"||pref==="auto"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",dark?"dark":"light");document.documentElement.setAttribute("data-theme-pref",pref)})();</script>
     <link rel="stylesheet" href="../assets/ziyit-theme.css">
 </head>
 
@@ -798,7 +787,7 @@
                     </div>
                 </section>
 
-                <!-- 知识库可见等级管理（仅 Lv.4 站长，v1.32） -->
+                
                 <section id="knowledge-management" class="content-section">
                     <div class="section-header">
                         <h2>知识库管理</h2>
@@ -831,7 +820,7 @@
                         <button type="button" class="kb-subtab" data-kbtab="edit">编辑与恢复</button>
                     </div>
 
-                    <!-- ① 条目总表 -->
+                    
                     <div class="kb-pane active" id="kb-pane-entries">
                         <div class="user-controls">
                             <input type="text" class="user-search" id="kb-entries-q" placeholder="按标题（key）搜索...">
@@ -859,12 +848,12 @@
                         </div>
                     </div>
 
-                    <!-- ② 目录树 -->
+                    
                     <div class="kb-pane" id="kb-pane-tree">
                         <div class="kb-tree" id="kb-tree"></div>
                     </div>
 
-                    <!-- ③ 关键词搜索 -->
+                    
                     <div class="kb-pane" id="kb-pane-search">
                         <div class="user-controls">
                             <input type="text" class="user-search" id="kb-search-q" placeholder="跨标题与正文内容搜索关键词...">
@@ -883,7 +872,7 @@
                         <div id="kb-search-results"></div>
                     </div>
 
-                    <!-- ④ 原文/生效文对照 -->
+                    
                     <div class="kb-pane" id="kb-pane-compare">
                         <div class="user-controls">
                             <select class="form-select kb-pick" id="kb-compare-key"></select>
@@ -894,7 +883,7 @@
                         <div class="kb-compare" id="kb-compare"></div>
                     </div>
 
-                    <!-- ⑤ 档位预览 -->
+                    
                     <div class="kb-pane" id="kb-pane-preview">
                         <div class="kb-level-tabs kb-level-tabs-inline" id="kb-preview-tabs">
                             <button type="button" class="kb-tab active" data-pvlevel="0">公开</button>
@@ -911,7 +900,7 @@
                         <pre class="kb-pre" id="kb-pv-text"></pre>
                     </div>
 
-                    <!-- ⑥ 模拟提问 -->
+                    
                     <div class="kb-pane" id="kb-pane-ask">
                         <div class="user-controls">
                             <input type="text" class="user-search" id="kb-ask-q" placeholder="输入用户可能问的一句话，看 AI 真正会拿到那几段...">
@@ -930,7 +919,7 @@
                         <pre class="kb-pre" id="kb-ask-matched"></pre>
                     </div>
 
-                    <!-- ⑦ 编辑与恢复 -->
+                    
                     <div class="kb-pane" id="kb-pane-edit">
                         <div class="user-controls">
                             <select class="form-select kb-pick" id="kb-edit-key"></select>
@@ -1158,7 +1147,7 @@
         </footer>
     </div>
 
-    <!-- 管理员邮箱验证强制门（v1.31）：未验证邮箱前拦截全部管理功能 -->
+    
     <div class="email-gate" id="email-verify-gate">
         <div class="email-gate-card">
             <h2>需要完成邮箱验证</h2>
@@ -1492,7 +1481,7 @@
     </div>
 
     
-    <!-- 添加后室成员（仅 Lv.3+） -->
+    
     <div class="modal" id="add-backrooms-member-modal">
         <div class="modal-content">
             <div class="modal-header">添加后室成员</div>
@@ -1519,7 +1508,7 @@
         </div>
     </div>
 
-    <!-- 恢复 AI 工具权重（仅重置输入框，默认值 = 当前已保存的配置，不新增后端接口） -->
+    
     <div class="modal" id="ai-reset-modal">
         <div class="modal-content">
             <div class="modal-header">恢复到默认</div>

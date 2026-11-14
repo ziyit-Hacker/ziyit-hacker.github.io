@@ -34,18 +34,7 @@
     <script src="./assets/zsec_client.js?v=20261114"></script>
     <script src="./assets/xss_guard.js?v=20261114"></script>
     <script src="./assets/ziyit_api.js?v=20261114"></script>
-    <script>
-        (function () {
-            var pref = 'auto';
-            try {
-                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
-                if (m) pref = decodeURIComponent(m[1]) || 'auto';
-            } catch (e) { }
-            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme-pref', pref);
-        })();
-    </script>
+    <script>(function(){var pref="auto";try{var m=document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));if(m)pref=decodeURIComponent(m[1])||"auto"}catch(e){}var dark=pref==="dark"||pref==="auto"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",dark?"dark":"light");document.documentElement.setAttribute("data-theme-pref",pref)})();</script>
     <link rel="stylesheet" href="./assets/ziyit-theme.css">
     <style>
          
@@ -299,95 +288,9 @@
         </div>
     </div>
 
-    <script>
-        const languageSelect = document.getElementById('language');
-        const customLanguageInput = document.getElementById('customLanguage');
-        const customLanguageBtn = document.getElementById('customLanguageBtn');
-        customLanguageBtn.addEventListener('click', () => {
-            customLanguageInput.style.display = 'block';
-            customLanguageBtn.style.display = 'none';
-        });
-        customLanguageBtn.addEventListener('click', () => {
-            const customLanguage = customLanguageInput.value;
-            if (customLanguage) {
-                languageSelect.options.add(new Option(customLanguage, customLanguage));
-                customLanguageInput.value = '';
-                customLanguageInput.style.display = 'none';
-                customLanguageBtn.style.display = 'block';
-            }
-        });
-        languageSelect.addEventListener('change', () => {
-            if (languageSelect.value === 'cca') {
-                customLanguageBtn.style.display = 'block';
-            } else {
-                customLanguageBtn.style.display = 'none';
-            }
-        });
-        customLanguageInput.addEventListener('input', () => {
-            customLanguageBtn.disabled = customLanguageInput.value.trim() === '';
-        });
-        customLanguageBtn.addEventListener('click', () => {
-            customLanguageInput.value = '';
-        });
-    </script>
+    <script>const languageSelect=document.getElementById("language");const customLanguageInput=document.getElementById("customLanguage");const customLanguageBtn=document.getElementById("customLanguageBtn");customLanguageBtn.addEventListener("click",()=>{customLanguageInput.style.display="block";customLanguageBtn.style.display="none"});customLanguageBtn.addEventListener("click",()=>{const customLanguage=customLanguageInput.value;if(customLanguage){languageSelect.options.add(new Option(customLanguage,customLanguage));customLanguageInput.value="";customLanguageInput.style.display="none";customLanguageBtn.style.display="block"}});languageSelect.addEventListener("change",()=>{if(languageSelect.value==="cca"){customLanguageBtn.style.display="block"}else{customLanguageBtn.style.display="none"}});customLanguageInput.addEventListener("input",()=>{customLanguageBtn.disabled=customLanguageInput.value.trim()===""});customLanguageBtn.addEventListener("click",()=>{customLanguageInput.value=""});</script>
 
-    <script>
-         
-         
-        function currentLanguageLabel() {
-            var sel = document.getElementById('language');
-            if (sel) {
-                if (sel.selectedOptions && sel.selectedOptions[0]) {
-                    return sel.selectedOptions[0].text;
-                }
-                return sel.value;
-            }
-            return '中文';
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            var btn = document.getElementById('translateBtn');
-
-            btn.addEventListener('click', async function () {
-                var text = document.getElementById('inputText').value.trim();
-                var resultEl = document.getElementById('result');
-
-                if (!text) {
-                    resultEl.textContent = '请输入要翻译的文本';
-                    return;
-                }
-                if (!window.ZIYIT_API || !window.ZIYIT_API.getToken()) {
-                    resultEl.textContent = '请先登录后使用翻译功能';
-                    return;
-                }
-
-                btn.disabled = true;
-                resultEl.innerHTML = '<div class="loading">翻译中...</div>';
-
-                try {
-                    var data = await ZIYIT_API.request('/translate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            text: text,
-                            language: currentLanguageLabel()
-                        })
-                    });
-                    resultEl.textContent = (data && data.translated) || '翻译结果为空，请重试';
-                } catch (e) {
-                    if (e && e.status === 429) {
-                        resultEl.textContent = '今日翻译次数已用完，请稍后再试；或联系 ziyitstudio@qq.com 升级为 VIP（价格为 RC 专业版价格）';
-                    } else if (e && e.status === 401) {
-                        resultEl.textContent = '登录已失效，请重新登录后再试';
-                    } else {
-                        resultEl.textContent = '翻译失败: ' + ((e && e.message) || '未知错误');
-                    }
-                } finally {
-                    btn.disabled = false;
-                }
-            });
-        });
-    </script>
+    <script>function currentLanguageLabel(){var sel=document.getElementById("language");if(sel){if(sel.selectedOptions&&sel.selectedOptions[0]){return sel.selectedOptions[0].text}return sel.value}return"中文"}document.addEventListener("DOMContentLoaded",function(){var btn=document.getElementById("translateBtn");btn.addEventListener("click",async function(){var text=document.getElementById("inputText").value.trim();var resultEl=document.getElementById("result");if(!text){resultEl.textContent="请输入要翻译的文本";return}if(!window.ZIYIT_API||!window.ZIYIT_API.getToken()){resultEl.textContent="请先登录后使用翻译功能";return}btn.disabled=true;resultEl.innerHTML='<div class="loading">翻译中...</div>';try{var data=await ZIYIT_API.request("/translate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,language:currentLanguageLabel()})});resultEl.textContent=data&&data.translated||"翻译结果为空，请重试"}catch(e){if(e&&e.status===429){resultEl.textContent="今日翻译次数已用完，请稍后再试；或联系 ziyitstudio@qq.com 升级为 VIP（价格为 RC 专业版价格）"}else if(e&&e.status===401){resultEl.textContent="登录已失效，请重新登录后再试"}else{resultEl.textContent="翻译失败: "+(e&&e.message||"未知错误")}}finally{btn.disabled=false}})});</script>
 
     <script type="importmap">
         {
@@ -401,63 +304,12 @@
             }
         }
     </script>
-    <script>
-        window.PHANTOM_API_KEY = 'PfwHF-kkg8c-YX6CF-J7Uw1-hv5Dn';
-    </script>
+    <script>window.PHANTOM_API_KEY="PfwHF-kkg8c-YX6CF-J7Uw1-hv5Dn";</script>
     <script type="module" src="https://ziyit-hacker.github.io/Human_verification/main.js"
         onerror="showCaptchaError()"></script>
-    <script>
-        function showCaptchaError() {
-            document.getElementById('captcha-container').innerHTML = '<p style="color:red;font-size:16px;">初始化失败，请稍后重试</p>';
-        }
-        window.addEventListener('phantom:verified', function (e) {
-            document.getElementById('captcha-container').style.display = 'none';
-            document.getElementById('translator-content').style.display = 'block';
-        });
-    </script>
+    <script>function showCaptchaError(){document.getElementById("captcha-container").innerHTML='<p style="color:red;font-size:16px;">初始化失败，请稍后重试</p>'}window.addEventListener("phantom:verified",function(e){document.getElementById("captcha-container").style.display="none";document.getElementById("translator-content").style.display="block"});</script>
     
-    <script>
-        function checkLoginStatus() {
-            const navItems = document.querySelectorAll('.nav-item');
-            const loginLink = document.getElementById('loginLink');
-            if (!ZIYIT_API.getToken()) {
-                navItems.forEach(item => {
-                    const role = item.getAttribute('data-role');
-                    const show = role === 'all';
-                    item.classList.toggle('visible', show);
-                    item.classList.toggle('hidden', !show);
-                });
-                if (loginLink) loginLink.style.display = 'inline-block';
-                return;
-            }
-            ZIYIT_API.currentUser().then(function (user) {
-                const isVip = ZIYIT_API.isVip(user);
-                const uname = user.username || '';
-                const isAdmin = uname === 'Minecraft_zy227';
-                navItems.forEach(item => {
-                    const role = item.getAttribute('data-role');
-                    let show = role === 'all';
-                    if (isAdmin) {
-                        show = show || role === 'admin' || role === 'adminstr';
-                    } else if (isVip) {
-                        show = show || role === 'admin';
-                    }
-                    item.classList.toggle('visible', show);
-                    item.classList.toggle('hidden', !show);
-                });
-                if (loginLink) loginLink.style.display = 'none';
-            }).catch(function () {
-                navItems.forEach(item => {
-                    const role = item.getAttribute('data-role');
-                    const show = role === 'all';
-                    item.classList.toggle('visible', show);
-                    item.classList.toggle('hidden', !show);
-                });
-            });
-        }
-
-        window.addEventListener('DOMContentLoaded', checkLoginStatus);
-    </script>
+    <script>function checkLoginStatus(){const navItems=document.querySelectorAll(".nav-item");const loginLink=document.getElementById("loginLink");if(!ZIYIT_API.getToken()){navItems.forEach(item=>{const role=item.getAttribute("data-role");const show=role==="all";item.classList.toggle("visible",show);item.classList.toggle("hidden",!show)});if(loginLink)loginLink.style.display="inline-block";return}ZIYIT_API.currentUser().then(function(user){const isVip=ZIYIT_API.isVip(user);const uname=user.username||"";const isAdmin=String(user.userId)==="1";navItems.forEach(item=>{const role=item.getAttribute("data-role");let show=role==="all";if(isAdmin){show=show||role==="admin"||role==="adminstr"}else if(isVip){show=show||role==="admin"}item.classList.toggle("visible",show);item.classList.toggle("hidden",!show)});if(loginLink)loginLink.style.display="none"}).catch(function(){navItems.forEach(item=>{const role=item.getAttribute("data-role");const show=role==="all";item.classList.toggle("visible",show);item.classList.toggle("hidden",!show)})})}window.addEventListener("DOMContentLoaded",checkLoginStatus);</script>
 <script src="./assets/ziyit-theme.js"></script>
 </body>
 

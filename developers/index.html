@@ -11,18 +11,7 @@
     <script src="../assets/xss_guard.js?v=20261114"></script>
     <script src="../assets/ziyit_api.js?v=20261114"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script>
-        (function () {
-            var pref = 'auto';
-            try {
-                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
-                if (m) pref = decodeURIComponent(m[1]) || 'auto';
-            } catch (e) { }
-            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme-pref', pref);
-        })();
-    </script>
+    <script>(function(){var pref="auto";try{var m=document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));if(m)pref=decodeURIComponent(m[1])||"auto"}catch(e){}var dark=pref==="dark"||pref==="auto"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",dark?"dark":"light");document.documentElement.setAttribute("data-theme-pref",pref)})();</script>
     <link rel="stylesheet" href="../assets/ziyit-theme.css">
     <style>
          
@@ -114,34 +103,7 @@
 </head>
 
 <body>
-    <script>
-         
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
-            return null;
-        }
-
-         
-        function checkUserPermission() {
-            const authToken = getCookie('authToken') || localStorage.getItem('authToken');
-            if (!authToken) {
-                alert('请先登录以访问该页面');
-                window.location.href = '../';
-                return;
-            }
-
-            const [typeCode] = authToken.split('-');
-            if (typeCode === 'UR') {
-                alert('您没有权限访问该页面');
-                window.location.href = '../';
-            }
-        }
-
-         
-        document.addEventListener('DOMContentLoaded', checkUserPermission);
-    </script>
+    <script>function getCookie(name){const value=`; ${document.cookie}`;const parts=value.split(`; ${name}=`);if(parts.length===2)return decodeURIComponent(parts.pop().split(";").shift());return null}function checkUserPermission(){const authToken=getCookie("authToken")||localStorage.getItem("authToken");if(!authToken){alert("请先登录以访问该页面");window.location.href="../";return}const[typeCode]=authToken.split("-");if(typeCode==="UR"){alert("您没有权限访问该页面");window.location.href="../"}}document.addEventListener("DOMContentLoaded",checkUserPermission);</script>
 
     
     <div class="site-nav" id="up">
@@ -219,61 +181,9 @@
         &copy;2026&nbsp;&nbsp;ZIYIT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>版权所有，侵权必究</strong>
     </footer>
 
-    <script>
-        const logsElement = document.getElementById('logs');
-        fetch('logs.log')
-            .then(response => {
-                return response.text();
-            })
-            .then(data => {
-                let formattedData = data.replace(/\n/g, '<br>');
-                formattedData = formattedData.replace(/ /g, '&nbsp;');
-                logsElement.innerHTML = formattedData;
-            })
-            .catch(error => {
-                console.error('Error fetching logs:', error);
-                logsElement.textContent = '无法加载日志文件。';
-            });
-    </script>
+    <script>const logsElement=document.getElementById("logs");fetch("logs.log").then(response=>response.text()).then(data=>{let formattedData=data.replace(/\n/g,"<br>");formattedData=formattedData.replace(/ /g,"&nbsp;");logsElement.innerHTML=formattedData}).catch(error=>{console.error("Error fetching logs:",error);logsElement.textContent="无法加载日志文件。"});</script>
 
-    <script>
-         
-        function checkLoginStatus() {
-            const navItems = document.querySelectorAll('.nav-item');
-            if (!ZIYIT_API.getToken()) {
-                navItems.forEach(item => {
-                    item.classList.add('hidden');
-                    item.classList.remove('visible');
-                });
-                return;
-            }
-            ZIYIT_API.currentUser().then(function (user) {
-                const isVip = ZIYIT_API.isVip(user);
-                const uname = user.username || '';
-                const isAdmin = uname === 'Minecraft_zy227';
-                navItems.forEach(item => {
-                    const role = item.getAttribute('data-role');
-                    let show = role === 'all';
-                    if (isAdmin) {
-                        show = show || role === 'admin' || role === 'adminstr';
-                    } else if (isVip) {
-                        show = show || role === 'admin';
-                    }
-                    item.classList.toggle('visible', show);
-                    item.classList.toggle('hidden', !show);
-                });
-                const loginLink = document.getElementById('loginLink');
-                if (loginLink) loginLink.style.display = 'none';
-            }).catch(function () {
-                navItems.forEach(item => {
-                    item.classList.add('hidden');
-                    item.classList.remove('visible');
-                });
-            });
-        }
-
-        window.addEventListener('DOMContentLoaded', checkLoginStatus);
-    </script>
+    <script>function checkLoginStatus(){const navItems=document.querySelectorAll(".nav-item");if(!ZIYIT_API.getToken()){navItems.forEach(item=>{item.classList.add("hidden");item.classList.remove("visible")});return}ZIYIT_API.currentUser().then(function(user){const isVip=ZIYIT_API.isVip(user);const uname=user.username||"";const isAdmin=String(user.userId)==="1";navItems.forEach(item=>{const role=item.getAttribute("data-role");let show=role==="all";if(isAdmin){show=show||role==="admin"||role==="adminstr"}else if(isVip){show=show||role==="admin"}item.classList.toggle("visible",show);item.classList.toggle("hidden",!show)});const loginLink=document.getElementById("loginLink");if(loginLink)loginLink.style.display="none"}).catch(function(){navItems.forEach(item=>{item.classList.add("hidden");item.classList.remove("visible")})})}window.addEventListener("DOMContentLoaded",checkLoginStatus);</script>
     <script src="../assets/ziyit-theme.js"></script>
 </body>
 

@@ -232,57 +232,7 @@
             <strong><span id="userTypeDisplay"></span></strong>
         </div>
     </div>
-    <script>
-         
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
-
-         
-        async function getUserPermission(username) {
-            try {
-                const response = await fetch('/backrooms/user.json');
-                const userData = await response.json();
-
-                const usernameIndex = userData.Username.indexOf(username);
-                if (usernameIndex !== -1) {
-                    const permission = userData.Permission[usernameIndex];
-                    return { permission };
-                }
-                return null;
-            } catch (error) {
-                console.error('读取用户权限信息失败:', error);
-                return null;
-            }
-        }
-
-         
-        document.addEventListener('DOMContentLoaded', async function () {
-            const authToken = getCookie('authToken') || localStorage.getItem('authToken');
-            const usernameDisplay = document.getElementById('usernameDisplay');
-            const userTypeDisplay = document.getElementById('userTypeDisplay');
-            const pageContent = document.getElementById('page-content');
-
-            if (!authToken) {
-                if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';
-                if (userTypeDisplay) userTypeDisplay.textContent = '';
-            } else {
-                const user = await ZIYIT_API.currentUser();
-                const username = user ? user.username : '';
-                const type = (user && ZIYIT_API.isVip(user)) ? 'ZC' : 'UR';
-                if (usernameDisplay) usernameDisplay.textContent = user ? user.username : '';
-                if (userTypeDisplay) {
-                    try {
-                        userTypeDisplay.textContent = await ZIYIT_API.userType() || (ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户');
-                    } catch (e) {
-                        userTypeDisplay.textContent = ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户';
-                    }
-                }
-            }
-        });
-    </script>
+    <script>function getCookie(name){const value=`; ${document.cookie}`;const parts=value.split(`; ${name}=`);if(parts.length===2)return parts.pop().split(";").shift()}async function getUserPermission(username){try{const response=await fetch("/backrooms/user.json");const userData=await response.json();const usernameIndex=userData.Username.indexOf(username);if(usernameIndex!==-1){const permission=userData.Permission[usernameIndex];return{permission}}return null}catch(error){console.error("读取用户权限信息失败:",error);return null}}document.addEventListener("DOMContentLoaded",async function(){const authToken=getCookie("authToken")||localStorage.getItem("authToken");const usernameDisplay=document.getElementById("usernameDisplay");const userTypeDisplay=document.getElementById("userTypeDisplay");const pageContent=document.getElementById("page-content");if(!authToken){if(usernameDisplay)usernameDisplay.innerHTML='您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';if(userTypeDisplay)userTypeDisplay.textContent=""}else{const user=await ZIYIT_API.currentUser();const username=user?user.username:"";const type=user&&ZIYIT_API.isVip(user)?"ZC":"UR";if(usernameDisplay)usernameDisplay.textContent=user?user.username:"";if(userTypeDisplay){try{userTypeDisplay.textContent=await ZIYIT_API.userType()||(ZIYIT_API.isVip(user)?"VIP用户":"普通用户")}catch(e){userTypeDisplay.textContent=ZIYIT_API.isVip(user)?"VIP用户":"普通用户"}}}});</script>
         <p class="error-message">The requested resource could not be found on this server. The site configured at this
             address does not contain the file you are looking for.</p>
 
@@ -326,15 +276,7 @@
         </div>
     </div>
 
-    <script>
-         
-        document.getElementById('current-time').textContent = new Date().toLocaleString();
-
-         
-        window.addEventListener('load', function () {
-            console.log('404 Error Page loaded successfully');
-        });
-    </script>
+    <script>document.getElementById("current-time").textContent=(new Date).toLocaleString();window.addEventListener("load",function(){console.log("404 Error Page loaded successfully")});</script>
 </body>
 
 </html>

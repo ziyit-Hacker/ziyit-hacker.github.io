@@ -10,18 +10,7 @@
     <meta name="author" content="ZIYIT STUDIO">
     <link rel="canonical" href="https://ziyit-hacker.github.io/injection.html">
     <link rel="icon" href="./assets/ziyit.png" type="image/x-icon">
-    <script>
-        (function () {
-            var pref = 'auto';
-            try {
-                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
-                if (m) pref = decodeURIComponent(m[1]) || 'auto';
-            } catch (e) { }
-            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme-pref', pref);
-        })();
-    </script>
+    <script>(function(){var pref="auto";try{var m=document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));if(m)pref=decodeURIComponent(m[1])||"auto"}catch(e){}var dark=pref==="dark"||pref==="auto"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",dark?"dark":"light");document.documentElement.setAttribute("data-theme-pref",pref)})();</script>
     <link rel="stylesheet" href="./assets/ziyit-theme.css">
     <script src="./assets/f12check.js"></script>
     <script src="./assets/blacklist.js"></script>
@@ -35,7 +24,7 @@
             padding: 24px 20px 40px;
         }
 
-        /* ---------- Hero ---------- */
+         
         .hero {
             border-radius: 12px;
             padding: 40px 32px;
@@ -112,7 +101,7 @@
             transform: scale(.98);
         }
 
-        /* ---------- 区块骨架 ---------- */
+         
         .sec {
             margin-top: 40px;
         }
@@ -165,7 +154,7 @@
             margin: 0;
         }
 
-        /* ---------- 定价 ---------- */
+         
         .price-box {
             background: var(--ziyit-bg-card);
             border: 1px solid var(--ziyit-border);
@@ -220,7 +209,7 @@
             color: var(--ziyit-text-secondary);
         }
 
-        /* ---------- 体验区 ---------- */
+         
         .try-box {
             background: var(--ziyit-bg-card);
             border: 1px solid var(--ziyit-border);
@@ -372,7 +361,7 @@
             line-height: 1.6;
         }
 
-        /* ---------- 结果 ---------- */
+         
         .result {
             margin-top: 20px;
             border-top: 1px dashed var(--ziyit-border);
@@ -499,7 +488,7 @@
             color: var(--ziyit-text-secondary);
         }
 
-        /* ---------- 代码示例 ---------- */
+         
         .tabs {
             display: flex;
             gap: 4px;
@@ -548,7 +537,7 @@
             white-space: pre;
         }
 
-        /* ---------- API 文档 ---------- */
+         
         .api-table {
             width: 100%;
             border-collapse: collapse;
@@ -959,325 +948,10 @@ print("费用拆解", data["cost"], "实扣", data["charged"], "余额", data["b
         <div class="foot">ZIYIT STUDIO · 澄镜防注入检测</div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var KEY_STORE = 'injection_exp_key';
-            var MAX_CHARS = 10000;
+    <script>document.addEventListener("DOMContentLoaded",function(){var KEY_STORE="injection_exp_key";var MAX_CHARS=1e4;var keyInput=document.getElementById("keyInput");var toggleKeyBtn=document.getElementById("toggleKeyBtn");var textInput=document.getElementById("textInput");var counter=document.getElementById("counter");var tooLong=document.getElementById("tooLong");var tooLongText=document.getElementById("tooLongText");var trimBtn=document.getElementById("trimBtn");var detectBtn=document.getElementById("detectBtn");var result=document.getElementById("result");var pricingBox=document.getElementById("pricingBox");function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}function fmtNum(n){if(n==null||n==="")return"-";var v=Number(n);if(isNaN(v))return esc(n);if(Math.abs(v-Math.round(v))<1e-9)return String(Math.round(v));return String(Math.round(v*100)/100)}function loadKey(){try{return sessionStorage.getItem(KEY_STORE)||""}catch(e){return""}}function saveKey(v){try{if(v)sessionStorage.setItem(KEY_STORE,v);else sessionStorage.removeItem(KEY_STORE)}catch(e){}}keyInput.value=loadKey();keyInput.addEventListener("input",function(){saveKey(keyInput.value.trim());keyInput.classList.remove("error")});toggleKeyBtn.addEventListener("click",function(){var show=keyInput.type==="password";keyInput.type=show?"text":"password";toggleKeyBtn.textContent=show?"隐藏":"显示"});function refreshCounter(){var n=textInput.value.length;counter.textContent=n+" / "+MAX_CHARS;var over=n>MAX_CHARS;counter.classList.toggle("over",over);tooLong.style.display=over?"flex":"none";if(over){tooLongText.textContent="文本 "+n+" 字符，超出上限 "+MAX_CHARS+" 字符，已阻止提交（对应后端 413）。"}return over}textInput.addEventListener("input",refreshCounter);trimBtn.addEventListener("click",function(){textInput.value=textInput.value.slice(0,MAX_CHARS);refreshCounter();textInput.focus()});textInput.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();runDetect()}});function loadPricing(){return ZIYIT_API.injectionPricing().then(function(p){p=p||{};var tpp=p.tokensPerPoint;var ppk=p.pointsPerKeyword;var ex=p.example||{};var labels=p.labels||{};var rows=""+'<div class="price-row"><span class="lbl">'+esc(labels.tokensPerPoint||"多少 Token 收 1 点")+"</span>"+'<span class="val">'+esc(fmtNum(tpp))+" Token = 1 点</span></div>"+'<div class="price-row"><span class="lbl">'+esc(labels.pointsPerKeyword||"每个命中关键词收多少点")+"</span>"+'<span class="val">'+esc(fmtNum(ppk))+" 点 / 个</span></div>"+'<div class="price-row"><span class="lbl">计费口径</span>'+'<span class="val">模型段 + 关键词段</span></div>';pricingBox.innerHTML=""+'<div class="price-main"><span class="price-num">'+esc(fmtNum(tpp))+"</span>"+"<span>Token = 1 点 · 命中关键词 <b>"+esc(fmtNum(ppk))+"</b> 点/个</span></div>"+'<div style="margin-top:14px;">'+rows+"</div>"+(ex.totalTokens!=null?'<div class="price-note">'+esc(ex.note||"费用示例")+"：约 "+esc(fmtNum(ex.totalTokens))+" Token → <b>"+esc(fmtNum(ex.points))+" 点</b>。</div>":"")+'<div class="price-note">VIP 分档可能再减免，实际扣点以接口返回的 <code>charged</code> 为准。'+"扣的是与人机验证共用的那份 ZIYIT 点数；价格由管理员在后台配置，前端不缓存、不硬编码。</div>"}).catch(function(){pricingBox.innerHTML='<div class="price-main" style="color:var(--ziyit-text-secondary);">'+"当前定价读取失败，请稍后刷新重试。</div>"})}function errorText(err){var status=err&&err.status;var reason=err&&err.reason;var detail=err&&err.detail;if(status===401||reason==="missing_key")return"请先填写 API 密钥。";if(status===400||reason==="empty_text")return"请先输入要检测的文本。";if(status===503||reason==="disabled")return"服务端已关闭防注入检测 API，请稍后再试或联系管理员。";if(status===413||reason==="text_too_long"){var max=detail&&detail.maxChars;return"文本超长"+(max?"（上限 "+max+" 字符）":"")+"，请删减后重试。"}if(status===403){if(reason==="invalid")return"API 密钥无效，请检查是否填错。";if(reason==="disabled")return"该 API 密钥已被停用。";if(reason==="origin")return"该密钥限定了来源白名单，当前页面来源不在白名单内。服务端直连请把密钥的 allowed_origins 留空。";if(reason==="daily_points")return"该密钥今日消耗点数已达上限，请明天再试或让管理员调整上限。";if(reason==="points"){var pts=detail&&detail.points;var min=detail&&detail.minRequired;return"点数余额不足"+(pts!=null?"（当前 "+fmtNum(pts)+" 点":"")+(min!=null?"，至少需要 "+fmtNum(min)+" 点）":pts!=null?"）":"")}return"密钥不可用（403"+(reason?" · "+reason:"")+"）。"}return err&&err.message||"检测失败，请稍后重试。"}function renderResult(d){d=d||{};var hit=Number(d.injection)===1;var tokens=d.tokens||{};var cost=d.cost||{};var kws=d.keywords||[];var kwHtml=kws.length?'<div class="kw-list">'+kws.map(function(k){return'<span class="kw-tag">'+esc(k)+"</span>"}).join("")+"</div>":'<div class="kw-empty">未命中关键词</div>';var html=""+'<div class="badge-row">'+'<span class="verdict '+(hit?"attack":"clean")+'">'+(hit?"检测到注入":"未检测到注入")+"</span>"+'<span class="verdict-prob">注入概率 <b>'+esc(d.modelProb==null?"—":fmtNum(d.modelProb))+"</b>"+" ｜ 判定阈值 <b>"+esc(fmtNum(d.threshold))+"</b>"+" ｜ 模型版本 <b>"+esc(d.modelVersion||"—")+"</b></span>"+"</div>";if(d.degraded){html+='<div class="notice warn">模型暂不可用，已降级放行（返回「未检测到注入」，本次模型段费用记 0，只收关键词段）。</div>'}html+='<div class="kv-grid">'+'<div class="kv-block"><h4>命中关键词（'+kws.length+"）</h4>"+kwHtml+"</div>"+'<div class="kv-block"><h4>Token 明细</h4>'+'<div class="kv-line"><span class="k">输入 Token</span><span class="v">'+esc(fmtNum(tokens.inputTokens))+"</span></div>"+'<div class="kv-line"><span class="k">输入 ID</span><span class="v">'+esc(fmtNum(tokens.inputIds))+"</span></div>"+'<div class="kv-line"><span class="k">输出 Token</span><span class="v">'+esc(fmtNum(tokens.outputTokens))+"</span></div>"+'<div class="kv-line"><span class="k">计费总 Token</span><span class="v">'+esc(fmtNum(d.totalTokens))+"</span></div>"+"</div>"+'<div class="kv-block"><h4>点数消耗与余额</h4>'+'<div class="kv-line"><span class="k">模型段</span><span class="v">'+esc(fmtNum(cost.model))+" 点</span></div>"+'<div class="kv-line"><span class="k">关键词段</span><span class="v">'+esc(fmtNum(cost.keywords))+" 点</span></div>"+'<div class="kv-line"><span class="k">本次合计</span><span class="v">'+esc(fmtNum(cost.total))+" 点</span></div>"+'<div class="kv-line"><span class="k">实际扣除点数</span><span class="v">'+esc(fmtNum(d.charged))+" 点</span></div>"+'<div class="kv-line"><span class="k">点数余额（与人机验证共用）</span><span class="v">'+esc(fmtNum(d.balance))+" 点</span></div>"+"</div>"+"</div>";result.innerHTML=html;result.style.display="block"}function renderError(msg){result.innerHTML='<div class="notice err">'+esc(msg)+"</div>";result.style.display="block"}var running=false;function runDetect(){if(running)return;var key=keyInput.value.trim();var text=textInput.value;if(!key){keyInput.classList.add("error");keyInput.focus();renderError("请先填写 API 密钥。还没有密钥？可前往「我的密钥」申请。");return}if(textInput.value.length>MAX_CHARS){tooLong.style.display="flex";renderError("文本超出上限，请先删减或点击「截断到上限」。");return}if(!text.trim()){textInput.classList.add("error");textInput.focus();renderError("请先输入要检测的文本。");return}running=true;detectBtn.disabled=true;detectBtn.textContent="检测中…";result.innerHTML='<div class="notice warn">正在检测，请稍候…</div>';result.style.display="block";ZIYIT_API.injectionDetect(text,key).then(function(d){renderResult(d)}).catch(function(err){renderError(errorText(err))}).finally(function(){running=false;detectBtn.disabled=false;detectBtn.textContent="发起检测"})}detectBtn.addEventListener("click",runDetect);var exMap={curl:document.getElementById("exCurl"),js:document.getElementById("exJs"),py:document.getElementById("exPy")};document.querySelectorAll(".tab").forEach(function(tab){tab.addEventListener("click",function(){var name=tab.getAttribute("data-ex");document.querySelectorAll(".tab").forEach(function(t){var on=t===tab;t.classList.toggle("active",on);t.setAttribute("aria-selected",on?"true":"false")});Object.keys(exMap).forEach(function(k){exMap[k].style.display=k===name?"block":"none"})})});refreshCounter();loadPricing()});</script>
 
-            var keyInput = document.getElementById('keyInput');
-            var toggleKeyBtn = document.getElementById('toggleKeyBtn');
-            var textInput = document.getElementById('textInput');
-            var counter = document.getElementById('counter');
-            var tooLong = document.getElementById('tooLong');
-            var tooLongText = document.getElementById('tooLongText');
-            var trimBtn = document.getElementById('trimBtn');
-            var detectBtn = document.getElementById('detectBtn');
-            var result = document.getElementById('result');
-            var pricingBox = document.getElementById('pricingBox');
-
-            function esc(s) {
-                return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-            }
-
-            function fmtNum(n) {
-                if (n == null || n === '') return '-';
-                var v = Number(n);
-                if (isNaN(v)) return esc(n);
-                if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
-                return String(Math.round(v * 100) / 100);
-            }
-
-            /* ---------- 密钥：只进 sessionStorage，关闭标签页即丢 ---------- */
-            function loadKey() {
-                try { return sessionStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; }
-            }
-            function saveKey(v) {
-                try {
-                    if (v) sessionStorage.setItem(KEY_STORE, v);
-                    else sessionStorage.removeItem(KEY_STORE);
-                } catch (e) { }
-            }
-
-            keyInput.value = loadKey();
-            keyInput.addEventListener('input', function () {
-                saveKey(keyInput.value.trim());
-                keyInput.classList.remove('error');
-            });
-
-            toggleKeyBtn.addEventListener('click', function () {
-                var show = keyInput.type === 'password';
-                keyInput.type = show ? 'text' : 'password';
-                toggleKeyBtn.textContent = show ? '隐藏' : '显示';
-            });
-
-            /* ---------- 字数统计与上限拦截 ---------- */
-            function refreshCounter() {
-                var n = textInput.value.length;
-                counter.textContent = n + ' / ' + MAX_CHARS;
-                var over = n > MAX_CHARS;
-                counter.classList.toggle('over', over);
-                tooLong.style.display = over ? 'flex' : 'none';
-                if (over) {
-                    tooLongText.textContent = '文本 ' + n + ' 字符，超出上限 ' + MAX_CHARS + ' 字符，已阻止提交（对应后端 413）。';
-                }
-                return over;
-            }
-            textInput.addEventListener('input', refreshCounter);
-            trimBtn.addEventListener('click', function () {
-                textInput.value = textInput.value.slice(0, MAX_CHARS);
-                refreshCounter();
-                textInput.focus();
-            });
-
-            // 回车直接检测、Shift+回车换行
-            textInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    runDetect();
-                }
-            });
-
-            /* ---------- 定价（公开接口，改价后自动变） ---------- */
-            function loadPricing() {
-                return ZIYIT_API.injectionPricing().then(function (p) {
-                    p = p || {};
-                    var tpp = p.tokensPerPoint;
-                    var ppk = p.pointsPerKeyword;
-                    var ex = p.example || {};
-                    var labels = p.labels || {};
-                    var rows = ''
-                        + '<div class="price-row"><span class="lbl">' + esc(labels.tokensPerPoint || '多少 Token 收 1 点') + '</span>'
-                        + '<span class="val">' + esc(fmtNum(tpp)) + ' Token = 1 点</span></div>'
-                        + '<div class="price-row"><span class="lbl">' + esc(labels.pointsPerKeyword || '每个命中关键词收多少点') + '</span>'
-                        + '<span class="val">' + esc(fmtNum(ppk)) + ' 点 / 个</span></div>'
-                        + '<div class="price-row"><span class="lbl">计费口径</span>'
-                        + '<span class="val">模型段 + 关键词段</span></div>';
-
-                    pricingBox.innerHTML = ''
-                        + '<div class="price-main"><span class="price-num">' + esc(fmtNum(tpp)) + '</span>'
-                        + '<span>Token = 1 点 · 命中关键词 <b>' + esc(fmtNum(ppk)) + '</b> 点/个</span></div>'
-                        + '<div style="margin-top:14px;">' + rows + '</div>'
-                        + (ex.totalTokens != null
-                            ? '<div class="price-note">' + esc(ex.note || '费用示例') + '：约 ' + esc(fmtNum(ex.totalTokens))
-                            + ' Token → <b>' + esc(fmtNum(ex.points)) + ' 点</b>。</div>'
-                            : '')
-                        + '<div class="price-note">VIP 分档可能再减免，实际扣点以接口返回的 <code>charged</code> 为准。'
-                        + '扣的是与人机验证共用的那份 ZIYIT 点数；价格由管理员在后台配置，前端不缓存、不硬编码。</div>';
-                }).catch(function () {
-                    pricingBox.innerHTML = '<div class="price-main" style="color:var(--ziyit-text-secondary);">'
-                        + '当前定价读取失败，请稍后刷新重试。</div>';
-                });
-            }
-
-            /* ---------- 错误映射 ---------- */
-            function errorText(err) {
-                var status = err && err.status;
-                var reason = err && err.reason;
-                var detail = err && err.detail;
-
-                if (status === 401 || reason === 'missing_key') return '请先填写 API 密钥。';
-                if (status === 400 || reason === 'empty_text') return '请先输入要检测的文本。';
-                if (status === 503 || reason === 'disabled') return '服务端已关闭防注入检测 API，请稍后再试或联系管理员。';
-                if (status === 413 || reason === 'text_too_long') {
-                    var max = detail && detail.maxChars;
-                    return '文本超长' + (max ? '（上限 ' + max + ' 字符）' : '') + '，请删减后重试。';
-                }
-                if (status === 403) {
-                    if (reason === 'invalid') return 'API 密钥无效，请检查是否填错。';
-                    if (reason === 'disabled') return '该 API 密钥已被停用。';
-                    if (reason === 'origin') return '该密钥限定了来源白名单，当前页面来源不在白名单内。服务端直连请把密钥的 allowed_origins 留空。';
-                    if (reason === 'daily_points') return '该密钥今日消耗点数已达上限，请明天再试或让管理员调整上限。';
-                    if (reason === 'points') {
-                        var pts = detail && detail.points;
-                        var min = detail && detail.minRequired;
-                        return '点数余额不足' + (pts != null ? '（当前 ' + fmtNum(pts) + ' 点' : '') +
-                            (min != null ? '，至少需要 ' + fmtNum(min) + ' 点）' : (pts != null ? '）' : ''));
-                    }
-                    return '密钥不可用（403' + (reason ? ' · ' + reason : '') + '）。';
-                }
-                return (err && err.message) || '检测失败，请稍后重试。';
-            }
-
-            /* ---------- 结果渲染 ---------- */
-            function renderResult(d) {
-                d = d || {};
-                var hit = Number(d.injection) === 1;
-                var tokens = d.tokens || {};
-                var cost = d.cost || {};
-                var kws = d.keywords || [];
-
-                var kwHtml = kws.length
-                    ? '<div class="kw-list">' + kws.map(function (k) {
-                        return '<span class="kw-tag">' + esc(k) + '</span>';
-                    }).join('') + '</div>'
-                    : '<div class="kw-empty">未命中关键词</div>';
-
-                var html = ''
-                    + '<div class="badge-row">'
-                    + '<span class="verdict ' + (hit ? 'attack' : 'clean') + '">' + (hit ? '检测到注入' : '未检测到注入') + '</span>'
-                    + '<span class="verdict-prob">注入概率 <b>' + esc(d.modelProb == null ? '—' : fmtNum(d.modelProb)) + '</b>'
-                    + ' ｜ 判定阈值 <b>' + esc(fmtNum(d.threshold)) + '</b>'
-                    + ' ｜ 模型版本 <b>' + esc(d.modelVersion || '—') + '</b></span>'
-                    + '</div>';
-
-                if (d.degraded) {
-                    html += '<div class="notice warn">模型暂不可用，已降级放行（返回「未检测到注入」，本次模型段费用记 0，只收关键词段）。</div>';
-                }
-
-                html += '<div class="kv-grid">'
-                    + '<div class="kv-block"><h4>命中关键词（' + kws.length + '）</h4>' + kwHtml + '</div>'
-                    + '<div class="kv-block"><h4>Token 明细</h4>'
-                    + '<div class="kv-line"><span class="k">输入 Token</span><span class="v">' + esc(fmtNum(tokens.inputTokens)) + '</span></div>'
-                    + '<div class="kv-line"><span class="k">输入 ID</span><span class="v">' + esc(fmtNum(tokens.inputIds)) + '</span></div>'
-                    + '<div class="kv-line"><span class="k">输出 Token</span><span class="v">' + esc(fmtNum(tokens.outputTokens)) + '</span></div>'
-                    + '<div class="kv-line"><span class="k">计费总 Token</span><span class="v">' + esc(fmtNum(d.totalTokens)) + '</span></div>'
-                    + '</div>'
-                    + '<div class="kv-block"><h4>点数消耗与余额</h4>'
-                    + '<div class="kv-line"><span class="k">模型段</span><span class="v">' + esc(fmtNum(cost.model)) + ' 点</span></div>'
-                    + '<div class="kv-line"><span class="k">关键词段</span><span class="v">' + esc(fmtNum(cost.keywords)) + ' 点</span></div>'
-                    + '<div class="kv-line"><span class="k">本次合计</span><span class="v">' + esc(fmtNum(cost.total)) + ' 点</span></div>'
-                    + '<div class="kv-line"><span class="k">实际扣除点数</span><span class="v">' + esc(fmtNum(d.charged)) + ' 点</span></div>'
-                    + '<div class="kv-line"><span class="k">点数余额（与人机验证共用）</span><span class="v">' + esc(fmtNum(d.balance)) + ' 点</span></div>'
-                    + '</div>'
-                    + '</div>';
-
-                result.innerHTML = html;
-                result.style.display = 'block';
-            }
-
-            function renderError(msg) {
-                result.innerHTML = '<div class="notice err">' + esc(msg) + '</div>';
-                result.style.display = 'block';
-            }
-
-            /* ---------- 发起检测 ---------- */
-            var running = false;
-            function runDetect() {
-                if (running) return;
-                var key = keyInput.value.trim();
-                var text = textInput.value;
-
-                if (!key) {
-                    keyInput.classList.add('error');
-                    keyInput.focus();
-                    renderError('请先填写 API 密钥。还没有密钥？可前往「我的密钥」申请。');
-                    return;
-                }
-                if (textInput.value.length > MAX_CHARS) {
-                    tooLong.style.display = 'flex';
-                    renderError('文本超出上限，请先删减或点击「截断到上限」。');
-                    return;
-                }
-                if (!text.trim()) {
-                    textInput.classList.add('error');
-                    textInput.focus();
-                    renderError('请先输入要检测的文本。');
-                    return;
-                }
-
-                running = true;
-                detectBtn.disabled = true;
-                detectBtn.textContent = '检测中…';
-                result.innerHTML = '<div class="notice warn">正在检测，请稍候…</div>';
-                result.style.display = 'block';
-
-                ZIYIT_API.injectionDetect(text, key).then(function (d) {
-                    renderResult(d);
-                }).catch(function (err) {
-                    renderError(errorText(err));
-                }).finally(function () {
-                    running = false;
-                    detectBtn.disabled = false;
-                    detectBtn.textContent = '发起检测';
-                });
-            }
-
-            detectBtn.addEventListener('click', runDetect);
-
-            /* ---------- 代码示例切换 ---------- */
-            var exMap = {
-                curl: document.getElementById('exCurl'),
-                js: document.getElementById('exJs'),
-                py: document.getElementById('exPy')
-            };
-            document.querySelectorAll('.tab').forEach(function (tab) {
-                tab.addEventListener('click', function () {
-                    var name = tab.getAttribute('data-ex');
-                    document.querySelectorAll('.tab').forEach(function (t) {
-                        var on = t === tab;
-                        t.classList.toggle('active', on);
-                        t.setAttribute('aria-selected', on ? 'true' : 'false');
-                    });
-                    Object.keys(exMap).forEach(function (k) {
-                        exMap[k].style.display = (k === name) ? 'block' : 'none';
-                    });
-                });
-            });
-
-            refreshCounter();
-            loadPricing();
-        });
-    </script>
-
-    <script>
-        function checkLoginStatus() {
-            const navItems = document.querySelectorAll('.nav-item');
-            const loginLink = document.getElementById('loginLink');
-            if (!ZIYIT_API.getToken()) {
-                navItems.forEach(item => {
-                    const role = item.getAttribute('data-role');
-                    const show = role === 'all';
-                    item.classList.toggle('visible', show);
-                    item.classList.toggle('hidden', !show);
-                });
-                if (loginLink) loginLink.style.display = 'inline-block';
-                return;
-            }
-            ZIYIT_API.currentUser().then(function (user) {
-                const isVip = ZIYIT_API.isVip(user);
-                const uname = user.username || '';
-                const isAdmin = uname === 'Minecraft_zy227';
-                navItems.forEach(item => {
-                    const role = item.getAttribute('data-role');
-                    let show = role === 'all';
-                    if (isAdmin) {
-                        show = show || role === 'admin' || role === 'adminstr';
-                    } else if (isVip) {
-                        show = show || role === 'admin';
-                    }
-                    item.classList.toggle('visible', show);
-                    item.classList.toggle('hidden', !show);
-                });
-                if (loginLink) loginLink.style.display = 'none';
-            }).catch(function () {
-                navItems.forEach(item => {
-                    const role = item.getAttribute('data-role');
-                    const show = role === 'all';
-                    item.classList.toggle('visible', show);
-                    item.classList.toggle('hidden', !show);
-                });
-            });
-        }
-
-        window.addEventListener('DOMContentLoaded', checkLoginStatus);
-    </script>
-    <script>
-        // 示例里的后端地址不在源码写死：运行时用「Cookie → backend.txt」选出的可用地址填充。
-        (function () {
-            function fill(base) {
-                if (!base) return;
-                document.querySelectorAll('pre.code').forEach(function (el) {
-                    if (el.textContent.indexOf('__BASE__') === -1) return;
-                    el.textContent = el.textContent.split('__BASE__').join(base);
-                });
-            }
-            if (window.ZIYIT_API && ZIYIT_API.backendReady) {
-                ZIYIT_API.backendReady().then(function () {
-                    fill(ZIYIT_API.base && ZIYIT_API.base());
-                }).catch(function () { });
-            }
-        })();
-    </script>
+    <script>function checkLoginStatus(){const navItems=document.querySelectorAll(".nav-item");const loginLink=document.getElementById("loginLink");if(!ZIYIT_API.getToken()){navItems.forEach(item=>{const role=item.getAttribute("data-role");const show=role==="all";item.classList.toggle("visible",show);item.classList.toggle("hidden",!show)});if(loginLink)loginLink.style.display="inline-block";return}ZIYIT_API.currentUser().then(function(user){const isVip=ZIYIT_API.isVip(user);const uname=user.username||"";const isAdmin=String(user.userId)==="1";navItems.forEach(item=>{const role=item.getAttribute("data-role");let show=role==="all";if(isAdmin){show=show||role==="admin"||role==="adminstr"}else if(isVip){show=show||role==="admin"}item.classList.toggle("visible",show);item.classList.toggle("hidden",!show)});if(loginLink)loginLink.style.display="none"}).catch(function(){navItems.forEach(item=>{const role=item.getAttribute("data-role");const show=role==="all";item.classList.toggle("visible",show);item.classList.toggle("hidden",!show)})})}window.addEventListener("DOMContentLoaded",checkLoginStatus);</script>
+    <script>(function(){function fill(base){if(!base)return;document.querySelectorAll("pre.code").forEach(function(el){if(el.textContent.indexOf("__BASE__")===-1)return;el.textContent=el.textContent.split("__BASE__").join(base)})}if(window.ZIYIT_API&&ZIYIT_API.backendReady){ZIYIT_API.backendReady().then(function(){fill(ZIYIT_API.base&&ZIYIT_API.base())}).catch(function(){})}})();</script>
     <script src="./assets/ziyit-theme.js"></script>
 </body>
 

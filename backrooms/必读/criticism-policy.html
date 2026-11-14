@@ -9,43 +9,9 @@
 
     <script type="text/javascript"
         src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/init.combined.js"></script>
-    <script type="text/javascript">
-        var URL_HOST = 'www.wikidot.com';
-        var URL_DOMAIN = 'wikidot.com';
-        var USE_SSL = true;
-        var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-         
+    <script type="text/javascript">var URL_HOST="www.wikidot.com";var URL_DOMAIN="wikidot.com";var USE_SSL=true;var URL_STATIC="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc";var WIKIREQUEST={};WIKIREQUEST.info={};WIKIREQUEST.info.domain="backrooms-wiki-cn.wikidot.com";WIKIREQUEST.info.siteId=4716348;WIKIREQUEST.info.siteUnixName="backrooms-wiki-cn";WIKIREQUEST.info.categoryId=40786773;WIKIREQUEST.info.themeId=1;WIKIREQUEST.info.requestPageName="start";OZONE.request.timestamp=1767421974;OZONE.request.date=new Date;WIKIREQUEST.info.lang="cn";WIKIREQUEST.info.pageUnixName="start";WIKIREQUEST.info.pageId=1312481462;WIKIREQUEST.info.lang="cn";OZONE.lang="cn";var isUAMobile=!!/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);</script>
 
-        var WIKIREQUEST = {};
-        WIKIREQUEST.info = {};
-
-        WIKIREQUEST.info.domain = "backrooms-wiki-cn.wikidot.com";
-        WIKIREQUEST.info.siteId = 4716348;
-        WIKIREQUEST.info.siteUnixName = "backrooms-wiki-cn";
-        WIKIREQUEST.info.categoryId = 40786773;
-        WIKIREQUEST.info.themeId = 1;
-        WIKIREQUEST.info.requestPageName = "start";
-        OZONE.request.timestamp = 1767421974;
-        OZONE.request.date = new Date();
-        WIKIREQUEST.info.lang = 'cn';
-        WIKIREQUEST.info.pageUnixName = "start";
-        WIKIREQUEST.info.pageId = 1312481462;
-        WIKIREQUEST.info.lang = "cn";
-        OZONE.lang = "cn";
-        var isUAMobile = !!/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    </script>
-
-    <script type="text/javascript">
-
-        require.config({
-            baseUrl: URL_STATIC + '/common--javascript',
-            paths: {
-                'jquery.ui': 'jquery-ui.min',
-                'jquery.form': 'jquery.form'
-            }
-        });
-
-    </script>
+    <script type="text/javascript">require.config({baseUrl:URL_STATIC+"/common--javascript",paths:{"jquery.ui":"jquery-ui.min","jquery.form":"jquery.form"}});</script>
 
     <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
     <meta name="baidu-site-verification" content="codeva-47Yi9iuOuV" />
@@ -73,36 +39,12 @@
     <link rel="alternate" type="application/wiki" title="Edit this page"
         href="javascript:WIKIDOT.page.listeners.editClick()" />
 
-    <script type="text/javascript">
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-18234656-1']);
-        _gaq.push(['_setDomainName', 'none']);
-        _gaq.push(['_setAllowLinker', true]);
-        _gaq.push(['_trackPageview']);
+    <script type="text/javascript">var _gaq=_gaq||[];_gaq.push(["_setAccount","UA-18234656-1"]);_gaq.push(["_setDomainName","none"]);_gaq.push(["_setAllowLinker",true]);_gaq.push(["_trackPageview"]);_gaq.push(["old._setAccount","UA-68540-5"]);_gaq.push(["old._setDomainName","none"]);_gaq.push(["old._setAllowLinker",true]);_gaq.push(["old._trackPageview"]);_gaq.push(["userTracker._setAccount","UA-290379544-1"]);_gaq.push(["userTracker._trackPageview"]);</script>
 
-        _gaq.push(['old._setAccount', 'UA-68540-5']);
-        _gaq.push(['old._setDomainName', 'none']);
-        _gaq.push(['old._setAllowLinker', true]);
-        _gaq.push(['old._trackPageview']);
-
-        _gaq.push(['userTracker._setAccount', 'UA-290379544-1']);
-        _gaq.push(['userTracker._trackPageview']);
-    </script>
-
-    <script type="text/javascript">
-        window.google_analytics_uacct = 'UA-18234656-1';
-        window.google_analytics_domain_name = 'none';
-    </script>
+    <script type="text/javascript">window.google_analytics_uacct="UA-18234656-1";window.google_analytics_domain_name="none";</script>
 
     <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" acync=""></script>
-    <script>
-        var OneSignal = window.OneSignal || [];
-        OneSignal.push(function () {
-            OneSignal.init({
-                appId: null,
-            });
-        });
-    </script>
+    <script>var OneSignal=window.OneSignal||[];OneSignal.push(function(){OneSignal.init({appId:null})});</script>
 
     <style>
         
@@ -670,57 +612,7 @@
             <strong><span id="userTypeDisplay"></span></strong>
         </div>
     </div>
-    <script>
-         
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
-
-         
-        async function getUserPermission(username) {
-            try {
-                const response = await fetch('/backrooms/user.json');
-                const userData = await response.json();
-
-                const usernameIndex = userData.Username.indexOf(username);
-                if (usernameIndex !== -1) {
-                    const permission = userData.Permission[usernameIndex];
-                    return { permission };
-                }
-                return null;
-            } catch (error) {
-                console.error('读取用户权限信息失败:', error);
-                return null;
-            }
-        }
-
-         
-        document.addEventListener('DOMContentLoaded', async function () {
-            const authToken = getCookie('authToken') || localStorage.getItem('authToken');
-            const usernameDisplay = document.getElementById('usernameDisplay');
-            const userTypeDisplay = document.getElementById('userTypeDisplay');
-            const pageContent = document.getElementById('page-content');
-
-            if (!authToken) {
-                if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';
-                if (userTypeDisplay) userTypeDisplay.textContent = '';
-            } else {
-                const user = await ZIYIT_API.currentUser();
-                const username = user ? user.username : '';
-                const type = (user && ZIYIT_API.isVip(user)) ? 'ZC' : 'UR';
-                if (usernameDisplay) usernameDisplay.textContent = user ? user.username : '';
-                if (userTypeDisplay) {
-                    try {
-                        userTypeDisplay.textContent = await ZIYIT_API.userType() || (ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户');
-                    } catch (e) {
-                        userTypeDisplay.textContent = ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户';
-                    }
-                }
-            }
-        });
-    </script>
+    <script>function getCookie(name){const value=`; ${document.cookie}`;const parts=value.split(`; ${name}=`);if(parts.length===2)return parts.pop().split(";").shift()}async function getUserPermission(username){try{const response=await fetch("/backrooms/user.json");const userData=await response.json();const usernameIndex=userData.Username.indexOf(username);if(usernameIndex!==-1){const permission=userData.Permission[usernameIndex];return{permission}}return null}catch(error){console.error("读取用户权限信息失败:",error);return null}}document.addEventListener("DOMContentLoaded",async function(){const authToken=getCookie("authToken")||localStorage.getItem("authToken");const usernameDisplay=document.getElementById("usernameDisplay");const userTypeDisplay=document.getElementById("userTypeDisplay");const pageContent=document.getElementById("page-content");if(!authToken){if(usernameDisplay)usernameDisplay.innerHTML='您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';if(userTypeDisplay)userTypeDisplay.textContent=""}else{const user=await ZIYIT_API.currentUser();const username=user?user.username:"";const type=user&&ZIYIT_API.isVip(user)?"ZC":"UR";if(usernameDisplay)usernameDisplay.textContent=user?user.username:"";if(userTypeDisplay){try{userTypeDisplay.textContent=await ZIYIT_API.userType()||(ZIYIT_API.isVip(user)?"VIP用户":"普通用户")}catch(e){userTypeDisplay.textContent=ZIYIT_API.isVip(user)?"VIP用户":"普通用户"}}}});</script>
                         <div id="top-bar">
                             <div class="top-bar">
                                 <ul>
@@ -1005,116 +897,6 @@
     }
 </style>
 
-<script>
-     
-    document.addEventListener('DOMContentLoaded', function () {
-         
-        const randomNum = Math.floor(Math.random() * 4);  
-
-         
-        const randomCodeSpans = document.querySelectorAll('span.randomCode');
-
-         
-        const asdfghjklDiv = document.getElementById('asdfghjkl');
-
-         
-        if (randomNum === 0) {
-            if (asdfghjklDiv) {
-                asdfghjklDiv.style.display = 'block';
-            }
-             
-            randomCodeSpans.forEach(span => {
-                span.style.display = 'none';
-            });
-        } else {
-             
-            if (asdfghjklDiv) {
-                asdfghjklDiv.style.display = 'none';
-            }
-
-             
-            fetch('../暗号')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('无法读取暗号文件');
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                     
-                    const codeWords = data.trim().split('\n');
-
-                     
-                    const selectedCodeWords = [];
-                    const codeWordsCopy = [...codeWords];
-
-                    for (let i = 0; i < randomNum && codeWordsCopy.length > 0; i++) {
-                        const randomIndex = Math.floor(Math.random() * codeWordsCopy.length);
-                        selectedCodeWords.push(codeWordsCopy.splice(randomIndex, 1)[0]);
-                    }
-
-                     
-                    const selectedSpans = [];
-                    const spansCopy = Array.from(randomCodeSpans);
-
-                    for (let i = 0; i < randomNum && spansCopy.length > 0; i++) {
-                        const randomIndex = Math.floor(Math.random() * spansCopy.length);
-                        selectedSpans.push(spansCopy.splice(randomIndex, 1)[0]);
-                    }
-
-                     
-                    selectedSpans.forEach((span, index) => {
-                        if (index < selectedCodeWords.length) {
-                             
-                            span.innerHTML = span.innerHTML.replace('${randomCode}', selectedCodeWords[index]);
-                            span.style.display = 'inline';
-                        }
-                    });
-
-                     
-                    spansCopy.forEach(span => {
-                        span.style.display = 'none';
-                    });
-                })
-                .catch(error => {
-                    console.error('读取暗号文件失败:', error);
-                     
-                    const defaultCodeWords = ['安全', '稳定', '规则', '遵守', '文明'];
-
-                     
-                    const selectedCodeWords = [];
-                    const codeWordsCopy = [...defaultCodeWords];
-
-                    for (let i = 0; i < randomNum && codeWordsCopy.length > 0; i++) {
-                        const randomIndex = Math.floor(Math.random() * codeWordsCopy.length);
-                        selectedCodeWords.push(codeWordsCopy.splice(randomIndex, 1)[0]);
-                    }
-
-                     
-                    const selectedSpans = [];
-                    const spansCopy = Array.from(randomCodeSpans);
-
-                    for (let i = 0; i < randomNum && spansCopy.length > 0; i++) {
-                        const randomIndex = Math.floor(Math.random() * spansCopy.length);
-                        selectedSpans.push(spansCopy.splice(randomIndex, 1)[0]);
-                    }
-
-                     
-                    selectedSpans.forEach((span, index) => {
-                        if (index < selectedCodeWords.length) {
-                             
-                            span.innerHTML = span.innerHTML.replace('${randomCode}', selectedCodeWords[index]);
-                            span.style.display = 'inline';
-                        }
-                    });
-
-                     
-                    spansCopy.forEach(span => {
-                        span.style.display = 'none';
-                    });
-                });
-        }
-    });
-</script>
+<script>document.addEventListener("DOMContentLoaded",function(){const randomNum=Math.floor(Math.random()*4);const randomCodeSpans=document.querySelectorAll("span.randomCode");const asdfghjklDiv=document.getElementById("asdfghjkl");if(randomNum===0){if(asdfghjklDiv){asdfghjklDiv.style.display="block"}randomCodeSpans.forEach(span=>{span.style.display="none"})}else{if(asdfghjklDiv){asdfghjklDiv.style.display="none"}fetch("../暗号").then(response=>{if(!response.ok){throw new Error("无法读取暗号文件")}return response.text()}).then(data=>{const codeWords=data.trim().split("\n");const selectedCodeWords=[];const codeWordsCopy=[...codeWords];for(let i=0;i<randomNum&&codeWordsCopy.length>0;i++){const randomIndex=Math.floor(Math.random()*codeWordsCopy.length);selectedCodeWords.push(codeWordsCopy.splice(randomIndex,1)[0])}const selectedSpans=[];const spansCopy=Array.from(randomCodeSpans);for(let i=0;i<randomNum&&spansCopy.length>0;i++){const randomIndex=Math.floor(Math.random()*spansCopy.length);selectedSpans.push(spansCopy.splice(randomIndex,1)[0])}selectedSpans.forEach((span,index)=>{if(index<selectedCodeWords.length){span.innerHTML=span.innerHTML.replace("${randomCode}",selectedCodeWords[index]);span.style.display="inline"}});spansCopy.forEach(span=>{span.style.display="none"})}).catch(error=>{console.error("读取暗号文件失败:",error);const defaultCodeWords=["安全","稳定","规则","遵守","文明"];const selectedCodeWords=[];const codeWordsCopy=[...defaultCodeWords];for(let i=0;i<randomNum&&codeWordsCopy.length>0;i++){const randomIndex=Math.floor(Math.random()*codeWordsCopy.length);selectedCodeWords.push(codeWordsCopy.splice(randomIndex,1)[0])}const selectedSpans=[];const spansCopy=Array.from(randomCodeSpans);for(let i=0;i<randomNum&&spansCopy.length>0;i++){const randomIndex=Math.floor(Math.random()*spansCopy.length);selectedSpans.push(spansCopy.splice(randomIndex,1)[0])}selectedSpans.forEach((span,index)=>{if(index<selectedCodeWords.length){span.innerHTML=span.innerHTML.replace("${randomCode}",selectedCodeWords[index]);span.style.display="inline"}});spansCopy.forEach(span=>{span.style.display="none"})})}});</script>
 
 </html>

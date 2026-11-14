@@ -12,43 +12,9 @@
 
     <script type="text/javascript"
         src="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/init.combined.js"></script>
-    <script type="text/javascript">
-        var URL_HOST = 'www.wikidot.com';
-        var URL_DOMAIN = 'wikidot.com';
-        var USE_SSL = true;
-        var URL_STATIC = 'https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc';
-         
+    <script type="text/javascript">var URL_HOST="www.wikidot.com";var URL_DOMAIN="wikidot.com";var USE_SSL=true;var URL_STATIC="https://d3g0gp89917ko0.cloudfront.net/v--7690939296dc";var WIKIREQUEST={};WIKIREQUEST.info={};WIKIREQUEST.info.domain="backrooms-wiki-cn.wikidot.com";WIKIREQUEST.info.siteId=4716348;WIKIREQUEST.info.siteUnixName="backrooms-wiki-cn";WIKIREQUEST.info.categoryId=40786773;WIKIREQUEST.info.themeId=1;WIKIREQUEST.info.requestPageName="start";OZONE.request.timestamp=1767421974;OZONE.request.date=new Date;WIKIREQUEST.info.lang="cn";WIKIREQUEST.info.pageUnixName="start";WIKIREQUEST.info.pageId=1312481462;WIKIREQUEST.info.lang="cn";OZONE.lang="cn";var isUAMobile=!!/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);</script>
 
-        var WIKIREQUEST = {};
-        WIKIREQUEST.info = {};
-
-        WIKIREQUEST.info.domain = "backrooms-wiki-cn.wikidot.com";
-        WIKIREQUEST.info.siteId = 4716348;
-        WIKIREQUEST.info.siteUnixName = "backrooms-wiki-cn";
-        WIKIREQUEST.info.categoryId = 40786773;
-        WIKIREQUEST.info.themeId = 1;
-        WIKIREQUEST.info.requestPageName = "start";
-        OZONE.request.timestamp = 1767421974;
-        OZONE.request.date = new Date();
-        WIKIREQUEST.info.lang = 'cn';
-        WIKIREQUEST.info.pageUnixName = "start";
-        WIKIREQUEST.info.pageId = 1312481462;
-        WIKIREQUEST.info.lang = "cn";
-        OZONE.lang = "cn";
-        var isUAMobile = !!/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    </script>
-
-    <script type="text/javascript">
-
-        require.config({
-            baseUrl: URL_STATIC + '/common--javascript',
-            paths: {
-                'jquery.ui': 'jquery-ui.min',
-                'jquery.form': 'jquery.form'
-            }
-        });
-
-    </script>
+    <script type="text/javascript">require.config({baseUrl:URL_STATIC+"/common--javascript",paths:{"jquery.ui":"jquery-ui.min","jquery.form":"jquery.form"}});</script>
 
     <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
     <meta name="baidu-site-verification" content="codeva-47Yi9iuOuV" />
@@ -76,36 +42,12 @@
     <link rel="alternate" type="application/wiki" title="Edit this page"
         href="javascript:WIKIDOT.page.listeners.editClick()" />
 
-    <script type="text/javascript">
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-18234656-1']);
-        _gaq.push(['_setDomainName', 'none']);
-        _gaq.push(['_setAllowLinker', true]);
-        _gaq.push(['_trackPageview']);
+    <script type="text/javascript">var _gaq=_gaq||[];_gaq.push(["_setAccount","UA-18234656-1"]);_gaq.push(["_setDomainName","none"]);_gaq.push(["_setAllowLinker",true]);_gaq.push(["_trackPageview"]);_gaq.push(["old._setAccount","UA-68540-5"]);_gaq.push(["old._setDomainName","none"]);_gaq.push(["old._setAllowLinker",true]);_gaq.push(["old._trackPageview"]);_gaq.push(["userTracker._setAccount","UA-290379544-1"]);_gaq.push(["userTracker._trackPageview"]);</script>
 
-        _gaq.push(['old._setAccount', 'UA-68540-5']);
-        _gaq.push(['old._setDomainName', 'none']);
-        _gaq.push(['old._setAllowLinker', true]);
-        _gaq.push(['old._trackPageview']);
-
-        _gaq.push(['userTracker._setAccount', 'UA-290379544-1']);
-        _gaq.push(['userTracker._trackPageview']);
-    </script>
-
-    <script type="text/javascript">
-        window.google_analytics_uacct = 'UA-18234656-1';
-        window.google_analytics_domain_name = 'none';
-    </script>
+    <script type="text/javascript">window.google_analytics_uacct="UA-18234656-1";window.google_analytics_domain_name="none";</script>
 
     <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" acync=""></script>
-    <script>
-        var OneSignal = window.OneSignal || [];
-        OneSignal.push(function () {
-            OneSignal.init({
-                appId: null,
-            });
-        });
-    </script>
+    <script>var OneSignal=window.OneSignal||[];OneSignal.push(function(){OneSignal.init({appId:null})});</script>
 
     <style>
         
@@ -668,52 +610,7 @@
                                 <strong><span id="userTypeDisplay"></span></strong>
                             </div>
                         </div>
-                        <script>
-                             
-                            async function getUserPermission(username) {
-                                try {
-                                    const response = await fetch('/backrooms/user.json');
-                                    const userData = await response.json();
-
-                                    const usernameIndex = userData.Username.indexOf(username);
-                                    if (usernameIndex !== -1) {
-                                        const permission = userData.Permission[usernameIndex];
-                                        return { permission };
-                                    }
-                                    return null;
-                                } catch (error) {
-                                    console.error('读取用户权限信息失败:', error);
-                                    return null;
-                                }
-                            }
-
-                             
-                            document.addEventListener('DOMContentLoaded', async function () {
-                                const usernameDisplay = document.getElementById('usernameDisplay');
-                                const userTypeDisplay = document.getElementById('userTypeDisplay');
-
-                                if (!ZIYIT_API.getToken()) {
-                                    if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';
-                                    if (userTypeDisplay) userTypeDisplay.textContent = '';
-                                } else {
-                                    try {
-                                        const user = await ZIYIT_API.currentUser();
-
-                                        if (usernameDisplay) usernameDisplay.textContent = user.username;
-                                        if (userTypeDisplay) {
-                                            try {
-                                                userTypeDisplay.textContent = await ZIYIT_API.userType() || (ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户');
-                                            } catch (e) {
-                                                userTypeDisplay.textContent = ZIYIT_API.isVip(user) ? 'VIP用户' : '普通用户';
-                                            }
-                                        }
-                                    } catch (error) {
-                                        if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';
-                                        if (userTypeDisplay) userTypeDisplay.textContent = '';
-                                    }
-                                }
-                            });
-                        </script>
+                        <script>async function getUserPermission(username){try{const response=await fetch("/backrooms/user.json");const userData=await response.json();const usernameIndex=userData.Username.indexOf(username);if(usernameIndex!==-1){const permission=userData.Permission[usernameIndex];return{permission}}return null}catch(error){console.error("读取用户权限信息失败:",error);return null}}document.addEventListener("DOMContentLoaded",async function(){const usernameDisplay=document.getElementById("usernameDisplay");const userTypeDisplay=document.getElementById("userTypeDisplay");if(!ZIYIT_API.getToken()){if(usernameDisplay)usernameDisplay.innerHTML='您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';if(userTypeDisplay)userTypeDisplay.textContent=""}else{try{const user=await ZIYIT_API.currentUser();if(usernameDisplay)usernameDisplay.textContent=user.username;if(userTypeDisplay){try{userTypeDisplay.textContent=await ZIYIT_API.userType()||(ZIYIT_API.isVip(user)?"VIP用户":"普通用户")}catch(e){userTypeDisplay.textContent=ZIYIT_API.isVip(user)?"VIP用户":"普通用户"}}}catch(error){if(usernameDisplay)usernameDisplay.innerHTML='您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';if(userTypeDisplay)userTypeDisplay.textContent=""}}});</script>
                         <div id="top-bar">
                             <div class="top-bar">
                                 <ul>
@@ -859,63 +756,7 @@
                                                 </button>
                                                 <div style="text-align:center; margin-top:10px; color:#8a6d3b; font-size:0.9em;">选择文档类型后将跳转到对应的文档编辑器</div>
                                             </div>
-                                            <script>
-                                                 
-                                                function toggleForm() {
-                                                    const expandBtn = document.getElementById('Expand');
-                                                    const foldBtn = document.getElementById('Fold');
-                                                    const form = document.getElementById('documentForm');
-
-                                                    if (form.style.display === 'none' || form.style.display === '') {
-                                                         
-                                                        form.style.display = 'block';
-                                                        setTimeout(() => {
-                                                            form.style.opacity = '1';
-                                                            form.style.transform = 'translateY(0)';
-                                                        }, 10);
-                                                        expandBtn.style.display = 'none';
-                                                        foldBtn.style.display = 'inline-block';
-                                                    } else {
-                                                         
-                                                        form.style.opacity = '0';
-                                                        form.style.transform = 'translateY(-10px)';
-                                                        setTimeout(() => {
-                                                            form.style.display = 'none';
-                                                            expandBtn.style.display = 'inline-block';
-                                                            foldBtn.style.display = 'none';
-                                                        }, 300);
-                                                    }
-                                                }
-
-                                                 
-                                                document.addEventListener('DOMContentLoaded', function () {
-                                                    const expandBtn = document.getElementById('Expand');
-                                                    const foldBtn = document.getElementById('Fold');
-
-                                                    if (expandBtn) {
-                                                        expandBtn.addEventListener('click', function (e) {
-                                                            e.preventDefault();
-                                                            toggleForm();
-                                                        });
-                                                    }
-
-                                                    if (foldBtn) {
-                                                        foldBtn.addEventListener('click', function (e) {
-                                                            e.preventDefault();
-                                                            toggleForm();
-                                                        });
-                                                    }
-
-                                                     
-                                                    const gotoBtn = document.getElementById('btn-goto-editor');
-                                                    if (gotoBtn) {
-                                                        gotoBtn.addEventListener('click', function () {
-                                                            const type = document.getElementById('document-type').value;
-                                                            location.href = 'create-document.html?type=' + encodeURIComponent(type);
-                                                        });
-                                                    }
-                                                });
-                                            </script>
+                                            <script>function toggleForm(){const expandBtn=document.getElementById("Expand");const foldBtn=document.getElementById("Fold");const form=document.getElementById("documentForm");if(form.style.display==="none"||form.style.display===""){form.style.display="block";setTimeout(()=>{form.style.opacity="1";form.style.transform="translateY(0)"},10);expandBtn.style.display="none";foldBtn.style.display="inline-block"}else{form.style.opacity="0";form.style.transform="translateY(-10px)";setTimeout(()=>{form.style.display="none";expandBtn.style.display="inline-block";foldBtn.style.display="none"},300)}}document.addEventListener("DOMContentLoaded",function(){const expandBtn=document.getElementById("Expand");const foldBtn=document.getElementById("Fold");if(expandBtn){expandBtn.addEventListener("click",function(e){e.preventDefault();toggleForm()})}if(foldBtn){foldBtn.addEventListener("click",function(e){e.preventDefault();toggleForm()})}const gotoBtn=document.getElementById("btn-goto-editor");if(gotoBtn){gotoBtn.addEventListener("click",function(){const type=document.getElementById("document-type").value;location.href="create-document.html?type="+encodeURIComponent(type)})}});</script>
                                         </div>
                                     </div>
                                 </div>

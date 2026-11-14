@@ -1673,7 +1673,7 @@ plainText .verifier-header {
     background: rgba(255, 255, 255, 0.02);
 }
 
-/* ===== v1.31：头像展示 / 当前登录高亮 / 邮箱验证门 ===== */
+ 
 .user-item.self-admin {
     border: 2px solid var(--success-color);
     background: rgba(39, 174, 96, 0.12);
@@ -1756,7 +1756,7 @@ plainText .verifier-header {
     background: var(--ziyit-bg-card, #1f232b);
 }
 
-/* ===== v1.32：知识库可见等级管理（仅 Lv.4 站长） ===== */
+ 
 .kb-meta {
     display: flex;
     flex-wrap: wrap;
@@ -1956,7 +1956,7 @@ plainText .verifier-header {
     padding: 0 2px;
 }
 
-/* 目录树 */
+ 
 .kb-tree {
     border: 1px solid var(--border-color);
     border-radius: 10px;
@@ -2002,7 +2002,7 @@ plainText .verifier-header {
     color: var(--secondary-color);
 }
 
-/* 内联控件 */
+ 
 .kb-inline-label {
     display: inline-flex;
     align-items: center;
@@ -2025,7 +2025,7 @@ plainText .verifier-header {
     padding: 10px 12px;
 }
 
-/* 搜索结果 */
+ 
 .kb-search-summary {
     font-size: 13px;
     color: var(--secondary-color);
@@ -2075,7 +2075,7 @@ plainText .verifier-header {
     font-size: 12px;
 }
 
-/* 原文 / 生效文对照 */
+ 
 .kb-compare-head {
     font-size: 13px;
     color: var(--secondary-color);
@@ -2124,7 +2124,7 @@ plainText .verifier-header {
 .kb-line-del { background: rgba(231, 76, 60, 0.16); }
 .kb-line-add { background: rgba(39, 174, 96, 0.18); }
 
-/* 档位预览 */
+ 
 .kb-titles {
     display: flex;
     flex-wrap: wrap;
@@ -2162,7 +2162,7 @@ plainText .verifier-header {
     margin-bottom: 10px;
 }
 
-/* 编辑与恢复 */
+ 
 .kb-edit-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

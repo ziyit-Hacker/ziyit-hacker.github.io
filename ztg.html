@@ -145,45 +145,13 @@
             }
         }
     </style>
-    <script>
-        (function () {
-            var pref = 'auto';
-            try {
-                var m = document.cookie.match(new RegExp('(?:^|;\\s*)ziyit-theme=([^;]*)'));
-                if (m) pref = decodeURIComponent(m[1]) || 'auto';
-            } catch (e) { }
-            var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme-pref', pref);
-        })();
-    </script>
+    <script>(function(){var pref="auto";try{var m=document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));if(m)pref=decodeURIComponent(m[1])||"auto"}catch(e){}var dark=pref==="dark"||pref==="auto"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",dark?"dark":"light");document.documentElement.setAttribute("data-theme-pref",pref)})();</script>
     <link rel="stylesheet" href="./assets/ziyit-theme.css">
 </head>
 
 <body>
     <h1>游戏用户信息</h1>
-    <script>
-         
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
-            return null;
-        }
-
-         
-        function checkUserPermission() {
-            const authToken = getCookie('authToken') || localStorage.getItem('authToken');
-            if (!authToken) {
-                alert('请先登录以访问该页面');
-                window.location.href = './';
-                return;
-            }
-        }
-
-         
-        document.addEventListener('DOMContentLoaded', checkUserPermission);
-    </script>
+    <script>function getCookie(name){const value=`; ${document.cookie}`;const parts=value.split(`; ${name}=`);if(parts.length===2)return decodeURIComponent(parts.pop().split(";").shift());return null}function checkUserPermission(){const authToken=getCookie("authToken")||localStorage.getItem("authToken");if(!authToken){alert("请先登录以访问该页面");window.location.href="./";return}}document.addEventListener("DOMContentLoaded",checkUserPermission);</script>
     <hr>
     
     <div class="site-nav">
@@ -200,26 +168,7 @@
         </div>
     </div>
 
-    <script>
-        const authToken = getCookie('authToken') || localStorage.getItem('authToken');
-        console.log('User authToken:', authToken);
-
-        if (!authToken) {
-            console.log('未找到authToken');
-            alert('请先登录');
-            window.location.href = '/';
-        }
-
-        const tokenParts = authToken.split('-');
-        if (tokenParts[tokenParts.length - 1] !== 'True') {
-            console.log('authToken验证失败:', tokenParts);
-            alert('您不是ZTG用户，无法访问此页面');
-            window.location.href = '/';
-        }
-        console.log('验证通过，开始匹配用户数据');
-        const [_, username] = authToken.split('-');
-        const lines = text.split('\n');
-    </script>
+    <script>const authToken=getCookie("authToken")||localStorage.getItem("authToken");console.log("User authToken:",authToken);if(!authToken){console.log("未找到authToken");alert("请先登录");window.location.href="/"}const tokenParts=authToken.split("-");if(tokenParts[tokenParts.length-1]!=="True"){console.log("authToken验证失败:",tokenParts);alert("您不是ZTG用户，无法访问此页面");window.location.href="/"}console.log("验证通过，开始匹配用户数据");const[_,username]=authToken.split("-");const lines=text.split("\n");</script>
 
     <div id="brui">
         <strong><span style="color: black;">经验(经验/等级): <span id="expDisplay">0/0</span></span></strong>
@@ -295,69 +244,7 @@
         </div>
     </footer>
 
-    <script>
-         
-        fetch('ztg.txt')
-            .then(response => response.text())
-            .then(text => {
-                const lines = text.split('\n');
-                const [_, username] = authToken.split('-');
-                
-                for (const line of lines) {
-                    const [lineUsername, exp, sam, hp, satiety, level, ai, backpack] = line.split(' - ');
-                    if (lineUsername.trim() === username.trim()) {
-
-                         
-                        if (exp === 'NO DATA' || sam === 'NO DATA' || hp === 'NO DATA' || satiety === 'NO DATA') {
-                            alert('数据在数据转移或服务器更新时被破坏');
-                            console.error('数据在数据转移或服务器更新时被破坏，用户数据为:', line);
-                        }
-
-                         
-                        const samValue = parseInt(sam);
-                        if (samValue < 50) {
-                            alert('SAM值过低请立即饮用杏仁水');
-                            console.log('SAM值过低', line);
-                        }
-
-                         
-                        const alertDiv = document.createElement('div');
-                        alertDiv.style.position = 'fixed';
-                        alertDiv.style.top = '20px';
-                        alertDiv.style.left = '50%';
-                        alertDiv.style.transform = 'translateX(-50%)';
-                        alertDiv.style.padding = '15px 25px';
-                        alertDiv.style.backgroundColor = '#ffeb3b';
-                        alertDiv.style.color = '#000';
-                        alertDiv.style.borderRadius = '5px';
-                        alertDiv.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-                        alertDiv.style.zIndex = '1000';
-                        alertDiv.style.animation = 'fadeIn 0.5s';
-                        alertDiv.innerHTML = '数据已从ZTG服务器迁移至ZIYIT根服务器，如出现数据错误或数据为NO DATA和其他问题请联系管理员';
-                        document.body.appendChild(alertDiv);
-                        
-                         
-                        setTimeout(() => {
-                            alertDiv.style.animation = 'fadeOut 0.5s';
-                            setTimeout(() => alertDiv.remove(), 500);
-                        }, 5000);
-
-                         
-                        document.getElementById('expDisplay').textContent = exp;
-                        document.getElementById('samDisplay').textContent = sam;
-                        document.getElementById('hpDisplay').textContent = hp;
-                        document.getElementById('satietyDisplay').textContent = satiety;
-                        document.getElementById('Levels').textContent = level;
-                        document.getElementById('DefaultAI').textContent = ai;
-                        document.getElementById('Backpack').textContent = backpack;
-                        break;
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('读取ztg.txt出错:', error);
-            });
-    </script>
+    <script>fetch("ztg.txt").then(response=>response.text()).then(text=>{const lines=text.split("\n");const[_,username]=authToken.split("-");for(const line of lines){const[lineUsername,exp,sam,hp,satiety,level,ai,backpack]=line.split(" - ");if(lineUsername.trim()===username.trim()){if(exp==="NO DATA"||sam==="NO DATA"||hp==="NO DATA"||satiety==="NO DATA"){alert("数据在数据转移或服务器更新时被破坏");console.error("数据在数据转移或服务器更新时被破坏，用户数据为:",line)}const samValue=parseInt(sam);if(samValue<50){alert("SAM值过低请立即饮用杏仁水");console.log("SAM值过低",line)}const alertDiv=document.createElement("div");alertDiv.style.position="fixed";alertDiv.style.top="20px";alertDiv.style.left="50%";alertDiv.style.transform="translateX(-50%)";alertDiv.style.padding="15px 25px";alertDiv.style.backgroundColor="#ffeb3b";alertDiv.style.color="#000";alertDiv.style.borderRadius="5px";alertDiv.style.boxShadow="0 4px 8px rgba(0,0,0,0.2)";alertDiv.style.zIndex="1000";alertDiv.style.animation="fadeIn 0.5s";alertDiv.innerHTML="数据已从ZTG服务器迁移至ZIYIT根服务器，如出现数据错误或数据为NO DATA和其他问题请联系管理员";document.body.appendChild(alertDiv);setTimeout(()=>{alertDiv.style.animation="fadeOut 0.5s";setTimeout(()=>alertDiv.remove(),500)},5e3);document.getElementById("expDisplay").textContent=exp;document.getElementById("samDisplay").textContent=sam;document.getElementById("hpDisplay").textContent=hp;document.getElementById("satietyDisplay").textContent=satiety;document.getElementById("Levels").textContent=level;document.getElementById("DefaultAI").textContent=ai;document.getElementById("Backpack").textContent=backpack;break}}}).catch(error=>{console.error("读取ztg.txt出错:",error)});</script>
     <p class="tit">&copy;2026 ZIYIT <strong>版权所有，侵权必究</strong></p>
 <script src="./assets/ziyit-theme.js"></script>
 </body>
