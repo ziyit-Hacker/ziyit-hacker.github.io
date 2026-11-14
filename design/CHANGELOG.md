@@ -3,6 +3,31 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.58 — 2026-11-14
+### 变更
+- 对齐指南新增的 §6.0 / §6.1：
+  - `assets/zsec_client.js` 替换为后端 `frontend_reference/zsec_client.js`（16KB 参考版），补齐 `X-ZS-Wrap` 的 `{h,b}` 信封与免加密接口的 `X-ZS-Cred-Data`；PIN 指纹与旧版一致，证书无需更换。
+  - 在新版上重新叠加 Cookie 会话复用：`zs_session`（240s，含 `seq` / `credSeq` / `credMax` 与 spki 指纹校验），仅在过期、409/428 或解密失败时重新握手。
+  - `assets/ziyit_api.js`：`/challenge`、`/session`、`/verify`、`/verify/consume`、`/pow/challenge`、`/pow/verify`、`/consume-token`、`/experience/status` 不再豁免加密；上传/下载等包体明文接口改为委托 `zc.request({plain:true})`，凭证改走 `X-ZS-Cred-Data`，明文头不再出现 Token。
+  - 全站 79 个 HTML 的 `zsec_client.js` / `ziyit_api.js` 引用升级到 `?v=20261114b`。
+- §6.0 列出的 `/auth/security`、Passkey、多因子、邮箱自助等接口后端已暂缓强制，前端无需改动。
+
+## v1.57 — 2026-11-14
+### 变更
+- **ZSEC 会话复用**（[zsec_client.js](file:///f:/Code/html/ziyit/assets/zsec_client.js)）：握手成功后把 `{sessionId, AES key, seq, serverSpki, 过期时间}` 写入同源 Cookie `zs_session`（TTL 240s，为后端 300s 会话上限留余量）。下次页面加载先恢复会话直接加密请求，仅在会话过期、seq 失配（409/428）或服务端要求重协商时才重新握手；恢复时校验 spki 的 SHA-256 等于内置指纹，防止 Cookie 被篡改注入假公钥。
+- **P1 修复**：
+  - 管理台新增 Lv.3「创建账号」面板，走 `POST /admin/users`（`username/email/password/role/emailVerified`），并分别提示 409 占用、429 频率、403 权限。
+  - [ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js) 统一处理：403 对象型 `detail.message` 弹封禁横幅、428 给出「安全信道未建立」提示、GET/HEAD 429 按 `Retry-After` 自动退避一次。
+  - [chatwall.html](file:///f:/Code/html/ziyit/chatwall.html) 的 `apiFetch` 改为委托 `ZIYIT_API.request`，聊天墙请求重新走 ZSEC，不再裸 `fetch`。
+- **P2 清理**：移除 `user/password.html`、`user/profile.html` 中未使用的 CryptoJS MD5 死代码及其脚本标签；`ikun/index.html` 补挂 `xss_guard.js`。
+
+## v1.56 — 2026-11-14
+### 变更
+- **管理台内置「举报审核」与「官方邮件群发」**（[admin.html](file:///f:/Code/html/ziyit/music/admin.html)、[admin.js](file:///f:/Code/html/ziyit/music/admin.js)）：
+  - 侧栏新增两项，沿用 `data-level` 自动显隐：举报审核（Lv.1+）、邮件群发（Lv.3+）。
+  - 举报审核：状态/档位筛选、待处理/待高级审批/总数统计卡、举报卡片（档位色标、目标类型与 ID、被举报次数、举报人、时间）；「处理」弹窗按等级给出 `dismiss` / `delete_content` / `request_ban` / `request_strict`（Lv.1/2 申请）与 `strict` / `ban_user`（Lv.3+ 直接执行），封禁时长仅 T1/T2 生效，T3/T4 走 2^n 小时递增。
+  - 邮件群发：收件人（全体 / 按属性筛选 / 指定用户 ID，支持角色、VIP、封禁、TOTP、2FA、邮箱已验证、排除管理员）、内容（主题、标题、HTML 正文、动态按钮、追加 CSS）、预览（`dryRun` 渲染结果写入 `sandbox` iframe，显示命中人数与示例邮箱），发送前二次确认并回显入队数与小时配额。
+
 ## v1.55 — 2026-11-14
 ### 变更
 - **全站静态资源缓存击穿**：所有 `ziyit_api.js` / `zsec_client.js` / `xss_guard.js` / `phantom.js` 引用统一追加 `?v=20261114`，避免 GitHub Pages 长缓存导致旧版（无 ZSEC 加密）JS 被浏览器长期命中、登录接口始终走明文返回 428。
