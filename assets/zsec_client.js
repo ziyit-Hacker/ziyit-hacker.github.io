@@ -31,6 +31,15 @@
   'use strict';
 
   // 官方 ReleaseControl 证书指纹（由后端证书 ReleaseControl_Cert.cer 计算，更新证书时必须同步更换）
+  function zsTabId() {
+    try {
+      var k = 'zs_tab_id';
+      var v = sessionStorage.getItem(k);
+      if (!v) { v = randomHex(6); sessionStorage.setItem(k, v); }
+      return v;
+    } catch (e) { return 'x' + Math.random().toString(16).slice(2, 10); }
+  }
+
   function ckRead(name) {
     try {
       var m = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
@@ -173,8 +182,10 @@
     this._serverSpki = null;
     this._rawKeyB64 = null;
     this._restoreTried = false;
-    this.sessionCookie = 'zs_session';
+    this.sessionCookie = 'zs_session_' + zsTabId();
     this.sessionTTL = 240;
+    // 清理旧版共享 Cookie，避免其残留 seq 触发 409
+    if (typeof document !== 'undefined') ckDrop('zs_session');
   }
 
   ZSecureClient.prototype._loadClientId = function () {
@@ -443,7 +454,6 @@
     }
 
     var seq = ++session.seq;
-    this._saveSession();
     var ts = Math.floor(Date.now() / 1000);
     var nonce = randomHex(16);
     var urlPath = this._path(path);
@@ -487,6 +497,7 @@
       body: JSON.stringify({ iv: bufToB64(iv), data: bufToB64(ct) })
     });
 
+    this._saveSession();
     var buffer = await res.arrayBuffer();
 
     // 非 JSON（SSE / 文件 / HTML）后端会回 X-ZS-Plain: 1
@@ -559,7 +570,6 @@
       session = await this._ensureSession();
     }
     var seq = ++session.credSeq;
-    this._saveSession();
     var ts = Math.floor(Date.now() / 1000);
     var nonce = randomHex(16);
     var urlPath = this._path(path);
@@ -622,8 +632,11 @@
         if (Object.keys(split.cred).length) {
           // 包体保持明文，凭证单独加密；会话过期用新密钥重试一次
           var credOut = await self._sendCredOnly(path, method, split, opts);
+          self._saveSession();
           var cj = credOut.json() || {};
-          if (!retried && (credOut.status === 428 || (credOut.status === 409 && cj.zsec))) {
+          var credCode = cj && cj.code;
+          if (!retried && (credOut.status === 428 || (credOut.status === 409 && (cj.zsec ||
+              credCode === 'session_expired' || credCode === 'key_exhausted' || credCode === 'seq_mismatch')))) {
             self._resetSession();
             return run(true);
           }
