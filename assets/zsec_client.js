@@ -499,11 +499,21 @@
 
     this._saveSession();
     var buffer = await res.arrayBuffer();
+    var text = utf8(buffer);
+    var resEnc = res.headers.get('X-ZS-Encrypted') === '1';
+    var resPlain = res.headers.get('X-ZS-Plain') === '1';
 
-    // 非 JSON（SSE / 文件 / HTML）后端会回 X-ZS-Plain: 1
-    if (res.headers.get('X-ZS-Plain') === '1' || res.headers.get('X-ZS-Encrypted') !== '1') {
-      return this._wrap(res, new TextDecoder().decode(new Uint8Array(buffer)));
+    // 跨域且 credentials=include 时，服务端的 Access-Control-Expose-Headers: * 不生效，
+    // X-ZS-* 响应头可能读不到。不能只看响应头判断，否则会把 {"iv","data"} 密文信封
+    // 当成业务 JSON 返回（表现为接口 200 但前端拿不到 token）。
+    var envelope = null;
+    if (!resPlain && !resEnc) {
+      try { envelope = JSON.parse(text); } catch (e) { envelope = null; }
+      if (!envelope || typeof envelope.iv !== 'string' || typeof envelope.data !== 'string') {
+        return this._wrap(res, text);          // 真正的明文响应
+      }
     }
+    if (resPlain) return this._wrap(res, text);
 
     // 响应绑定校验：会话标识与序号必须与本次请求一致（防串包 / 重放）
     var resSid = res.headers.get('X-ZS-Session');
@@ -515,10 +525,11 @@
       throw new Error('ZSEC: 响应序号与请求不一致');
     }
 
-    // 响应签名校验：防中间人替换密文；严格模式下「没有签名」也视为失败
+    // 响应签名校验：防中间人替换密文；严格模式下「没有签名」也视为失败。
+    // 响应头整体不可见时（见上）无法判断签名是否缺失，此时以 AES-GCM 认证标签为准。
     var proofSig = res.headers.get('X-ZS-Proof-Sig');
     if (!proofSig) {
-      if (this.strictServerProof) {
+      if (this.strictServerProof && resEnc) {
         throw new Error('ZSEC: 加密响应缺少后端签名');
       }
     } else {
@@ -541,17 +552,25 @@
       }
     }
 
-    var envelope = JSON.parse(utf8(buffer));
-    var plainRes = await crypto.subtle.decrypt(
-      {
-        name: 'AES-GCM',
-        iv: b64ToBuf(envelope.iv),
-        additionalData: textToBuf(this._aad('ZSEC1R', method, urlPath, seq, session.id, ts, nonce)),
-        tagLength: 128
-      },
-      session.key,
-      b64ToBuf(envelope.data)
-    );
+    var sniffed = !resEnc && !resPlain;
+    if (!envelope) envelope = JSON.parse(text);
+    var plainRes;
+    try {
+      plainRes = await crypto.subtle.decrypt(
+        {
+          name: 'AES-GCM',
+          iv: b64ToBuf(envelope.iv),
+          additionalData: textToBuf(this._aad('ZSEC1R', method, urlPath, seq, session.id, ts, nonce)),
+          tagLength: 128
+        },
+        session.key,
+        b64ToBuf(envelope.data)
+      );
+    } catch (e) {
+      // 响应头不可见时只是「长得像密文信封」：解不开说明它本来就是业务 JSON
+      if (sniffed) return this._wrap(res, text);
+      throw e;
+    }
 
     if (res.headers.get('X-ZS-Rekey') === '1' || session.seq >= session.max) {
       this._resetSession();   // 后端已销毁该密钥，下次请求自动重新握手

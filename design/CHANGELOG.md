@@ -3,6 +3,13 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.61 — 2026-11-14
+### 修复
+- **登录接口 200 OK 但页面提示「登录响应异常，请稍后再试」**：跨域请求带 `credentials: 'include'` 时，规范规定响应头 `Access-Control-Expose-Headers: *` **不按通配符处理**（只有非凭据请求才展开为全部头）。因此 `X-ZS-Encrypted` / `X-ZS-Plain` / `X-ZS-Proof-*` 等自定义响应头在浏览器里读不到，旧逻辑把「加密信封 `{"iv","data"}`」当成明文业务 JSON 返回，`ziyit_api` 解析出的对象没有 token。
+  - [zsec_client.js](file:///f:/Code/html/ziyit/assets/zsec_client.js)：响应判定改为「头优先 + 报文特征兜底」——头不可见时若 body 是 `{iv:string,data:string}` 仍按密文解密；只有真正非信封的响应才按明文返回。响应头整体不可见时，签名缺失不再判失败（以 AES-GCM 认证标签 + AAD 绑定为准），`X-ZS-Rekey` 依赖 `seq >= max` 兜底。
+  - 后端 `main.py` 的 `PhantomCORSMiddleware`：凭据来源改为显式暴露 `X-ZS-*`、`Retry-After`、`Date`（非凭据来源仍用 `*`），需重新部署后端生效。
+  - 全站 79 个 HTML 的 `zsec_client.js` 引用升级到 `?v=20261114d`。
+
 ## v1.60 — 2026-11-14
 ### 修复
 - 登录/接口偶发 409：后端对 ZSEC 请求序号是「必须恰好等于上次 +1」。v1.58 的会话复用把 `seq` 在**发送前**写入 Cookie，且所有标签页共用 `zs_session`，任一请求中断或另一标签页先发就会永久错位并触发 409。
