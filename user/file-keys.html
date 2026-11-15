@@ -12,7 +12,7 @@
     <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
     <script src="../assets/f12check.js"></script>
     <script src="../assets/xss_guard.js?v=20261114"></script>
-    <script src="../assets/ziyit_api.js?v=20261115a"></script>
+    <script src="../assets/ziyit_api.js?v=20261115b"></script>
     <style>        * {
             margin: 0;
             padding: 0;
@@ -262,7 +262,6 @@
         <div class="key-panel" id="keyPanel" style="display:none;"></div>
         <div id="fileArea"></div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script>document.addEventListener("DOMContentLoaded", function() {
     if (!ZIYIT_API.getToken()) {
         alert("请先登录");
@@ -305,10 +304,6 @@
         }
         if (err && err.status === 401) return "登录状态已失效，请重新登录";
         return fallback || "请求失败，请稍后再试";
-    }
-    function md5Base64(text) {
-        if (typeof CryptoJS === "undefined" || !CryptoJS.MD5) return null;
-        return CryptoJS.MD5(text).toString(CryptoJS.enc.Base64);
     }
     function copyText(text, btn) {
         var done = function() {
@@ -415,14 +410,10 @@
             pwdInput.focus();
             return;
         }
-        var md5 = md5Base64(password);
-        if (!md5) {
-            alert("密码加密组件加载失败，请检查网络后刷新页面重试");
-            return;
-        }
         btn.disabled = true;
         btn.textContent = "验证中…";
-        ZIYIT_API.rcRevealRecoveryKey(fileId, md5).then(function(data) {
+        // 后端已统一走 _pw_verify，直接提交明文（兼容 legacy_md5_bcrypt 与 bcrypt_v2 两代账号）
+        ZIYIT_API.rcRevealRecoveryKey(fileId, password).then(function(data) {
             pwdInput.value = "";
             showKeyPanel(data);
         }).catch(function(err) {

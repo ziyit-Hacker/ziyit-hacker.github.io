@@ -3,6 +3,17 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.67 — 2026-11-15
+### 修复
+- **封禁申诉提交后永远提示「未获取到申诉令牌」**：[ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js#L1224-L1247) 的 `authFetch` 在 `request()` 结果外又包了一层 `{ok, status, json()}`，`appeal.html` 解构 `d.appealToken` 自然为空；同时它把错误转成 `{ok:false}` 而不 reject，导致 401「用户名或密码错误」被静默吞掉。改为直接返回后端 JSON、失败正常 reject，申诉登录/轮询/发消息三处恢复可用。
+- **密码校验改用明文**（按后端 v1.66 通知）：
+  - [file-keys.html](file:///f:/Code/html/ziyit/user/file-keys.html)：查看 RC 恢复密钥不再 `base64(md5(密码))`，直接提交明文；移除 `md5Base64()` 与 crypto-js CDN 引用。
+  - [appeal.html](file:///f:/Code/html/ziyit/user/appeal.html)：本就是明文，补充提交成功后立即清空密码框。
+  - `ziyit_api.js` 中 `appealLogin` / `rcRevealRecoveryKey` 的参数名由 `passwordB64` / `md5Password` 改为 `password`。
+  - RC 客户端相关（`/auth/login`、`/keys/verify`）与登录页保持旧格式，未改动。
+### 变更
+- 全站 79 个 HTML 的 `ziyit_api.js?v=20261115a` 升至 `?v=20261115b`。
+
 ## v1.66 — 2026-11-15
 ### 修复
 - **管理台处理举报报 `处理失败：report has no targetUser`**：用户端举报聊天墙消息时只传了 `targetType`/`targetId`，没传 `targetUserId`，后端 `strict` / `ban_user` 分支取不到被举报人直接 400（`POST /admin/reports/{id}/resolve` 实测 400）。

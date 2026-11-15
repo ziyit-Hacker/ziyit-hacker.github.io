@@ -1221,6 +1221,8 @@
             token
         });
     }
+    // 申诉接口专用：直接返回后端 JSON，失败时 reject（调用方靠 err.status 区分 401/400）
+    // 这里不能再包一层 {ok,status,json}，否则 appeal.html 拿不到 appealToken，且错误会被吞掉
     function authFetch(path, token, options) {
         options = options || {};
         options.headers = options.headers || {};
@@ -1232,30 +1234,14 @@
             headers: options.headers
         };
         if (options.body) reqOpts.body = options.body;
-        return request(path, reqOpts).then(function(data) {
-            return {
-                ok: true,
-                status: 200,
-                json: function() {
-                    return Promise.resolve(data);
-                }
-            };
-        }, function(err) {
-            return {
-                ok: false,
-                status: err && err.status ? err.status : 0,
-                json: function() {
-                    return Promise.resolve(err && err.data || null);
-                }
-            };
-        });
+        return request(path, reqOpts);
     }
-    function appealLogin(username, passwordB64) {
+    function appealLogin(username, password) {
         return authFetch("/guide/appeal", null, {
             method: "POST",
             body: JSON.stringify({
                 username,
-                password: passwordB64
+                password
             })
         });
     }
@@ -1369,9 +1355,9 @@
     function rcFiles() {
         return request("/rc/files");
     }
-    function rcRevealRecoveryKey(fileId, md5Password) {
+    function rcRevealRecoveryKey(fileId, password) {
         return post("/rc/files/" + encodeURIComponent(fileId) + "/recovery-key", {
-            password: md5Password
+            password
         });
     }
     function rcDeleteFile(fileId) {
