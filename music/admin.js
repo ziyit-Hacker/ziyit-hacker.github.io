@@ -5660,26 +5660,29 @@ function openReportResolve(id) {
     })[0];
     if (!rep) return;
     adminReportState.pendingId = id;
+    // 后端 strict / ban_user 需要一个明确的 targetUserId；老举报可能没带，
+    // 直接提交只会得到 400「report has no targetUser」，这里提前禁用并说明
+    var hasTargetUser = rep.targetUserId != null && rep.targetUserId !== "";
     var info = document.getElementById("report-resolve-info");
     if (info) {
         info.style.whiteSpace = "pre-line";
         var lines = [ reportTierLabel(rep.tier) + " · " + reportTargetTypeLabel(rep.targetType) + " · 目标 " + String(rep.targetId || "-"), "分类：" + (rep.category || "-") + "　举报人：" + (rep.reporterName || rep.reporterId || "-") + "　时间：" + (rep.createdAt || "-") ];
-        if (rep.targetUserId) lines.push("目标用户 ID：" + rep.targetUserId);
+        lines.push(hasTargetUser ? "目标用户 ID：" + rep.targetUserId : "目标用户：未知（该举报未携带 targetUserId，只能驳回或删除内容）");
         if (rep.detail) lines.push("补充说明：" + rep.detail);
         info.textContent = lines.join("\n");
     }
     var sel = document.getElementById("report-resolve-action");
     if (sel) {
-        var opts = [ [ "dismiss", "驳回举报" ], [ "delete_content", "删除被举报内容" ] ];
+        var opts = [ [ "dismiss", "驳回举报", false ], [ "delete_content", "删除被举报内容", false ] ];
         if (canAccess(3)) {
-            opts.push([ "strict", "严管账号（2^n 分钟）" ]);
-            opts.push([ "ban_user", "封禁账号（2^n 小时）" ]);
+            opts.push([ "strict", "严管账号（2^n 分钟）", !hasTargetUser ]);
+            opts.push([ "ban_user", "封禁账号（2^n 小时）", !hasTargetUser ]);
         } else {
-            opts.push([ "request_strict", "申请严管（交 Lv.3+ 审批）" ]);
-            opts.push([ "request_ban", "申请封禁（交 Lv.3+ 审批）" ]);
+            opts.push([ "request_strict", "申请严管（交 Lv.3+ 审批）", false ]);
+            opts.push([ "request_ban", "申请封禁（交 Lv.3+ 审批）", false ]);
         }
         sel.innerHTML = opts.map(function(o) {
-            return '<option value="' + o[0] + '">' + o[1] + "</option>";
+            return '<option value="' + o[0] + '"' + (o[2] ? " disabled" : "") + ">" + o[1] + (o[2] ? "（缺目标用户，不可用）" : "") + "</option>";
         }).join("");
     }
     var note = document.getElementById("report-resolve-note");
@@ -5703,6 +5706,15 @@ function submitReportResolve() {
     if (!id) return;
     var sel = document.getElementById("report-resolve-action");
     var action = sel ? sel.value : "dismiss";
+    if (action === "strict" || action === "ban_user") {
+        var rep = (adminReportState.reports || []).filter(function(x) {
+            return String(x.id) === String(id);
+        })[0];
+        if (!rep || rep.targetUserId == null || rep.targetUserId === "") {
+            showToast("该举报缺少目标用户 ID，无法严管/封禁；请改用「删除被举报内容」", "error");
+            return;
+        }
+    }
     var noteEl = document.getElementById("report-resolve-note");
     var payload = {
         action,

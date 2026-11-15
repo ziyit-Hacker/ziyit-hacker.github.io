@@ -3,6 +3,13 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.66 — 2026-11-15
+### 修复
+- **管理台处理举报报 `处理失败：report has no targetUser`**：用户端举报聊天墙消息时只传了 `targetType`/`targetId`，没传 `targetUserId`，后端 `strict` / `ban_user` 分支取不到被举报人直接 400（`POST /admin/reports/{id}/resolve` 实测 400）。
+  - [chatwall.html](file:///f:/Code/html/ziyit/chatwall.html)：`itemUser()` 补出作者 `id`（取 `author.userId`，兼容旧字段 `userId`）；主楼与回复的「举报」按钮增加 `data-report-uid`，点击时随 `ZIYIT_REPORT.open({targetUserId})` 一起提交。
+  - [admin.js](file:///f:/Code/html/ziyit/music/admin.js)：举报弹窗对缺少 `targetUserId` 的记录把「严管账号 / 封禁账号」置灰并标注「缺目标用户，不可用」，信息区显示「目标用户：未知」；`submitReportResolve` 提交前再拦一次，改为提示改用「删除被举报内容」，不再把 400 抛成红条。
+  - [admin.html](file:///f:/Code/html/ziyit/music/admin.html)：`admin.js` 引用加 `?v=20261115a` 强制刷新缓存。
+
 ## v1.65 — 2026-11-15
 ### 修复
 - **聊天墙接口 200 OK 但页面显示「URI malformed，稍后自动重试」**（[chatwall.html](file:///f:/Code/html/ziyit/chatwall.html)）：离线缓存把列表 JSON 按 **UTF-16 码元**逐字符切块（每块 ≤3000 编码字节），而 emoji（如 `😂`、`❗` 所在增补平面字符）占两个码元；切点落在代理对中间时，`encodeURIComponent(孤立代理字符)` 抛 `URIError: URI malformed`，异常冒泡到 `loadWall` 的 `.catch`，把已经成功返回的列表覆盖成错误提示。后端与网络层无异常，纯前端致命错误。

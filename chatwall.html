@@ -595,7 +595,9 @@
     }
     function itemUser(it) {
         var a = it && it.author || {};
+        var uid = a.userId != null ? a.userId : it && it.userId;
         return {
+            id: uid == null || uid === "" ? "" : String(uid),
             name: a.username || a.name || it.username || "匿名用户",
             avatar: a.avatarUrl || a.avatar || it.avatarUrl || ""
         };
@@ -637,7 +639,9 @@
         var likedCls = isLiked(it) ? " liked" : "";
         var likeBtn = '<button class="act like' + likedCls + '" data-like="' + esc(id) + '">♡' + (depth === 0 ? " 点赞" : "") + ' <span class="like-count">' + likeCount(it) + "</span></button>";
         var quoteBtn = content ? '<button class="act quote" data-quote="' + esc(content) + '">引用给 AI 客服</button>' : "";
-        var reportBtn = '<button class="act report" data-report-msg="' + esc(id) + '">举报</button>';
+        // 举报必须带上内容作者的 userId：后端严管/封禁按 targetUserId 执行，
+        // 缺失时只会返回 400「report has no targetUser」
+        var reportBtn = '<button class="act report" data-report-msg="' + esc(id) + '"' + (u.id ? ' data-report-uid="' + esc(u.id) + '"' : "") + '>举报</button>';
         var canNest = depth < MAX_REPLY_DEPTH;
         var replyBtn = canNest ? '<button class="act reply-toggle" data-reply-toggle="' + esc(id) + '" data-nick="' + esc(u.name) + '">回复' + (replyCount(it) ? " " + replyCount(it) : "") + "</button>" : "";
         var children = '<div class="replies" data-replies="' + esc(id) + '" style="display:none;"></div>';
@@ -949,10 +953,13 @@
         var reportId = t.getAttribute("data-report-msg");
         if (reportId) {
             e.stopPropagation();
-            ZIYIT_REPORT.open({
+            var reportOpts = {
                 targetType: "chat_message",
                 targetId: reportId
-            });
+            };
+            var reportUid = t.getAttribute("data-report-uid");
+            if (reportUid) reportOpts.targetUserId = reportUid;
+            ZIYIT_REPORT.open(reportOpts);
             return;
         }
         var likeId = t.getAttribute("data-like");
