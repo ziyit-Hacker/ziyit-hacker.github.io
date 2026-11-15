@@ -3,6 +3,14 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.64 — 2026-11-15
+### 修复
+- **举报弹窗在暗色主题下文字看不清**：[ziyit_report.js](file:///f:/Code/html/ziyit/assets/ziyit_report.js) 里正文/下拉框/取消按钮误用了并不存在的 token `--ziyit-text`，回落到写死的 `#222`，而背景 `--ziyit-bg-card` 在暗色下是 `#1f2229`，导致「目标」「系统级攻击」「取消」等文字几乎与背景同色。
+  - `--ziyit-text` → `--ziyit-text-primary`（全站实际 token，暗色为 `#e6e6e6`）。
+  - 补充下拉项 `.zr-field select option` 与 `.zr-field textarea::placeholder` 的颜色声明，避免暖色/暗色系统下原生控件文字发灰发黑。
+  - 错误状态色 `#d33` 改为 `var(--ziyit-danger)`（暗色 `#f25767`，对比度更足）。
+- chatwall 与 backrooms 三个列表页的 `ziyit_report.js` 引用升级到 `?v=20261115a`。
+
 ## v1.63 — 2026-11-15
 ### 修复
 - **注释清理工具 [strip_comments.py](file:///f:/Code/html/ziyit/strip_comments.py) 会压掉代码换行、且不删空行**：
