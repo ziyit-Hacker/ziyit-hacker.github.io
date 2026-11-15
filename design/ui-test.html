@@ -5,10 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>ZIYIT UI 设计体系测试页 v1.9</title>
-    <script>(function(){var pref="auto";try{var m=document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));if(m)pref=decodeURIComponent(m[1])||"auto"}catch(e){}var dark=pref==="dark"||pref==="auto"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",dark?"dark":"light");document.documentElement.setAttribute("data-theme-pref",pref)})();</script>
-    <style>
-         
-        :root {
+    <script>(function() {
+    var pref = "auto";
+    try {
+        var m = document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));
+        if (m) pref = decodeURIComponent(m[1]) || "auto";
+    } catch (e) {}
+    var dark = pref === "dark" || pref === "auto" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme-pref", pref);
+})();</script>
+    <style>        :root {
             --ziyit-primary: #0078d4;
             --ziyit-primary-dark: #005a9e;
             --ziyit-primary-light: #e8f3fb;
@@ -28,7 +35,6 @@
             --ziyit-bg-card: #ffffff;
             --ziyit-bg-hover: #f0f7fc;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
@@ -37,7 +43,6 @@
         }
         a { color: var(--ziyit-primary); text-decoration: none; transition: color .2s; }
         a:hover { color: var(--ziyit-primary-dark); }
-
         .page { max-width: 1200px; margin: 0 auto; padding: 0 20px 60px; }
         .section { margin-top: 48px; }
         .section > h2 {
@@ -55,8 +60,6 @@
             font-family: Consolas, "Courier New", monospace; font-size: 13px;
             background: #f0f0f0; padding: 2px 6px; border-radius: 4px;
         }
-
-         
         .hero {
             background: linear-gradient(135deg, #0078d4, #005a9e);
             color: #fff; padding: 56px 20px 40px; text-align: center; margin-bottom: 0;
@@ -64,19 +67,13 @@
         .hero h1 { font-size: 36px; line-height: 1.3; font-weight: 700; }
         .hero p { font-size: 15px; opacity: .9; margin-top: 12px; }
         .hero .tag { display: inline-block; margin-top: 20px; padding: 4px 14px; border-radius: 20px; background: rgba(255,255,255,.18); font-size: 13px; }
-
-         
         .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
         .swatch { border: 1px solid var(--ziyit-border-light); border-radius: 8px; overflow: hidden; background: var(--ziyit-bg-card); }
         .swatch .block { height: 64px; }
         .swatch .info { padding: 8px 12px; font-size: 12px; color: var(--ziyit-text-secondary); }
         .swatch .info b { display: block; font-size: 13px; color: var(--ziyit-text-primary); }
-
-         
         .type-sample { display: flex; align-items: baseline; gap: 16px; padding: 10px 0; border-bottom: 1px dashed var(--ziyit-border-light); }
         .type-sample .lbl { font-size: 12px; color: var(--ziyit-text-disabled); width: 130px; flex-shrink: 0; }
-
-         
         .btn {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
             border: none; border-radius: 6px; cursor: pointer; font-size: 15px;
@@ -104,10 +101,7 @@
             animation: spin .7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-         
         .form-group { margin-bottom: 16px; }
-         
         .form-group label:not([class]) { display: block; font-size: 13px; color: var(--ziyit-text-secondary); margin-bottom: 8px; }
         .input, .select {
             width: 100%; max-width: 360px; height: 36px; padding: 0 12px;
@@ -123,17 +117,13 @@
         .field-msg { font-size: 13px; margin-top: 6px; }
         .field-msg.error { color: var(--ziyit-danger); }
         .field-msg.ok { color: var(--ziyit-success); }
-
         .check, .radio { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; min-height: 44px; margin-right: 20px; }
         .check input, .radio input { width: 16px; height: 16px; accent-color: var(--ziyit-primary); }
-         
-         
         .switch {
             position: relative; display: inline-flex; align-items: center; gap: 8px;
             cursor: pointer; min-height: 44px; margin-right: 20px; font-size: 15px;
             user-select: none; -webkit-tap-highlight-color: transparent;
         }
-         
         .switch input {
             position: absolute; width: 1px; height: 1px; margin: 0;
             opacity: 0; overflow: hidden; clip: rect(0 0 0 0);
@@ -163,17 +153,13 @@
         }
         .switch:hover .track { box-shadow: 0 0 0 2px var(--ziyit-primary-light); }
         .switch input:focus-visible + .track { box-shadow: 0 0 0 3px var(--ziyit-primary-light); }
-         
         .switch input:disabled + .track { background: var(--ziyit-border); cursor: not-allowed; }
         .switch input:disabled + .track::after { background: var(--ziyit-bg-card); }
         .switch input:disabled ~ .switch-label { color: var(--ziyit-text-disabled); }
         .switch .switch-label { transition: color .2s; }
-         
         .switch-sm .track { display: inline-block; width: 40px; min-width: 40px; height: 18px; border-radius: 9px; }
         .switch-sm .track::after { width: 12px; height: 12px; top: 1px; left: 1px; }
         .switch-sm input:checked + .track::after { left: 23px; }
-
-         
         .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
         .card {
             background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border-light);
@@ -185,8 +171,6 @@
         .card .actions { margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px; }
         .card.clickable { cursor: pointer; }
         .card.clickable:hover { box-shadow: 0 4px 12px rgba(0,0,0,.12); transform: translateY(-2px); }
-
-         
         .topbar { background: var(--ziyit-bg-card); border-bottom: 1px solid var(--ziyit-border-light); padding: 0 20px; height: 56px; display: flex; align-items: center; gap: 32px; }
         .topbar .logo { font-size: 18px; font-weight: 700; color: var(--ziyit-text-primary); display: flex; align-items: center; gap: 8px; }
         .logo-mark { width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #0078d4, #005a9e); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; }
@@ -196,14 +180,12 @@
         .topbar nav a.active { color: var(--ziyit-primary); background: var(--ziyit-primary-light); font-weight: 600; }
         .topbar .user { display: flex; align-items: center; gap: 8px; }
         .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--ziyit-primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
-
         .layout-demo { display: flex; gap: 16px; align-items: stretch; }
         .sidebar { width: 220px; background: var(--ziyit-bg); border-radius: 8px; padding: 12px; flex-shrink: 0; }
         .sidebar .group { font-size: 12px; color: var(--ziyit-text-disabled); padding: 8px 12px 4px; }
         .sidebar .item { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border-radius: 6px; font-size: 14px; cursor: pointer; transition: background .2s, color .2s; }
         .sidebar .item:hover { background: var(--ziyit-bg-hover); }
         .sidebar .item.active { background: var(--ziyit-primary); color: #fff; }
-
         .dropdown { position: relative; display: inline-block; }
         .dropdown .trigger { cursor: pointer; }
         .dropdown-menu {
@@ -215,7 +197,6 @@
         .dropdown-menu a { display: block; padding: 8px 12px; border-radius: 6px; font-size: 14px; color: var(--ziyit-text-primary); }
         .dropdown-menu a:hover { background: var(--ziyit-bg-hover); color: var(--ziyit-primary); }
         .dropdown-menu .sep { height: 1px; background: var(--ziyit-border-light); margin: 6px 4px; }
-
         .mobile-nav { display: none; }
         @media (max-width: 768px) {
             .topbar nav { display: none; }
@@ -223,9 +204,6 @@
             .layout-demo { flex-direction: column; }
             .sidebar { width: 100%; }
         }
-
-         
-         
         .site-nav { position: relative; background: var(--ziyit-bg-card); border-bottom: 1px solid var(--ziyit-border); }
         .site-nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 16px; padding: 0 16px; height: 52px; }
         .site-nav-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ziyit-text-primary); font-weight: 700; font-size: 16px; text-decoration: none; }
@@ -234,14 +212,11 @@
         .site-nav-menu > li > a, .site-nav-menu > .has-sub { display: block; padding: 8px 14px; border-radius: 6px; color: var(--ziyit-text-primary); font-size: 14px; text-decoration: none; cursor: pointer; transition: color .2s, background .2s; }
         .site-nav-menu > li > a:hover, .site-nav-menu > .has-sub:hover { color: var(--ziyit-primary); background: var(--ziyit-bg-hover); }
         .site-nav-menu .line { width: 1px; height: 20px; background: var(--ziyit-border); margin: 0 10px; }
-         
         .site-nav-menu ul { display: none; position: absolute; top: 100%; left: 0; margin-top: 6px; min-width: 190px; padding: 6px; background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); border-radius: 8px; box-shadow: 0 8px 20px rgba(0, 0, 0, .18); list-style: none; z-index: 20; }
         .site-nav-menu > li:hover > ul { display: block; }
-         
         .site-nav-menu ul::before { content: ''; position: absolute; top: -6px; left: 0; right: 0; height: 6px; }
         .site-nav-menu ul a { display: block; padding: 8px 12px; border-radius: 6px; color: var(--ziyit-text-primary); font-size: 13px; text-decoration: none; transition: color .2s, background .2s; }
         .site-nav-menu ul a:hover { color: var(--ziyit-primary); background: var(--ziyit-bg-hover); }
-         
         .site-nav-toggle { display: none; background: none; border: 0; color: var(--ziyit-text-primary); font-size: 22px; line-height: 1; padding: 4px 8px; cursor: pointer; }
         @media (max-width: 768px) {
             .site-nav-toggle { display: block; }
@@ -253,8 +228,6 @@
             .site-nav-menu ul::before { display: none; }
             .site-nav-menu.open ul { display: block; }
         }
-
-         
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100;
             display: none; align-items: center; justify-content: center; padding: 16px;
@@ -270,8 +243,6 @@
         .modal .body { font-size: 15px; color: var(--ziyit-text-secondary); margin-bottom: 20px; }
         .modal .foot { display: flex; justify-content: flex-end; gap: 8px; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-
-         
         .table-wrap { border: 1px solid var(--ziyit-border-light); border-radius: 8px; overflow: hidden; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         thead th { background: var(--ziyit-bg); color: var(--ziyit-text-secondary); font-size: 13px; font-weight: 400; text-align: left; padding: 10px 12px; height: 40px; }
@@ -279,24 +250,17 @@
         tbody tr:nth-child(even) { background: #fafafa; }
         tbody tr:hover { background: var(--ziyit-bg-hover); }
         tbody td .ops { display: flex; gap: 8px; justify-content: flex-end; }
-
-         
         .tag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; font-size: 13px; margin-right: 8px; }
         .tag.vip { background: var(--ziyit-accent); color: #fff; }
         .tag.ban { background: #fdecee; color: var(--ziyit-danger); }
         .tag.normal { background: var(--ziyit-bg); color: var(--ziyit-text-secondary); }
         .tag.primary { background: var(--ziyit-primary-light); color: var(--ziyit-primary); }
         .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 50%; background: var(--ziyit-primary); color: #fff; font-size: 12px; }
-
-         
         .pagination { display: flex; gap: 4px; align-items: center; }
         .pagination button { width: 32px; height: 32px; border: none; border-radius: 6px; background: transparent; color: var(--ziyit-text-primary); font-size: 14px; cursor: pointer; transition: background .2s, color .2s; }
         .pagination button:hover { background: var(--ziyit-bg-hover); }
         .pagination button.active { background: var(--ziyit-primary); color: #fff; }
         .pagination button:disabled { color: var(--ziyit-text-disabled); cursor: not-allowed; background: transparent; }
-
-         
-         
         .ziyit-loader { text-align: center; }
         .ziyit-loader .loader-title {
             display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -315,8 +279,6 @@
             background: linear-gradient(90deg, var(--ziyit-primary), var(--ziyit-primary-dark));
             animation: loaderSlide 2s infinite;
         }
-        
-
         @keyframes loaderSlide {
             0%   { transform: translateX(-100%) scaleX(1);    animation-timing-function: cubic-bezier(0.33, 0.45, 0.67, 0); }
             45%  { transform: translateX(260%)  scaleX(1.524); }
@@ -327,15 +289,11 @@
         .skeleton { background: #ececec; border-radius: 6px; animation: pulse 1.2s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
         .skeleton-line { height: 14px; margin-bottom: 10px; }
-
-         
         .empty { text-align: center; padding: 40px 20px; }
         .empty .icon { font-size: 48px; color: #cccccc; }
         .empty .icon img { width: 48px; height: 48px; object-fit: contain; }
         .empty h4 { font-size: 16px; font-weight: 600; margin: 12px 0 4px; color: var(--ziyit-text-primary); }
         .empty p { font-size: 13px; color: var(--ziyit-text-secondary); margin-bottom: 16px; }
-
-         
         #toast-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
         .toast {
             display: flex; align-items: center; gap: 8px; background: rgba(51,51,51,.92); color: #fff;
@@ -345,22 +303,14 @@
         .toast.ok { border-left-color: var(--ziyit-success); }
         .toast.err { border-left-color: var(--ziyit-danger); }
         .toast .x { background: none; border: none; color: rgba(255,255,255,.7); cursor: pointer; font-size: 14px; margin-left: 8px; }
-
-         
         .icons { display: flex; gap: 32px; align-items: flex-end; flex-wrap: wrap; }
         .icons .ic { text-align: center; color: var(--ziyit-primary); }
         .icons .ic span { display: block; font-size: 12px; color: var(--ziyit-text-secondary); margin-top: 6px; }
-
-         
         .elev { padding: 16px; border-radius: 8px; background: var(--ziyit-bg-card); text-align: center; font-size: 13px; color: var(--ziyit-text-secondary); }
         .e1 { box-shadow: 0 1px 3px rgba(0,0,0,.08); }
         .e2 { box-shadow: 0 4px 12px rgba(0,0,0,.12); }
         .e3 { box-shadow: 0 8px 24px rgba(0,0,0,.2); }
-
         footer { text-align: center; font-size: 12px; color: var(--ziyit-text-secondary); padding: 24px 0 40px; }
-
-         
-         
         [data-theme="dark"] {
             --ziyit-bg: #16181d;
             --ziyit-bg-card: #1f2229;
@@ -373,7 +323,6 @@
             --ziyit-primary-light: rgba(0, 120, 212, .18);
             color-scheme: dark;  
         }
-         
         [data-theme="dark"] code { background: #2a2e36; color: #c9d1d9; }
         [data-theme="dark"] tbody tr:nth-child(even) { background: #23262d; }
         [data-theme="dark"] .input:disabled, [data-theme="dark"] .select:disabled { background: #23262d; }
@@ -382,8 +331,6 @@
         [data-theme="dark"] .tag.ban { background: rgba(242, 87, 103, .14); color: #f08997; }
         [data-theme="dark"] .tag.normal { background: #23262d; }
         [data-theme="dark"] .hero { background: linear-gradient(135deg, #0b4d80, #07385f); }
-
-         
         .theme-switch { display: inline-flex; align-items: center; gap: 4px; padding: 4px; background: var(--ziyit-bg); border: 1px solid var(--ziyit-border-light); border-radius: 8px; }
         .theme-opt {
             display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px;
@@ -395,15 +342,11 @@
         .theme-opt:hover { background: var(--ziyit-bg-hover); color: var(--ziyit-text-primary); }
         .theme-opt.active { background: var(--ziyit-primary); color: #fff; }
         .theme-opt:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ziyit-primary-light); }
-
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { transition: none !important; animation: none !important; }
-        }
-    </style>
+        }</style>
 </head>
 <body>
-
-    
     <div class="site-nav">
         <div class="site-nav-inner">
             <a class="site-nav-brand" href="../index.html"><span class="logo-mark">Z</span>ZIYIT</a>
@@ -439,17 +382,12 @@
             </ul>
         </div>
     </div>
-
-    
     <div class="hero">
         <h1>ZIYIT STUDIO UI 设计体系</h1>
         <p>DESIGN.md v1.1 · 全站视觉与交互标准 · 控件测试页</p>
         <span class="tag">科技 · 创造 · 无限可能</span>
     </div>
-
     <div class="page">
-
-        
         <div class="section" id="color">
             <h2>2. 色彩系统</h2>
             <p class="desc">品牌主色、强调色、功能色与中性色 Token（DESIGN.md §2）。</p>
@@ -477,8 +415,6 @@
                 <div style="width:320px;height:48px;border-radius:8px;background:linear-gradient(135deg,#ffffff,#f0f7fc);border:1px solid #eee"></div>
             </div>
         </div>
-
-        
         <div class="section" id="type">
             <h2>3. 排版层级</h2>
             <p class="desc">字号 / 行高 / 字重规范（DESIGN.md §3）。</p>
@@ -492,8 +428,6 @@
                 <div class="type-sample"><span class="lbl">小字 · 12px</span><span style="font-size:12px;line-height:1.4;color:var(--ziyit-text-disabled)">© 2026 ZIYIT STUDIO</span></div>
             </div>
         </div>
-
-        
         <div class="section" id="buttons">
             <h2>4.1 按钮</h2>
             <p class="desc">五种类型 × 三种规格 + 禁用 + 加载态（DESIGN.md §4.1）。</p>
@@ -520,8 +454,6 @@
                 </div>
             </div>
         </div>
-
-        
         <div class="section" id="form">
             <h2>4.2-4.4 表单控件</h2>
             <p class="desc">输入框状态、下拉、复选框 / 单选框 / 开关（DESIGN.md §4.2-4.4）。</p>
@@ -559,8 +491,6 @@
                 </div>
             </div>
         </div>
-
-        
         <div class="section" id="cards">
             <h2>4.5 卡片</h2>
             <p class="desc">普通卡片与可点击卡片（DESIGN.md §4.5）。</p>
@@ -582,8 +512,6 @@
                 </div>
             </div>
         </div>
-
-        
         <div class="section" id="nav">
             <h2>4.6 导航</h2>
             <p class="desc">顶部导航 / 侧边栏 / 下拉菜单 / 移动端折叠（DESIGN.md §4.6）。</p>
@@ -623,8 +551,6 @@
                 </div>
             </div>
         </div>
-
-        
         <div class="section" id="modal">
             <h2>4.7 模态框</h2>
             <p class="desc">打开演示：遮罩淡入 + 面板上移淡入；Esc / 遮罩 / 取消关闭（DESIGN.md §4.7）。</p>
@@ -635,8 +561,6 @@
                 </div>
             </div>
         </div>
-
-        
         <div class="section" id="table">
             <h2>4.8 表格</h2>
             <p class="desc">表头 / 斑马纹 / 行悬停 / 操作列（DESIGN.md §4.8）。</p>
@@ -659,8 +583,6 @@
                 </div>
             </div>
         </div>
-
-        
         <div class="section" id="tags">
             <h2>4.10 标签与徽章</h2>
             <p class="desc">VIP / 封禁 / 普通 / 主色标签 与 计数徽章（DESIGN.md §4.10）。</p>
@@ -674,8 +596,6 @@
                 </div>
             </div>
         </div>
-
-        
         <div class="section" id="loading">
             <h2>4.12 加载指示器</h2>
             <p class="desc">主加载指示器/ 骨架屏 / 按钮加载（DESIGN.md §4.12）。</p>
@@ -695,8 +615,6 @@
                 </div>
             </div>
         </div>
-
-        
         <div class="section" id="empty">
             <h2>4.13 空状态</h2>
             <p class="desc">无数据引导，必须提供下一步动作（DESIGN.md §4.13）。</p>
@@ -709,8 +627,6 @@
                 </div>
             </div>
         </div>
-
-        
         <div class="section" id="theme">
             <h2>4.14 主题切换</h2>
             <p class="desc">浅色 / 深色 / 跟随系统（DESIGN.md §4.14）。偏好自动保存至 cookie（key：ziyit-theme，有效期 1 年），刷新后保持；"跟随系统"实时响应系统设置。</p>
@@ -735,8 +651,6 @@
                 <div class="row"><span class="caption">实现要点：① 仅交换中性色 token，品牌主色不变；② 深色模式同时修正 code / 表格斑马纹 / 禁用输入框 / 骨架屏等硬编码浅色；③ 监听 <code>prefers-color-scheme</code>，系统切换时"跟随系统"模式自动响应。</span></div>
             </div>
         </div>
-
-        
         <div class="section" id="toast">
             <h2>4.9 Toast 提示</h2>
             <p class="desc">成功 / 错误 / 信息，自动消失，替代 alert()（DESIGN.md §4.9）。</p>
@@ -748,8 +662,6 @@
                 </div>
             </div>
         </div>
-
-        
         <div class="section" id="icons">
             <h2>5. 图标系统</h2>
             <p class="desc">线性风格，四档尺寸（DESIGN.md §5）。</p>
@@ -762,8 +674,6 @@
                 </div>
             </div>
         </div>
-
-        
         <div class="section" id="elevation">
             <h2>7. 深度与层级</h2>
             <p class="desc">Elevation 1-3 阴影系统（DESIGN.md §7）。</p>
@@ -773,11 +683,8 @@
                 <div class="elev e3" style="flex:1">Elevation 3<br>模态框</div>
             </div>
         </div>
-
         <footer>© 2026 ZIYIT STUDIO · 设计体系测试页 v1.9 · 本页 noindex</footer>
     </div>
-
-    
     <div class="modal-overlay" id="modal-normal">
         <div class="modal">
             <h3>编辑用户信息 <button class="close" onclick="closeModal('modal-normal')">×</button></h3>
@@ -803,9 +710,122 @@
             </div>
         </div>
     </div>
-
     <div id="toast-box"></div>
-
-    <script>function openModal(id){document.getElementById("modal-"+id).classList.add("active")}function closeModal(id){document.getElementById(id).classList.remove("active")}document.addEventListener("keydown",function(e){if(e.key==="Escape")document.querySelectorAll(".modal-overlay.active").forEach(m=>m.classList.remove("active"))});document.querySelectorAll(".modal-overlay").forEach(overlay=>{overlay.addEventListener("click",function(e){if(e.target===overlay)overlay.classList.remove("active")})});function showToast(type,text){var box=document.getElementById("toast-box");var t=document.createElement("div");t.className="toast "+(type==="ok"?"ok":type==="err"?"err":"");t.innerHTML=text+'<button class="x" onclick="this.parentNode.remove()">×</button>';box.appendChild(t);while(box.children.length>3)box.removeChild(box.firstChild);setTimeout(function(){t.remove()},type==="ok"?2e3:4e3)}function demoLoading(btn){var html=btn.innerHTML;btn.innerHTML='<span class="spinner"></span>提交中…';btn.disabled=true;setTimeout(function(){btn.innerHTML=html;btn.disabled=false;showToast("ok","操作成功")},1500)}function toggleSkeleton(btn){var area=document.getElementById("skeletonArea");if(area.style.display==="none"){area.style.display="block";btn.textContent="隐藏骨架屏"}else{area.style.display="none";btn.textContent="显示骨架屏"}}(function(){var toggle=document.querySelector(".site-nav-toggle");if(!toggle)return;toggle.addEventListener("click",function(){var menu=document.querySelector(".site-nav-menu");if(menu)menu.classList.toggle("open")})})();function getCookie(name){var m=document.cookie.match(new RegExp("(?:^|;\\s*)"+name+"=([^;]*)"));return m?decodeURIComponent(m[1]):""}function setCookie(name,value,days){var d=new Date;d.setTime(d.getTime()+days*24*60*60*1e3);document.cookie=name+"="+encodeURIComponent(value)+"; path=/; expires="+d.toUTCString()}var themeMedia=window.matchMedia?window.matchMedia("(prefers-color-scheme: dark)"):null;function resolveTheme(pref){return pref==="dark"||pref==="auto"&&themeMedia&&themeMedia.matches?"dark":"light"}function applyTheme(pref){document.documentElement.setAttribute("data-theme",resolveTheme(pref));document.documentElement.setAttribute("data-theme-pref",pref);updateThemeUI()}function setTheme(pref){try{setCookie("ziyit-theme",pref,365)}catch(e){}applyTheme(pref)}function updateThemeUI(){var pref=document.documentElement.getAttribute("data-theme-pref")||"auto";document.querySelectorAll(".theme-opt").forEach(function(b){var on=b.getAttribute("data-theme-opt")===pref;b.classList.toggle("active",on);b.setAttribute("aria-checked",on?"true":"false")});var resolved=document.documentElement.getAttribute("data-theme");var name=resolved==="dark"?"深色模式":"浅色模式";var desc=document.getElementById("theme-desc");if(desc)desc.textContent=pref==="auto"?"当前偏好：跟随系统（系统为"+name+"）":"当前偏好："+name}document.querySelectorAll(".theme-opt").forEach(function(b){b.addEventListener("click",function(){setTheme(b.getAttribute("data-theme-opt"))})});if(themeMedia){themeMedia.addEventListener("change",function(){var pref=document.documentElement.getAttribute("data-theme-pref")||"auto";if(pref==="auto")applyTheme(pref)})}updateThemeUI();document.querySelectorAll(".switch input").forEach(function(input){input.addEventListener("change",function(){var name=input.closest(".switch").getAttribute("data-name")||"开关";showToast(input.checked?"ok":"info",name+"："+(input.checked?"已开启":"已关闭"))})});var swAuto=document.getElementById("sw-auto");var iUpdate=document.getElementById("i-update");if(swAuto&&iUpdate){var syncUpdate=function(){iUpdate.disabled=!swAuto.checked};swAuto.addEventListener("change",syncUpdate);syncUpdate()}</script>
+    <script>function openModal(id) {
+    document.getElementById("modal-" + id).classList.add("active");
+}
+function closeModal(id) {
+    document.getElementById(id).classList.remove("active");
+}
+document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") document.querySelectorAll(".modal-overlay.active").forEach(m => m.classList.remove("active"));
+});
+document.querySelectorAll(".modal-overlay").forEach(overlay => {
+    overlay.addEventListener("click", function(e) {
+        if (e.target === overlay) overlay.classList.remove("active");
+    });
+});
+function showToast(type, text) {
+    var box = document.getElementById("toast-box");
+    var t = document.createElement("div");
+    t.className = "toast " + (type === "ok" ? "ok" : type === "err" ? "err" : "");
+    t.innerHTML = text + '<button class="x" onclick="this.parentNode.remove()">×</button>';
+    box.appendChild(t);
+    while (box.children.length > 3) box.removeChild(box.firstChild);
+    setTimeout(function() {
+        t.remove();
+    }, type === "ok" ? 2e3 : 4e3);
+}
+function demoLoading(btn) {
+    var html = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span>提交中…';
+    btn.disabled = true;
+    setTimeout(function() {
+        btn.innerHTML = html;
+        btn.disabled = false;
+        showToast("ok", "操作成功");
+    }, 1500);
+}
+function toggleSkeleton(btn) {
+    var area = document.getElementById("skeletonArea");
+    if (area.style.display === "none") {
+        area.style.display = "block";
+        btn.textContent = "隐藏骨架屏";
+    } else {
+        area.style.display = "none";
+        btn.textContent = "显示骨架屏";
+    }
+}
+(function() {
+    var toggle = document.querySelector(".site-nav-toggle");
+    if (!toggle) return;
+    toggle.addEventListener("click", function() {
+        var menu = document.querySelector(".site-nav-menu");
+        if (menu) menu.classList.toggle("open");
+    });
+})();
+function getCookie(name) {
+    var m = document.cookie.match(new RegExp("(?:^|;\\s*)" + name + "=([^;]*)"));
+    return m ? decodeURIComponent(m[1]) : "";
+}
+function setCookie(name, value, days) {
+    var d = new Date;
+    d.setTime(d.getTime() + days * 24 * 60 * 60 * 1e3);
+    document.cookie = name + "=" + encodeURIComponent(value) + "; path=/; expires=" + d.toUTCString();
+}
+var themeMedia = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+function resolveTheme(pref) {
+    return pref === "dark" || pref === "auto" && themeMedia && themeMedia.matches ? "dark" : "light";
+}
+function applyTheme(pref) {
+    document.documentElement.setAttribute("data-theme", resolveTheme(pref));
+    document.documentElement.setAttribute("data-theme-pref", pref);
+    updateThemeUI();
+}
+function setTheme(pref) {
+    try {
+        setCookie("ziyit-theme", pref, 365);
+    } catch (e) {}
+    applyTheme(pref);
+}
+function updateThemeUI() {
+    var pref = document.documentElement.getAttribute("data-theme-pref") || "auto";
+    document.querySelectorAll(".theme-opt").forEach(function(b) {
+        var on = b.getAttribute("data-theme-opt") === pref;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-checked", on ? "true" : "false");
+    });
+    var resolved = document.documentElement.getAttribute("data-theme");
+    var name = resolved === "dark" ? "深色模式" : "浅色模式";
+    var desc = document.getElementById("theme-desc");
+    if (desc) desc.textContent = pref === "auto" ? "当前偏好：跟随系统（系统为" + name + "）" : "当前偏好：" + name;
+}
+document.querySelectorAll(".theme-opt").forEach(function(b) {
+    b.addEventListener("click", function() {
+        setTheme(b.getAttribute("data-theme-opt"));
+    });
+});
+if (themeMedia) {
+    themeMedia.addEventListener("change", function() {
+        var pref = document.documentElement.getAttribute("data-theme-pref") || "auto";
+        if (pref === "auto") applyTheme(pref);
+    });
+}
+updateThemeUI();
+document.querySelectorAll(".switch input").forEach(function(input) {
+    input.addEventListener("change", function() {
+        var name = input.closest(".switch").getAttribute("data-name") || "开关";
+        showToast(input.checked ? "ok" : "info", name + "：" + (input.checked ? "已开启" : "已关闭"));
+    });
+});
+var swAuto = document.getElementById("sw-auto");
+var iUpdate = document.getElementById("i-update");
+if (swAuto && iUpdate) {
+    var syncUpdate = function() {
+        iUpdate.disabled = !swAuto.checked;
+    };
+    swAuto.addEventListener("change", syncUpdate);
+    syncUpdate();
+}</script>
 </body>
 </html>

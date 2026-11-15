@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,30 +31,34 @@
     </script>
     <script src="./assets/f12check.js"></script>
     <script src="./assets/xss_guard.js?v=20261114"></script>
-    <script src="./assets/ziyit_api.js?v=20261114b"></script>
-    <script>(function(){var pref="auto";try{var m=document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));if(m)pref=decodeURIComponent(m[1])||"auto"}catch(e){}var dark=pref==="dark"||pref==="auto"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",dark?"dark":"light");document.documentElement.setAttribute("data-theme-pref",pref)})();</script>
+    <script src="./assets/ziyit_api.js?v=20261115a"></script>
+    <script>(function() {
+    var pref = "auto";
+    try {
+        var m = document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));
+        if (m) pref = decodeURIComponent(m[1]) || "auto";
+    } catch (e) {}
+    var dark = pref === "dark" || pref === "auto" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme-pref", pref);
+})();</script>
     <link rel="stylesheet" href="./assets/ziyit-theme.css">
-    <style>
-         
-        * {
+    <style>        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
-
         .bid {
             color: var(--ziyit-danger);
             font-size: 12px;
             margin-left: 4px;
         }
-
         body {
             background: var(--ziyit-bg);
             min-height: 100vh;
             padding: 0 0 20px;
         }
-
         #captcha-container {
             text-align: center;
             padding: 60px 20px 40px;
@@ -65,7 +68,6 @@
             margin-bottom: 20px;
             color: var(--ziyit-text-primary);
         }
-
         .containers {
             width: 100%;
             max-width: 600px;
@@ -76,24 +78,20 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
-
         .header {
             background: linear-gradient(135deg, var(--ziyit-primary), var(--ziyit-primary-dark));
             color: #fff;
             padding: 20px;
             text-align: center;
         }
-
         .header h1 {
             font-size: 22px;
             font-weight: 600;
             color: #fff;
         }
-
         .content {
             padding: 30px;
         }
-
         textarea {
             width: 100%;
             height: 120px;
@@ -108,11 +106,9 @@
             background: var(--ziyit-bg-card);
             color: var(--ziyit-text-primary);
         }
-
         textarea:focus {
             border-color: var(--ziyit-primary);
         }
-
         .translate-btn {
             width: 100%;
             background: var(--ziyit-primary);
@@ -125,17 +121,14 @@
             margin-bottom: 20px;
             transition: background 0.2s;
         }
-
         .translate-btn:hover {
             background: var(--ziyit-primary-dark);
         }
-
         .translate-btn:disabled {
             background: var(--ziyit-border);
             color: var(--ziyit-text-disabled);
             cursor: not-allowed;
         }
-
         .result {
             min-height: 120px;
             padding: 15px;
@@ -148,17 +141,14 @@
             word-break: break-word;
             color: var(--ziyit-text-primary);
         }
-
         .loading {
             display: inline-block;
             color: var(--ziyit-text-secondary);
         }
-
         .result:empty::before {
             content: '翻译结果将显示在这里...';
             color: var(--ziyit-text-disabled);
         }
-
         .language-select {
             margin-top: 16px;
         }
@@ -185,19 +175,15 @@
             font-size: 14px;
             margin-left: 8px;
         }
-
         .footer {
             padding: 15px;
             text-align: center;
             font-size: 12px;
             color: var(--ziyit-text-secondary);
             border-top: 1px solid var(--ziyit-border-light);
-        }
-    </style>
+        }</style>
 </head>
-
 <body>
-    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -240,24 +226,19 @@
             </ul>
         </div>
     </div>
-
     <div id="captcha-container">
         <p>为了保证安全性，本页面需人机验证</p>
         <div id="app"></div>
     </div>
-
     <div id="translator-content" style="display:none; width:100%;">
         <div class="containers">
             <div class="header">
                 <h1>巨硬翻译器</h1>
             </div>
-
             <div class="content">
                 <textarea id="inputText"
                     placeholder="输入任意语言文本...">Microsoft Edge browser is a fast and secure web browser</textarea>
-
                 <button class="translate-btn" id="translateBtn">翻译</button>
-
                 <div class="result" id="result">翻译结果将显示在这里...</div>
                 <div class="language-select">
                     <label for="language">选择语言：</label>
@@ -280,19 +261,91 @@
                     <button id="customLanguageBtn" style="display: none;">添加自定义语言</button>
                 </div>
             </div>
-
             <div class="footer">
                 © 2026 ZIYIT STUDIO
             </div>
         </div>
     </div>
-
-    <script>const languageSelect=document.getElementById("language");const customLanguageInput=document.getElementById("customLanguage");const customLanguageBtn=document.getElementById("customLanguageBtn");customLanguageBtn.addEventListener("click",()=>{customLanguageInput.style.display="block";customLanguageBtn.style.display="none"});customLanguageBtn.addEventListener("click",()=>{const customLanguage=customLanguageInput.value;if(customLanguage){languageSelect.options.add(new Option(customLanguage,customLanguage));customLanguageInput.value="";customLanguageInput.style.display="none";customLanguageBtn.style.display="block"}});languageSelect.addEventListener("change",()=>{if(languageSelect.value==="cca"){customLanguageBtn.style.display="block"}else{customLanguageBtn.style.display="none"}});customLanguageInput.addEventListener("input",()=>{customLanguageBtn.disabled=customLanguageInput.value.trim()===""});customLanguageBtn.addEventListener("click",()=>{customLanguageInput.value=""});</script>
-
-    <script>function currentLanguageLabel(){var sel=document.getElementById("language");if(sel){if(sel.selectedOptions&&sel.selectedOptions[0]){return sel.selectedOptions[0].text}return sel.value}return"中文"}document.addEventListener("DOMContentLoaded",function(){var btn=document.getElementById("translateBtn");btn.addEventListener("click",async function(){var text=document.getElementById("inputText").value.trim();var resultEl=document.getElementById("result");if(!text){resultEl.textContent="请输入要翻译的文本";return}if(!window.ZIYIT_API||!window.ZIYIT_API.getToken()){resultEl.textContent="请先登录后使用翻译功能";return}btn.disabled=true;resultEl.innerHTML='<div class="loading">翻译中...</div>';try{var data=await ZIYIT_API.request("/translate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,language:currentLanguageLabel()})});resultEl.textContent=data&&data.translated||"翻译结果为空，请重试"}catch(e){if(e&&e.status===429){resultEl.textContent="今日翻译次数已用完，请稍后再试；或联系 ziyitstudio@qq.com 升级为 VIP（价格为 RC 专业版价格）"}else if(e&&e.status===401){resultEl.textContent="登录已失效，请重新登录后再试"}else{resultEl.textContent="翻译失败: "+(e&&e.message||"未知错误")}}finally{btn.disabled=false}})});</script>
-
-    <script type="importmap">
-        {
+    <script>const languageSelect = document.getElementById("language");
+const customLanguageInput = document.getElementById("customLanguage");
+const customLanguageBtn = document.getElementById("customLanguageBtn");
+customLanguageBtn.addEventListener("click", () => {
+    customLanguageInput.style.display = "block";
+    customLanguageBtn.style.display = "none";
+});
+customLanguageBtn.addEventListener("click", () => {
+    const customLanguage = customLanguageInput.value;
+    if (customLanguage) {
+        languageSelect.options.add(new Option(customLanguage, customLanguage));
+        customLanguageInput.value = "";
+        customLanguageInput.style.display = "none";
+        customLanguageBtn.style.display = "block";
+    }
+});
+languageSelect.addEventListener("change", () => {
+    if (languageSelect.value === "cca") {
+        customLanguageBtn.style.display = "block";
+    } else {
+        customLanguageBtn.style.display = "none";
+    }
+});
+customLanguageInput.addEventListener("input", () => {
+    customLanguageBtn.disabled = customLanguageInput.value.trim() === "";
+});
+customLanguageBtn.addEventListener("click", () => {
+    customLanguageInput.value = "";
+});</script>
+    <script>function currentLanguageLabel() {
+    var sel = document.getElementById("language");
+    if (sel) {
+        if (sel.selectedOptions && sel.selectedOptions[0]) {
+            return sel.selectedOptions[0].text;
+        }
+        return sel.value;
+    }
+    return "中文";
+}
+document.addEventListener("DOMContentLoaded", function() {
+    var btn = document.getElementById("translateBtn");
+    btn.addEventListener("click", async function() {
+        var text = document.getElementById("inputText").value.trim();
+        var resultEl = document.getElementById("result");
+        if (!text) {
+            resultEl.textContent = "请输入要翻译的文本";
+            return;
+        }
+        if (!window.ZIYIT_API || !window.ZIYIT_API.getToken()) {
+            resultEl.textContent = "请先登录后使用翻译功能";
+            return;
+        }
+        btn.disabled = true;
+        resultEl.innerHTML = '<div class="loading">翻译中...</div>';
+        try {
+            var data = await ZIYIT_API.request("/translate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    text,
+                    language: currentLanguageLabel()
+                })
+            });
+            resultEl.textContent = data && data.translated || "翻译结果为空，请重试";
+        } catch (e) {
+            if (e && e.status === 429) {
+                resultEl.textContent = "今日翻译次数已用完，请稍后再试；或联系 ziyitstudio@qq.com 升级为 VIP（价格为 RC 专业版价格）";
+            } else if (e && e.status === 401) {
+                resultEl.textContent = "登录已失效，请重新登录后再试";
+            } else {
+                resultEl.textContent = "翻译失败: " + (e && e.message || "未知错误");
+            }
+        } finally {
+            btn.disabled = false;
+        }
+    });
+});</script>
+    <script type="importmap">        {
             "imports": {
                 "@noble/curves/nist.js": "./assets/noble/curves-nist.js",
                 "@noble/hashes/sha2.js": "./assets/noble/hashes-sha2.js",
@@ -301,15 +354,56 @@
                 "@noble/hashes/utils.js": "./assets/noble/hashes-utils.js",
                 "@noble/ciphers/aes.js": "./assets/noble/ciphers-aes.js"
             }
-        }
-    </script>
-    <script>window.PHANTOM_API_KEY="PfwHF-kkg8c-YX6CF-J7Uw1-hv5Dn";</script>
+        }</script>
+    <script>window.PHANTOM_API_KEY = "PfwHF-kkg8c-YX6CF-J7Uw1-hv5Dn";</script>
     <script type="module" src="https://ziyit-hacker.github.io/Human_verification/main.js"
         onerror="showCaptchaError()"></script>
-    <script>function showCaptchaError(){document.getElementById("captcha-container").innerHTML='<p style="color:red;font-size:16px;">初始化失败，请稍后重试</p>'}window.addEventListener("phantom:verified",function(e){document.getElementById("captcha-container").style.display="none";document.getElementById("translator-content").style.display="block"});</script>
-    
-    <script>function checkLoginStatus(){const navItems=document.querySelectorAll(".nav-item");const loginLink=document.getElementById("loginLink");if(!ZIYIT_API.getToken()){navItems.forEach(item=>{const role=item.getAttribute("data-role");const show=role==="all";item.classList.toggle("visible",show);item.classList.toggle("hidden",!show)});if(loginLink)loginLink.style.display="inline-block";return}ZIYIT_API.currentUser().then(function(user){const isVip=ZIYIT_API.isVip(user);const uname=user.username||"";const isAdmin=String(user.userId)==="1";navItems.forEach(item=>{const role=item.getAttribute("data-role");let show=role==="all";if(isAdmin){show=show||role==="admin"||role==="adminstr"}else if(isVip){show=show||role==="admin"}item.classList.toggle("visible",show);item.classList.toggle("hidden",!show)});if(loginLink)loginLink.style.display="none"}).catch(function(){navItems.forEach(item=>{const role=item.getAttribute("data-role");const show=role==="all";item.classList.toggle("visible",show);item.classList.toggle("hidden",!show)})})}window.addEventListener("DOMContentLoaded",checkLoginStatus);</script>
+    <script>function showCaptchaError() {
+    document.getElementById("captcha-container").innerHTML = '<p style="color:red;font-size:16px;">初始化失败，请稍后重试</p>';
+}
+window.addEventListener("phantom:verified", function(e) {
+    document.getElementById("captcha-container").style.display = "none";
+    document.getElementById("translator-content").style.display = "block";
+});</script>
+    <script>function checkLoginStatus() {
+    const navItems = document.querySelectorAll(".nav-item");
+    const loginLink = document.getElementById("loginLink");
+    if (!ZIYIT_API.getToken()) {
+        navItems.forEach(item => {
+            const role = item.getAttribute("data-role");
+            const show = role === "all";
+            item.classList.toggle("visible", show);
+            item.classList.toggle("hidden", !show);
+        });
+        if (loginLink) loginLink.style.display = "inline-block";
+        return;
+    }
+    ZIYIT_API.currentUser().then(function(user) {
+        const isVip = ZIYIT_API.isVip(user);
+        const uname = user.username || "";
+        const isAdmin = String(user.userId) === "1";
+        navItems.forEach(item => {
+            const role = item.getAttribute("data-role");
+            let show = role === "all";
+            if (isAdmin) {
+                show = show || role === "admin" || role === "adminstr";
+            } else if (isVip) {
+                show = show || role === "admin";
+            }
+            item.classList.toggle("visible", show);
+            item.classList.toggle("hidden", !show);
+        });
+        if (loginLink) loginLink.style.display = "none";
+    }).catch(function() {
+        navItems.forEach(item => {
+            const role = item.getAttribute("data-role");
+            const show = role === "all";
+            item.classList.toggle("visible", show);
+            item.classList.toggle("hidden", !show);
+        });
+    });
+}
+window.addEventListener("DOMContentLoaded", checkLoginStatus);</script>
 <script src="./assets/ziyit-theme.js"></script>
 </body>
-
 </html>

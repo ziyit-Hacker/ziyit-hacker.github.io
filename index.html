@@ -1,5 +1,4 @@
 <html lang="zh-cn">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,42 +37,34 @@
     <script src="./assets/auto_f5.js"></script>
     <script src="./assets/Cookie.js"></script>
     <script src="./assets/xss_guard.js?v=20261114"></script>
-    <script src="./assets/ziyit_api.js?v=20261114b"></script>
-    <style>
-        * {
+    <script src="./assets/ziyit_api.js?v=20261115a"></script>
+    <style>        * {
             margin: 0px;
             padding: 0;
             list-style: none;
         }
-
         a {
             text-decoration: none;
             color: #66e656;
         }
-
         p {
             color: black;
         }
-
         ul li {
             display: inline-block;
             line-height: 35px;
         }
-
         li a {
             padding-left: 20px;
             padding-right: 20px;
         }
-
         li p {
             padding-left: 20px;
             padding-right: 20px;
         }
-
         .bid {
             color: #f25767;
         }
-
         .tit {
             color: black;
             position: fixed;
@@ -84,17 +75,14 @@
             background-color: rgba(255, 255, 255, 0.5);
             padding: 5px 0;
         }
-
         .line {
             width: 1px;
             height: 12px;
             background-color: #f3a707;
         }
-
         a:hover {
             color: #ff8000;
         }
-
         h1 {
             width: 100%;
             background-color: var(--ziyit-primary-light);
@@ -102,19 +90,15 @@
             text-align: center;
             font-size: 50px;
         }
-
         * {
             box-sizing: border-box;
         }
-
         .slider {
             width: 560px;
             max-width: 100%;    
             height: 400px;
             overflow: hidden;
         }
-
-         
         .home-hero {
             display: flex;
             align-items: flex-start;
@@ -171,32 +155,27 @@
                 grid-template-columns: 1fr;
             }
         }
-
         .slider-wrapper {
             width: 100%;
             height: 320px;
         }
-
         .slider-wrapper img {
             width: 100%;
             height: 100%;
             display: block;
         }
-
         .slider-footer {
             height: 80px;
             background-color: rgb(100, 67, 68);
             padding: 12px 12px 0 12px;
             position: relative;
         }
-
         .slider-footer .toggle {
             position: absolute;
             right: 0;
             top: 12px;
             display: flex;
         }
-
         .slider-footer .toggle button {
             margin-right: 12px;
             width: 28px;
@@ -208,18 +187,15 @@
             border-radius: 4px;
             cursor: pointer;
         }
-
         .slider-footer .toggle button:hover {
             background: rgba(255, 255, 255, 0.2);
         }
-
         .slider-footer p {
             margin: 0;
             color: #fff;
             font-size: 18px;
             margin-bottom: 10px;
         }
-
         .slider-indicator {
             margin: 0;
             padding: 0;
@@ -227,7 +203,6 @@
             display: flex;
             align-items: center;
         }
-
         .slider-indicator li {
             width: 8px;
             height: 8px;
@@ -237,58 +212,44 @@
             opacity: 0.4;
             cursor: pointer;
         }
-
         .slider-indicator li.active {
             width: 12px;
             height: 12px;
             opacity: 1;
         }
-
         footer {
             transition: background-color 0.5s ease;
         }
-
         .hidden {
             display: none !important;
         }
-
         .visible {
             display: inline-block !important;
         }
-
         * {
             cursor: default !important;
         }
-
         .backrooms {
             color: #8b4513;
         }
-
         .backrooms:hover {
             color: #ff8000;
-        }
-    </style>
-    <style>
-        @media (max-width: 768px) {
+        }</style>
+    <style>        @media (max-width: 768px) {
             .line {
                 display: none;
             }
-
             .service-grid {
                 flex-direction: column;
             }
-
             .service-grid>div {
                 width: 100%;
                 margin-bottom: 20px;
             }
-
             h1 {
                 text-align: center;
             }
         }
-
-         
         :root {
             --gray-monochrome: 128, 128, 128;
             --pale-gray-monochrome: 240, 240, 240;
@@ -297,14 +258,11 @@
             --link-color: 53, 177, 164;
             --mono-font: 'Courier New', monospace;
         }
-
-         
         .top-bar {
             background-color: rgb(var(--gray-monochrome));
             padding: 0.5rem 1rem;
             margin-bottom: 1rem;
         }
-
         .top-bar ul {
             display: flex;
             align-items: center;
@@ -312,12 +270,10 @@
             padding: 0;
             list-style: none;
         }
-
         .top-bar ul li {
             position: relative;
             margin: 0 0.5rem;
         }
-
         .top-bar ul li a {
             color: rgb(var(--pale-gray-monochrome));
             text-decoration: none;
@@ -326,17 +282,14 @@
             transition: 300ms;
             font-family: var(--mono-font);
         }
-
         .top-bar ul li a:hover {
             color: rgb(var(--link-color));
             background-color: rgb(var(--white-monochrome));
         }
-
         .top-bar ul li:hover {
             color: rgb(var(--link-color));
             background-color: rgb(var(--white-monochrome));
         }
-
         .top-bar ul ul {
             display: none;
             position: absolute;
@@ -349,51 +302,41 @@
             top: 100%;
             left: 0;
         }
-
         .top-bar ul li:hover>ul {
             display: block;
         }
-
         .top-bar ul ul li {
             display: block !important;
             margin: 0.2rem 0;
         }
-
         .top-bar ul ul li.hidden {
             display: none !important;
         }
-
         .top-bar ul ul li a {
             color: rgb(var(--black-monochrome));
             padding: 0.3rem 0.5rem;
             width: 100%;
             box-sizing: border-box;
         }
-
         .top-bar ul ul li a:hover {
             color: rgb(var(--link-color));
             background-color: rgb(var(--white-monochrome));
         }
-
-         
         .mobile-top-bar {
             display: none;
             background-color: rgb(var(--gray-monochrome));
             padding: 0.5rem 1rem;
             margin-bottom: 1rem;
         }
-
         .mobile-top-bar .open-menu {
             text-align: center;
             margin-bottom: 0.5rem;
         }
-
         .mobile-top-bar .open-menu a {
             font-size: 24px;
             color: rgb(var(--pale-gray-monochrome));
             text-decoration: none;
         }
-
         .mobile-top-bar ul {
             display: none;
             background-color: rgb(var(--pale-gray-monochrome));
@@ -402,16 +345,13 @@
             padding: 0.5rem;
             margin: 0;
         }
-
         .mobile-top-bar ul.active {
             display: block;
         }
-
         .mobile-top-bar ul li {
             display: block;
             margin: 0.3rem 0;
         }
-
         .mobile-top-bar ul li a {
             color: rgb(var(--black-monochrome));
             padding: 0.3rem 0.5rem;
@@ -419,12 +359,10 @@
             text-decoration: none;
             transition: 300ms;
         }
-
         .mobile-top-bar ul li a:hover {
             color: rgb(var(--link-color));
             background-color: rgb(var(--white-monochrome));
         }
-
         .mobile-top-bar ul ul {
             display: block;
             position: static;
@@ -432,35 +370,27 @@
             padding: 0.5rem 0 0 1rem;
             margin: 0;
         }
-
         .mobile-top-bar ul ul li {
             display: block !important;
             margin: 0.2rem 0;
         }
-
         .mobile-top-bar ul ul li.hidden {
             display: none !important;
         }
-
         .navMenu {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
         }
-
-         
         @media (max-width: 768px) {
             .top-bar {
                 display: none;
             }
-
             .mobile-top-bar {
                 display: block;
             }
         }
-
-         
         .cookie-consent {
             position: fixed;
             bottom: 0;
@@ -476,11 +406,9 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-
         .cookie-consent.active {
             display: block;
         }
-
         .cookie-content {
             max-width: 1200px;
             margin: 0 auto;
@@ -489,7 +417,6 @@
             align-items: flex-start;
             flex-wrap: wrap;
         }
-
         .cookie-text {
             flex: 1;
             margin-right: 30px;
@@ -498,36 +425,30 @@
             max-height: 70vh;
             overflow-y: auto;
         }
-
         .cookie-text h3 {
             color: #ecf0f1;
             margin-bottom: 15px;
             font-size: 18px;
         }
-
         .cookie-text h4 {
             color: #bdc3c7;
             margin: 15px 0 10px 0;
             font-size: 16px;
         }
-
         .cookie-text ul {
             margin: 10px 0;
             padding-left: 20px;
         }
-
         .cookie-text li {
             margin-bottom: 8px;
             line-height: 1.5;
         }
-
         .cookie-buttons {
             display: flex;
             flex-direction: column;
             gap: 12px;
             min-width: 150px;
         }
-
         .cookie-btn {
             padding: 12px 24px;
             border: none;
@@ -538,29 +459,24 @@
             transition: all 0.3s ease;
             white-space: nowrap;
         }
-
         .cookie-accept {
             background: linear-gradient(135deg, #27ae60, #2ecc71);
             color: white;
         }
-
         .cookie-accept:hover {
             background: linear-gradient(135deg, #229954, #27ae60);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
         }
-
         .cookie-reject {
             background: linear-gradient(135deg, #e74c3c, #c0392b);
             color: white;
         }
-
         .cookie-reject:hover {
             background: linear-gradient(135deg, #c0392b, #a93226);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
         }
-
         .cookie-overlay {
             position: fixed;
             top: 0;
@@ -571,68 +487,56 @@
             z-index: 9999;
             display: none;
         }
-
         .cookie-overlay.active {
             display: block;
         }
-
         @keyframes slideUp {
             from {
                 transform: translateY(100%);
                 opacity: 0;
             }
-
             to {
                 transform: translateY(0);
                 opacity: 1;
             }
         }
-
         @media (max-width: 768px) {
             .cookie-content {
                 flex-direction: column;
                 text-align: left;
             }
-
             .cookie-text {
                 margin-right: 0;
                 margin-bottom: 20px;
                 font-size: 13px;
             }
-
             .cookie-buttons {
                 flex-direction: row;
                 justify-content: center;
                 width: 100%;
             }
-
             .cookie-btn {
                 padding: 10px 20px;
                 font-size: 13px;
                 flex: 1;
                 max-width: 150px;
             }
-
             .cookie-text h3 {
                 font-size: 16px;
             }
-
             .cookie-text h4 {
                 font-size: 14px;
             }
         }
-
         .cookie-btn {
             cursor: pointer !important;
         }
-
         #lang {
             position: absolute;
             top: 20px;
             right: 20px;
             z-index: 1000;
         }
-
         #languageSelect {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -650,26 +554,21 @@
             min-width: 120px;
             position: relative;
         }
-
         #languageSelect:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
             border-color: rgba(255, 255, 255, 0.5);
         }
-
         #languageSelect:focus {
             outline: none;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
         }
-
         #languageSelect option {
             background: #2c3e50;
             color: white;
             padding: 10px;
             font-size: 14px;
         }
-
-         
         #lang::after {
             content: "▼";
             position: absolute;
@@ -681,55 +580,75 @@
             pointer-events: none;
             z-index: 1001;
         }
-
-         
         @media (max-width: 768px) {
             #lang {
                 top: 15px;
                 right: 15px;
             }
-
             #languageSelect {
                 padding: 10px 35px 10px 15px;
                 font-size: 14px;
                 min-width: 100px;
             }
-
             #lang::after {
                 right: 12px;
                 font-size: 10px;
             }
         }
-
-         
         @keyframes languageSwitch {
             0% {
                 transform: scale(1);
             }
-
             50% {
                 transform: scale(1.05);
             }
-
             100% {
                 transform: scale(1);
             }
         }
-
         .language-switch-animation {
             animation: languageSwitch 0.3s ease;
-        }
-    </style>
-    <script>(function(){var pref="auto";try{var m=document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));if(m)pref=decodeURIComponent(m[1])||"auto"}catch(e){}var dark=pref==="dark"||pref==="auto"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",dark?"dark":"light");document.documentElement.setAttribute("data-theme-pref",pref)})();</script>
+        }</style>
+    <script>(function() {
+    var pref = "auto";
+    try {
+        var m = document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));
+        if (m) pref = decodeURIComponent(m[1]) || "auto";
+    } catch (e) {}
+    var dark = pref === "dark" || pref === "auto" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme-pref", pref);
+})();</script>
     <link rel="stylesheet" href="./assets/ziyit-theme.css">
 </head>
-
 <body>
-    <script>function Development(){const devLink=document.getElementById("development");if(devLink){devLink.addEventListener("click",function(e){e.preventDefault();disableAntidebug();setTimeout(()=>{const event=new KeyboardEvent("keydown",{key:"F12",code:"F12",keyCode:123,which:123,bubbles:true,cancelable:true});document.dispatchEvent(event);setTimeout(()=>{enableAntidebug()},1e3)},100);alert("开发者工具已临时启用，请在1秒内按F12")})}}document.addEventListener("DOMContentLoaded",Development);</script>
+    <script>function Development() {
+    const devLink = document.getElementById("development");
+    if (devLink) {
+        devLink.addEventListener("click", function(e) {
+            e.preventDefault();
+            disableAntidebug();
+            setTimeout(() => {
+                const event = new KeyboardEvent("keydown", {
+                    key: "F12",
+                    code: "F12",
+                    keyCode: 123,
+                    which: 123,
+                    bubbles: true,
+                    cancelable: true
+                });
+                document.dispatchEvent(event);
+                setTimeout(() => {
+                    enableAntidebug();
+                }, 1e3);
+            }, 100);
+            alert("开发者工具已临时启用，请在1秒内按F12");
+        });
+    }
+}
+document.addEventListener("DOMContentLoaded", Development);</script>
     <h1>ZIYIT主页</h1>
-
     <hr>
-    
     <div class="site-nav">
         <div class="site-nav-inner">
             <button type="button" class="site-nav-toggle" aria-label="展开菜单">☰</button>
@@ -775,7 +694,6 @@
             </ul>
         </div>
     </div>
-
     <div class="home-hero">
         <div class="slider">
             <div class="slider-wrapper">
@@ -808,7 +726,6 @@
             </ul>
         </aside>
     </div>
-
     <div style="margin: 30px auto; max-width: 1000px;" id="product">
         <h2 style="text-align: center; margin-bottom: 20px;">我们的产品与服务</h2>
         <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
@@ -829,7 +746,6 @@
             </div>
         </div>
     </div>
-
     <footer style="background: var(--ziyit-bg-card); border-top: 1px solid var(--ziyit-border); padding: 20px; margin-top: 50px;">
         <div style="max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap;">
             <div style="width: 300px; margin-bottom: 20px;">
@@ -851,8 +767,6 @@
         </div>
         <p class="tit">&copy;2026 ZIYIT <strong>版权所有，侵权必究</strong></p>
     </footer>
-
-    
     <div class="cookie-overlay" id="cookieOverlay"></div>
     <div class="cookie-consent" id="cookieConsent">
         <div class="cookie-content">
@@ -870,19 +784,397 @@
         </div>
     </div>
     </div>
-
-    <script>function initCookieConsent(){const cookieConsent=document.getElementById("cookieConsent");const cookieOverlay=document.getElementById("cookieOverlay");const cookieAccept=document.getElementById("cookieAccept");const cookieReject=document.getElementById("cookieReject");if(!cookieConsent||!cookieOverlay||!cookieAccept||!cookieReject){console.error("Cookie提示元素未找到");return}const cookieChoice=localStorage.getItem("Cookie");if(cookieChoice===null){setTimeout(()=>{cookieConsent.classList.add("active");cookieOverlay.classList.add("active");document.body.style.overflow="hidden";document.querySelectorAll("a, button, input, select, textarea").forEach(element=>{if(!element.classList.contains("cookie-btn")){element.style.pointerEvents="none"}})},1e3)}else{handleCookieChoice(cookieChoice)}cookieAccept.addEventListener("click",function(e){e.stopPropagation();console.log("接受按钮被点击");if(window.cookieManager){window.cookieManager.setCookieStatus(true)}else{localStorage.setItem("Cookie","True")}hideCookieConsent()});cookieReject.addEventListener("click",function(e){e.stopPropagation();console.log("拒绝按钮被点击");if(window.cookieManager){window.cookieManager.setCookieStatus(false)}else{localStorage.setItem("Cookie","False")}hideCookieConsent()});function hideCookieConsent(){cookieConsent.classList.remove("active");cookieOverlay.classList.remove("active");document.body.style.overflow="";document.querySelectorAll("a, button, input, select, textarea").forEach(element=>{element.style.pointerEvents=""})}function handleCookieChoice(choice){if(window.cookieManager){window.cookieManager.setCookieStatus(choice==="True")}}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",initCookieConsent)}else{initCookieConsent()}</script>
-
-    <script>const data=[{url:"./images/slider09.jpg",title:"ZIYIT添加学习界面。",color:"rgb(135, 206, 235)",link:""},{url:"./images/slider07.jpg",title:'我的世界_寒坤的哔哩哔哩是"我的世界寒坤"',color:"rgb(63, 44, 46)",link:"https://space.bilibili.com/3546981356013833"},{url:"./images/slider01.jpg",title:"登录界面大改，使用前必须登录",color:"rgb(0, 120, 212)",link:""},{url:"./images/slider02.jpg",title:"Backroom ZIYIT版详细Wiki",color:"rgb(72, 69, 60)",link:"./backrooms/"},{url:"./images/slider03.jpg",title:"修复了注册页面的bug",color:"rgb(67, 190, 255)",link:""},{url:"./images/asfl.png",title:"广告位招租",color:"rgb(0, 0, 0)",link:"mailto:ziyitstudio@qq.com"}];const img=document.querySelector(".slider-wrapper img");const p=document.querySelector(".slider-footer p");const footer=document.querySelector(".slider-footer");const next=document.querySelector(".next");let i=0;next.addEventListener("click",function(){i++;i=i%data.length;toggle()});const prev=document.querySelector(".prev");prev.addEventListener("click",function(){i--;if(i<0){i=data.length-1}toggle()});function toggle(){img.src=data[i].url;p.innerHTML=data[i].title;footer.style.backgroundColor=data[i].color;document.querySelector(".slider-indicator .active").classList.remove("active");document.querySelector(`.slider-indicator li:nth-child(${i+1})`).classList.add("active");img.onclick=function(){if(data[i].link){window.open(data[i].link,"_blank")}}}let timerId=setInterval(function(){next.click()},2500);const slider=document.querySelector(".slider");slider.addEventListener("mouseenter",function(){clearInterval(timerId)});slider.addEventListener("mouseleave",function(){if(timerId)clearInterval(timerId);timerId=setInterval(function(){next.click()},2500)});const lis=document.querySelectorAll(".slider-indicator li");lis.forEach(function(li,index){li.addEventListener("click",function(){i=index;toggle()})});</script>
-
-    <script>document.addEventListener("DOMContentLoaded",function(){const openMenuLink=document.querySelector(".mobile-top-bar .open-menu a");const mobileMenu=document.getElementById("mobile-menu");if(openMenuLink&&mobileMenu){openMenuLink.textContent="≡";openMenuLink.addEventListener("click",function(e){e.preventDefault();mobileMenu.classList.toggle("active")})}const mobileMenuItems=document.querySelectorAll("#mobile-menu > li");mobileMenuItems.forEach(item=>{const subMenu=item.querySelector("ul");if(subMenu){item.addEventListener("click",function(e){if(e.target.tagName==="A")return;e.stopPropagation();subMenu.style.display=subMenu.style.display==="block"?"none":"block"})}})});toggle();</script>
-
-    <script>function getCookie(name){const value=`; ${document.cookie}`;const parts=value.split(`; ${name}=`);if(parts.length===2)return decodeURIComponent(parts.pop().split(";").shift());return null}function getCurrentUser(){return ZIYIT_API.getToken()||null}function isLoggedIn(){return!!(getCurrentUser()||ZIYIT_API.getCredentials&&ZIYIT_API.getCredentials())}async function checkBlacklist(authToken){return false}async function checkLoginStatus(){const navItems=document.querySelectorAll(".nav-item");const loginLink=document.getElementById("loginLink");const mobileLoginLink=document.getElementById("mobileLoginLink");const slider=document.querySelector(".slider");const lines=document.querySelectorAll(".line");function showLoggedOut(){navItems.forEach(item=>{if(item.textContent.includes("登录")){item.classList.add("visible");item.classList.remove("hidden")}else{item.classList.add("hidden");item.classList.remove("visible")}});lines.forEach(line=>line.style.display="none");loginLink.style.display="inline-block";if(mobileLoginLink)mobileLoginLink.style.display="inline-block";if(document.getElementById("userActionLink"))document.getElementById("userActionLink").style.display="none";if(document.getElementById("mobileUserActionLink"))document.getElementById("mobileUserActionLink").style.display="none"}const authToken=getCurrentUser();const hasCred=!!(ZIYIT_API.getCredentials&&ZIYIT_API.getCredentials());if(!authToken&&!hasCred){showLoggedOut();return}let meUser=null;let authError=null;try{meUser=await ZIYIT_API.currentUser()}catch(e){authError=e}if(!meUser){const invalidAuth=authError&&authError.status===401;if(invalidAuth){ZIYIT_API.clearToken()}else if(authToken&&!hasCred&&!ZIYIT_API.getRememberToken()){ZIYIT_API.clearToken()}showLoggedOut();return}if(document.getElementById("userActionLink"))document.getElementById("userActionLink").style.display="block";if(document.getElementById("mobileUserActionLink"))document.getElementById("mobileUserActionLink").style.display="block";const username=meUser.username||"";const ut=parseInt(localStorage.getItem("ut"))||0;if(ut>240&&(username==="cache"||username==="temp")){localStorage.setItem("ut",1024);ZIYIT_API.clearToken();location.reload();return}if(username==="cache"||username==="temp"){alert("此账号为临时账号，体验时间为3.75分钟");const timer=setInterval(()=>{let currentUt=parseInt(localStorage.getItem("ut"))||0;if(ut>240){if(currentUt>240){currentUt-=1;localStorage.setItem("ut",currentUt);if(currentUt===240){localStorage.setItem("ut",0);clearInterval(timer)}}}else{currentUt+=1;localStorage.setItem("ut",currentUt);if(currentUt+1>240){alert("体验时间已结束");ZIYIT_API.clearToken();location.reload();clearInterval(timer)}}},1e3)}else{localStorage.removeItem("ut")}loginLink.style.display="none";if(mobileLoginLink)mobileLoginLink.style.display="none";if(!authToken){navItems.forEach(item=>item.style.display="none");lines.forEach(line=>line.style.display="none");loginLink.style.display="inline-block";if(mobileLoginLink)mobileLoginLink.style.display="inline-block";return}const isBlacklisted=await checkBlacklist(authToken);if(isBlacklisted){document.querySelectorAll("#navMenu li").forEach(item=>{const isVirusDb=item.querySelector('a[href=".\\move\\mod"]');item.style.display=isVirusDb?"inline-block":"none"});document.querySelectorAll("#mobile-menu li").forEach(item=>{const isVirusDb=item.querySelector('a[href=".\\move\\mod"]');item.style.display=isVirusDb?"block":"none"});loginLink.style.display="none";if(mobileLoginLink)mobileLoginLink.style.display="none";if(slider)slider.style.display="none";document.querySelectorAll("footer").forEach(footer=>footer.style.display="none");document.getElementById("product").style.display="none";addBlacklistNotice();return}let adminLevelCache=null;setInterval(()=>{if(!getCurrentUser()){adminLevelCache=null;navItems.forEach(item=>{if(item.textContent.includes("登录")){item.classList.add("visible");item.classList.remove("hidden")}else{item.classList.add("hidden");item.classList.remove("visible")}});return}ZIYIT_API.currentUser().then(function(user){const isVip=ZIYIT_API.isVip(user);const uname=user.username||"";let isAdmin=adminLevelCache>0;if(adminLevelCache===null){isAdmin=false;ZIYIT_API.adminMe().then(function(me){adminLevelCache=me&&me.level?Number(me.level):0}).catch(function(){adminLevelCache=0})}loginLink.style.display="none";if(mobileLoginLink)mobileLoginLink.style.display="none";navItems.forEach(item=>{const role=item.getAttribute("data-role");if(String(user.userId)==="1"){if(role==="all"||role==="admin"||role==="adminstr"){item.classList.add("visible");item.classList.remove("hidden")}else{item.classList.add("hidden");item.classList.remove("visible")}}else{if(role==="all"||(isVip||isAdmin)&&role==="admin"||isAdmin&&role==="adminstr"||!isVip&&role==="user"){item.classList.add("visible");item.classList.remove("hidden")}else{item.classList.add("hidden");item.classList.remove("visible")}}const adminstrElements=item.querySelectorAll('[data-role="adminstr"]');adminstrElements.forEach(element=>{if(String(user.userId)==="1"||isAdmin){element.classList.add("visible");element.classList.remove("hidden")}else{element.classList.add("hidden");element.classList.remove("visible")}})});const mobileAdminstrElements=document.querySelectorAll('#mobile-menu [data-role="adminstr"]');mobileAdminstrElements.forEach(element=>{if(String(user.userId)==="1"||isAdmin){element.classList.add("visible");element.classList.remove("hidden")}else{element.classList.add("hidden");element.classList.remove("visible")}})}).catch(function(){if(getCurrentUser()&&!(ZIYIT_API.getCredentials&&ZIYIT_API.getCredentials())){ZIYIT_API.clearToken()}loginLink.style.display="inline-block";if(mobileLoginLink)mobileLoginLink.style.display="inline-block"})},250)}window.addEventListener("DOMContentLoaded",checkLoginStatus);</script>
-
-    
-
-    <script>function changeLanguage(lang){const select=document.getElementById("languageSelect");select.classList.add("language-switch-animation");setTimeout(()=>{select.classList.remove("language-switch-animation")},300);if(lang==="./"){alert("当前已是简体中文页面")}else if(lang==="./ikun/"){window.location.href=lang}}document.addEventListener("DOMContentLoaded",function(){const currentPath=window.location.pathname;const select=document.getElementById("languageSelect");if(currentPath.includes("/ikun/")){select.value="./ikun/"}else{select.value="./"}});</script>
+    <script>function initCookieConsent() {
+    const cookieConsent = document.getElementById("cookieConsent");
+    const cookieOverlay = document.getElementById("cookieOverlay");
+    const cookieAccept = document.getElementById("cookieAccept");
+    const cookieReject = document.getElementById("cookieReject");
+    if (!cookieConsent || !cookieOverlay || !cookieAccept || !cookieReject) {
+        console.error("Cookie提示元素未找到");
+        return;
+    }
+    const cookieChoice = localStorage.getItem("Cookie");
+    if (cookieChoice === null) {
+        setTimeout(() => {
+            cookieConsent.classList.add("active");
+            cookieOverlay.classList.add("active");
+            document.body.style.overflow = "hidden";
+            document.querySelectorAll("a, button, input, select, textarea").forEach(element => {
+                if (!element.classList.contains("cookie-btn")) {
+                    element.style.pointerEvents = "none";
+                }
+            });
+        }, 1e3);
+    } else {
+        handleCookieChoice(cookieChoice);
+    }
+    cookieAccept.addEventListener("click", function(e) {
+        e.stopPropagation();
+        console.log("接受按钮被点击");
+        if (window.cookieManager) {
+            window.cookieManager.setCookieStatus(true);
+        } else {
+            localStorage.setItem("Cookie", "True");
+        }
+        hideCookieConsent();
+    });
+    cookieReject.addEventListener("click", function(e) {
+        e.stopPropagation();
+        console.log("拒绝按钮被点击");
+        if (window.cookieManager) {
+            window.cookieManager.setCookieStatus(false);
+        } else {
+            localStorage.setItem("Cookie", "False");
+        }
+        hideCookieConsent();
+    });
+    function hideCookieConsent() {
+        cookieConsent.classList.remove("active");
+        cookieOverlay.classList.remove("active");
+        document.body.style.overflow = "";
+        document.querySelectorAll("a, button, input, select, textarea").forEach(element => {
+            element.style.pointerEvents = "";
+        });
+    }
+    function handleCookieChoice(choice) {
+        if (window.cookieManager) {
+            window.cookieManager.setCookieStatus(choice === "True");
+        }
+    }
+}
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCookieConsent);
+} else {
+    initCookieConsent();
+}</script>
+    <script>const data = [ {
+    url: "./images/slider09.jpg",
+    title: "ZIYIT添加学习界面。",
+    color: "rgb(135, 206, 235)",
+    link: ""
+}, {
+    url: "./images/slider07.jpg",
+    title: '我的世界_寒坤的哔哩哔哩是"我的世界寒坤"',
+    color: "rgb(63, 44, 46)",
+    link: "https://space.bilibili.com/3546981356013833"
+}, {
+    url: "./images/slider01.jpg",
+    title: "登录界面大改，使用前必须登录",
+    color: "rgb(0, 120, 212)",
+    link: ""
+}, {
+    url: "./images/slider02.jpg",
+    title: "Backroom ZIYIT版详细Wiki",
+    color: "rgb(72, 69, 60)",
+    link: "./backrooms/"
+}, {
+    url: "./images/slider03.jpg",
+    title: "修复了注册页面的bug",
+    color: "rgb(67, 190, 255)",
+    link: ""
+}, {
+    url: "./images/asfl.png",
+    title: "广告位招租",
+    color: "rgb(0, 0, 0)",
+    link: "mailto:ziyitstudio@qq.com"
+} ];
+const img = document.querySelector(".slider-wrapper img");
+const p = document.querySelector(".slider-footer p");
+const footer = document.querySelector(".slider-footer");
+const next = document.querySelector(".next");
+let i = 0;
+next.addEventListener("click", function() {
+    i++;
+    i = i % data.length;
+    toggle();
+});
+const prev = document.querySelector(".prev");
+prev.addEventListener("click", function() {
+    i--;
+    if (i < 0) {
+        i = data.length - 1;
+    }
+    toggle();
+});
+function toggle() {
+    img.src = data[i].url;
+    p.innerHTML = data[i].title;
+    footer.style.backgroundColor = data[i].color;
+    document.querySelector(".slider-indicator .active").classList.remove("active");
+    document.querySelector(`.slider-indicator li:nth-child(${i + 1})`).classList.add("active");
+    img.onclick = function() {
+        if (data[i].link) {
+            window.open(data[i].link, "_blank");
+        }
+    };
+}
+let timerId = setInterval(function() {
+    next.click();
+}, 2500);
+const slider = document.querySelector(".slider");
+slider.addEventListener("mouseenter", function() {
+    clearInterval(timerId);
+});
+slider.addEventListener("mouseleave", function() {
+    if (timerId) clearInterval(timerId);
+    timerId = setInterval(function() {
+        next.click();
+    }, 2500);
+});
+const lis = document.querySelectorAll(".slider-indicator li");
+lis.forEach(function(li, index) {
+    li.addEventListener("click", function() {
+        i = index;
+        toggle();
+    });
+});</script>
+    <script>document.addEventListener("DOMContentLoaded", function() {
+    const openMenuLink = document.querySelector(".mobile-top-bar .open-menu a");
+    const mobileMenu = document.getElementById("mobile-menu");
+    if (openMenuLink && mobileMenu) {
+        openMenuLink.textContent = "≡";
+        openMenuLink.addEventListener("click", function(e) {
+            e.preventDefault();
+            mobileMenu.classList.toggle("active");
+        });
+    }
+    const mobileMenuItems = document.querySelectorAll("#mobile-menu > li");
+    mobileMenuItems.forEach(item => {
+        const subMenu = item.querySelector("ul");
+        if (subMenu) {
+            item.addEventListener("click", function(e) {
+                if (e.target.tagName === "A") return;
+                e.stopPropagation();
+                subMenu.style.display = subMenu.style.display === "block" ? "none" : "block";
+            });
+        }
+    });
+});
+toggle();</script>
+    <script>function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return decodeURIComponent(parts.pop().split(";").shift());
+    return null;
+}
+function getCurrentUser() {
+    return ZIYIT_API.getToken() || null;
+}
+function isLoggedIn() {
+    return !!(getCurrentUser() || ZIYIT_API.getCredentials && ZIYIT_API.getCredentials());
+}
+async function checkBlacklist(authToken) {
+    return false;
+}
+async function checkLoginStatus() {
+    const navItems = document.querySelectorAll(".nav-item");
+    const loginLink = document.getElementById("loginLink");
+    const mobileLoginLink = document.getElementById("mobileLoginLink");
+    const slider = document.querySelector(".slider");
+    const lines = document.querySelectorAll(".line");
+    function showLoggedOut() {
+        navItems.forEach(item => {
+            if (item.textContent.includes("登录")) {
+                item.classList.add("visible");
+                item.classList.remove("hidden");
+            } else {
+                item.classList.add("hidden");
+                item.classList.remove("visible");
+            }
+        });
+        lines.forEach(line => line.style.display = "none");
+        loginLink.style.display = "inline-block";
+        if (mobileLoginLink) mobileLoginLink.style.display = "inline-block";
+        if (document.getElementById("userActionLink")) document.getElementById("userActionLink").style.display = "none";
+        if (document.getElementById("mobileUserActionLink")) document.getElementById("mobileUserActionLink").style.display = "none";
+    }
+    const authToken = getCurrentUser();
+    const hasCred = !!(ZIYIT_API.getCredentials && ZIYIT_API.getCredentials());
+    if (!authToken && !hasCred) {
+        showLoggedOut();
+        return;
+    }
+    let meUser = null;
+    let authError = null;
+    try {
+        meUser = await ZIYIT_API.currentUser();
+    } catch (e) {
+        authError = e;
+    }
+    if (!meUser) {
+        const invalidAuth = authError && authError.status === 401;
+        if (invalidAuth) {
+            ZIYIT_API.clearToken();
+        } else if (authToken && !hasCred && !ZIYIT_API.getRememberToken()) {
+            ZIYIT_API.clearToken();
+        }
+        showLoggedOut();
+        return;
+    }
+    if (document.getElementById("userActionLink")) document.getElementById("userActionLink").style.display = "block";
+    if (document.getElementById("mobileUserActionLink")) document.getElementById("mobileUserActionLink").style.display = "block";
+    const username = meUser.username || "";
+    const ut = parseInt(localStorage.getItem("ut")) || 0;
+    if (ut > 240 && (username === "cache" || username === "temp")) {
+        localStorage.setItem("ut", 1024);
+        ZIYIT_API.clearToken();
+        location.reload();
+        return;
+    }
+    if (username === "cache" || username === "temp") {
+        alert("此账号为临时账号，体验时间为3.75分钟");
+        const timer = setInterval(() => {
+            let currentUt = parseInt(localStorage.getItem("ut")) || 0;
+            if (ut > 240) {
+                if (currentUt > 240) {
+                    currentUt -= 1;
+                    localStorage.setItem("ut", currentUt);
+                    if (currentUt === 240) {
+                        localStorage.setItem("ut", 0);
+                        clearInterval(timer);
+                    }
+                }
+            } else {
+                currentUt += 1;
+                localStorage.setItem("ut", currentUt);
+                if (currentUt + 1 > 240) {
+                    alert("体验时间已结束");
+                    ZIYIT_API.clearToken();
+                    location.reload();
+                    clearInterval(timer);
+                }
+            }
+        }, 1e3);
+    } else {
+        localStorage.removeItem("ut");
+    }
+    loginLink.style.display = "none";
+    if (mobileLoginLink) mobileLoginLink.style.display = "none";
+    if (!authToken) {
+        navItems.forEach(item => item.style.display = "none");
+        lines.forEach(line => line.style.display = "none");
+        loginLink.style.display = "inline-block";
+        if (mobileLoginLink) mobileLoginLink.style.display = "inline-block";
+        return;
+    }
+    const isBlacklisted = await checkBlacklist(authToken);
+    if (isBlacklisted) {
+        document.querySelectorAll("#navMenu li").forEach(item => {
+            const isVirusDb = item.querySelector('a[href=".\\move\\mod"]');
+            item.style.display = isVirusDb ? "inline-block" : "none";
+        });
+        document.querySelectorAll("#mobile-menu li").forEach(item => {
+            const isVirusDb = item.querySelector('a[href=".\\move\\mod"]');
+            item.style.display = isVirusDb ? "block" : "none";
+        });
+        loginLink.style.display = "none";
+        if (mobileLoginLink) mobileLoginLink.style.display = "none";
+        if (slider) slider.style.display = "none";
+        document.querySelectorAll("footer").forEach(footer => footer.style.display = "none");
+        document.getElementById("product").style.display = "none";
+        addBlacklistNotice();
+        return;
+    }
+    let adminLevelCache = null;
+    setInterval(() => {
+        if (!getCurrentUser()) {
+            adminLevelCache = null;
+            navItems.forEach(item => {
+                if (item.textContent.includes("登录")) {
+                    item.classList.add("visible");
+                    item.classList.remove("hidden");
+                } else {
+                    item.classList.add("hidden");
+                    item.classList.remove("visible");
+                }
+            });
+            return;
+        }
+        ZIYIT_API.currentUser().then(function(user) {
+            const isVip = ZIYIT_API.isVip(user);
+            const uname = user.username || "";
+            let isAdmin = adminLevelCache > 0;
+            if (adminLevelCache === null) {
+                isAdmin = false;
+                ZIYIT_API.adminMe().then(function(me) {
+                    adminLevelCache = me && me.level ? Number(me.level) : 0;
+                }).catch(function() {
+                    adminLevelCache = 0;
+                });
+            }
+            loginLink.style.display = "none";
+            if (mobileLoginLink) mobileLoginLink.style.display = "none";
+            navItems.forEach(item => {
+                const role = item.getAttribute("data-role");
+                if (String(user.userId) === "1") {
+                    if (role === "all" || role === "admin" || role === "adminstr") {
+                        item.classList.add("visible");
+                        item.classList.remove("hidden");
+                    } else {
+                        item.classList.add("hidden");
+                        item.classList.remove("visible");
+                    }
+                } else {
+                    if (role === "all" || (isVip || isAdmin) && role === "admin" || isAdmin && role === "adminstr" || !isVip && role === "user") {
+                        item.classList.add("visible");
+                        item.classList.remove("hidden");
+                    } else {
+                        item.classList.add("hidden");
+                        item.classList.remove("visible");
+                    }
+                }
+                const adminstrElements = item.querySelectorAll('[data-role="adminstr"]');
+                adminstrElements.forEach(element => {
+                    if (String(user.userId) === "1" || isAdmin) {
+                        element.classList.add("visible");
+                        element.classList.remove("hidden");
+                    } else {
+                        element.classList.add("hidden");
+                        element.classList.remove("visible");
+                    }
+                });
+            });
+            const mobileAdminstrElements = document.querySelectorAll('#mobile-menu [data-role="adminstr"]');
+            mobileAdminstrElements.forEach(element => {
+                if (String(user.userId) === "1" || isAdmin) {
+                    element.classList.add("visible");
+                    element.classList.remove("hidden");
+                } else {
+                    element.classList.add("hidden");
+                    element.classList.remove("visible");
+                }
+            });
+        }).catch(function() {
+            if (getCurrentUser() && !(ZIYIT_API.getCredentials && ZIYIT_API.getCredentials())) {
+                ZIYIT_API.clearToken();
+            }
+            loginLink.style.display = "inline-block";
+            if (mobileLoginLink) mobileLoginLink.style.display = "inline-block";
+        });
+    }, 250);
+}
+window.addEventListener("DOMContentLoaded", checkLoginStatus);</script>
+    <script>function changeLanguage(lang) {
+    const select = document.getElementById("languageSelect");
+    select.classList.add("language-switch-animation");
+    setTimeout(() => {
+        select.classList.remove("language-switch-animation");
+    }, 300);
+    if (lang === "./") {
+        alert("当前已是简体中文页面");
+    } else if (lang === "./ikun/") {
+        window.location.href = lang;
+    }
+}
+document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    const select = document.getElementById("languageSelect");
+    if (currentPath.includes("/ikun/")) {
+        select.value = "./ikun/";
+    } else {
+        select.value = "./";
+    }
+});</script>
 <script src="./assets/ziyit-theme.js"></script>
 </body>
-
 </html>

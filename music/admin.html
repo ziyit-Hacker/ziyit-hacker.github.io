@@ -1,25 +1,30 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <title>音乐管理系统 - 管理员后台</title>
     <meta name="robots" content="noindex, nofollow">
     <meta name="description" content="ZIYIT 管理员后台，请勿公开分享。">
     <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
-    
     <script src="../assets/blacklist.js"></script>
     <script src="../assets/xss_guard.js?v=20261114"></script>
-    <script src="../assets/ziyit_api.js?v=20261114b"></script>
+    <script src="../assets/ziyit_api.js?v=20261115a"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./admin.css">
-    <script>(function(){var pref="auto";try{var m=document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));if(m)pref=decodeURIComponent(m[1])||"auto"}catch(e){}var dark=pref==="dark"||pref==="auto"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",dark?"dark":"light");document.documentElement.setAttribute("data-theme-pref",pref)})();</script>
+    <script>(function() {
+    var pref = "auto";
+    try {
+        var m = document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));
+        if (m) pref = decodeURIComponent(m[1]) || "auto";
+    } catch (e) {}
+    var dark = pref === "dark" || pref === "auto" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme-pref", pref);
+})();</script>
     <link rel="stylesheet" href="../assets/ziyit-theme.css">
 </head>
-
 <body>
     <div class="admin-container">
-        
         <header class="admin-header">
             <div class="header-top">
                 <h1 class="admin-title">音乐管理系统</h1>
@@ -50,10 +55,7 @@
                 </div>
             </div>
         </header>
-
-        
         <div class="admin-content">
-            
             <aside class="sidebar">
                 <ul class="sidebar-menu">
                     <li class="menu-item active" data-section="music-management" data-level="1">
@@ -124,22 +126,16 @@
                     </li>
                 </ul>
             </aside>
-
-            
             <main class="main-content">
-                
                 <section id="music-management" class="content-section active">
-                    
                     <section class="music-player-admin">
                         <div class="player-header">
                             <h2 class="player-title">音乐播放控制</h2>
                             <div class="player-status" id="player-status">暂停中</div>
                         </div>
-
                         <div class="player-info">
                             <div class="current-song" id="current-song">请选择一首歌曲</div>
                         </div>
-
                         <div class="progress-container">
                             <span class="time-display" id="current-time">00:00</span>
                             <div class="progress-bar">
@@ -147,17 +143,13 @@
                             </div>
                             <span class="time-display" id="total-time">00:00</span>
                         </div>
-
                         <div class="player-controls">
                             <button class="control-btn" id="prev-btn">◀◀</button>
                             <button class="control-btn" id="play-btn">▶</button>
                             <button class="control-btn" id="next-btn">▶▶</button>
                         </div>
-
                         <audio id="audio-player" preload="metadata"></audio>
                     </section>
-
-                    
                     <section class="lyrics-admin">
                         <div class="lyrics-header">
                             <span>歌词内容</span>
@@ -196,8 +188,6 @@
                             </div>
                         </div>
                     </section>
-
-                    
                     <section class="music-list-admin">
                         <div class="list-header">
                             <h2>音乐库管理</h2>
@@ -212,24 +202,19 @@
                             </div>
                         </div>
                         <div class="music-items" id="music-list">
-                            
                         </div>
                     </section>
                 </section>
-
-                
                 <section id="user-management" class="content-section">
                     <div class="section-header">
                         <h2>用户管理</h2>
                         <button class="user-btn success" id="add-user-btn">添加用户</button>
                     </div>
-
                     <div class="user-controls">
                         <input type="text" class="user-search" id="user-search" placeholder="搜索用户名 / ID / IP / 角色 / 状态...">
                         <button class="user-btn" id="refresh-users">刷新列表</button>
                         <button class="user-btn danger" id="export-users">导出数据</button>
                     </div>
-
                     <div class="user-stats">
                         <div class="user-stat-card">
                             <div class="user-stat-number" id="total-users">0</div>
@@ -252,7 +237,6 @@
                             <div class="user-stat-label">黑名单用户</div>
                         </div>
                     </div>
-
                     <div class="user-list" id="user-list">
                         <div class="skeleton-list">
                             <div class="skeleton-row">
@@ -289,7 +273,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="ip-manage">
                         <div class="section-header">
                             <h2>IP 封禁管理</h2>
@@ -313,8 +296,6 @@
                         </div>
                     </div>
                 </section>
-
-                
                 <section id="api-key-management" class="content-section">
                     <div class="section-header">
                         <h2>API Key 管理</h2>
@@ -361,8 +342,6 @@
                         </div>
                     </div>
                 </section>
-
-                
                 <section id="pricing-management" class="content-section">
                     <div class="section-header">
                         <h2>定价管理</h2>
@@ -384,7 +363,6 @@
                         </div>
                     </div>
                 </section>
-
                 <section id="ai-pricing-management" class="content-section">
                     <div class="section-header">
                         <h2>AI 工具权重</h2>
@@ -403,7 +381,6 @@
                         </div>
                     </div>
                 </section>
-
                 <section id="injection-management" class="content-section">
                     <div class="section-header">
                         <h2>防注入检测</h2>
@@ -413,7 +390,6 @@
                         </div>
                     </div>
                     <p class="user-del-date" id="injection-meta" style="display:block;margin-bottom:16px;"></p>
-
                     <div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">
                         <h3 style="margin:0 0 6px;color:var(--primary-color);">模型版本</h3>
                         <p style="margin:0 0 12px;font-size:12px;color:var(--secondary-color);">
@@ -429,7 +405,6 @@
                         </div>
                         <div id="injection-model" style="margin-top:10px;font-size:12px;color:var(--secondary-color);"></div>
                     </div>
-
                     <div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">
                         <h3 style="margin:0 0 6px;color:var(--primary-color);">定价配置</h3>
                         <p style="margin:0 0 12px;font-size:12px;color:var(--secondary-color);">这里只是防注入检测的计费单价；扣的是与人机验证共用的同一份点数。</p>
@@ -445,7 +420,6 @@
                         </div>
                         <div id="injection-pricing-meta" style="margin-top:10px;font-size:12px;color:var(--secondary-color);"></div>
                     </div>
-
                     <div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">
                         <h3 style="margin:0 0 12px;color:var(--primary-color);">用量统计与消费报表</h3>
                         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
@@ -480,7 +454,6 @@
                             <button class="user-btn" id="query-injection-report">查询</button>
                         </div>
                     </div>
-
                     <div id="injection-report-panel">
                         <div class="skeleton-list">
                             <div class="skeleton-row">
@@ -492,8 +465,6 @@
                         </div>
                     </div>
                 </section>
-
-                
                 <section id="mod-management" class="content-section">
                     <div class="section-header">
                         <h2>MOD / DLC 管理</h2>
@@ -550,8 +521,6 @@
                         </div>
                     </div>
                 </section>
-
-                
                 <section id="rc-key-management" class="content-section">
                     <div class="section-header">
                         <h2>RC 软件密钥管理</h2>
@@ -597,7 +566,6 @@
                         </div>
                     </div>
                 </section>
-
                 <section id="rc-bug-management" class="content-section">
                     <div class="section-header">
                         <h2>RC BUG 反馈管理</h2>
@@ -609,7 +577,6 @@
                     </div>
                     <div class="user-list" id="rc-bug-list"></div>
                 </section>
-
                 <section id="rcu-management" class="content-section">
                     <div class="section-header">
                         <h2>RCU 更新管理</h2>
@@ -621,7 +588,6 @@
                         发布 / 查看 RC 在线更新包（Lv.3+）。包内 manifest.json.version 必须与填写的版本号一致；
                         sha256 留空会由浏览器按所选文件自动计算。撤销后 RC 客户端不会再安装该版本。
                     </p>
-
                     <div style="background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
                         <h3 style="margin: 0 0 10px; font-size: 15px;">发布更新包</h3>
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
@@ -640,12 +606,10 @@
                         </div>
                         <div id="rcu-publish-status" style="margin-top: 8px; font-size: 12px; color: var(--ziyit-text-secondary);"></div>
                     </div>
-
                     <div class="user-controls">
                         <input type="text" class="user-search" id="rcu-search" placeholder="搜索版本 / 渠道...">
                     </div>
                     <div class="user-list" id="rcu-list"><div class="skeleton-list"><div class="skeleton-row"><div class="sk-block sk-line" style="width:80%"></div></div></div></div>
-
                     <div class="section-header" style="margin-top: 20px;">
                         <h2 style="font-size: 16px;">已撤销版本</h2>
                     </div>
@@ -658,8 +622,6 @@
                     </div>
                     <div class="user-list" id="rcu-revoked-list"></div>
                 </section>
-
-                
                 <section id="afdian-management" class="content-section">
                     <div class="section-header">
                         <h2>爱发电订单</h2>
@@ -672,7 +634,6 @@
                         爱发电订单台账（Lv.3+）。已付款但<b>没发货</b>的订单会标出原因，可用下方「扫单补发」或「按订单号补发」处理。<br>
                         补发是幂等的：<b>同一订单号只会发一次</b>，已入账的会跳过。
                     </p>
-
                     <div class="user-stats">
                         <div class="user-stat-card">
                             <div class="user-stat-number" id="afdian-total-orders">0</div>
@@ -695,7 +656,6 @@
                             <div class="user-stat-label">已过期 VIP</div>
                         </div>
                     </div>
-
                     <div style="border: 1px solid var(--ziyit-border); border-radius: 10px; padding: 14px; margin: 4px 0 16px;">
                         <div style="font-weight: 600; margin-bottom: 8px;">查单补发（Webhook 漏收时用）</div>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
@@ -711,7 +671,6 @@
                         </div>
                         <p id="afdian-reconcile-result" style="display: none; margin-top: 10px; font-size: 13px; line-height: 1.8;"></p>
                     </div>
-
                     <div class="user-controls">
                         <input type="text" class="user-search" id="afdian-search" placeholder="搜索订单号 / 用户 / 备注 / 方案 ID...">
                         <select class="user-search" id="afdian-filter" style="max-width: 180px;">
@@ -732,35 +691,29 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="section-header" style="margin: 20px 0 10px;">
                         <h3>VIP 到期状态（<span id="afdian-vip-count">0</span>）</h3>
                     </div>
                     <div class="user-list" id="afdian-vip-list"></div>
                 </section>
-
                 <section id="system-settings" class="content-section">
                     <div class="section-header">
                         <h2>系统设置</h2>
                     </div>
                     <p>系统设置功能开发中...</p>
                 </section>
-
                 <section id="log-viewer" class="content-section">
                     <div class="section-header">
                         <h2>日志查看</h2>
                     </div>
                     <p>日志查看功能开发中...</p>
                 </section>
-
                 <section id="permission-management" class="content-section">
                     <div class="section-header">
                         <h2>权限管理</h2>
                     </div>
                     <p>权限管理功能开发中...</p>
                 </section>
-
-                
                 <section id="admin-management" class="content-section">
                     <div class="section-header">
                         <h2>管理员管理</h2>
@@ -794,8 +747,6 @@
                         </div>
                     </div>
                 </section>
-
-                
                 <section id="knowledge-management" class="content-section">
                     <div class="section-header">
                         <h2>知识库管理</h2>
@@ -808,7 +759,6 @@
                         <span>条目总数：<b id="kb-total">0</b></span>
                         <span class="kb-meta-tip">改完即生效（无需发布）；只写覆盖层、不改原 markdown</span>
                     </div>
-
                     <div class="kb-level-tabs" id="kb-level-tabs">
                         <button type="button" class="kb-tab active" data-kblevel="all">全部 <span class="kb-count" data-kbcount="all">0</span></button>
                         <button type="button" class="kb-tab" data-kblevel="0">公开 <span class="kb-count" data-kbcount="0">0</span></button>
@@ -817,7 +767,6 @@
                         <button type="button" class="kb-tab" data-kblevel="3">Lv.3+ <span class="kb-count" data-kbcount="3">0</span></button>
                         <button type="button" class="kb-tab" data-kblevel="4">Lv.4 <span class="kb-count" data-kbcount="4">0</span></button>
                     </div>
-
                     <div class="kb-subtabs" id="kb-subtabs">
                         <button type="button" class="kb-subtab active" data-kbtab="entries">条目总表</button>
                         <button type="button" class="kb-subtab" data-kbtab="tree">目录树</button>
@@ -827,8 +776,6 @@
                         <button type="button" class="kb-subtab" data-kbtab="ask">模拟提问</button>
                         <button type="button" class="kb-subtab" data-kbtab="edit">编辑与恢复</button>
                     </div>
-
-                    
                     <div class="kb-pane active" id="kb-pane-entries">
                         <div class="user-controls">
                             <input type="text" class="user-search" id="kb-entries-q" placeholder="按标题（key）搜索...">
@@ -855,13 +802,9 @@
                             </table>
                         </div>
                     </div>
-
-                    
                     <div class="kb-pane" id="kb-pane-tree">
                         <div class="kb-tree" id="kb-tree"></div>
                     </div>
-
-                    
                     <div class="kb-pane" id="kb-pane-search">
                         <div class="user-controls">
                             <input type="text" class="user-search" id="kb-search-q" placeholder="跨标题与正文内容搜索关键词...">
@@ -879,8 +822,6 @@
                         </div>
                         <div id="kb-search-results"></div>
                     </div>
-
-                    
                     <div class="kb-pane" id="kb-pane-compare">
                         <div class="user-controls">
                             <select class="form-select kb-pick" id="kb-compare-key"></select>
@@ -890,8 +831,6 @@
                         <div class="kb-compare-head">状态：<span id="kb-compare-state">-</span></div>
                         <div class="kb-compare" id="kb-compare"></div>
                     </div>
-
-                    
                     <div class="kb-pane" id="kb-pane-preview">
                         <div class="kb-level-tabs kb-level-tabs-inline" id="kb-preview-tabs">
                             <button type="button" class="kb-tab active" data-pvlevel="0">公开</button>
@@ -907,8 +846,6 @@
                         <div class="kb-titles" id="kb-pv-titles"></div>
                         <pre class="kb-pre" id="kb-pv-text"></pre>
                     </div>
-
-                    
                     <div class="kb-pane" id="kb-pane-ask">
                         <div class="user-controls">
                             <input type="text" class="user-search" id="kb-ask-q" placeholder="输入用户可能问的一句话，看 AI 真正会拿到那几段...">
@@ -926,8 +863,6 @@
                         <div class="kb-ask-meta" id="kb-ask-meta"></div>
                         <pre class="kb-pre" id="kb-ask-matched"></pre>
                     </div>
-
-                    
                     <div class="kb-pane" id="kb-pane-edit">
                         <div class="user-controls">
                             <select class="form-select kb-pick" id="kb-edit-key"></select>
@@ -979,8 +914,6 @@
                         <div class="kb-hint" id="kb-edit-hint"></div>
                     </div>
                 </section>
-
-                
                 <section id="guide-console" class="content-section">
                     <div class="section-header">
                         <h2>在线客服</h2>
@@ -1025,7 +958,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div id="guide-agents-panel" class="guide-agents-panel"
                         style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08);">
                         <div class="section-header" style="margin-bottom:10px;">
@@ -1049,8 +981,6 @@
                         <p style="padding:6px 2px; color:var(--ziyit-text-secondary); font-size:12px;">说明：仅名单内客服可接收/回复转人工消息（超级管理员自动兜底）。转人工优先分配给在线客服。</p>
                     </div>
                 </section>
-
-                
                 <section id="pentest-management" class="content-section">
                     <div class="section-header">
                         <h2>渗透测试管理</h2>
@@ -1063,7 +993,6 @@
                         所有管理员（Lv.1+）都可以查看；<b>分配 / 审批 / 驳回 / 重置 / 吊销 / 派任务只给站长</b>，其他管理员只读（后端同样会挡，非站长拿到 403）。<br>
                         分配 / 审批 / 重置产生的初始密码<b>只显示这一次</b>，请立刻转交给测试者。
                     </p>
-
                     <div id="pentest-assign-box" style="display: none; border: 1px solid var(--ziyit-border); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
                         <div style="font-weight: 600; margin-bottom: 8px;">站长直接分配（不必先走申请）</div>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
@@ -1073,7 +1002,6 @@
                             <button class="user-btn success" id="pentest-assign-btn">分配账号</button>
                         </div>
                     </div>
-
                     <div class="section-header" style="margin-bottom: 10px;">
                         <h3>编号（<span id="pentest-code-count">0</span>）</h3>
                     </div>
@@ -1081,7 +1009,6 @@
                         <input type="text" class="user-search" id="pentest-code-search" placeholder="搜索编号 / 测试账号 / 申请人...">
                     </div>
                     <div class="user-list" id="pentest-code-list"></div>
-
                     <div class="section-header" style="margin: 20px 0 10px;">
                         <h3>申请记录</h3>
                     </div>
@@ -1090,7 +1017,6 @@
                     </div>
                     <div class="user-list" id="pentest-app-list"></div>
                 </section>
-
                 <section id="backrooms-members" class="content-section">
                     <div class="section-header">
                         <h2>后室成员管理</h2>
@@ -1119,7 +1045,6 @@
                     </div>
                     <p style="padding: 8px 2px; color: var(--ziyit-text-secondary); font-size: 13px;">Adminstrator 类型成员不可编辑、不可删除（仅 Lv.3+ 可添加/删除成员，可修改 Admin/Member 类型）。</p>
                 </section>
-
                 <section id="report-management" class="content-section">
                     <div class="section-header">
                         <h2>举报审核</h2>
@@ -1168,7 +1093,6 @@
                         </div>
                     </div>
                 </section>
-
                 <section id="email-broadcast" class="content-section">
                     <div class="section-header">
                         <h2>官方邮件群发</h2>
@@ -1181,7 +1105,6 @@
                         仅 Lv.3+ 可用。单次最多 500 人，每管理员每小时上限 2000 人；发送为后台逐封进行，返回的 count 只是入队数，不代表已全部送达。
                         正文 HTML 会被清洗（<code>&lt;script&gt;</code> / <code>on*</code> / <code>javascript:</code> 会被剔除）。
                     </p>
-
                     <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
                         <h3 style="margin: 0 0 12px; color: var(--primary-color);">1. 收件人</h3>
                         <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
@@ -1250,7 +1173,6 @@
                             <textarea class="form-input" id="email-broadcast-userids" rows="3" placeholder="1, 2, 3"></textarea>
                         </div>
                     </div>
-
                     <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
                         <h3 style="margin: 0 0 12px; color: var(--primary-color);">2. 内容</h3>
                         <div class="form-group">
@@ -1275,14 +1197,12 @@
                             <textarea class="form-input" id="email-broadcast-css" rows="2" placeholder=".card{border-radius:12px;}"></textarea>
                         </div>
                     </div>
-
                     <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
                         <h3 style="margin: 0 0 12px; color: var(--primary-color);">3. 预览</h3>
                         <p id="email-broadcast-meta" style="margin: 0 0 10px; color: var(--ziyit-text-secondary); font-size: 13px;">尚未预览</p>
                         <iframe id="email-broadcast-preview-frame" title="邮件预览" sandbox style="width: 100%; height: 420px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff;"></iframe>
                     </div>
                 </section>
-
                 <section id="account-create" class="content-section">
                     <div class="section-header">
                         <h2>创建账号</h2>
@@ -1322,12 +1242,8 @@
                         <p id="ac-status" style="margin: 12px 0 0; font-size: 13px; color: var(--ziyit-text-secondary);">填写后点击「创建账号」。</p>
                     </div>
                 </section>
-
-                
             </main>
         </div>
-
-        
         <footer class="system-info">
             <div class="info-grid">
                 <div class="info-item">
@@ -1357,8 +1273,6 @@
             </div>
         </footer>
     </div>
-
-    
     <div class="email-gate" id="email-verify-gate">
         <div class="email-gate-card">
             <h2>需要完成邮箱验证</h2>
@@ -1373,8 +1287,6 @@
             </div>
         </div>
     </div>
-
-    
     <div class="modal" id="user-modal">
         <div class="modal-content">
             <div class="modal-header" id="modal-title">编辑用户</div>
@@ -1406,8 +1318,6 @@
             </form>
         </div>
     </div>
-
-    
     <div class="modal" id="add-user-modal">
         <div class="modal-content">
             <div class="modal-header">添加用户</div>
@@ -1431,8 +1341,6 @@
             </form>
         </div>
     </div>
-
-    
     <div class="modal" id="delete-user-modal">
         <div class="modal-content">
             <div class="modal-header">删除用户</div>
@@ -1448,8 +1356,6 @@
             </div>
         </div>
     </div>
-
-    
     <div class="modal" id="login-history-modal">
         <div class="modal-content">
             <div class="modal-header">登录记录</div>
@@ -1462,8 +1368,6 @@
             </div>
         </div>
     </div>
-
-    
     <div class="modal" id="dlc-modal">
         <div class="modal-content">
             <div class="modal-header">DLC 管理</div>
@@ -1483,8 +1387,6 @@
             </div>
         </div>
     </div>
-
-    
     <div class="modal" id="api-key-modal">
         <div class="modal-content">
             <div class="modal-header">创建 API Key</div>
@@ -1513,8 +1415,6 @@
             </div>
         </div>
     </div>
-
-    
     <div class="modal" id="api-key-edit-modal">
         <div class="modal-content" style="max-height:92vh;overflow-y:auto;">
             <div class="modal-header">编辑 API Key</div>
@@ -1573,8 +1473,6 @@
             </div>
         </div>
     </div>
-
-    
     <div class="modal" id="mod-modal">
         <div class="modal-content">
             <div class="modal-header" id="mod-modal-title">添加 MOD</div>
@@ -1611,8 +1509,6 @@
             </div>
         </div>
     </div>
-
-    
     <div class="modal" id="key-add-modal">
         <div class="modal-content">
             <div class="modal-header" id="key-add-title">添加 RC 软件密钥</div>
@@ -1643,8 +1539,6 @@
             </div>
         </div>
     </div>
-
-    
     <div class="modal" id="admin-add-modal">
         <div class="modal-content">
             <div class="modal-header">添加管理员</div>
@@ -1666,8 +1560,6 @@
             </div>
         </div>
     </div>
-
-    
     <div class="modal" id="admin-edit-modal">
         <div class="modal-content">
             <div class="modal-header">编辑管理员</div>
@@ -1690,9 +1582,6 @@
             </div>
         </div>
     </div>
-
-    
-    
     <div class="modal" id="add-backrooms-member-modal">
         <div class="modal-content">
             <div class="modal-header">添加后室成员</div>
@@ -1718,8 +1607,6 @@
             </div>
         </div>
     </div>
-
-    
     <div class="modal" id="ai-reset-modal">
         <div class="modal-content">
             <div class="modal-header">恢复到默认</div>
@@ -1754,7 +1641,6 @@
             </div>
         </div>
     </div>
-
     <div class="modal" id="promote-user-modal">
         <div class="modal-content">
             <div class="modal-header">升级用户</div>
@@ -1780,8 +1666,6 @@
             </div>
         </div>
     </div>
-
-    
     <div class="modal" id="admin-chat-modal">
         <div class="modal-content chat-modal-content">
             <div class="modal-header chat-modal-header">
@@ -1802,8 +1686,6 @@
             </div>
         </div>
     </div>
-
-    
     <div class="modal" id="admin-broadcast-modal">
         <div class="modal-content">
             <div class="modal-header">全局消息</div>
@@ -1822,7 +1704,6 @@
             </div>
         </div>
     </div>
-
     <div class="modal" id="pentest-password-modal">
         <div class="modal-content">
             <div class="modal-header">初始密码（只显示一次）</div>
@@ -1850,7 +1731,6 @@
             </div>
         </div>
     </div>
-
     <div class="modal" id="report-resolve-modal">
         <div class="modal-content">
             <div class="modal-header">处理举报</div>
@@ -1876,12 +1756,10 @@
             </div>
         </div>
     </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
     <script src="./admin.js"></script>
 <script src="../assets/ziyit-theme.js"></script>
 </body>
-
 </html>

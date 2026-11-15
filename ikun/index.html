@@ -1,5 +1,4 @@
 <html>
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,42 +9,34 @@
     <script src="../assets/auto_f5.js"></script>
     <script src="../assets/Cookie.js"></script>
     <script src="../assets/xss_guard.js?v=20261114"></script>
-    <script src="../assets/ziyit_api.js?v=20261114b"></script>
-    <style>
-        * {
+    <script src="../assets/ziyit_api.js?v=20261115a"></script>
+    <style>        * {
             margin: 0px;
             padding: 0;
             list-style: none;
         }
-
         a {
             text-decoration: none;
             color: #66e656;
         }
-
         p {
             color: black;
         }
-
         ul li {
             display: inline-block;
             line-height: 35px;
         }
-
         li a {
             padding-left: 20px;
             padding-right: 20px;
         }
-
         li p {
             padding-left: 20px;
             padding-right: 20px;
         }
-
         .bid {
             color: #f25767;
         }
-
         .tit {
             color: black;
             position: fixed;
@@ -56,59 +47,49 @@
             background-color: rgba(255, 255, 255, 0.5);
             padding: 5px 0;
         }
-
         .line {
             width: 1px;
             height: 12px;
             background-color: #f3a707;
         }
-
         a:hover {
             color: #ff8000;
         }
-
         h1 {
             width: 100%;
             background-color: rgb(195, 234, 249);
             text-align: center;
             font-size: 50px;
         }
-
         * {
             box-sizing: border-box;
         }
-
         .slider {
             width: 560px;
             height: 400px;
             overflow: hidden;
         }
-
         .slider-wrapper {
             width: 100%;
             height: 320px;
         }
-
         .slider-wrapper img {
             width: 100%;
             height: 100%;
             display: block;
         }
-
         .slider-footer {
             height: 80px;
             background-color: rgb(100, 67, 68);
             padding: 12px 12px 0 12px;
             position: relative;
         }
-
         .slider-footer .toggle {
             position: absolute;
             right: 0;
             top: 12px;
             display: flex;
         }
-
         .slider-footer .toggle button {
             margin-right: 12px;
             width: 28px;
@@ -120,18 +101,15 @@
             border-radius: 4px;
             cursor: pointer;
         }
-
         .slider-footer .toggle button:hover {
             background: rgba(255, 255, 255, 0.2);
         }
-
         .slider-footer p {
             margin: 0;
             color: #fff;
             font-size: 18px;
             margin-bottom: 10px;
         }
-
         .slider-indicator {
             margin: 0;
             padding: 0;
@@ -139,7 +117,6 @@
             display: flex;
             align-items: center;
         }
-
         .slider-indicator li {
             width: 8px;
             height: 8px;
@@ -149,58 +126,44 @@
             opacity: 0.4;
             cursor: pointer;
         }
-
         .slider-indicator li.active {
             width: 12px;
             height: 12px;
             opacity: 1;
         }
-
         footer {
             transition: background-color 0.5s ease;
         }
-
         .hidden {
             display: none !important;
         }
-
         .visible {
             display: inline-block !important;
         }
-
         * {
             cursor: default !important;
         }
-
         .backrooms {
             color: #8b4513;
         }
-
         .backrooms:hover {
             color: #ff8000;
-        }
-    </style>
-    <style>
-        @media (max-width: 768px) {
+        }</style>
+    <style>        @media (max-width: 768px) {
             .line {
                 display: none;
             }
-
             .service-grid {
                 flex-direction: column;
             }
-
             .service-grid>div {
                 width: 100%;
                 margin-bottom: 20px;
             }
-
             h1 {
                 text-align: center;
             }
         }
-
-         
         :root {
             --gray-monochrome: 128, 128, 128;
             --pale-gray-monochrome: 240, 240, 240;
@@ -209,14 +172,11 @@
             --link-color: 53, 177, 164;
             --mono-font: 'Courier New', monospace;
         }
-
-         
         .top-bar {
             background-color: rgb(var(--gray-monochrome));
             padding: 0.5rem 1rem;
             margin-bottom: 1rem;
         }
-
         .top-bar ul {
             display: flex;
             align-items: center;
@@ -224,12 +184,10 @@
             padding: 0;
             list-style: none;
         }
-
         .top-bar ul li {
             position: relative;
             margin: 0 0.5rem;
         }
-
         .top-bar ul li a {
             color: rgb(var(--pale-gray-monochrome));
             text-decoration: none;
@@ -238,17 +196,14 @@
             transition: 300ms;
             font-family: var(--mono-font);
         }
-
         .top-bar ul li a:hover {
             color: rgb(var(--link-color));
             background-color: rgb(var(--white-monochrome));
         }
-
         .top-bar ul li:hover {
             color: rgb(var(--link-color));
             background-color: rgb(var(--white-monochrome));
         }
-
         .top-bar ul ul {
             display: none;
             position: absolute;
@@ -261,47 +216,38 @@
             top: 100%;
             left: 0;
         }
-
         .top-bar ul li:hover>ul {
             display: block;
         }
-
         .top-bar ul ul li {
             display: block;
             margin: 0.2rem 0;
         }
-
         .top-bar ul ul li a {
             color: rgb(var(--black-monochrome));
             padding: 0.3rem 0.5rem;
             width: 100%;
             box-sizing: border-box;
         }
-
         .top-bar ul ul li a:hover {
             color: rgb(var(--link-color));
             background-color: rgb(var(--white-monochrome));
         }
-
-         
         .mobile-top-bar {
             display: none;
             background-color: rgb(var(--gray-monochrome));
             padding: 0.5rem 1rem;
             margin-bottom: 1rem;
         }
-
         .mobile-top-bar .open-menu {
             text-align: center;
             margin-bottom: 0.5rem;
         }
-
         .mobile-top-bar .open-menu a {
             font-size: 24px;
             color: rgb(var(--pale-gray-monochrome));
             text-decoration: none;
         }
-
         .mobile-top-bar ul {
             display: none;
             background-color: rgb(var(--pale-gray-monochrome));
@@ -310,16 +256,13 @@
             padding: 0.5rem;
             margin: 0;
         }
-
         .mobile-top-bar ul.active {
             display: block;
         }
-
         .mobile-top-bar ul li {
             display: block;
             margin: 0.3rem 0;
         }
-
         .mobile-top-bar ul li a {
             color: rgb(var(--black-monochrome));
             padding: 0.3rem 0.5rem;
@@ -327,12 +270,10 @@
             text-decoration: none;
             transition: 300ms;
         }
-
         .mobile-top-bar ul li a:hover {
             color: rgb(var(--link-color));
             background-color: rgb(var(--white-monochrome));
         }
-
         .mobile-top-bar ul ul {
             display: block;
             position: static;
@@ -340,30 +281,23 @@
             padding: 0.5rem 0 0 1rem;
             margin: 0;
         }
-
         .mobile-top-bar ul ul li {
             margin: 0.2rem 0;
         }
-
         .navMenu {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
         }
-
-         
         @media (max-width: 768px) {
             .top-bar {
                 display: none;
             }
-
             .mobile-top-bar {
                 display: block;
             }
         }
-
-         
         .cookie-consent {
             position: fixed;
             bottom: 0;
@@ -379,11 +313,9 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-
         .cookie-consent.active {
             display: block;
         }
-
         .cookie-content {
             max-width: 1200px;
             margin: 0 auto;
@@ -392,7 +324,6 @@
             align-items: flex-start;
             flex-wrap: wrap;
         }
-
         .cookie-text {
             flex: 1;
             margin-right: 30px;
@@ -401,36 +332,30 @@
             max-height: 70vh;
             overflow-y: auto;
         }
-
         .cookie-text h3 {
             color: #ecf0f1;
             margin-bottom: 15px;
             font-size: 18px;
         }
-
         .cookie-text h4 {
             color: #bdc3c7;
             margin: 15px 0 10px 0;
             font-size: 16px;
         }
-
         .cookie-text ul {
             margin: 10px 0;
             padding-left: 20px;
         }
-
         .cookie-text li {
             margin-bottom: 8px;
             line-height: 1.5;
         }
-
         .cookie-buttons {
             display: flex;
             flex-direction: column;
             gap: 12px;
             min-width: 150px;
         }
-
         .cookie-btn {
             padding: 12px 24px;
             border: none;
@@ -441,29 +366,24 @@
             transition: all 0.3s ease;
             white-space: nowrap;
         }
-
         .cookie-accept {
             background: linear-gradient(135deg, #27ae60, #2ecc71);
             color: white;
         }
-
         .cookie-accept:hover {
             background: linear-gradient(135deg, #229954, #27ae60);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
         }
-
         .cookie-reject {
             background: linear-gradient(135deg, #e74c3c, #c0392b);
             color: white;
         }
-
         .cookie-reject:hover {
             background: linear-gradient(135deg, #c0392b, #a93226);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
         }
-
         .cookie-overlay {
             position: fixed;
             top: 0;
@@ -474,68 +394,56 @@
             z-index: 9999;
             display: none;
         }
-
         .cookie-overlay.active {
             display: block;
         }
-
         @keyframes slideUp {
             from {
                 transform: translateY(100%);
                 opacity: 0;
             }
-
             to {
                 transform: translateY(0);
                 opacity: 1;
             }
         }
-
         @media (max-width: 768px) {
             .cookie-content {
                 flex-direction: column;
                 text-align: left;
             }
-
             .cookie-text {
                 margin-right: 0;
                 margin-bottom: 20px;
                 font-size: 13px;
             }
-
             .cookie-buttons {
                 flex-direction: row;
                 justify-content: center;
                 width: 100%;
             }
-
             .cookie-btn {
                 padding: 10px 20px;
                 font-size: 13px;
                 flex: 1;
                 max-width: 150px;
             }
-
             .cookie-text h3 {
                 font-size: 16px;
             }
-
             .cookie-text h4 {
                 font-size: 14px;
             }
         }
-
         .cookie-btn {
             cursor: pointer !important;
         }
-
         #lang {
             position: absolute;
             top: 20px;
             right: 20px;
             z-index: 1000;
         }
-
         #languageSelect {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -553,26 +461,21 @@
             min-width: 120px;
             position: relative;
         }
-
         #languageSelect:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
             border-color: rgba(255, 255, 255, 0.5);
         }
-
         #languageSelect:focus {
             outline: none;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
         }
-
         #languageSelect option {
             background: #2c3e50;
             color: white;
             padding: 10px;
             font-size: 14px;
         }
-
-         
         #lang::after {
             content: "▼";
             position: absolute;
@@ -584,60 +487,111 @@
             pointer-events: none;
             z-index: 1001;
         }
-
-         
         @media (max-width: 768px) {
             #lang {
                 top: 15px;
                 right: 15px;
             }
-
             #languageSelect {
                 padding: 10px 35px 10px 15px;
                 font-size: 14px;
                 min-width: 100px;
             }
-
             #lang::after {
                 right: 12px;
                 font-size: 10px;
             }
         }
-
-         
         @keyframes languageSwitch {
             0% {
                 transform: scale(1);
             }
-
             50% {
                 transform: scale(1.05);
             }
-
             100% {
                 transform: scale(1);
             }
         }
-
         .language-switch-animation {
             animation: languageSwitch 0.3s ease;
-        }
-    </style>
+        }</style>
 </head>
-
 <body background="../assets/bg.jpg" style=" background-repeat:no-repeat ;
         background-size:100% 100%;
         background-attachment: fixed;">
-    <script>function Development(){const devLink=document.getElementById("development");if(devLink){devLink.addEventListener("click",function(e){e.preventDefault();disableF12Check();setTimeout(()=>{const event=new KeyboardEvent("keydown",{key:"F12",code:"F12",keyCode:123,which:123,bubbles:true,cancelable:true});document.dispatchEvent(event);setTimeout(()=>{enableF12Check()},1e3)},100);alert("Ctl`农只`酷奶`酷奶`只`哈基战`酷耶c`哦^ 农只`战`1泥潭`米浮ス木`只`F12`哦^")})}}function disableF12Check(){document.removeEventListener("keydown",window.f12CheckKeydownHandler);document.removeEventListener("contextmenu",window.f12CheckContextmenuHandler);if(window.originalConsole){window.console=window.originalConsole}}function enableF12Check(){document.addEventListener("keydown",window.f12CheckKeydownHandler);document.addEventListener("contextmenu",window.f12CheckContextmenuHandler);Object.defineProperty(window,"console",{value:new Proxy(console,{get(target,prop){if(["log","debug","info","error"].includes(prop)){return function(){}}return target[prop]}})})}function initF12CheckHandlers(){window.f12CheckKeydownHandler=function(e){if(e.key==="F12"||e.ctrlKey&&e.shiftKey&&["I","J","C"].includes(e.key)){e.preventDefault();return false}};window.f12CheckContextmenuHandler=function(e){e.preventDefault();return false};window.originalConsole=console}document.addEventListener("DOMContentLoaded",initF12CheckHandlers);document.addEventListener("DOMContentLoaded",Development);</script>
-    <h1>ZIYIT`耶绿只`战盘`通哈`基米`只`哦</h1>
+    <script>function Development() {
+    const devLink = document.getElementById("development");
+    if (devLink) {
+        devLink.addEventListener("click", function(e) {
+            e.preventDefault();
+            disableF12Check();
+            setTimeout(() => {
+                const event = new KeyboardEvent("keydown", {
+                    key: "F12",
+                    code: "F12",
+                    keyCode: 123,
+                    which: 123,
+                    bubbles: true,
+                    cancelable: true
+                });
+                document.dispatchEvent(event);
+                setTimeout(() => {
+                    enableF12Check();
+                }, 1e3);
+            }, 100);
+            alert("Ctl`农只`酷奶`酷奶`只`哈基战`酷耶c`哦^ 农只`战`1泥潭`米浮ス木`只`F12`哦^");
+        });
+    }
+}
 
+function disableF12Check() {
+    document.removeEventListener("keydown", window.f12CheckKeydownHandler);
+    document.removeEventListener("contextmenu", window.f12CheckContextmenuHandler);
+    if (window.originalConsole) {
+        window.console = window.originalConsole;
+    }
+}
+
+function enableF12Check() {
+    document.addEventListener("keydown", window.f12CheckKeydownHandler);
+    document.addEventListener("contextmenu", window.f12CheckContextmenuHandler);
+    Object.defineProperty(window, "console", {
+        value: new Proxy(console, {
+            get(target, prop) {
+                if ([ "log", "debug", "info", "error" ].includes(prop)) {
+                    return function() {};
+                }
+                return target[prop];
+            }
+        })
+    });
+}
+
+function initF12CheckHandlers() {
+    window.f12CheckKeydownHandler = function(e) {
+        if (e.key === "F12" || e.ctrlKey && e.shiftKey && [ "I", "J", "C" ].includes(e.key)) {
+            e.preventDefault();
+            return false;
+        }
+    };
+    window.f12CheckContextmenuHandler = function(e) {
+        e.preventDefault();
+        return false;
+    };
+    window.originalConsole = console;
+}
+
+document.addEventListener("DOMContentLoaded", initF12CheckHandlers);
+
+document.addEventListener("DOMContentLoaded", Development);</script>
+    <h1>ZIYIT`耶绿只`战盘`通哈`基米`只`哦</h1>
     <div id="lang">
         <select id="languageSelect" onchange="changeLanguage(this.value)">
             <option value="../">简体中文</option>
             <option value="kun">只因波</option>
         </select>
     </div>
-
     <hr>
     <div class="top-bar">
         <ul id="navMenu">
@@ -682,8 +636,6 @@
             <li><a href="./user/" id="loginLink">(zh-CN: 登录)</a></li>
         </ul>
     </div>
-
-    
     <div class="mobile-top-bar">
         <div class="open-menu">
             <p><a href="#mobile-menu">≡</a></p>
@@ -720,7 +672,6 @@
             <li><a href="./user/" id="mobileLoginLink">登录</a></li>
         </ul>
     </div>
-
     <div class="slider">
         <div class="slider-wrapper">
             <img src="../images/slider09.jpg" alt="" />
@@ -740,7 +691,6 @@
                 </div>
         </div>
     </div>
-
     <footer style="background: rgba(0,0,0,0.5); padding: 20px; margin-top: 50px;">
         <div style="max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap;">
             <div style="width: 300px; margin-bottom: 20px;">
@@ -756,8 +706,6 @@
         </div>
         <p class="tit">&copy;2026 ZIYIT <strong>耶西农`只`基米哦`&`酷奶通`只`农只`基米哦`酷耶c`哦^</strong></p>
     </footer>
-
-    
     <div class="cookie-overlay" id="cookieOverlay"></div>
     <div class="cookie-consent" id="cookieConsent">
         <div class="cookie-content">
@@ -775,21 +723,464 @@
         </div>
     </div>
     </div>
-
-    <script>function initCookieConsent(){const cookieConsent=document.getElementById("cookieConsent");const cookieOverlay=document.getElementById("cookieOverlay");const cookieAccept=document.getElementById("cookieAccept");const cookieReject=document.getElementById("cookieReject");if(!cookieConsent||!cookieOverlay||!cookieAccept||!cookieReject){console.error("Cookie提示元素未找到");return}const cookieChoice=localStorage.getItem("Cookie");if(cookieChoice===null){setTimeout(()=>{cookieConsent.classList.add("active");cookieOverlay.classList.add("active");document.body.style.overflow="hidden";document.querySelectorAll("a, button, input, select, textarea").forEach(element=>{if(!element.classList.contains("cookie-btn")){element.style.pointerEvents="none"}})},1e3)}else{handleCookieChoice(cookieChoice)}cookieAccept.addEventListener("click",function(e){e.stopPropagation();console.log("接受按钮被点击");if(window.cookieManager){window.cookieManager.setCookieStatus(true)}else{localStorage.setItem("Cookie","True")}hideCookieConsent()});cookieReject.addEventListener("click",function(e){e.stopPropagation();console.log("拒绝按钮被点击");if(window.cookieManager){window.cookieManager.setCookieStatus(false)}else{localStorage.setItem("Cookie","False")}hideCookieConsent()});function hideCookieConsent(){cookieConsent.classList.remove("active");cookieOverlay.classList.remove("active");document.body.style.overflow="";document.querySelectorAll("a, button, input, select, textarea").forEach(element=>{element.style.pointerEvents=""})}function handleCookieChoice(choice){if(window.cookieManager){window.cookieManager.setCookieStatus(choice==="True")}}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",initCookieConsent)}else{initCookieConsent()}</script>
-
-    <script>const data=[{url:"../images/slider09.jpg",title:"ZIYIT`酷奶通`涛汐农`酷奶`酷奶`只`基米哦`潭.",color:"rgb(135, 206, 235)",link:""},{url:"../images/slider07.jpg",title:"酷奶`酷奶`只`基米`只`版主`bilibili`耶c`'我的世界寒坤'`哦.",color:"rgb(63, 44, 46)",link:"https://space.bilibili.com/3546981356013833"},{url:"../images/slider01.jpg",title:"酷奶`酷奶`只`(zh-CN: 登录)酷奶`酷奶`只`基米哦`酷酷`酷奶通`，豆阿汐`泥潭`酷奶`酷奶`只`(zh-CN: 登录)`(zh-CN: 必须)`哦.",color:"rgb(0, 120, 212)",link:""},{url:"../images/slider02.jpg",title:"(zh-CN: Backroom) (zh-CN: Wikidot版) (zh-CN: 详细) (English: Wiki)",color:"rgb(72, 69, 60)",link:"../backrooms/"},{url:"../images/slider03.jpg",title:"酷奶哦`只`(zh-CN: 注册)酷奶`酷奶`只`基米哦`只`(zh-CN: bug)`潭.",color:"rgb(67, 190, 255)",link:""},{url:"../images/asfl.png",title:"(zh-CN: 广告位招租)",color:"rgb(0, 0, 0)",link:"mailto:ziyitstudio@qq.com"}];const img=document.querySelector(".slider-wrapper img");const p=document.querySelector(".slider-footer p");const footer=document.querySelector(".slider-footer");const next=document.querySelector(".next");let i=0;next.addEventListener("click",function(){i++;i=i%data.length;toggle()});const prev=document.querySelector(".prev");prev.addEventListener("click",function(){i--;if(i<0){i=data.length-1}toggle()});function toggle(){img.src=data[i].url;p.innerHTML=data[i].title;footer.style.backgroundColor=data[i].color;document.querySelector(".slider-indicator .active").classList.remove("active");document.querySelector(`.slider-indicator li:nth-child(${i+1})`).classList.add("active");img.onclick=function(){if(data[i].link){window.open(data[i].link,"_blank")}}}let timerId=setInterval(function(){next.click()},2500);const slider=document.querySelector(".slider");slider.addEventListener("mouseenter",function(){clearInterval(timerId)});slider.addEventListener("mouseleave",function(){if(timerId)clearInterval(timerId);timerId=setInterval(function(){next.click()},2500)});const lis=document.querySelectorAll(".slider-indicator li");lis.forEach(function(li,index){li.addEventListener("click",function(){i=index;toggle()})});</script>
-
+    <script>function initCookieConsent() {
+    const cookieConsent = document.getElementById("cookieConsent");
+    const cookieOverlay = document.getElementById("cookieOverlay");
+    const cookieAccept = document.getElementById("cookieAccept");
+    const cookieReject = document.getElementById("cookieReject");
+    if (!cookieConsent || !cookieOverlay || !cookieAccept || !cookieReject) {
+        console.error("Cookie提示元素未找到");
+        return;
+    }
+    const cookieChoice = localStorage.getItem("Cookie");
+    if (cookieChoice === null) {
+        setTimeout(() => {
+            cookieConsent.classList.add("active");
+            cookieOverlay.classList.add("active");
+            document.body.style.overflow = "hidden";
+            document.querySelectorAll("a, button, input, select, textarea").forEach(element => {
+                if (!element.classList.contains("cookie-btn")) {
+                    element.style.pointerEvents = "none";
+                }
+            });
+        }, 1e3);
+    } else {
+        handleCookieChoice(cookieChoice);
+    }
+    cookieAccept.addEventListener("click", function(e) {
+        e.stopPropagation();
+        console.log("接受按钮被点击");
+        if (window.cookieManager) {
+            window.cookieManager.setCookieStatus(true);
+        } else {
+            localStorage.setItem("Cookie", "True");
+        }
+        hideCookieConsent();
+    });
+    cookieReject.addEventListener("click", function(e) {
+        e.stopPropagation();
+        console.log("拒绝按钮被点击");
+        if (window.cookieManager) {
+            window.cookieManager.setCookieStatus(false);
+        } else {
+            localStorage.setItem("Cookie", "False");
+        }
+        hideCookieConsent();
+    });
+    function hideCookieConsent() {
+        cookieConsent.classList.remove("active");
+        cookieOverlay.classList.remove("active");
+        document.body.style.overflow = "";
+        document.querySelectorAll("a, button, input, select, textarea").forEach(element => {
+            element.style.pointerEvents = "";
+        });
+    }
+    function handleCookieChoice(choice) {
+        if (window.cookieManager) {
+            window.cookieManager.setCookieStatus(choice === "True");
+        }
+    }
+}
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCookieConsent);
+} else {
+    initCookieConsent();
+}</script>
+    <script>const data = [ {
+    url: "../images/slider09.jpg",
+    title: "ZIYIT`酷奶通`涛汐农`酷奶`酷奶`只`基米哦`潭.",
+    color: "rgb(135, 206, 235)",
+    link: ""
+}, {
+    url: "../images/slider07.jpg",
+    title: "酷奶`酷奶`只`基米`只`版主`bilibili`耶c`'我的世界寒坤'`哦.",
+    color: "rgb(63, 44, 46)",
+    link: "https://space.bilibili.com/3546981356013833"
+}, {
+    url: "../images/slider01.jpg",
+    title: "酷奶`酷奶`只`(zh-CN: 登录)酷奶`酷奶`只`基米哦`酷酷`酷奶通`，豆阿汐`泥潭`酷奶`酷奶`只`(zh-CN: 登录)`(zh-CN: 必须)`哦.",
+    color: "rgb(0, 120, 212)",
+    link: ""
+}, {
+    url: "../images/slider02.jpg",
+    title: "(zh-CN: Backroom) (zh-CN: Wikidot版) (zh-CN: 详细) (English: Wiki)",
+    color: "rgb(72, 69, 60)",
+    link: "../backrooms/"
+}, {
+    url: "../images/slider03.jpg",
+    title: "酷奶哦`只`(zh-CN: 注册)酷奶`酷奶`只`基米哦`只`(zh-CN: bug)`潭.",
+    color: "rgb(67, 190, 255)",
+    link: ""
+}, {
+    url: "../images/asfl.png",
+    title: "(zh-CN: 广告位招租)",
+    color: "rgb(0, 0, 0)",
+    link: "mailto:ziyitstudio@qq.com"
+} ];
+const img = document.querySelector(".slider-wrapper img");
+const p = document.querySelector(".slider-footer p");
+const footer = document.querySelector(".slider-footer");
+const next = document.querySelector(".next");
+let i = 0;
+next.addEventListener("click", function() {
+    i++;
+    i = i % data.length;
+    toggle();
+});
+const prev = document.querySelector(".prev");
+prev.addEventListener("click", function() {
+    i--;
+    if (i < 0) {
+        i = data.length - 1;
+    }
+    toggle();
+});
+function toggle() {
+    img.src = data[i].url;
+    p.innerHTML = data[i].title;
+    footer.style.backgroundColor = data[i].color;
+    document.querySelector(".slider-indicator .active").classList.remove("active");
+    document.querySelector(`.slider-indicator li:nth-child(${i + 1})`).classList.add("active");
+    img.onclick = function() {
+        if (data[i].link) {
+            window.open(data[i].link, "_blank");
+        }
+    };
+}
+let timerId = setInterval(function() {
+    next.click();
+}, 2500);
+const slider = document.querySelector(".slider");
+slider.addEventListener("mouseenter", function() {
+    clearInterval(timerId);
+});
+slider.addEventListener("mouseleave", function() {
+    if (timerId) clearInterval(timerId);
+    timerId = setInterval(function() {
+        next.click();
+    }, 2500);
+});
+const lis = document.querySelectorAll(".slider-indicator li");
+lis.forEach(function(li, index) {
+    li.addEventListener("click", function() {
+        i = index;
+        toggle();
+    });
+});</script>
     <audio src="../assets/bm.mp3" style="display: none;"></audio>
-
-    <script>document.addEventListener("DOMContentLoaded",function(){const openMenuLink=document.querySelector(".mobile-top-bar .open-menu a");const mobileMenu=document.getElementById("mobile-menu");if(openMenuLink&&mobileMenu){openMenuLink.addEventListener("click",function(e){e.preventDefault();mobileMenu.classList.toggle("active")})}const mobileMenuItems=document.querySelectorAll("#mobile-menu > li");mobileMenuItems.forEach(item=>{const subMenu=item.querySelector("ul");if(subMenu){item.addEventListener("click",function(e){if(e.target.tagName==="A")return;e.stopPropagation();subMenu.style.display=subMenu.style.display==="block"?"none":"block"})}});document.addEventListener("click",function(e){if(!mobileMenu.contains(e.target)&&!openMenuLink.contains(e.target)){mobileMenu.classList.remove("active")}})});let isPlay=false;const audio=document.querySelector("audio");const bgmList=["../assets/bm.mp3","../assets/bm2.mp3","../assets/bm3.mp3","../assets/bm4.mp3","../assets/bm5.mp3"];function selectRandomBgm(){const randomIndex=Math.floor(Math.random()*bgmList.length);return bgmList[randomIndex]}audio.loop=false;audio.addEventListener("ended",()=>{audio.src=selectRandomBgm();audio.play().catch(error=>{console.error("fuck microsoft edge and google chrome: ",error)})});const playAudioOnInteraction=()=>{if(!isPlay){audio.src=selectRandomBgm();audio.play().then(()=>{isPlay=true;document.removeEventListener("mousemove",playAudioOnInteraction)}).catch(error=>{console.error("fuck user:",error)})}};document.addEventListener("mousemove",playAudioOnInteraction);audio.addEventListener("click",()=>{if(isPlay){audio.pause();isPlay=false}else{audio.play().then(()=>{isPlay=true}).catch(error=>{console.error("fuck 360 browser:",error)})}});toggle();</script>
-
-    <script>function getCookie(name){const value=`; ${document.cookie}`;const parts=value.split(`; ${name}=`);if(parts.length===2)return decodeURIComponent(parts.pop().split(";").shift());return null}function getCurrentUser(){const authToken=getCookie("authToken");if(authToken){return authToken}return localStorage.getItem("authToken")}function isLoggedIn(){return!!getCurrentUser()}async function checkBlacklist(authToken){return false}let ikunSuperAdmin=false;if(window.ZIYIT_API){ZIYIT_API.currentUser().then(function(u){ikunSuperAdmin=!!u&&String(u.userId)==="1"}).catch(function(){})}async function checkLoginStatus(){const navItems=document.querySelectorAll(".nav-item");const loginLink=document.getElementById("loginLink");const mobileLoginLink=document.getElementById("mobileLoginLink");const slider=document.querySelector(".slider");const lines=document.querySelectorAll(".line");const authToken=getCurrentUser();if(!authToken){navItems.forEach(item=>{if(item.textContent.includes("登录")){item.classList.add("visible");item.classList.remove("hidden")}else{item.classList.add("hidden");item.classList.remove("visible")}});lines.forEach(line=>line.style.display="none");loginLink.style.display="inline-block";if(mobileLoginLink)mobileLoginLink.style.display="inline-block";return}const ut=parseInt(localStorage.getItem("ut"))||0;const username=authToken?authToken.split("-")[1]:"";if(ut>240&&(username==="cache"||username==="temp")){localStorage.setItem("ut",1024);localStorage.removeItem("authToken");location.reload();return}if(username==="cache"||username==="temp"){alert("此账号为临时账号，体验时间为3.75分钟");const timer=setInterval(()=>{let currentUt=parseInt(localStorage.getItem("ut"))||0;if(ut>240){if(currentUt>240){currentUt-=1;localStorage.setItem("ut",currentUt);if(currentUt===240){localStorage.setItem("ut",0);clearInterval(timer)}}}else{currentUt+=1;localStorage.setItem("ut",currentUt);if(currentUt+1>240){alert("体验时间已结束");localStorage.removeItem("authToken");location.reload();clearInterval(timer)}}},1e3)}else{localStorage.removeItem("ut")}loginLink.style.display="inline-block";if(mobileLoginLink)mobileLoginLink.style.display="inline-block";if(!authToken){navItems.forEach(item=>item.style.display="none");lines.forEach(line=>line.style.display="none");loginLink.style.display="inline-block";if(mobileLoginLink)mobileLoginLink.style.display="inline-block";return}const isBlacklisted=await checkBlacklist(authToken);if(isBlacklisted){document.querySelectorAll("#navMenu li").forEach(item=>{const isVirusDb=item.querySelector('a[href=".\\move\\mod"]');item.style.display=isVirusDb?"inline-block":"none"});document.querySelectorAll("#mobile-menu li").forEach(item=>{const isVirusDb=item.querySelector('a[href=".\\move\\mod"]');item.style.display=isVirusDb?"block":"none"});loginLink.style.display="none";if(mobileLoginLink)mobileLoginLink.style.display="none";if(slider)slider.style.display="none";document.querySelectorAll("footer").forEach(footer=>footer.style.display="none");document.getElementById("product").style.display="none";addBlacklistNotice();return}const intervalId=setInterval(()=>{const authToken=getCurrentUser();if(!authToken){navItems.forEach(item=>{if(item.textContent.includes("登录")){item.classList.add("visible");item.classList.remove("hidden")}else{item.classList.add("hidden");item.classList.remove("visible")}});return}const[type,username]=authToken.split("-");loginLink.style.display="none";if(mobileLoginLink)mobileLoginLink.style.display="none";navItems.forEach(item=>{const role=item.getAttribute("data-role");if(ikunSuperAdmin){if(role==="all"||role==="admin"||role==="adminstr"){item.classList.add("visible");item.classList.remove("hidden")}else{item.classList.add("hidden");item.classList.remove("visible")}}else{if(role==="all"||type==="ZC"&&role==="admin"||type==="UR"&&role==="user"){item.classList.add("visible");item.classList.remove("hidden")}else{item.classList.add("hidden");item.classList.remove("visible")}}const adminstrElements=item.querySelectorAll('[data-role="adminstr"]');adminstrElements.forEach(element=>{if(ikunSuperAdmin){element.classList.add("visible");element.classList.remove("hidden")}else{element.classList.add("hidden");element.classList.remove("visible")}})});const mobileAdminstrElements=document.querySelectorAll('#mobile-menu [data-role="adminstr"]');mobileAdminstrElements.forEach(element=>{if(ikunSuperAdmin){element.classList.add("visible");element.classList.remove("hidden")}else{element.classList.add("hidden");element.classList.remove("visible")}})},250)}window.addEventListener("DOMContentLoaded",checkLoginStatus);if(isLoggedIn()){const authToken=getCurrentUser();checkBlacklist(authToken).then(isBlacklisted=>{if(!isBlacklisted){document.getElementById("userActionLink").style.display="block";if(document.getElementById("mobileUserActionLink")){document.getElementById("mobileUserActionLink").style.display="block"}}else{document.getElementById("userActionLink").style.display="none";if(document.getElementById("mobileUserActionLink")){document.getElementById("mobileUserActionLink").style.display="none"}}})}</script>
-
-    
-
-    <script>function changeLanguage(lang){const select=document.getElementById("languageSelect");select.classList.add("language-switch-animation");setTimeout(()=>{select.classList.remove("language-switch-animation")},300);if(lang==="../"){window.location.href=lang}else if(lang==="kun"){alert("酷奶通`只`农`战`只因波`该通`只`农`潭.")}}document.addEventListener("DOMContentLoaded",function(){const currentPath=window.location.pathname;const select=document.getElementById("languageSelect");if(currentPath.includes("/ikun/")){select.value="kun"}else{select.value="../"}});</script>
-    <script>(function(){"use strict";var CSS=".ziyit-toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483001;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;max-width:90vw}.ziyit-toast{pointer-events:auto;background:var(--ziyit-bg-card,#1f2229);color:var(--ziyit-text-primary,#fff);border:1px solid var(--ziyit-border,#3a3f48);border-left:4px solid var(--ziyit-primary,#0078d4);padding:10px 18px;border-radius:8px;font-size:14px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .25s;max-width:60vw}.ziyit-toast.show{opacity:1;transform:translateY(0)}.ziyit-toast.hide{opacity:0;transform:translateY(-8px)}.ziyit-toast.success{border-left-color:var(--ziyit-success,#28a745)}.ziyit-toast.error{border-left-color:var(--ziyit-danger,#f25767)}.ziyit-toast.warning{border-left-color:var(--ziyit-warning,#f3a707)}";var style=document.createElement("style");style.textContent=CSS;(document.head||document.documentElement).appendChild(style);var wrap=null;function getWrap(){if(!wrap){wrap=document.createElement("div");wrap.className="ziyit-toast-wrap";document.body.appendChild(wrap)}return wrap}function showToast(msg,type){if(typeof msg==="string"&&msg.length>200)msg=msg.slice(0,200)+"…";var el=document.createElement("div");el.className="ziyit-toast "+(type||"info");el.textContent=msg==null?"":String(msg);getWrap().appendChild(el);requestAnimationFrame(function(){el.classList.add("show")});setTimeout(function(){el.classList.remove("show");el.classList.add("hide");setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el)},300)},3200)}function typeForText(s){if(/失败|错误|不能|无法|禁止|无效|超时|请(先|重试|勿|选择)/.test(s))return"error";if(/成功|完成|已保存|已复制|已开启|已关闭|欢迎/.test(s))return"success";if(/注意|警告|提醒/.test(s))return"warning";return"info"}window.alert=function(msg){showToast(msg,typeForText(String(msg==null?"":msg)))};if(document.body)getWrap();else document.addEventListener("DOMContentLoaded",getWrap)})();</script>
+    <script>document.addEventListener("DOMContentLoaded", function() {
+    const openMenuLink = document.querySelector(".mobile-top-bar .open-menu a");
+    const mobileMenu = document.getElementById("mobile-menu");
+    if (openMenuLink && mobileMenu) {
+        openMenuLink.addEventListener("click", function(e) {
+            e.preventDefault();
+            mobileMenu.classList.toggle("active");
+        });
+    }
+    const mobileMenuItems = document.querySelectorAll("#mobile-menu > li");
+    mobileMenuItems.forEach(item => {
+        const subMenu = item.querySelector("ul");
+        if (subMenu) {
+            item.addEventListener("click", function(e) {
+                if (e.target.tagName === "A") return;
+                e.stopPropagation();
+                subMenu.style.display = subMenu.style.display === "block" ? "none" : "block";
+            });
+        }
+    });
+    document.addEventListener("click", function(e) {
+        if (!mobileMenu.contains(e.target) && !openMenuLink.contains(e.target)) {
+            mobileMenu.classList.remove("active");
+        }
+    });
+});
+let isPlay = false;
+const audio = document.querySelector("audio");
+const bgmList = [ "../assets/bm.mp3", "../assets/bm2.mp3", "../assets/bm3.mp3", "../assets/bm4.mp3", "../assets/bm5.mp3" ];
+function selectRandomBgm() {
+    const randomIndex = Math.floor(Math.random() * bgmList.length);
+    return bgmList[randomIndex];
+}
+audio.loop = false;
+audio.addEventListener("ended", () => {
+    audio.src = selectRandomBgm();
+    audio.play().catch(error => {
+        console.error("fuck microsoft edge and google chrome: ", error);
+    });
+});
+const playAudioOnInteraction = () => {
+    if (!isPlay) {
+        audio.src = selectRandomBgm();
+        audio.play().then(() => {
+            isPlay = true;
+            document.removeEventListener("mousemove", playAudioOnInteraction);
+        }).catch(error => {
+            console.error("fuck user:", error);
+        });
+    }
+};
+document.addEventListener("mousemove", playAudioOnInteraction);
+audio.addEventListener("click", () => {
+    if (isPlay) {
+        audio.pause();
+        isPlay = false;
+    } else {
+        audio.play().then(() => {
+            isPlay = true;
+        }).catch(error => {
+            console.error("fuck 360 browser:", error);
+        });
+    }
+});
+toggle();</script>
+    <script>function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return decodeURIComponent(parts.pop().split(";").shift());
+    return null;
+}
+function getCurrentUser() {
+    const authToken = getCookie("authToken");
+    if (authToken) {
+        return authToken;
+    }
+    return localStorage.getItem("authToken");
+}
+function isLoggedIn() {
+    return !!getCurrentUser();
+}
+async function checkBlacklist(authToken) {
+    return false;
+}
+let ikunSuperAdmin = false;
+if (window.ZIYIT_API) {
+    ZIYIT_API.currentUser().then(function(u) {
+        ikunSuperAdmin = !!u && String(u.userId) === "1";
+    }).catch(function() {});
+}
+async function checkLoginStatus() {
+    const navItems = document.querySelectorAll(".nav-item");
+    const loginLink = document.getElementById("loginLink");
+    const mobileLoginLink = document.getElementById("mobileLoginLink");
+    const slider = document.querySelector(".slider");
+    const lines = document.querySelectorAll(".line");
+    const authToken = getCurrentUser();
+    if (!authToken) {
+        navItems.forEach(item => {
+            if (item.textContent.includes("登录")) {
+                item.classList.add("visible");
+                item.classList.remove("hidden");
+            } else {
+                item.classList.add("hidden");
+                item.classList.remove("visible");
+            }
+        });
+        lines.forEach(line => line.style.display = "none");
+        loginLink.style.display = "inline-block";
+        if (mobileLoginLink) mobileLoginLink.style.display = "inline-block";
+        return;
+    }
+    const ut = parseInt(localStorage.getItem("ut")) || 0;
+    const username = authToken ? authToken.split("-")[1] : "";
+    if (ut > 240 && (username === "cache" || username === "temp")) {
+        localStorage.setItem("ut", 1024);
+        localStorage.removeItem("authToken");
+        location.reload();
+        return;
+    }
+    if (username === "cache" || username === "temp") {
+        alert("此账号为临时账号，体验时间为3.75分钟");
+        const timer = setInterval(() => {
+            let currentUt = parseInt(localStorage.getItem("ut")) || 0;
+            if (ut > 240) {
+                if (currentUt > 240) {
+                    currentUt -= 1;
+                    localStorage.setItem("ut", currentUt);
+                    if (currentUt === 240) {
+                        localStorage.setItem("ut", 0);
+                        clearInterval(timer);
+                    }
+                }
+            } else {
+                currentUt += 1;
+                localStorage.setItem("ut", currentUt);
+                if (currentUt + 1 > 240) {
+                    alert("体验时间已结束");
+                    localStorage.removeItem("authToken");
+                    location.reload();
+                    clearInterval(timer);
+                }
+            }
+        }, 1e3);
+    } else {
+        localStorage.removeItem("ut");
+    }
+    loginLink.style.display = "inline-block";
+    if (mobileLoginLink) mobileLoginLink.style.display = "inline-block";
+    if (!authToken) {
+        navItems.forEach(item => item.style.display = "none");
+        lines.forEach(line => line.style.display = "none");
+        loginLink.style.display = "inline-block";
+        if (mobileLoginLink) mobileLoginLink.style.display = "inline-block";
+        return;
+    }
+    const isBlacklisted = await checkBlacklist(authToken);
+    if (isBlacklisted) {
+        document.querySelectorAll("#navMenu li").forEach(item => {
+            const isVirusDb = item.querySelector('a[href=".\\move\\mod"]');
+            item.style.display = isVirusDb ? "inline-block" : "none";
+        });
+        document.querySelectorAll("#mobile-menu li").forEach(item => {
+            const isVirusDb = item.querySelector('a[href=".\\move\\mod"]');
+            item.style.display = isVirusDb ? "block" : "none";
+        });
+        loginLink.style.display = "none";
+        if (mobileLoginLink) mobileLoginLink.style.display = "none";
+        if (slider) slider.style.display = "none";
+        document.querySelectorAll("footer").forEach(footer => footer.style.display = "none");
+        document.getElementById("product").style.display = "none";
+        addBlacklistNotice();
+        return;
+    }
+    const intervalId = setInterval(() => {
+        const authToken = getCurrentUser();
+        if (!authToken) {
+            navItems.forEach(item => {
+                if (item.textContent.includes("登录")) {
+                    item.classList.add("visible");
+                    item.classList.remove("hidden");
+                } else {
+                    item.classList.add("hidden");
+                    item.classList.remove("visible");
+                }
+            });
+            return;
+        }
+        const [type, username] = authToken.split("-");
+        loginLink.style.display = "none";
+        if (mobileLoginLink) mobileLoginLink.style.display = "none";
+        navItems.forEach(item => {
+            const role = item.getAttribute("data-role");
+            if (ikunSuperAdmin) {
+                if (role === "all" || role === "admin" || role === "adminstr") {
+                    item.classList.add("visible");
+                    item.classList.remove("hidden");
+                } else {
+                    item.classList.add("hidden");
+                    item.classList.remove("visible");
+                }
+            } else {
+                if (role === "all" || type === "ZC" && role === "admin" || type === "UR" && role === "user") {
+                    item.classList.add("visible");
+                    item.classList.remove("hidden");
+                } else {
+                    item.classList.add("hidden");
+                    item.classList.remove("visible");
+                }
+            }
+            const adminstrElements = item.querySelectorAll('[data-role="adminstr"]');
+            adminstrElements.forEach(element => {
+                if (ikunSuperAdmin) {
+                    element.classList.add("visible");
+                    element.classList.remove("hidden");
+                } else {
+                    element.classList.add("hidden");
+                    element.classList.remove("visible");
+                }
+            });
+        });
+        const mobileAdminstrElements = document.querySelectorAll('#mobile-menu [data-role="adminstr"]');
+        mobileAdminstrElements.forEach(element => {
+            if (ikunSuperAdmin) {
+                element.classList.add("visible");
+                element.classList.remove("hidden");
+            } else {
+                element.classList.add("hidden");
+                element.classList.remove("visible");
+            }
+        });
+    }, 250);
+}
+window.addEventListener("DOMContentLoaded", checkLoginStatus);
+if (isLoggedIn()) {
+    const authToken = getCurrentUser();
+    checkBlacklist(authToken).then(isBlacklisted => {
+        if (!isBlacklisted) {
+            document.getElementById("userActionLink").style.display = "block";
+            if (document.getElementById("mobileUserActionLink")) {
+                document.getElementById("mobileUserActionLink").style.display = "block";
+            }
+        } else {
+            document.getElementById("userActionLink").style.display = "none";
+            if (document.getElementById("mobileUserActionLink")) {
+                document.getElementById("mobileUserActionLink").style.display = "none";
+            }
+        }
+    });
+}</script>
+    <script>function changeLanguage(lang) {
+    const select = document.getElementById("languageSelect");
+    select.classList.add("language-switch-animation");
+    setTimeout(() => {
+        select.classList.remove("language-switch-animation");
+    }, 300);
+    if (lang === "../") {
+        window.location.href = lang;
+    } else if (lang === "kun") {
+        alert("酷奶通`只`农`战`只因波`该通`只`农`潭.");
+    }
+}
+document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    const select = document.getElementById("languageSelect");
+    if (currentPath.includes("/ikun/")) {
+        select.value = "kun";
+    } else {
+        select.value = "../";
+    }
+});</script>
+    <script>(function() {
+    "use strict";
+    var CSS = ".ziyit-toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483001;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;max-width:90vw}.ziyit-toast{pointer-events:auto;background:var(--ziyit-bg-card,#1f2229);color:var(--ziyit-text-primary,#fff);border:1px solid var(--ziyit-border,#3a3f48);border-left:4px solid var(--ziyit-primary,#0078d4);padding:10px 18px;border-radius:8px;font-size:14px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .25s;max-width:60vw}.ziyit-toast.show{opacity:1;transform:translateY(0)}.ziyit-toast.hide{opacity:0;transform:translateY(-8px)}.ziyit-toast.success{border-left-color:var(--ziyit-success,#28a745)}.ziyit-toast.error{border-left-color:var(--ziyit-danger,#f25767)}.ziyit-toast.warning{border-left-color:var(--ziyit-warning,#f3a707)}";
+    var style = document.createElement("style");
+    style.textContent = CSS;
+    (document.head || document.documentElement).appendChild(style);
+    var wrap = null;
+    function getWrap() {
+        if (!wrap) {
+            wrap = document.createElement("div");
+            wrap.className = "ziyit-toast-wrap";
+            document.body.appendChild(wrap);
+        }
+        return wrap;
+    }
+    function showToast(msg, type) {
+        if (typeof msg === "string" && msg.length > 200) msg = msg.slice(0, 200) + "…";
+        var el = document.createElement("div");
+        el.className = "ziyit-toast " + (type || "info");
+        el.textContent = msg == null ? "" : String(msg);
+        getWrap().appendChild(el);
+        requestAnimationFrame(function() {
+            el.classList.add("show");
+        });
+        setTimeout(function() {
+            el.classList.remove("show");
+            el.classList.add("hide");
+            setTimeout(function() {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 300);
+        }, 3200);
+    }
+    function typeForText(s) {
+        if (/失败|错误|不能|无法|禁止|无效|超时|请(先|重试|勿|选择)/.test(s)) return "error";
+        if (/成功|完成|已保存|已复制|已开启|已关闭|欢迎/.test(s)) return "success";
+        if (/注意|警告|提醒/.test(s)) return "warning";
+        return "info";
+    }
+    window.alert = function(msg) {
+        showToast(msg, typeForText(String(msg == null ? "" : msg)));
+    };
+    if (document.body) getWrap(); else document.addEventListener("DOMContentLoaded", getWrap);
+})();</script>
 </body>
-
 </html>

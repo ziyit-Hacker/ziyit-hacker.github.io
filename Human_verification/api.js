@@ -1,1 +1,681 @@
-const TICKET_HEADER="x-phantom-ticket";const BASE_COOKIE="ziyit_api_base_ok";const BASE_COOKIE_DAYS=7;let resolvedBase="";let backendPromise=null;let loadedBases=[];function readCookie(name){try{const m=document.cookie.match(new RegExp("(?:^|; )"+name+"=([^;]*)"));return m?decodeURIComponent(m[1]):""}catch(e){return""}}function writeCookie(name,value,days){try{const d=new Date;d.setTime(d.getTime()+days*864e5);document.cookie=name+"="+encodeURIComponent(value)+"; expires="+d.toUTCString()+"; path=/"}catch(e){}}function clearCookie(name){try{document.cookie=name+"=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"}catch(e){}}function customBase(){try{const c=localStorage.getItem("ziyit_api_base");if(c)return String(c).replace(/\/+$/,"")}catch(e){}return""}function baseCookie(){const v=readCookie(BASE_COOKIE).replace(/\/+$/,"");return/^https?:\/\//i.test(v)?v:""}function cachedBase(){return baseCookie()||customBase()}function rememberBase(base){if(!base)return;if(base===resolvedBase)return;resolvedBase=base;ticket={token:"",expiresAt:0};sessionCaps={...PERMISSIVE_CAPS};if(base===customBase())return;writeCookie(BASE_COOKIE,base,BASE_COOKIE_DAYS)}function invalidateBase(){resolvedBase="";backendPromise=null;loadedBases=[];clearCookie(BASE_COOKIE)}function backendTxtUrl(){try{return new URL("../backend.txt",import.meta.url).href}catch(e){return"backend.txt"}}function parseBases(txt){const out=[];String(txt||"").split(/\r?\n/).forEach(line=>{const m=line.trim().match(/https?:\/\/[^\s]+/i);if(!m)return;const u=m[0].replace(/\/+$/,"");if(out.indexOf(u)===-1)out.push(u)});return out}function loadBases(){return fetch(backendTxtUrl(),{cache:"no-store",headers:{"ngrok-skip-browser-warning":"1"}}).then(res=>res.ok?res.text():"").catch(()=>"").then(txt=>{loadedBases=parseBases(txt);return loadedBases})}const MAX_BASE_ROUNDS=3;function baseCandidates(primary){const list=[];const add=u=>{if(!u)return;const v=String(u).replace(/\/+$/,"");if(list.indexOf(v)===-1)list.push(v)};add(baseCookie());add(customBase());add(primary);loadedBases.forEach(add);return list}function sleep(ms){return new Promise(resolve=>window.setTimeout(resolve,ms))}function isBaseDown(err){if(!err||!err.status)return true;return err.status===502||err.status===503||err.status===504||err.status===530}function probeBase(base,timeoutMs=3e3){return new Promise(resolve=>{const ctrl=new AbortController;let done=false;const finish=ok=>{if(done)return;done=true;if(!ok){try{ctrl.abort()}catch(e){}}resolve(ok)};const timer=setTimeout(()=>finish(false),timeoutMs);try{fetch(base+"/",{method:"GET",mode:"cors",cache:"no-store",headers:{"ngrok-skip-browser-warning":"1"},signal:ctrl.signal}).then(res=>{clearTimeout(timer);finish(res.status<500)}).catch(()=>{clearTimeout(timer);finish(false)})}catch(e){clearTimeout(timer);finish(false)}})}async function pickBase(bases){for(let round=0;round<MAX_BASE_ROUNDS;round++){for(let i=0;i<bases.length;i++){if(await probeBase(bases[i],round===0?3e3:1500))return bases[i]}if(round<MAX_BASE_ROUNDS-1)await sleep(300)}return""}export function backendReady(){if(!backendPromise){const cached=cachedBase();backendPromise=loadBases().then(bases=>{if(cached){return pickBase([cached].concat(bases)).then(ok=>{if(ok){rememberBase(ok);return ok}resolvedBase="";clearCookie(BASE_COOKIE);return""})}return pickBase(bases).then(picked=>{if(picked)rememberBase(picked);return picked})})}return backendPromise}export function apiBase(){const cookie=baseCookie();if(cookie)return cookie;const custom=customBase();if(custom)return custom;return resolvedBase||loadedBases[0]||""}let ticket={token:"",expiresAt:0};let ticketPromise=null;const PERMISSIVE_CAPS={allowedMethods:["phantom","pow"],defaultMethod:"phantom",canSwitch:true};let sessionCaps={...PERMISSIVE_CAPS};function explicitApiKey(){try{return window.PHANTOM_API_KEY||localStorage.getItem("phantom_api_key")||""}catch(e){return""}}async function readError(res){let detail="";let body=null;try{const data=await res.json();body=data;detail=typeof data.detail==="string"?data.detail:JSON.stringify(data.detail??data)}catch(e){detail=await res.text().catch(()=>"")}const err=new Error(`${res.status} ${res.statusText} ${detail}`.trim());err.status=res.status;err.detail=detail;err.body=body;return err}export function isMethodNotAllowed(e){if(!e||e.status!==403)return false;return String(e.detail||e.message||"").indexOf("not allowed for this key")!==-1}async function fetchTicket(base){const{res,done}=await fetchWithDeadline(`${base}/session`,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:"{}"},{timeoutMessage:"会话建立超时，请检查网络后重试"});let data=null;try{if(!res.ok){throw await readError(res)}data=await res.json()}catch(e){if(isAbortError(e))throw timeoutError("会话建立超时，请检查网络后重试");throw e}finally{done()}if(!data||!data.ticket){throw new Error("session 响应缺少 ticket")}const allowed=Array.isArray(data.allowedMethods)?data.allowedMethods.filter(m=>m==="phantom"||m==="pow"):[];const allowedMethods=allowed.length?allowed:PERMISSIVE_CAPS.allowedMethods;const defaultMethod=allowedMethods.indexOf(data.defaultMethod)!==-1?data.defaultMethod:allowedMethods[0];const canSwitch=typeof data.canSwitch==="boolean"?data.canSwitch:allowedMethods.length>1;sessionCaps={allowedMethods,defaultMethod,canSwitch};const ttl=Number(data.expiresIn)>0?Number(data.expiresIn):300;ticket={token:data.ticket,expiresAt:Date.now()+Math.max(ttl-10,5)*1e3};return ticket.token}async function currentTicket(base){if(ticket.token&&Date.now()<ticket.expiresAt){return ticket.token}if(!ticketPromise){ticketPromise=fetchTicket(base).finally(()=>{ticketPromise=null})}return ticketPromise}async function authHeaders(base){const key=explicitApiKey();if(key){return{"api-key":key}}return{[TICKET_HEADER]:await currentTicket(base)}}export async function sessionInfo(){if(!explicitApiKey()&&!expChannel){const base=await backendReady();try{await currentTicket(base)}catch(e){}}return{...sessionCaps}}let expChannel=null;export function setExperienceChannel(cfg){if(!cfg){expChannel=null;return}const headerName=String(cfg.headerName||"").trim();const key=String(cfg.key||"").trim();const token=String(cfg.token||"").trim();expChannel=headerName&&key?{headerName,key,token}:null}function expHeaders(){if(!expChannel)return null;const h={[expChannel.headerName]:expChannel.key};if(expChannel.token)h["Authorization"]="Bearer "+expChannel.token;return h}async function postToBase(base,path,body,exp,opts){for(let attempt=0;attempt<2;attempt++){const{res,done}=await fetchWithDeadline(`${base}${path}`,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json",...exp||await authHeaders(base)},body:JSON.stringify(body)},opts);try{if(res.ok){return await res.json()}if(res.status===401&&!exp&&!explicitApiKey()&&attempt===0){ticket={token:"",expiresAt:0};sessionCaps={...PERMISSIVE_CAPS};continue}throw await readError(res)}catch(e){if(isAbortError(e)){if(opts&&opts.signal&&opts.signal.aborted)throw e;throw timeoutError("请求超时，请检查网络后重试")}throw e}finally{done()}}throw new Error("请求失败：票据重取后仍未通过")}async function postJson(apiBaseArg,path,body,opts){const exp=expHeaders();const list=baseCandidates(apiBaseArg);if(!list.length){invalidateBase();throw new Error("未配置后端地址：backend.txt 为空或不可读")}let lastErr=null;for(let round=0;round<MAX_BASE_ROUNDS;round++){for(let i=0;i<list.length;i++){try{const data=await postToBase(list[i],path,body,exp,opts);rememberBase(list[i]);return data}catch(err){lastErr=err;if(isAbortError(err))throw err;if(!isBaseDown(err))throw err}}if(round<MAX_BASE_ROUNDS-1)await sleep(300)}invalidateBase();throw lastErr}export function requestChallenge(apiBase,clientPublicJwk,device,preferredMethod){const body={clientPublicJwk};if(device)body.device=device;if(preferredMethod==="phantom"||preferredMethod==="pow")body.preferredMethod=preferredMethod;return postJson(apiBase,"/challenge",body)}export function submitVerify(apiBase,challengeId,sessionId,iv,ciphertext){return postJson(apiBase,"/verify",{challengeId,sessionId,iv,ciphertext})}export function submitStreamChunk(apiBase,challengeId,sessionId,iv,ciphertext){return postJson(apiBase,"/verify/chunk",{challengeId,sessionId,iv,ciphertext})}export async function requestWithFallback(path,options={}){await backendReady();const list=baseCandidates(resolvedBase);if(!list.length){invalidateBase();throw new Error("未配置后端地址：backend.txt 为空或不可读")}let lastErr=null;for(let round=0;round<MAX_BASE_ROUNDS;round++){for(let i=0;i<list.length;i++){if(options.signal&&options.signal.aborted)throw new DOMException("Aborted","AbortError");try{const res=await fetch(list[i]+path,{...options,headers:{"ngrok-skip-browser-warning":"1",...options.headers||{}}});if(isBaseDown({status:res.status})){lastErr=new Error(`后端地址不可用（${res.status}）`);lastErr.status=res.status;continue}rememberBase(list[i]);return res}catch(err){lastErr=err;if(isAbortError(err))throw err;if(!isBaseDown(err))throw err}}if(round<MAX_BASE_ROUNDS-1)await sleep(300)}invalidateBase();throw lastErr||new Error("后端地址全部不可用")}export async function videoBinary(apiBase,challengeId,sessionId,videoUrl,opts){const exp=expHeaders();const path=videoPath(videoUrl,challengeId,sessionId);if(/^https?:\/\//i.test(path)){return await getBinary("",path,exp,opts)}const list=baseCandidates(apiBase);if(!list.length){invalidateBase();throw new Error("未配置后端地址：backend.txt 为空或不可读")}let lastErr=null;for(let round=0;round<MAX_BASE_ROUNDS;round++){for(let i=0;i<list.length;i++){try{const buf=await getBinary(list[i],path,exp,opts);rememberBase(list[i]);return buf}catch(err){lastErr=err;if(isAbortError(err))throw err;if(!isBaseDown(err))throw err}}if(round<MAX_BASE_ROUNDS-1)await sleep(300)}invalidateBase();throw lastErr}export function videoReady(apiBase,challengeId,sessionId,opts){return postJson(apiBase,"/video/ready",{challengeId,sessionId},opts)}export function videoChunk(apiBase,challengeId,sessionId,index,opts){return postJson(apiBase,"/video/chunk",{challengeId,sessionId,index},opts)}function videoPath(videoUrl,challengeId,sessionId){const u=String(videoUrl||"").trim();if(u){const path=u.charAt(0)==="/"||/^https?:\/\//i.test(u)?u:"/"+u;if(sessionId&&!/[?&]sessionId=/.test(path)){return path+(path.indexOf("?")===-1?"?":"&")+"sessionId="+encodeURIComponent(sessionId)}return path}const q="challengeId="+encodeURIComponent(challengeId||"")+(sessionId?"&sessionId="+encodeURIComponent(sessionId):"");return"/video?"+q}const DEFAULT_TIMEOUT_MS=6e4;const VIDEO_HEADER_TIMEOUT_MS=45e3;const VIDEO_IDLE_TIMEOUT_MS=3e4;function timeoutError(message,code){const err=new Error(message);err.code=code||"TIMEOUT";return err}function isAbortError(err){return!!err&&(err.name==="AbortError"||err.code==="ABORTED")}async function fetchWithDeadline(url,init,opts){const o=opts||{};const totalMs=Number(o.timeoutMs)>0?Number(o.timeoutMs):DEFAULT_TIMEOUT_MS;const ctrl=new AbortController;const outer=o.signal;const relay=()=>{try{ctrl.abort()}catch(e){}};if(outer){if(outer.aborted)relay();else outer.addEventListener("abort",relay,{once:true})}let timedOut=false;const timer=window.setTimeout(()=>{timedOut=true;relay()},totalMs);const done=()=>{window.clearTimeout(timer);if(outer)outer.removeEventListener("abort",relay)};try{const res=await fetch(url,{...init||{},signal:ctrl.signal});return{res,ctrl,done}}catch(e){done();if(timedOut)throw timeoutError(o.timeoutMessage||"请求超时，请检查网络后重试");throw e}}async function readBodyWithWatchdog(res,opts){const o=opts||{};const ctrl=o.ctrl;const idleMs=Number(o.idleMs)>0?Number(o.idleMs):VIDEO_IDLE_TIMEOUT_MS;const total=Number(res.headers.get("content-length"))||0;if(!res.body||typeof res.body.getReader!=="function"){return await res.arrayBuffer()}let timedOut=false;let timer=0;const arm=()=>{window.clearTimeout(timer);timer=window.setTimeout(()=>{timedOut=true;try{ctrl.abort()}catch(e){}},idleMs)};arm();const reader=res.body.getReader();const chunks=[];let loaded=0;try{for(;;){const step=await reader.read();if(step.done)break;if(step.value&&step.value.length){chunks.push(step.value);loaded+=step.value.length;arm();try{o.onProgress?.(loaded,total)}catch(e){}}}}catch(e){if(timedOut)throw timeoutError(o.timeoutMessage||"下载中断（网络太慢），请重试",o.timeoutCode);throw e}finally{window.clearTimeout(timer);try{reader.releaseLock()}catch(e){}}const out=new Uint8Array(loaded);let off=0;for(let i=0;i<chunks.length;i++){out.set(chunks[i],off);off+=chunks[i].length}return out.buffer}async function getBinary(base,path,exp,opts){const o=opts||{};for(let attempt=0;attempt<2;attempt++){const{res,ctrl,done}=await fetchWithDeadline(`${base}${path}`,{method:"GET",credentials:"include",headers:{...exp||await authHeaders(base)}},{timeoutMs:Number(o.headerTimeoutMs)>0?Number(o.headerTimeoutMs):VIDEO_HEADER_TIMEOUT_MS,signal:o.signal,timeoutMessage:"验证题下载超时，请点击刷新重试",timeoutCode:"VIDEO_TIMEOUT"});try{if(res.ok){return await readBodyWithWatchdog(res,{ctrl,idleMs:o.idleMs,onProgress:o.onProgress,timeoutMessage:"验证题下载中断（网络太慢），请点击刷新重试",timeoutCode:"VIDEO_TIMEOUT"})}if(res.status===401&&!exp&&!explicitApiKey()&&attempt===0){ticket={token:"",expiresAt:0};sessionCaps={...PERMISSIVE_CAPS};continue}throw await readError(res)}finally{done()}}throw new Error("请求失败：票据重取后仍未通过")}export function requestPowChallenge(apiBase,preferredMethod){const body={};if(preferredMethod==="phantom"||preferredMethod==="pow")body.preferredMethod=preferredMethod;return postJson(apiBase,"/pow/challenge",body)}export function verifyPow(apiBase,challengeId,solution,sessionId){const body={challengeId,solution};if(sessionId)body.sessionId=sessionId;return postJson(apiBase,"/pow/verify",body)}export function submitPowStream(apiBase,challengeId,sessionId,seq,hashes,solveMs){const body={challengeId,seq,hashes,solveMs};if(sessionId)body.sessionId=sessionId;return postJson(apiBase,"/pow/stream",body)}export function consumeVerify(apiBase,receipts){const list=(Array.isArray(receipts)?receipts:[receipts]).filter(Boolean);const body=list.length>1?{receipts:list}:{receipt:list[0]};return postJson(apiBase,"/verify/consume",body)}
+const TICKET_HEADER = "x-phantom-ticket";
+const BASE_COOKIE = "ziyit_api_base_ok";
+const BASE_COOKIE_DAYS = 7;
+let resolvedBase = "";
+let backendPromise = null;
+let loadedBases = [];
+function readCookie(name) {
+    try {
+        const m = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+        return m ? decodeURIComponent(m[1]) : "";
+    } catch (e) {
+        return "";
+    }
+}
+function writeCookie(name, value, days) {
+    try {
+        const d = new Date;
+        d.setTime(d.getTime() + days * 864e5);
+        document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + d.toUTCString() + "; path=/";
+    } catch (e) {}
+}
+function clearCookie(name) {
+    try {
+        document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    } catch (e) {}
+}
+function customBase() {
+    try {
+        const c = localStorage.getItem("ziyit_api_base");
+        if (c) return String(c).replace(/\/+$/, "");
+    } catch (e) {}
+    return "";
+}
+function baseCookie() {
+    const v = readCookie(BASE_COOKIE).replace(/\/+$/, "");
+    return /^https?:\/\//i.test(v) ? v : "";
+}
+function cachedBase() {
+    return baseCookie() || customBase();
+}
+function rememberBase(base) {
+    if (!base) return;
+    if (base === resolvedBase) return;
+    resolvedBase = base;
+    ticket = {
+        token: "",
+        expiresAt: 0
+    };
+    sessionCaps = {
+        ...PERMISSIVE_CAPS
+    };
+    if (base === customBase()) return;
+    writeCookie(BASE_COOKIE, base, BASE_COOKIE_DAYS);
+}
+function invalidateBase() {
+    resolvedBase = "";
+    backendPromise = null;
+    loadedBases = [];
+    clearCookie(BASE_COOKIE);
+}
+function backendTxtUrl() {
+    try {
+        return new URL("../backend.txt", import.meta.url).href;
+    } catch (e) {
+        return "backend.txt";
+    }
+}
+function parseBases(txt) {
+    const out = [];
+    String(txt || "").split(/\r?\n/).forEach(line => {
+        const m = line.trim().match(/https?:\/\/[^\s]+/i);
+        if (!m) return;
+        const u = m[0].replace(/\/+$/, "");
+        if (out.indexOf(u) === -1) out.push(u);
+    });
+    return out;
+}
+function loadBases() {
+    return fetch(backendTxtUrl(), {
+        cache: "no-store",
+        headers: {
+            "ngrok-skip-browser-warning": "1"
+        }
+    }).then(res => res.ok ? res.text() : "").catch(() => "").then(txt => {
+        loadedBases = parseBases(txt);
+        return loadedBases;
+    });
+}
+const MAX_BASE_ROUNDS = 3;
+function baseCandidates(primary) {
+    const list = [];
+    const add = u => {
+        if (!u) return;
+        const v = String(u).replace(/\/+$/, "");
+        if (list.indexOf(v) === -1) list.push(v);
+    };
+    add(baseCookie());
+    add(customBase());
+    add(primary);
+    loadedBases.forEach(add);
+    return list;
+}
+function sleep(ms) {
+    return new Promise(resolve => window.setTimeout(resolve, ms));
+}
+function isBaseDown(err) {
+    if (!err || !err.status) return true;
+    return err.status === 502 || err.status === 503 || err.status === 504 || err.status === 530;
+}
+function probeBase(base, timeoutMs = 3e3) {
+    return new Promise(resolve => {
+        const ctrl = new AbortController;
+        let done = false;
+        const finish = ok => {
+            if (done) return;
+            done = true;
+            if (!ok) {
+                try {
+                    ctrl.abort();
+                } catch (e) {}
+            }
+            resolve(ok);
+        };
+        const timer = setTimeout(() => finish(false), timeoutMs);
+        try {
+            fetch(base + "/", {
+                method: "GET",
+                mode: "cors",
+                cache: "no-store",
+                headers: {
+                    "ngrok-skip-browser-warning": "1"
+                },
+                signal: ctrl.signal
+            }).then(res => {
+                clearTimeout(timer);
+                finish(res.status < 500);
+            }).catch(() => {
+                clearTimeout(timer);
+                finish(false);
+            });
+        } catch (e) {
+            clearTimeout(timer);
+            finish(false);
+        }
+    });
+}
+async function pickBase(bases) {
+    for (let round = 0; round < MAX_BASE_ROUNDS; round++) {
+        for (let i = 0; i < bases.length; i++) {
+            if (await probeBase(bases[i], round === 0 ? 3e3 : 1500)) return bases[i];
+        }
+        if (round < MAX_BASE_ROUNDS - 1) await sleep(300);
+    }
+    return "";
+}
+export function backendReady() {
+    if (!backendPromise) {
+        const cached = cachedBase();
+        backendPromise = loadBases().then(bases => {
+            if (cached) {
+                return pickBase([ cached ].concat(bases)).then(ok => {
+                    if (ok) {
+                        rememberBase(ok);
+                        return ok;
+                    }
+                    resolvedBase = "";
+                    clearCookie(BASE_COOKIE);
+                    return "";
+                });
+            }
+            return pickBase(bases).then(picked => {
+                if (picked) rememberBase(picked);
+                return picked;
+            });
+        });
+    }
+    return backendPromise;
+}
+export function apiBase() {
+    const cookie = baseCookie();
+    if (cookie) return cookie;
+    const custom = customBase();
+    if (custom) return custom;
+    return resolvedBase || loadedBases[0] || "";
+}
+let ticket = {
+    token: "",
+    expiresAt: 0
+};
+let ticketPromise = null;
+const PERMISSIVE_CAPS = {
+    allowedMethods: [ "phantom", "pow" ],
+    defaultMethod: "phantom",
+    canSwitch: true
+};
+let sessionCaps = {
+    ...PERMISSIVE_CAPS
+};
+function explicitApiKey() {
+    try {
+        return window.PHANTOM_API_KEY || localStorage.getItem("phantom_api_key") || "";
+    } catch (e) {
+        return "";
+    }
+}
+async function readError(res) {
+    let detail = "";
+    let body = null;
+    try {
+        const data = await res.json();
+        body = data;
+        detail = typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail ?? data);
+    } catch (e) {
+        detail = await res.text().catch(() => "");
+    }
+    const err = new Error(`${res.status} ${res.statusText} ${detail}`.trim());
+    err.status = res.status;
+    err.detail = detail;
+    err.body = body;
+    return err;
+}
+export function isMethodNotAllowed(e) {
+    if (!e || e.status !== 403) return false;
+    return String(e.detail || e.message || "").indexOf("not allowed for this key") !== -1;
+}
+async function fetchTicket(base) {
+    const {res, done} = await fetchWithDeadline(`${base}/session`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: "{}"
+    }, {
+        timeoutMessage: "会话建立超时，请检查网络后重试"
+    });
+    let data = null;
+    try {
+        if (!res.ok) {
+            throw await readError(res);
+        }
+        data = await res.json();
+    } catch (e) {
+        if (isAbortError(e)) throw timeoutError("会话建立超时，请检查网络后重试");
+        throw e;
+    } finally {
+        done();
+    }
+    if (!data || !data.ticket) {
+        throw new Error("session 响应缺少 ticket");
+    }
+    const allowed = Array.isArray(data.allowedMethods) ? data.allowedMethods.filter(m => m === "phantom" || m === "pow") : [];
+    const allowedMethods = allowed.length ? allowed : PERMISSIVE_CAPS.allowedMethods;
+    const defaultMethod = allowedMethods.indexOf(data.defaultMethod) !== -1 ? data.defaultMethod : allowedMethods[0];
+    const canSwitch = typeof data.canSwitch === "boolean" ? data.canSwitch : allowedMethods.length > 1;
+    sessionCaps = {
+        allowedMethods,
+        defaultMethod,
+        canSwitch
+    };
+    const ttl = Number(data.expiresIn) > 0 ? Number(data.expiresIn) : 300;
+    ticket = {
+        token: data.ticket,
+        expiresAt: Date.now() + Math.max(ttl - 10, 5) * 1e3
+    };
+    return ticket.token;
+}
+async function currentTicket(base) {
+    if (ticket.token && Date.now() < ticket.expiresAt) {
+        return ticket.token;
+    }
+    if (!ticketPromise) {
+        ticketPromise = fetchTicket(base).finally(() => {
+            ticketPromise = null;
+        });
+    }
+    return ticketPromise;
+}
+async function authHeaders(base) {
+    const key = explicitApiKey();
+    if (key) {
+        return {
+            "api-key": key
+        };
+    }
+    return {
+        [TICKET_HEADER]: await currentTicket(base)
+    };
+}
+export async function sessionInfo() {
+    if (!explicitApiKey() && !expChannel) {
+        const base = await backendReady();
+        try {
+            await currentTicket(base);
+        } catch (e) {}
+    }
+    return {
+        ...sessionCaps
+    };
+}
+let expChannel = null;
+export function setExperienceChannel(cfg) {
+    if (!cfg) {
+        expChannel = null;
+        return;
+    }
+    const headerName = String(cfg.headerName || "").trim();
+    const key = String(cfg.key || "").trim();
+    const token = String(cfg.token || "").trim();
+    expChannel = headerName && key ? {
+        headerName,
+        key,
+        token
+    } : null;
+}
+function expHeaders() {
+    if (!expChannel) return null;
+    const h = {
+        [expChannel.headerName]: expChannel.key
+    };
+    if (expChannel.token) h["Authorization"] = "Bearer " + expChannel.token;
+    return h;
+}
+async function postToBase(base, path, body, exp, opts) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+        const {res, done} = await fetchWithDeadline(`${base}${path}`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...exp || await authHeaders(base)
+            },
+            body: JSON.stringify(body)
+        }, opts);
+        try {
+            if (res.ok) {
+                return await res.json();
+            }
+            if (res.status === 401 && !exp && !explicitApiKey() && attempt === 0) {
+                ticket = {
+                    token: "",
+                    expiresAt: 0
+                };
+                sessionCaps = {
+                    ...PERMISSIVE_CAPS
+                };
+                continue;
+            }
+            throw await readError(res);
+        } catch (e) {
+            if (isAbortError(e)) {
+                if (opts && opts.signal && opts.signal.aborted) throw e;
+                throw timeoutError("请求超时，请检查网络后重试");
+            }
+            throw e;
+        } finally {
+            done();
+        }
+    }
+    throw new Error("请求失败：票据重取后仍未通过");
+}
+async function postJson(apiBaseArg, path, body, opts) {
+    const exp = expHeaders();
+    const list = baseCandidates(apiBaseArg);
+    if (!list.length) {
+        invalidateBase();
+        throw new Error("未配置后端地址：backend.txt 为空或不可读");
+    }
+    let lastErr = null;
+    for (let round = 0; round < MAX_BASE_ROUNDS; round++) {
+        for (let i = 0; i < list.length; i++) {
+            try {
+                const data = await postToBase(list[i], path, body, exp, opts);
+                rememberBase(list[i]);
+                return data;
+            } catch (err) {
+                lastErr = err;
+                if (isAbortError(err)) throw err;
+                if (!isBaseDown(err)) throw err;
+            }
+        }
+        if (round < MAX_BASE_ROUNDS - 1) await sleep(300);
+    }
+    invalidateBase();
+    throw lastErr;
+}
+export function requestChallenge(apiBase, clientPublicJwk, device, preferredMethod) {
+    const body = {
+        clientPublicJwk
+    };
+    if (device) body.device = device;
+    if (preferredMethod === "phantom" || preferredMethod === "pow") body.preferredMethod = preferredMethod;
+    return postJson(apiBase, "/challenge", body);
+}
+export function submitVerify(apiBase, challengeId, sessionId, iv, ciphertext) {
+    return postJson(apiBase, "/verify", {
+        challengeId,
+        sessionId,
+        iv,
+        ciphertext
+    });
+}
+export function submitStreamChunk(apiBase, challengeId, sessionId, iv, ciphertext) {
+    return postJson(apiBase, "/verify/chunk", {
+        challengeId,
+        sessionId,
+        iv,
+        ciphertext
+    });
+}
+export async function requestWithFallback(path, options = {}) {
+    await backendReady();
+    const list = baseCandidates(resolvedBase);
+    if (!list.length) {
+        invalidateBase();
+        throw new Error("未配置后端地址：backend.txt 为空或不可读");
+    }
+    let lastErr = null;
+    for (let round = 0; round < MAX_BASE_ROUNDS; round++) {
+        for (let i = 0; i < list.length; i++) {
+            if (options.signal && options.signal.aborted) throw new DOMException("Aborted", "AbortError");
+            try {
+                const res = await fetch(list[i] + path, {
+                    ...options,
+                    headers: {
+                        "ngrok-skip-browser-warning": "1",
+                        ...options.headers || {}
+                    }
+                });
+                if (isBaseDown({
+                    status: res.status
+                })) {
+                    lastErr = new Error(`后端地址不可用（${res.status}）`);
+                    lastErr.status = res.status;
+                    continue;
+                }
+                rememberBase(list[i]);
+                return res;
+            } catch (err) {
+                lastErr = err;
+                if (isAbortError(err)) throw err;
+                if (!isBaseDown(err)) throw err;
+            }
+        }
+        if (round < MAX_BASE_ROUNDS - 1) await sleep(300);
+    }
+    invalidateBase();
+    throw lastErr || new Error("后端地址全部不可用");
+}
+export async function videoBinary(apiBase, challengeId, sessionId, videoUrl, opts) {
+    const exp = expHeaders();
+    const path = videoPath(videoUrl, challengeId, sessionId);
+    if (/^https?:\/\//i.test(path)) {
+        return await getBinary("", path, exp, opts);
+    }
+    const list = baseCandidates(apiBase);
+    if (!list.length) {
+        invalidateBase();
+        throw new Error("未配置后端地址：backend.txt 为空或不可读");
+    }
+    let lastErr = null;
+    for (let round = 0; round < MAX_BASE_ROUNDS; round++) {
+        for (let i = 0; i < list.length; i++) {
+            try {
+                const buf = await getBinary(list[i], path, exp, opts);
+                rememberBase(list[i]);
+                return buf;
+            } catch (err) {
+                lastErr = err;
+                if (isAbortError(err)) throw err;
+                if (!isBaseDown(err)) throw err;
+            }
+        }
+        if (round < MAX_BASE_ROUNDS - 1) await sleep(300);
+    }
+    invalidateBase();
+    throw lastErr;
+}
+export function videoReady(apiBase, challengeId, sessionId, opts) {
+    return postJson(apiBase, "/video/ready", {
+        challengeId,
+        sessionId
+    }, opts);
+}
+export function videoChunk(apiBase, challengeId, sessionId, index, opts) {
+    return postJson(apiBase, "/video/chunk", {
+        challengeId,
+        sessionId,
+        index
+    }, opts);
+}
+function videoPath(videoUrl, challengeId, sessionId) {
+    const u = String(videoUrl || "").trim();
+    if (u) {
+        const path = u.charAt(0) === "/" || /^https?:\/\//i.test(u) ? u : "/" + u;
+        if (sessionId && !/[?&]sessionId=/.test(path)) {
+            return path + (path.indexOf("?") === -1 ? "?" : "&") + "sessionId=" + encodeURIComponent(sessionId);
+        }
+        return path;
+    }
+    const q = "challengeId=" + encodeURIComponent(challengeId || "") + (sessionId ? "&sessionId=" + encodeURIComponent(sessionId) : "");
+    return "/video?" + q;
+}
+const DEFAULT_TIMEOUT_MS = 6e4;
+const VIDEO_HEADER_TIMEOUT_MS = 45e3;
+const VIDEO_IDLE_TIMEOUT_MS = 3e4;
+function timeoutError(message, code) {
+    const err = new Error(message);
+    err.code = code || "TIMEOUT";
+    return err;
+}
+function isAbortError(err) {
+    return !!err && (err.name === "AbortError" || err.code === "ABORTED");
+}
+async function fetchWithDeadline(url, init, opts) {
+    const o = opts || {};
+    const totalMs = Number(o.timeoutMs) > 0 ? Number(o.timeoutMs) : DEFAULT_TIMEOUT_MS;
+    const ctrl = new AbortController;
+    const outer = o.signal;
+    const relay = () => {
+        try {
+            ctrl.abort();
+        } catch (e) {}
+    };
+    if (outer) {
+        if (outer.aborted) relay(); else outer.addEventListener("abort", relay, {
+            once: true
+        });
+    }
+    let timedOut = false;
+    const timer = window.setTimeout(() => {
+        timedOut = true;
+        relay();
+    }, totalMs);
+    const done = () => {
+        window.clearTimeout(timer);
+        if (outer) outer.removeEventListener("abort", relay);
+    };
+    try {
+        const res = await fetch(url, {
+            ...init || {},
+            signal: ctrl.signal
+        });
+        return {
+            res,
+            ctrl,
+            done
+        };
+    } catch (e) {
+        done();
+        if (timedOut) throw timeoutError(o.timeoutMessage || "请求超时，请检查网络后重试");
+        throw e;
+    }
+}
+async function readBodyWithWatchdog(res, opts) {
+    const o = opts || {};
+    const ctrl = o.ctrl;
+    const idleMs = Number(o.idleMs) > 0 ? Number(o.idleMs) : VIDEO_IDLE_TIMEOUT_MS;
+    const total = Number(res.headers.get("content-length")) || 0;
+    if (!res.body || typeof res.body.getReader !== "function") {
+        return await res.arrayBuffer();
+    }
+    let timedOut = false;
+    let timer = 0;
+    const arm = () => {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+            timedOut = true;
+            try {
+                ctrl.abort();
+            } catch (e) {}
+        }, idleMs);
+    };
+    arm();
+    const reader = res.body.getReader();
+    const chunks = [];
+    let loaded = 0;
+    try {
+        for (;;) {
+            const step = await reader.read();
+            if (step.done) break;
+            if (step.value && step.value.length) {
+                chunks.push(step.value);
+                loaded += step.value.length;
+                arm();
+                try {
+                    o.onProgress?.(loaded, total);
+                } catch (e) {}
+            }
+        }
+    } catch (e) {
+        if (timedOut) throw timeoutError(o.timeoutMessage || "下载中断（网络太慢），请重试", o.timeoutCode);
+        throw e;
+    } finally {
+        window.clearTimeout(timer);
+        try {
+            reader.releaseLock();
+        } catch (e) {}
+    }
+    const out = new Uint8Array(loaded);
+    let off = 0;
+    for (let i = 0; i < chunks.length; i++) {
+        out.set(chunks[i], off);
+        off += chunks[i].length;
+    }
+    return out.buffer;
+}
+async function getBinary(base, path, exp, opts) {
+    const o = opts || {};
+    for (let attempt = 0; attempt < 2; attempt++) {
+        const {res, ctrl, done} = await fetchWithDeadline(`${base}${path}`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                ...exp || await authHeaders(base)
+            }
+        }, {
+            timeoutMs: Number(o.headerTimeoutMs) > 0 ? Number(o.headerTimeoutMs) : VIDEO_HEADER_TIMEOUT_MS,
+            signal: o.signal,
+            timeoutMessage: "验证题下载超时，请点击刷新重试",
+            timeoutCode: "VIDEO_TIMEOUT"
+        });
+        try {
+            if (res.ok) {
+                return await readBodyWithWatchdog(res, {
+                    ctrl,
+                    idleMs: o.idleMs,
+                    onProgress: o.onProgress,
+                    timeoutMessage: "验证题下载中断（网络太慢），请点击刷新重试",
+                    timeoutCode: "VIDEO_TIMEOUT"
+                });
+            }
+            if (res.status === 401 && !exp && !explicitApiKey() && attempt === 0) {
+                ticket = {
+                    token: "",
+                    expiresAt: 0
+                };
+                sessionCaps = {
+                    ...PERMISSIVE_CAPS
+                };
+                continue;
+            }
+            throw await readError(res);
+        } finally {
+            done();
+        }
+    }
+    throw new Error("请求失败：票据重取后仍未通过");
+}
+export function requestPowChallenge(apiBase, preferredMethod) {
+    const body = {};
+    if (preferredMethod === "phantom" || preferredMethod === "pow") body.preferredMethod = preferredMethod;
+    return postJson(apiBase, "/pow/challenge", body);
+}
+export function verifyPow(apiBase, challengeId, solution, sessionId) {
+    const body = {
+        challengeId,
+        solution
+    };
+    if (sessionId) body.sessionId = sessionId;
+    return postJson(apiBase, "/pow/verify", body);
+}
+export function submitPowStream(apiBase, challengeId, sessionId, seq, hashes, solveMs) {
+    const body = {
+        challengeId,
+        seq,
+        hashes,
+        solveMs
+    };
+    if (sessionId) body.sessionId = sessionId;
+    return postJson(apiBase, "/pow/stream", body);
+}
+export function consumeVerify(apiBase, receipts) {
+    const list = (Array.isArray(receipts) ? receipts : [ receipts ]).filter(Boolean);
+    const body = list.length > 1 ? {
+        receipts: list
+    } : {
+        receipt: list[0]
+    };
+    return postJson(apiBase, "/verify/consume", body);
+}

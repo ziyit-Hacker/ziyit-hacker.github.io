@@ -5,9 +5,10 @@ strip_comments.py —— 批量去掉 HTML / CSS / JS 文件中的注释与空�
 特性
 ----
 * JS（含 HTML 内联 <script>）默认调用 Terser 处理：
-  - 删除注释、删除空行/多余空白；
+  - 删注释、删空行，且**默认 beautify 输出多行/带缩进，不会把代码压成一行**；
   - `compress: false` + `mangle: false`：**不压缩逻辑、不混淆变量名**，只做“打印级”清理；
-  - 需要保留缩进换行时加 --terser-beautify（仍会删注释和空行）；
+  - 确需单行紧凑输出时加 --terser-compact；
+  - --no-terser 时回退内置词法：只删注释与空行，代码原有换行完全保留；
   - 单个脚本 Terser 解析失败（语法特殊 / 顶层 return / JSX 等）时自动回退内置词法去注释，
     不会因为一处失败中断整批；
   - 未安装 Terser 时自动用 npx 拉取一次（terser@5）后复用缓存。
@@ -31,8 +32,8 @@ python strip_comments.py Human_verification --write     # 实际去掉该目录�
 python strip_comments.py a.html b.js --dry-run          # 只看 a.html / b.js 会删多少
 python strip_comments.py --ext html js . --write        # 只处理 html/js
 python strip_comments.py . --delete-backups             # 删除范围内所有 .bak 备份
-python strip_comments.py --no-terser . --write          # 不调 Terser，用内置词法去注释
-python strip_comments.py . --write --terser-beautify    # Terser 输出保留换行/缩进
+python strip_comments.py --no-terser . --write          # 改用内置词法（保留原有换行）
+python strip_comments.py . --write                     # 默认 Terser + beautify（多行输出）
 python strip_comments.py --selftest                     # 跑内置自检（不碰任何文件）
 """
 
@@ -290,7 +291,7 @@ def strip_js(src):
                 j += 1
             word = src[i:j]
             out.append(word)
-            regex_ok = word not in _REGEX_AFTER_KEYWORD
+            regex_ok = word in _REGEX_AFTER_KEYWORD
             i = j
             continue
 
@@ -469,7 +470,7 @@ def _find_terser():
 class TerserRunner:
     """常驻 Node 助手进程，批量把 JS 交给 Terser 去注释/去空行（不混淆变量名）。"""
 
-    def __init__(self, beautify=False):
+    def __init__(self, beautify=True):
         self.beautify = bool(beautify)
         self._proc = None
         self._helper = None
@@ -660,6 +661,72 @@ def strip_css(src):
     return "".join(out), removed_chars, removed_blocks
 
 
+# ----------------------------- 空行去除（保留代码换行） -----------------------------
+
+def _scan_template_state(line, in_tpl):
+    """逐字符扫描一行，返回扫描结束时的「是否在模板字符串内」状态。"""
+    i, n = 0, len(line)
+    while i < n:
+        c = line[i]
+        if c == "\\":
+            i += 2
+            continue
+        if c == "`":
+            in_tpl = not in_tpl
+        i += 1
+    return in_tpl
+
+
+def drop_blank_lines(text, protect_templates=False):
+    """只删除纯空白行，代码行与其换行原样保留。
+    protect_templates=True：模板字符串内部的空行不删，避免改变字符串内容。"""
+    if not text:
+        return text
+    out = []
+    in_tpl = False
+    for line in text.split("\n"):
+        if line.strip() or (protect_templates and in_tpl):
+            out.append(line)
+        if protect_templates:
+            in_tpl = _scan_template_state(line, in_tpl)
+    res = "\n".join(out)
+    if text.endswith("\n") and not res.endswith("\n"):
+        res += "\n"
+    return res
+
+
+_HTML_BLANK_PROTECT = frozenset((
+    "script", "style", "pre", "textarea", "template", "xmp", "plaintext", "noscript"))
+_HTML_BLANK_TAG_RE = re.compile(r"<(/?)\s*([A-Za-z][\w:-]*)")
+
+
+def _drop_blank_lines_html(text):
+    """删除 HTML 空行；<pre>/<textarea>/<template>/<script>/<style> 内原样保留。"""
+    if not text:
+        return text
+    out = []
+    stack = []
+    for line in text.split("\n"):
+        if line.strip() or stack:
+            out.append(line)
+        for m in _HTML_BLANK_TAG_RE.finditer(line):
+            closing = bool(m.group(1))
+            name = m.group(2).lower()
+            if name not in _HTML_BLANK_PROTECT:
+                continue
+            if not closing:
+                stack.append(name)
+            elif name in stack:
+                if stack[-1] == name:
+                    stack.pop()
+                else:
+                    stack.remove(name)
+    res = "\n".join(out)
+    if text.endswith("\n") and not res.endswith("\n"):
+        res += "\n"
+    return res
+
+
 # ----------------------------- HTML 注释去除 -----------------------------
 
 def _find_script_close(body):
@@ -667,6 +734,7 @@ def _find_script_close(body):
     n = len(body)
     stack = []
     i = 0
+    regex_ok = True          # 为 True 时 '/' 视为正则字面量起始，避免正则里的 // 被当注释
     while i < n:
         c = body[i]
         top = stack[-1] if stack else None
@@ -677,6 +745,7 @@ def _find_script_close(body):
             if c == "`":
                 i += 1
                 stack.pop()
+                regex_ok = False
                 continue
             if c == "$" and i + 1 < n and body[i + 1] == "{":
                 i += 2
@@ -695,6 +764,31 @@ def _find_script_close(body):
                 else:
                     top[1] -= 1
                 i += 1
+                continue
+        # 正则字面量：整体跳过，防止其中的 // 被误判为行注释
+        if c == "/" and regex_ok and not (i + 1 < n and body[i + 1] in "/*"):
+            j = i + 1
+            in_cls = False
+            closed = False
+            while j < n:
+                ch = body[j]
+                if ch == "\\":
+                    j += 2
+                    continue
+                if ch == "[":
+                    in_cls = True
+                elif ch == "]":
+                    in_cls = False
+                elif ch == "/" and not in_cls:
+                    j += 1
+                    closed = True
+                    break
+                elif ch in "\r\n" and not in_cls:
+                    break
+                j += 1
+            if closed:
+                i = j
+                regex_ok = False
                 continue
         # 注释
         if c == "/" and i + 1 < n and body[i + 1] == "/":
@@ -720,15 +814,38 @@ def _find_script_close(body):
                     break
                 j += 1
             i = j
+            regex_ok = False
             continue
         # 模板
         if c == "`":
             i += 1
             stack.append("T")
             continue
+        # 标识符（关键字之后应把 '/' 当正则）
+        if c.isalpha() or c in "_$" or ord(c) > 127:
+            j = i + 1
+            while j < n and (body[j].isalnum() or body[j] in "_$" or ord(body[j]) > 127):
+                j += 1
+            regex_ok = body[i:j] in _REGEX_AFTER_KEYWORD
+            i = j
+            continue
+        # 数字
+        if c.isdigit():
+            j = i + 1
+            while j < n and (body[j].isalnum() or body[j] in "._"):
+                j += 1
+            regex_ok = False
+            i = j
+            continue
         # 代码态检测闭合标签
         if c == "<" and _CLOSE_SCRIPT_RE.match(body, i):
             return i
+        if c == ")" or c == "]":
+            regex_ok = False
+        elif c == "}" or c in "{[(" or c in "+-*/%&|^~!?:;,=<>":
+            regex_ok = True
+        elif c not in _WS:
+            regex_ok = False
         i += 1
     return -1
 
@@ -848,13 +965,19 @@ def strip_html(src, keep_functional=True, minify_js=None):
                         stripped = minify_js(body, _script_is_module(open_tag))
                     if stripped is None:
                         stripped, rc, rb = strip_js(body)
+                        stripped = drop_blank_lines(stripped, protect_templates=True)
+                        rc = max(rc, len(body) - len(stripped))
                     else:
                         rc = max(0, len(body) - len(stripped))
                         rb = 1 if stripped != body else 0
+                        stripped = drop_blank_lines(stripped, protect_templates=True)
+                        rc = max(rc, len(body) - len(stripped))
                 else:
                     stripped, rc, rb = body, 0, 0   # 数据型脚本原样保留
             else:
                 stripped, rc, rb = strip_css(body)
+                stripped = drop_blank_lines(stripped)
+                rc = max(rc, len(body) - len(stripped))
             removed_chars += rc
             removed_blocks += rb
             out.append(src[i:body_start])
@@ -882,7 +1005,7 @@ def strip_html(src, keep_functional=True, minify_js=None):
         out.append(src[i])
         i += 1
 
-    return "".join(out), removed_chars, removed_blocks, removed_blocks
+    return _drop_blank_lines_html("".join(out)), removed_chars, removed_blocks, removed_blocks
 
 
 # ----------------------------- 文件读写与入口 -----------------------------
@@ -919,12 +1042,18 @@ def strip_file(path, ext, keep_functional=True, minify_js=None):
             new_text = minify_js(text, ext == "mjs" or _js_looks_module(text))
         if new_text is None:
             new_text, rc, rb = strip_js(text)
+            new_text = drop_blank_lines(new_text, protect_templates=True)
+            rc = max(rc, len(text) - len(new_text))
             block_count = rb
         else:
             rc = max(0, len(text) - len(new_text))
             block_count = 1 if new_text != text else 0
+            new_text = drop_blank_lines(new_text, protect_templates=True)
+            rc = max(rc, len(text) - len(new_text))
     elif ext in _EXT_CSS:
         new_text, rc, rb = strip_css(text)
+        new_text = drop_blank_lines(new_text)
+        rc = max(rc, len(text) - len(new_text))
         block_count = rb
     else:
         new_text, rc, rb, block_count = strip_html(
@@ -1006,6 +1135,28 @@ def _selftest():
             print("FAIL:", repr(code))
             print("   keep 期待包含:", repr(keep))
             print("   got  :", repr(got))
+    blank_cases = [
+        # 只删空行，代码行与换行原样保留
+        ("var a = 1;\n\n\nvar b = 2;\n\n", "var a = 1;\nvar b = 2;\n"),
+        # 模板字符串内部的空行必须保留
+        ("const s = `a\n\nb`;\n\nvar c = 1;\n", "const s = `a\n\nb`;\nvar c = 1;\n"),
+    ]
+    for code, want in blank_cases:
+        got = drop_blank_lines(code, protect_templates=True)
+        if got != want:
+            fails += 1
+            print("FAIL-BLANK:", repr(code), "=>", repr(got), "want", repr(want))
+    html_blank_cases = [
+        ("<div>a</div>\n\n\n<div>b</div>\n", "<div>a</div>\n<div>b</div>\n"),
+        ("<pre>a\n\nb</pre>\n\n<p>c</p>", "<pre>a\n\nb</pre>\n<p>c</p>"),
+        ("<script>var a = 1;\n\nvar b = 2;\n</script>\n\n<p>x</p>",
+         "<script>var a = 1;\nvar b = 2;\n</script>\n<p>x</p>"),
+    ]
+    for code, want in html_blank_cases:
+        got, rc, rb, _ = strip_html(code)
+        if got != want:
+            fails += 1
+            print("FAIL-HTML-BLANK:", repr(code), "=>", repr(got), "want", repr(want))
     html_cases = [
         ("a<!-- 注释 -->b", "ab"),
         ("<script>x = '<!-- 不是注释'; // t</script>", "'<!-- 不是注释'"),
@@ -1104,16 +1255,21 @@ def main(argv=None):
     ap.add_argument("--ext", nargs="*", default=["html", "htm", "js", "mjs", "cjs", "css"],
                     help="要处理的扩展名")
     ap.add_argument("--write", action="store_true", help="真正写回文件（默认只预览）")
+    ap.add_argument("--dry-run", action="store_true", help="只预览不写回（默认行为，保留给旧脚本）")
     ap.add_argument("--backup", action="store_true", help="写回前生成 .bak")
     ap.add_argument("--skip-min", action="store_true", help="跳过 *.min.js 等已压缩文件")
     ap.add_argument("--exclude-dir", nargs="*", default=["node_modules", ".git", "__pycache__", ".venv"],
                     help="遍历时跳过的目录名")
     ap.add_argument("--strip-functional", action="store_true",
                     help="同时删除条件注释等“功能性注释”（默认保留）")
+    ap.add_argument("--terser", action="store_true",
+                    help="使用 Terser 处理 JS（现在是默认行为，保留给旧脚本）")
     ap.add_argument("--no-terser", action="store_true",
-                    help="不调用 Terser，使用内置词法去注释（默认调用 Terser）")
+                    help="不调用 Terser，用内置词法去注释（完全保留原有换行）")
     ap.add_argument("--terser-beautify", action="store_true",
-                    help="Terser 输出保留缩进换行（仍然删注释与空行）")
+                    help="Terser 输出保留缩进换行（默认已开启，保留给旧脚本）")
+    ap.add_argument("--terser-compact", action="store_true",
+                    help="关闭 beautify：Terser 输出压成单行（一般不需要）")
     ap.add_argument("--selftest", action="store_true", help="运行内置自检后退出")
     ap.add_argument("--delete-backups", action="store_true",
                     help="删除路径范围内所有 .bak 备份后退出（不做清理）")
@@ -1138,15 +1294,16 @@ def main(argv=None):
     runner = None
     minify_js = None
     if not args.no_terser:
-        runner = TerserRunner(beautify=args.terser_beautify)
+        runner = TerserRunner(beautify=not args.terser_compact)
         if runner.available():
             minify_js = runner.minify
-            print("JS 处理方式: Terser（compress/mangle 已关闭，不混淆变量名）")
+            print("JS 处理方式: Terser（compress/mangle 关闭；%s）"
+                  % ("单行紧凑输出" if args.terser_compact else "beautify 多行输出，保留换行与缩进"))
         else:
             runner = None
             print("JS 处理方式: 内置词法去注释（未找到可用的 Node.js / Terser）")
     else:
-        print("JS 处理方式: 内置词法去注释（--no-terser）")
+        print("JS 处理方式: 内置词法去注释（保留原有换行，只删注释与空行）")
 
     total_rm = 0
     changed = 0
@@ -1157,13 +1314,13 @@ def main(argv=None):
         if not text or not new_text:
             print("跳过(读取失败/为空):", path)
             continue
-        if new_text == text or rc == 0:
+        if new_text == text:
             continue
         changed += 1
         total_rm += rc
         saved = len(text.encode("utf-8", errors="replace")) - len(new_text.encode("utf-8", errors="replace"))
         print(("[写] " if args.write else "[预览] ") + path +
-              "  删注释≈%d字符 省%d字节" % (rc, saved))
+              "  整理≈%d字符 省%d字节" % (rc, saved))
         if args.write:
             if args.backup:
                 bak = path + ".bak"
@@ -1172,7 +1329,7 @@ def main(argv=None):
             with open(path, "wb") as f:
                 f.write(_encode(new_text, text.startswith("\ufeff")))
 
-    print("\n共扫描 %d 个文件，%d 个含注释，累计删除注释约 %d 字符。" % (len(files), changed, total_rm))
+    print("\n共扫描 %d 个文件，%d 个文件有变化，累计整理约 %d 字符。" % (len(files), changed, total_rm))
     if not args.write:
         print("本次仅预览。确认无误后请加 --write 真正改写（建议先 --backup）。")
     if runner is not None:

@@ -3,6 +3,22 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.63 — 2026-11-15
+### 修复
+- **注释清理工具 [strip_comments.py](file:///f:/Code/html/ziyit/strip_comments.py) 会压掉代码换行、且不删空行**：
+  - 默认路径改为 Terser **beautify 多行输出**（`compress:false` / `mangle:false`），不再把代码压成一行；确需单行加 `--terser-compact`，想用内置词法（完全保留原换行）加 `--no-terser`。
+  - Terser 输出后统一走 `drop_blank_lines`（JS/CSS 保护模板字符串、HTML 用标签栈保护 `script/style/pre/textarea/template` 等），实现「保留换行、删除空行」。
+  - 修复 `_find_script_close` 把正则字面量里的 `//`（如 `return/^https?:\/\//i`）误判为行注释，导致连带吞掉 `</script>` 与后续脚本、文件被截断的问题；同步修复 `strip_js` 中 `regex_ok` 关键字判定写反的 bug。
+  - 仅排版变化（内容等价）也会写回，日志改为「整理≈N 字符 / N 个文件有变化」。
+- 全站 HTML 与 JS 资源按新规则重跑一遍（跳过 `noble`、`*.min.js`），共 130 个文件；并用 `git show HEAD:` 恢复此前被旧版工具截断的 [Human_verification.html](file:///f:/Code/html/ziyit/Human_verification.html) 与 [user/register.html](file:///f:/Code/html/ziyit/user/register.html) 后重新处理，内联脚本 0 解析失败。
+
+## v1.62 — 2026-11-15
+### 变更
+- **按后端通知停用 ZSEC，前端改纯 HTTPS**：
+  - [ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js) 移除全部加密通道逻辑（`getZsec` / SSE 豁免 / 密文分支），`fetchApi` 直接走真实 `fetch` 并支持多 base 故障转移；新增 `httpsOnly()` 把 `http://` 归一化为 `https://`（`localhost` / `127.0.0.1` / `::1` 例外）。
+  - `fetchApi` 对 HTML 文档不再经 JSON 解析（此前会返回字面量 `"null"`，导致后室文档内容为空），直接返回真实 `Response`。
+  - 删除 `assets/zsec_client.js`，全站引用升级到 `ziyit_api.js?v=20261115a`。
+
 ## v1.61 — 2026-11-14
 ### 修复
 - **登录接口 200 OK 但页面提示「登录响应异常，请稍后再试」**：跨域请求带 `credentials: 'include'` 时，规范规定响应头 `Access-Control-Expose-Headers: *` **不按通配符处理**（只有非凭据请求才展开为全部头）。因此 `X-ZS-Encrypted` / `X-ZS-Plain` / `X-ZS-Proof-*` 等自定义响应头在浏览器里读不到，旧逻辑把「加密信封 `{"iv","data"}`」当成明文业务 JSON 返回，`ziyit_api` 解析出的对象没有 token。

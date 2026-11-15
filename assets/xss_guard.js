@@ -1,1 +1,133 @@
-(function(global){"use strict";var ALLOWED_TAGS={B:1,STRONG:1,I:1,EM:1,U:1,S:1,DEL:1,P:1,BR:1,HR:1,UL:1,OL:1,LI:1,BLOCKQUOTE:1,CODE:1,PRE:1,SPAN:1,DIV:1,H1:1,H2:1,H3:1,H4:1,H5:1,H6:1,A:1,TABLE:1,THEAD:1,TBODY:1,TR:1,TH:1,TD:1};var ALLOWED_ATTRS={A:["href","title","target","rel"]};var DANGEROUS_PROTOCOL=/^\s*(javascript|vbscript|data)\s*:/i;function escapeHtml(value){return String(value==null?"":value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}function setText(el,value){if(!el)return el;el.textContent=value==null?"":String(value);return el}function safeUrl(url){var u=String(url==null?"":url).trim();if(!u)return"";if(DANGEROUS_PROTOCOL.test(u))return"";if(/^(https?:|mailto:)/i.test(u)||u.charAt(0)==="/"||u.charAt(0)==="#"||u.charAt(0)==="?"){return u}return""}function setSafeHref(el,url){if(!el)return el;var safe=safeUrl(url);if(safe){el.setAttribute("href",safe);el.setAttribute("rel","noopener noreferrer")}else{el.removeAttribute("href")}return el}function sanitizeHtml(html){var doc=(new DOMParser).parseFromString("<div>"+String(html==null?"":html)+"</div>","text/html");var root=doc.body.firstChild;if(!root)return"";var walk=function(node){var child=node.firstChild;while(child){var next=child.nextSibling;if(child.nodeType===3){}else if(child.nodeType===1){var tag=child.tagName;if(!ALLOWED_TAGS[tag]){if(tag==="SCRIPT"||tag==="STYLE"||tag==="IFRAME"||tag==="OBJECT"||tag==="EMBED"||tag==="TEMPLATE"){node.removeChild(child)}else{while(child.firstChild)node.insertBefore(child.firstChild,child);node.removeChild(child)}child=next;continue}var allowed=ALLOWED_ATTRS[tag]||[];Array.prototype.slice.call(child.attributes).forEach(function(attr){var name=attr.name.toLowerCase();if(allowed.indexOf(name)<0){child.removeAttribute(attr.name);return}if(name==="href"&&!safeUrl(attr.value))child.removeAttribute("href");if(name==="target")child.setAttribute("target","_blank");if(name==="rel")child.setAttribute("rel","noopener noreferrer")});if(tag==="A"&&child.getAttribute("href")){child.setAttribute("rel","noopener noreferrer")}walk(child)}else{node.removeChild(child)}child=next}};walk(root);return root.innerHTML}function setRichHtml(el,html){if(!el)return el;el.innerHTML=sanitizeHtml(html);return el}function clipboardText(evt){try{return(evt.clipboardData||global.clipboardData).getData("text/plain")||""}catch(e){return""}}global.XssGuard={escapeHtml,setText,setRichHtml,setSafeHref,safeUrl,sanitizeHtml,clipboardText}})(typeof window!=="undefined"?window:globalThis);
+(function(global) {
+    "use strict";
+    var ALLOWED_TAGS = {
+        B: 1,
+        STRONG: 1,
+        I: 1,
+        EM: 1,
+        U: 1,
+        S: 1,
+        DEL: 1,
+        P: 1,
+        BR: 1,
+        HR: 1,
+        UL: 1,
+        OL: 1,
+        LI: 1,
+        BLOCKQUOTE: 1,
+        CODE: 1,
+        PRE: 1,
+        SPAN: 1,
+        DIV: 1,
+        H1: 1,
+        H2: 1,
+        H3: 1,
+        H4: 1,
+        H5: 1,
+        H6: 1,
+        A: 1,
+        TABLE: 1,
+        THEAD: 1,
+        TBODY: 1,
+        TR: 1,
+        TH: 1,
+        TD: 1
+    };
+    var ALLOWED_ATTRS = {
+        A: [ "href", "title", "target", "rel" ]
+    };
+    var DANGEROUS_PROTOCOL = /^\s*(javascript|vbscript|data)\s*:/i;
+    function escapeHtml(value) {
+        return String(value == null ? "" : value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+    function setText(el, value) {
+        if (!el) return el;
+        el.textContent = value == null ? "" : String(value);
+        return el;
+    }
+    function safeUrl(url) {
+        var u = String(url == null ? "" : url).trim();
+        if (!u) return "";
+        if (DANGEROUS_PROTOCOL.test(u)) return "";
+        if (/^(https?:|mailto:)/i.test(u) || u.charAt(0) === "/" || u.charAt(0) === "#" || u.charAt(0) === "?") {
+            return u;
+        }
+        return "";
+    }
+    function setSafeHref(el, url) {
+        if (!el) return el;
+        var safe = safeUrl(url);
+        if (safe) {
+            el.setAttribute("href", safe);
+            el.setAttribute("rel", "noopener noreferrer");
+        } else {
+            el.removeAttribute("href");
+        }
+        return el;
+    }
+    function sanitizeHtml(html) {
+        var doc = (new DOMParser).parseFromString("<div>" + String(html == null ? "" : html) + "</div>", "text/html");
+        var root = doc.body.firstChild;
+        if (!root) return "";
+        var walk = function(node) {
+            var child = node.firstChild;
+            while (child) {
+                var next = child.nextSibling;
+                if (child.nodeType === 3) {} else if (child.nodeType === 1) {
+                    var tag = child.tagName;
+                    if (!ALLOWED_TAGS[tag]) {
+                        if (tag === "SCRIPT" || tag === "STYLE" || tag === "IFRAME" || tag === "OBJECT" || tag === "EMBED" || tag === "TEMPLATE") {
+                            node.removeChild(child);
+                        } else {
+                            while (child.firstChild) node.insertBefore(child.firstChild, child);
+                            node.removeChild(child);
+                        }
+                        child = next;
+                        continue;
+                    }
+                    var allowed = ALLOWED_ATTRS[tag] || [];
+                    Array.prototype.slice.call(child.attributes).forEach(function(attr) {
+                        var name = attr.name.toLowerCase();
+                        if (allowed.indexOf(name) < 0) {
+                            child.removeAttribute(attr.name);
+                            return;
+                        }
+                        if (name === "href" && !safeUrl(attr.value)) child.removeAttribute("href");
+                        if (name === "target") child.setAttribute("target", "_blank");
+                        if (name === "rel") child.setAttribute("rel", "noopener noreferrer");
+                    });
+                    if (tag === "A" && child.getAttribute("href")) {
+                        child.setAttribute("rel", "noopener noreferrer");
+                    }
+                    walk(child);
+                } else {
+                    node.removeChild(child);
+                }
+                child = next;
+            }
+        };
+        walk(root);
+        return root.innerHTML;
+    }
+    function setRichHtml(el, html) {
+        if (!el) return el;
+        el.innerHTML = sanitizeHtml(html);
+        return el;
+    }
+    function clipboardText(evt) {
+        try {
+            return (evt.clipboardData || global.clipboardData).getData("text/plain") || "";
+        } catch (e) {
+            return "";
+        }
+    }
+    global.XssGuard = {
+        escapeHtml,
+        setText,
+        setRichHtml,
+        setSafeHref,
+        safeUrl,
+        sanitizeHtml,
+        clipboardText
+    };
+})(typeof window !== "undefined" ? window : globalThis);

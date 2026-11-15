@@ -1,1 +1,1669 @@
-import{CONFIG,isMobileViewport}from"./config.js";import{isMethodNotAllowed,requestChallenge,requestPowChallenge,sessionInfo,submitPowStream,submitVerify,submitStreamChunk,verifyPow,videoBinary,videoReady,videoChunk}from"./api.js";import{decrypt,deriveSessionKey,encrypt,generateClientKeyPair,importServerPublic}from"./crypto.js";import{installAntidebug}from"./antidebug.js";import{PhantomRenderer}from"./renderer.js";import{TrajectoryTracker}from"./tracker.js";import{injectStyles}from"./styles.js";import{collectEnvEvidence}from"./env.js";const VERSION="0.1.0";const PREVIEW_MS=CONFIG.previewSeconds*1e3;const LOGO_SVG='<img src="https://ziyit-hacker.github.io/assets/logo.ico" alt="Logo" style="width:22px;height:22px;display:block;border-radius:4px;" />';const CHECK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+'<path d="M5 12.5l4.5 4.5L19 7"/>'+"</svg>";const CLOSE_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+'<path d="M18 6 6 18M6 6l12 12"/>'+"</svg>";const ALERT_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+'<path d="M12 8v5M12 16.5v.5"/>'+"</svg>";const POW_WORKER_URL=new URL("./pow-worker.js",import.meta.url);function base64ToBytes(b64){const bin=atob(String(b64||""));const out=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out}class PowTask{constructor(){this.worker=null;this.blobUrl="";this.cancelled=false;this._reject=null}async _spawn(){try{return new Worker(POW_WORKER_URL)}catch(e){}const res=await fetch(POW_WORKER_URL);if(!res.ok){throw new Error(`pow worker fetch ${res.status}`)}const src=await res.text();this.blobUrl=URL.createObjectURL(new Blob([src],{type:"application/javascript"}));return new Worker(this.blobUrl)}async run(nonce,difficulty,onProgress){const worker=await this._spawn();if(this.cancelled){try{worker.terminate()}catch(e){}throw new Error("pow cancelled")}this.worker=worker;return new Promise((resolve,reject)=>{this._reject=reject;worker.addEventListener("message",ev=>{const msg=ev&&ev.data;if(!msg||this.cancelled){return}if(msg.type==="progress"){onProgress?.(msg);return}this._reject=null;this._dispose();if(msg.type==="solved"){resolve({solution:String(msg.solution),hashes:msg.hashes,solveMs:msg.solveMs})}else{reject(new Error(msg.message||"pow solve failed"))}});worker.addEventListener("error",e=>{this._reject=null;this._dispose();reject(new Error(e&&e.message||"pow worker error"))});worker.postMessage({type:"solve",nonce,difficulty})})}_dispose(){if(this.worker){try{this.worker.terminate()}catch(e){}this.worker=null}if(this.blobUrl){try{URL.revokeObjectURL(this.blobUrl)}catch(e){}this.blobUrl=""}}cancel(){this.cancelled=true;this._dispose();const reject=this._reject;this._reject=null;reject?.(new Error("pow cancelled"))}}function resolveContainer(el){const node=typeof el==="string"?document.querySelector(el):el;if(!(node instanceof HTMLElement)){throw new Error(`Phantom.mount: 容器未找到 (${el})`)}return node}class WidgetSession{constructor(canvas,apiBase,status,overlay,hint,activateBtn,onResult,onError,onRetry,onSessionInfo){Object.defineProperty(this,"canvas",{enumerable:true,configurable:true,writable:true,value:canvas});Object.defineProperty(this,"apiBase",{enumerable:true,configurable:true,writable:true,value:apiBase});Object.defineProperty(this,"status",{enumerable:true,configurable:true,writable:true,value:status});Object.defineProperty(this,"overlay",{enumerable:true,configurable:true,writable:true,value:overlay});Object.defineProperty(this,"hint",{enumerable:true,configurable:true,writable:true,value:hint});Object.defineProperty(this,"activateBtn",{enumerable:true,configurable:true,writable:true,value:activateBtn});Object.defineProperty(this,"onResult",{enumerable:true,configurable:true,writable:true,value:onResult});Object.defineProperty(this,"onError",{enumerable:true,configurable:true,writable:true,value:onError});Object.defineProperty(this,"onRetry",{enumerable:true,configurable:true,writable:true,value:onRetry});Object.defineProperty(this,"onSessionInfo",{enumerable:true,configurable:true,writable:true,value:onSessionInfo});Object.defineProperty(this,"renderer",{enumerable:true,configurable:true,writable:true,value:null});Object.defineProperty(this,"tracker",{enumerable:true,configurable:true,writable:true,value:null});Object.defineProperty(this,"sessionKey",{enumerable:true,configurable:true,writable:true,value:null});Object.defineProperty(this,"challengeId",{enumerable:true,configurable:true,writable:true,value:""});Object.defineProperty(this,"sessionId",{enumerable:true,configurable:true,writable:true,value:""});Object.defineProperty(this,"collecting",{enumerable:true,configurable:true,writable:true,value:false});Object.defineProperty(this,"finished",{enumerable:true,configurable:true,writable:true,value:false});Object.defineProperty(this,"previewing",{enumerable:true,configurable:true,writable:true,value:false});Object.defineProperty(this,"previewTimer",{enumerable:true,configurable:true,writable:true,value:0});Object.defineProperty(this,"previewMs",{enumerable:true,configurable:true,writable:true,value:PREVIEW_MS});Object.defineProperty(this,"duration",{enumerable:true,configurable:true,writable:true,value:3});Object.defineProperty(this,"retryTimer",{enumerable:true,configurable:true,writable:true,value:0});Object.defineProperty(this,"device",{enumerable:true,configurable:true,writable:true,value:"pc"});Object.defineProperty(this,"_unbind",{enumerable:true,configurable:true,writable:true,value:()=>{}});Object.defineProperty(this,"videoEl",{enumerable:true,configurable:true,writable:true,value:null});Object.defineProperty(this,"videoUrl",{enumerable:true,configurable:true,writable:true,value:""});Object.defineProperty(this,"streamEnabled",{enumerable:true,configurable:true,writable:true,value:false});Object.defineProperty(this,"streamIntervalMs",{enumerable:true,configurable:true,writable:true,value:50});this._autoRestarts=0;this._autoRestarting=false;Object.defineProperty(this,"streamTimer",{enumerable:true,configurable:true,writable:true,value:0});Object.defineProperty(this,"streamSeq",{enumerable:true,configurable:true,writable:true,value:0});Object.defineProperty(this,"streamCursor",{enumerable:true,configurable:true,writable:true,value:0});Object.defineProperty(this,"_sessionClosed",{enumerable:true,configurable:true,writable:true,value:false});this.requiredMethods=[];this.powRequired=false;this._powTask=null;this._powAbort=null;this._videoAbort=null;this._mediaSource=null;this._sourceBuffer=null;this._a11ySwitched=false;this._powAltUnavailable=false;this._powChallengeId="";this._powSessionId="";this._sessionCaps={allowedMethods:["phantom","pow"],defaultMethod:"phantom",canSwitch:true};this._preReceipts=[];this._powDone=false}async loadSessionCaps(){try{this._sessionCaps=await sessionInfo()}catch(e){}return this._sessionCaps}notifyEntry(caps,showEntry){try{this.onSessionInfo?.(caps,showEntry)}catch(e){}}setHint(stage,text){this.hint.setAttribute("data-stage",stage);this.hint.textContent=text}async start(){const mobile=isMobileViewport();this.device=mobile?"mobile":"pc";this.canvas.width=mobile?CONFIG.canvasWidthMobile:CONFIG.canvasWidthPC;this.canvas.height=mobile?CONFIG.canvasHeightMobile:CONFIG.canvasHeightPC;this.status.textContent="正在准备验证题…";this.overlay.classList.add("phantom-hidden");this.setHint("loading","");this.activateBtn.disabled=true;try{const caps=await this.loadSessionCaps();if(this._sessionClosed)return;if(caps.defaultMethod==="pow"){const handled=await this._runPowFirst();if(handled)return}const{privateKey,publicJwk}=await generateClientKeyPair();let challenge;try{challenge=await requestChallenge(this.apiBase,publicJwk,this.device)}catch(e){if(!isMethodNotAllowed(e))throw e;const handled=await this._runPowFirst();if(handled||this._sessionClosed)return;throw e}if(challenge&&challenge.sessionId)this.sessionId=challenge.sessionId;if(this._a11ySwitched)return;const methods=challenge&&Array.isArray(challenge.requiredMethods)?challenge.requiredMethods:[];this.requiredMethods=methods;this.powRequired=methods.indexOf("pow")!==-1;if(methods.indexOf("phantom")===-1&&this.powRequired){const handled=await this._runPowFirst();if(handled||this._sessionClosed)return}this.notifyEntry(caps,true);const serverPub=await importServerPublic(challenge.serverPublicJwk);this.sessionKey=await deriveSessionKey(privateKey,serverPub,challenge.salt);this.challengeId=challenge.challengeId;const paramsJson=await decrypt(this.sessionKey,challenge.encryptedParams.iv,challenge.encryptedParams.ciphertext);const raw=JSON.parse((new TextDecoder).decode(paramsJson));const streamCfg=raw.stream||{};this.streamEnabled=!!streamCfg.enabled;this.streamIntervalMs=Number(streamCfg.intervalMs)>0?Number(streamCfg.intervalMs):50;const videoEl=challenge&&challenge.videoStream?await this._prepareVideoChunked(challenge):challenge&&challenge.videoUrl?await this._prepareVideo(challenge):null;if(this._sessionClosed||this._a11ySwitched)return;const previewSeconds=Number(raw.previewSeconds)>0?Number(raw.previewSeconds):CONFIG.previewSeconds;this.previewMs=previewSeconds*1e3;const params={video:videoEl,duration:raw.duration,previewSeconds,fps:raw.fps,targetHalf:raw.targetHalf};this.duration=params.duration;this.renderer=new PhantomRenderer(this.canvas,params);this.tracker=new TrajectoryTracker(this.canvas);this.activateBtn.style.setProperty("--ph-charge-duration",`${this.duration}s`);this.status.textContent="";this.setHint("ready","按住下方按钮");this.activateBtn.disabled=false;this.renderer.drawStaticNoise();this.overlay.classList.remove("phantom-hidden");this.bindInteraction()}catch(e){if(this._sessionClosed||this._a11ySwitched)return;this.onError(e);const code=e&&e.status||0;if(e&&e.code==="PLAYBACK_UNSUPPORTED"){this.status.textContent="当前浏览器无法播放验证视频。请使用最新版 Chrome / Edge / Firefox / Safari 后重试。";this.setHint("blocked","");this.turnIntoRetryButton()}else if(code===429){this.status.textContent="尝试次数过多，请约 1 分钟后重试";this.scheduleRetry(6e4)}else if(code===401){this.status.textContent="会话已刷新，正在重新取题…";this.scheduleRetry(800,"auto-restart")}else if(code===403){const cls=this._classify403(e);this.status.textContent=cls.text;if(cls.kind==="env"||cls.kind==="points"||cls.kind==="method"){this.turnIntoRetryButton()}else{this.scheduleRetry(800,"auto-restart")}}else if(code===410){this.status.textContent="验证已过期，正在重新取题…";this.scheduleRetry(800,"auto-restart")}else if(e&&e.code==="VIDEO_TIMEOUT"){this.status.textContent="验证题加载超时，正在重新取题…";this.scheduleRetry(800,"auto-restart")}else{this.status.textContent=`初始化失败: ${e.message}`}}}bindInteraction(){if(this._a11ySwitched)return;const onDown=e=>{if(e.button!==0)return;e.preventDefault();if(this.collecting||this.previewing||this.finished)return;this.tracker?.notePress(e);this.previewing=true;this.overlay.classList.add("phantom-hidden");this.setHint("preview","手指/鼠标拖动到闪烁的方块等待");this.renderer?.start((_center,t)=>{if(t>=1)this.setHint("stopped","请松手")});armPreviewSwitch()};const beginCollect=()=>{if(!this.previewing||this.finished)return;this.previewing=false;this.collecting=true;this.status.textContent="";this.setHint("collect","按住跟随方块移动");this.tracker?.start();this._startStream();this.activateBtn.classList.add("phantom-holding")};const armPreviewSwitch=()=>{window.clearTimeout(this.previewTimer);const startedAt=performance.now();const maxWaitMs=Math.max(8e3,this.previewMs+8e3);let fromStart=false;const fire=()=>{this.previewTimer=0;beginCollect()};const tick=()=>{if(!this.previewing||this.finished)return;const now=performance.now();const v=this.videoEl;if(!v){if(now-startedAt>=this.previewMs){fire();return}}else{const playedMs=v.currentTime*1e3;if(!fromStart){if(playedMs<this.previewMs)fromStart=true}else if(playedMs>=this.previewMs){fire();return}}if(now-startedAt>=maxWaitMs){fire();return}this.previewTimer=window.setTimeout(tick,50)};this.previewTimer=window.setTimeout(tick,50)};const onUp=async()=>{if(this.finished)return;this.tracker?.noteRelease();if(this.previewing){window.clearTimeout(this.previewTimer);this.previewing=false;this.renderer?.pause();this.status.textContent="";this.setHint("ready","按住下方按钮并马上拖动到方块");return}if(!this.collecting)return;this.collecting=false;this.activateBtn.classList.remove("phantom-holding");this.renderer?.pause();this.setHint("done","");const samples=this.tracker?.stop()??[];await this._stopStream();void this.verifyAndFinish(samples)};this.activateBtn.addEventListener("pointerdown",onDown);window.addEventListener("pointerup",onUp);const onSelectStart=e=>e.preventDefault();document.addEventListener("selectstart",onSelectStart,{capture:true});document.addEventListener("dragstart",onSelectStart,{capture:true});this._unbind=()=>{this.activateBtn.removeEventListener("pointerdown",onDown);window.removeEventListener("pointerup",onUp);document.removeEventListener("selectstart",onSelectStart,{capture:true});document.removeEventListener("dragstart",onSelectStart,{capture:true})}}async _prepareVideoChunked(challenge){const meta=challenge&&challenge.videoStream||{};const cid=this.challengeId||challenge&&challenge.challengeId;const sid=this.sessionId||challenge&&challenge.sessionId;if(!cid)throw new Error("挑战缺少会话信息");this.status.textContent="正在加载验证题…";this._videoAbort?.abort();const ctrl=new AbortController;this._videoAbort=ctrl;const aborted=()=>ctrl.signal.aborted||this._sessionClosed||this._a11ySwitched;let v=null;let url="";let keepAbort=false;try{let ready=null;try{ready=await videoReady(this.apiBase,cid,sid,{signal:ctrl.signal})}catch(e){if(e&&e.status===404)return await this._fallbackFromChunked(challenge,aborted);throw e}if(aborted())return null;const mime=ready.mime||meta.mime||"video/mp4";const codec=ready.codec||meta.codec||"";const type=codec?`${mime}; codecs="${codec}"`:mime;const count=Number(ready.chunkCount||meta.chunkCount)||0;if(!count)throw this._playbackUnsupported("视频分包信息不可用");const chunkMs=Number(ready.chunkDurationMs||meta.chunkDurationMs)||0;const leadMs=Math.max(0,Number(ready.minPrefetch)||0)*1e3;const gateOn=ready.gateEnforce!==false;const win=Math.max(1,Math.floor(Number(ready.window??meta.window)||2));const t0=performance.now();const useMse=typeof window.MediaSource!=="undefined"&&window.MediaSource.isTypeSupported(type);let ms=null;let sb=null;v=document.createElement("video");v.muted=true;v.playsInline=true;v.setAttribute("playsinline","");v.preload="auto";v.style.cssText="position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";this.canvas.parentElement?.appendChild(v);this.videoEl=v;if(useMse){ms=new window.MediaSource;url=URL.createObjectURL(ms);v.src=url;this.videoUrl=url;this._mediaSource=ms;await new Promise((resolve,reject)=>{ms.addEventListener("sourceopen",()=>resolve(),{once:true});ms.addEventListener("error",()=>reject(this._playbackUnsupported("流式播放器初始化失败")),{once:true})});if(aborted())return null;sb=ms.addSourceBuffer(type);sb.mode="segments";this._sourceBuffer=sb}let firstReady=null;let handedOff=false;const firstReadyP=new Promise(resolve=>{firstReady=resolve});const pumped=this._pumpVideoChunks({challengeId:cid,sessionId:sid,count,win,gateOn,t0,chunkMs,leadMs,signal:ctrl.signal,aborted,useMse,sourceBuffer:sb,mediaSource:ms,mime,onFirst:()=>firstReady(),onProgress:done=>{if(aborted()||handedOff)return;this.status.textContent=`正在加载验证题… ${Math.min(99,Math.floor(done*100/count))}%`}});pumped.catch(()=>{});if(useMse){await Promise.race([firstReadyP,pumped]);if(aborted())return null;handedOff=true;await this._waitBuffered(v,{aborted})}else{const ordered=await pumped;if(aborted()||!ordered)return null;url=URL.createObjectURL(new Blob(ordered,{type:mime}));v.src=url;this.videoUrl=url}await new Promise((resolve,reject)=>{if(v.readyState>=1&&v.videoWidth)return resolve();const done=()=>resolve();v.addEventListener("loadedmetadata",done,{once:true});v.addEventListener("durationchange",done,{once:true});v.addEventListener("error",()=>reject(this._playbackUnsupported("视频无法解码")),{once:true});window.setTimeout(done,8e3)});if(aborted())return null;if(!v.videoWidth)throw this._playbackUnsupported("视频元数据不可用");if(useMse){keepAbort=true;pumped.then(()=>{if(this._videoAbort===ctrl)this._videoAbort=null},e=>{this._onChunkPumpError(e,ctrl);if(this._videoAbort===ctrl)this._videoAbort=null})}}catch(e){if(!(e&&e.status===404)){try{ctrl.abort()}catch(_e){}}try{if(v)v.remove()}catch(_e){}try{if(url)URL.revokeObjectURL(url)}catch(_e){}this._teardownMedia();this.videoEl=null;this.videoUrl="";if(e&&e.status===404)return await this._fallbackFromChunked(challenge,aborted);if(this._sessionClosed||this._a11ySwitched)throw e;if(e&&(e.status||e.code==="PLAYBACK_UNSUPPORTED"||e.code==="TIMEOUT"))throw e;throw this._playbackUnsupported(e&&e.message)}finally{if(!keepAbort&&this._videoAbort===ctrl)this._videoAbort=null}this.status.textContent="";return v}async _fallbackFromChunked(challenge,aborted){if(!challenge||!challenge.videoUrl)return null;if(aborted&&aborted())return null;try{return await this._prepareVideo(challenge)}catch(e){if(e&&e.status)throw e;return null}}_pumpVideoChunks(opt){const{challengeId,sessionId,count,win,gateOn,t0,chunkMs,leadMs,signal,aborted,useMse,sourceBuffer,mediaSource,onFirst,onProgress}=opt;const slots=new Map;let next=0;let inflight=0;let failure=null;let wake=null;const notify=()=>{const w=wake;wake=null;if(w)w()};const launch=()=>{while(!failure&&!aborted()&&next<count&&inflight<win){const index=next++;inflight++;const slot=this._fetchVideoChunk(challengeId,sessionId,index,{gateOn,t0,chunkMs,leadMs,signal,aborted}).then(bytes=>{inflight--;launch();notify();return bytes},e=>{inflight--;failure=e||new Error("视频分片加载失败");notify();throw failure});slot.catch(()=>{});slots.set(index,slot)}};const waitSlot=index=>new Promise(resolve=>{const check=()=>{if(slots.has(index)||failure)return resolve();wake=check};check()});launch();return(async()=>{const ordered=useMse?null:[];for(let i=0;i<count;i++){if(aborted())return null;if(!slots.has(i))await waitSlot(i);if(aborted())return null;if(failure)throw failure;const slot=slots.get(i);slots.delete(i);const bytes=await slot;if(aborted()||!bytes)return null;if(useMse)await this._appendSourceBuffer(sourceBuffer,bytes);else ordered.push(bytes);launch();if(i===0&&onFirst)onFirst();if(onProgress)onProgress(i+1)}if(aborted())return null;if(useMse){try{if(mediaSource.readyState==="open")mediaSource.endOfStream()}catch(e){}return null}return ordered})()}_onChunkPumpError(e,ctrl){if(!e||this._videoAbort!==ctrl||this._sessionClosed||this._a11ySwitched)return;const code=e&&e.status||0;this.onError(e);if(code===410||code===404||code===401){this.status.textContent=code===410?"验证已过期，正在重新取题…":code===404?"验证题已失效，正在重新取题…":"会话已刷新，正在重新取题…";this.scheduleRetry(800,"auto-restart")}else if(code===403){const cls=this._classify403(e);this.status.textContent=cls.text;if(cls.kind==="env"||cls.kind==="points"||cls.kind==="method")this.turnIntoRetryButton();else this.scheduleRetry(800,"auto-restart")}else{this.status.textContent="验证题加载中断，正在重新取题…";this.scheduleRetry(800,"auto-restart")}}async _fetchVideoChunk(challengeId,sessionId,index,opt){const{gateOn,t0,chunkMs,leadMs,signal,aborted}=opt;if(gateOn){const earliest=t0+Math.max(0,index*chunkMs-leadMs);for(;;){const wait=earliest-performance.now();if(wait<=0)break;if(aborted())return null;await new Promise(r=>window.setTimeout(r,Math.min(wait,250)))}}let lastErr=null;for(let attempt=0;attempt<3;attempt++){if(aborted())return null;try{const res=await videoChunk(this.apiBase,challengeId,sessionId,index,{signal});return base64ToBytes(res&&res.data)}catch(e){lastErr=e;if(aborted())return null;if(e&&e.status===409&&attempt<2){await new Promise(r=>window.setTimeout(r,500*(attempt+1)));continue}throw e}}throw lastErr}_appendSourceBuffer(sb,bytes){return new Promise((resolve,reject)=>{const onEnd=()=>{cleanup();resolve()};const onErr=()=>{cleanup();reject(new Error("视频分片写入失败"))};const cleanup=()=>{sb.removeEventListener("updateend",onEnd);sb.removeEventListener("error",onErr)};sb.addEventListener("updateend",onEnd);sb.addEventListener("error",onErr);try{sb.appendBuffer(bytes)}catch(e){cleanup();reject(e)}})}_waitBuffered(v,opt={}){const timeoutMs=Number(opt.timeoutMs)>0?Number(opt.timeoutMs):8e3;const aborted=opt.aborted||(()=>false);return new Promise(resolve=>{const deadline=performance.now()+timeoutMs;const tick=()=>{if(aborted()||!v)return resolve();try{if(v.readyState>=2)return resolve();const b=v.buffered;const t=v.currentTime||0;for(let i=0;i<b.length;i++){if(b.start(i)<=t+.05&&b.end(i)>t+.05)return resolve()}}catch(e){}if(performance.now()>=deadline)return resolve();window.setTimeout(tick,100)};tick()})}_teardownMedia(){const ms=this._mediaSource;const sb=this._sourceBuffer;this._mediaSource=null;this._sourceBuffer=null;if(!ms)return;try{if(ms.readyState==="open"&&(!sb||!sb.updating))ms.endOfStream()}catch(e){}}async _prepareVideo(challenge){const remote=challenge&&challenge.videoUrl;if(!remote){throw new Error("挑战缺少视频信息")}const mime=challenge.videoMime||"video/mp4";this.status.textContent="正在下载验证题…";this._videoAbort?.abort();const ctrl=new AbortController;this._videoAbort=ctrl;let v=null;let url="";try{const buf=await videoBinary(this.apiBase,this.challengeId||challenge.challengeId,this.sessionId||challenge.sessionId,remote,{signal:ctrl.signal,onProgress:(loaded,total)=>{if(this._sessionClosed||this._a11ySwitched)return;const mb=n=>(n/1048576).toFixed(1);this.status.textContent=total>0?`正在下载验证题… ${Math.min(99,Math.floor(loaded*100/total))}%（${mb(loaded)}/${mb(total)}MB）`:`正在下载验证题… ${mb(loaded)}MB`}});if(this._sessionClosed||this._a11ySwitched)return null;url=URL.createObjectURL(new Blob([buf],{type:mime}));v=document.createElement("video");v.src=url;v.muted=true;v.playsInline=true;v.setAttribute("playsinline","");v.preload="auto";v.style.cssText="position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";this.canvas.parentElement?.appendChild(v);this.videoEl=v;this.videoUrl=url;await new Promise((resolve,reject)=>{if(v.readyState>=1)return resolve();const done=()=>resolve();v.addEventListener("loadedmetadata",done,{once:true});v.addEventListener("durationchange",done,{once:true});v.addEventListener("error",()=>reject(this._playbackUnsupported("视频无法解码")),{once:true});window.setTimeout(done,8e3)});if(!v.videoWidth||!v.duration)throw this._playbackUnsupported("视频元数据不可用")}catch(e){if(v)v.remove();if(url)URL.revokeObjectURL(url);this.videoEl=null;this.videoUrl="";if(this._sessionClosed||this._a11ySwitched)throw e;if(e&&(e.status||e.code==="PLAYBACK_UNSUPPORTED"||e.code==="TIMEOUT"))throw e;throw this._playbackUnsupported(e&&e.message)}finally{if(this._videoAbort===ctrl)this._videoAbort=null}this.status.textContent="";return v}_playbackUnsupported(message){const err=new Error(message||"当前浏览器无法播放该视频编码");err.status=0;err.code="PLAYBACK_UNSUPPORTED";return err}_startStream(){if(!this.streamEnabled||!this.sessionKey||!this.challengeId)return;this.streamSeq=0;this.streamCursor=0;window.clearInterval(this.streamTimer);this.streamTimer=window.setInterval(()=>{void this._flushStream()},this.streamIntervalMs)}async _flushStream(){if(!this.streamEnabled||!this.sessionKey||!this.challengeId)return;const points=this.tracker?.takeSince(this.streamCursor)??[];this.streamCursor+=points.length;if(!points.length)return;const seq=++this.streamSeq;try{const plaintext=(new TextEncoder).encode(JSON.stringify({seq,points}));const{iv,ciphertext}=await encrypt(this.sessionKey,plaintext);await submitStreamChunk(this.apiBase,this.challengeId,this.sessionId,iv,ciphertext)}catch(e){}}async _stopStream(){window.clearInterval(this.streamTimer);this.streamTimer=0;await this._flushStream()}async verifyAndFinish(samples){if(!this.sessionKey)return;const envEvidence=collectEnvEvidence();if(envEvidence&&envEvidence.gated){this.finished=true;this.activateBtn.classList.remove("phantom-holding");this.activateBtn.disabled=true;this.status.textContent="检测到自动化工具环境，已中止验证";this.setHint("blocked","");const err=new Error("browser automation environment detected");err.status=0;err.code="ENV_AUTOMATION";err.detail="automation environment detected";this.onError(err);return}const payload={points:samples,lastPointT_ms:Date.now(),env:envEvidence&&envEvidence.env||undefined,beh:this.tracker?.getBehavior()||undefined};const plaintext=(new TextEncoder).encode(JSON.stringify(payload));const{iv,ciphertext}=await encrypt(this.sessionKey,plaintext);try{const result=await submitVerify(this.apiBase,this.challengeId,this.sessionId,iv,ciphertext);this.renderer?.stop();this.finished=true;this.status.textContent="";result.challengeId=this.challengeId;result.sessionId=this.sessionId;if(this.powRequired&&result.receipt&&!this._powDone){const powReceipt=await this._runPowPhase();if(!powReceipt){this.renderer?.stop();this.status.textContent="安全校验未完成，请重试";this.activateBtn.classList.add("phantom-fail");this.activateBtn.textContent="验证未完成";this.scheduleRetry();return}result.receipts=[...this._preReceipts,result.receipt,powReceipt]}else if(this._preReceipts.length){result.receipts=[...this._preReceipts,result.receipt]}if(result.passed===null||result.passed===undefined){this.status.textContent=result.receipt?"验证完成，正在确认结果…":"正在确认验证结果…"}const confirmed=await this.onResult(result)!==false;this.status.textContent="";if(confirmed){this.activateBtn.classList.add("phantom-success");this.activateBtn.textContent="验证通过"}else{this.activateBtn.classList.add("phantom-fail");this.activateBtn.textContent="验证失败";this.scheduleRetry()}}catch(e){this.renderer?.stop();this.finished=true;const code=e&&e.status||0;this.activateBtn.classList.add("phantom-fail");if(code===429){this.status.textContent="尝试次数过多，请约 1 分钟后重试";this.activateBtn.textContent="尝试次数过多";this.scheduleRetry(6e4)}else if(code===410){this.status.textContent="验证已失效，请重新滑动";this.activateBtn.textContent="验证已失效";this.scheduleRetry(800,"auto-restart")}else if(code===401){this.status.textContent="会话已刷新，正在重新验证…";this.activateBtn.textContent="正在重试";this.scheduleRetry(800,"auto-restart")}else if(code===403){const cls=this._classify403(e);this.status.textContent=cls.text;this.activateBtn.textContent=cls.kind==="points"?"点数不足":cls.kind==="env"?"环境校验未通过":"正在重新取题";if(cls.kind==="env"||cls.kind==="points"){this.turnIntoRetryButton()}else{this.scheduleRetry(800,"auto-restart")}}else{this.status.textContent="提交失败";this.activateBtn.textContent="验证失败";this.scheduleRetry()}this.onError(e)}}async _runPowPhase(preferredMethod,stopOnDual=false){const btn=this.activateBtn;const label=document.createElement("span");label.textContent="按住完成安全校验";const bar=document.createElement("span");bar.className="phantom-progress";btn.textContent="";btn.appendChild(label);btn.appendChild(bar);btn.style.setProperty("--ph-charge-duration","8s");btn.disabled=false;this.renderer?.drawStaticNoise();this.setHint("ready","按住下方按钮完成安全校验");let challenge=null;this._powAltUnavailable=false;const load=async()=>{try{challenge=await requestPowChallenge(this.apiBase,preferredMethod)}catch(e){challenge=null}if(challenge){this._powChallengeId=challenge.challengeId||"";this._powSessionId=challenge.sessionId||"";if(Array.isArray(challenge.requiredMethods))this.requiredMethods=challenge.requiredMethods}return!!challenge};try{if(!await load()){this.status.textContent="安全校验暂不可用，请稍后重试";this.setHint("blocked","");return null}if(stopOnDual&&this.requiredMethods.indexOf("phantom")!==-1){this._powAltUnavailable=true;this.setHint("blocked","");return null}for(;;){if(this._sessionClosed)return null;const attempt=await this._awaitPowAttempt(challenge);if(this._sessionClosed||attempt.failed)return null;if(attempt.released){if(!await load()){this.status.textContent="安全校验暂不可用，请稍后重试";this.setHint("blocked","");return null}this.status.textContent="已放弃，请重新按住";continue}try{const res=await verifyPow(this.apiBase,challenge.challengeId,attempt.solution,challenge.sessionId);if(res&&res.receipt){btn.classList.remove("phantom-holding");this.status.textContent="";return res.receipt}}catch(e){}if(!await load()){this.status.textContent="安全校验暂不可用，请稍后重试";this.setHint("blocked","");return null}btn.classList.remove("phantom-holding");this.setHint("ready","按住下方按钮完成安全校验");this.status.textContent="校验未通过，请再试一次"}}finally{const abort=this._powAbort;this._powAbort=null;abort?.();this._powTask?.cancel();this._powTask=null}}_awaitPowAttempt(challenge){const btn=this.activateBtn;return new Promise(resolve=>{const task=new PowTask;this._powTask=task;let solving=false;let settled=false;let fails=0;let streamSeq=0;const reportPowStream=(hashes,solveMs)=>submitPowStream(this.apiBase,challenge.challengeId,challenge.sessionId,streamSeq++,hashes,solveMs).catch(()=>{});const finish=out=>{if(settled)return;settled=true;this._powAbort=null;btn.removeEventListener("pointerdown",onDown);window.removeEventListener("pointerup",onUp);resolve(out)};this._powAbort=()=>finish({failed:true});const onDown=e=>{if(e.button!==0||solving||btn.disabled)return;e.preventDefault();solving=true;btn.classList.add("phantom-holding");this.status.textContent="正在校验…";task.run(challenge.nonce,challenge.difficulty,p=>{if(solving)void reportPowStream(p.hashes,p.solveMs)}).then(async out=>{if(!solving)return;solving=false;await reportPowStream(out.hashes,out.solveMs);finish({solution:out.solution})}).catch(()=>{if(!solving)return;solving=false;btn.classList.remove("phantom-holding");if(++fails>=2){finish({failed:true});return}this.status.textContent="校验失败，请重新按住"})};const onUp=()=>{if(!solving)return;solving=false;btn.classList.remove("phantom-holding");task.cancel();finish({released:true})};btn.addEventListener("pointerdown",onDown);window.addEventListener("pointerup",onUp)})}async switchToPow(){if(this._a11ySwitched||this.finished||this._sessionClosed)return false;this._a11ySwitched=true;this._unbind?.();this._unbind=()=>{};this._videoAbort?.abort();this.renderer?.pause();this.overlay.classList.add("phantom-hidden");this.activateBtn.classList.remove("phantom-holding");this.setHint("ready","");let receipt=null;try{receipt=await this._runPowPhase("pow",true)}catch(e){receipt=null}if(this._sessionClosed)return true;if(!receipt){this.status.textContent=this._powAltUnavailable?"当前验证暂不支持无障碍替代方式":"安全校验未完成，请重试";this.turnIntoRetryButton();this._a11ySwitched=false;return false}await this._finalize({receipt,receipts:[receipt],challengeId:this._powChallengeId||this.challengeId,sessionId:this._powSessionId||this.sessionId});return true}async _runPowFirst(){const stage=this.canvas.parentElement;if(stage)stage.style.display="none";this.notifyEntry(this._sessionCaps,false);const receipt=await this._runPowPhase("pow");if(this._sessionClosed)return true;if(!receipt){this.status.textContent="安全校验未完成，请重试";this.turnIntoRetryButton();return true}this._powDone=true;this._preReceipts=[receipt];if(this.requiredMethods.indexOf("phantom")!==-1){if(stage)stage.style.display="";this._resetActivateBtn();return false}await this._finalize({receipt,receipts:[receipt],challengeId:this._powChallengeId||this.challengeId,sessionId:this._powSessionId||this.sessionId});return true}_resetActivateBtn(){const btn=this.activateBtn;btn.textContent="按住并跟随方块";const bar=document.createElement("span");bar.className="phantom-progress";btn.appendChild(bar);btn.classList.remove("phantom-holding","phantom-success","phantom-fail","phantom-retry");btn.disabled=true}async _finalize(result){const confirmed=await this.onResult(result)!==false;this.status.textContent="";if(confirmed){this.activateBtn.classList.add("phantom-success");this.activateBtn.textContent="验证通过"}else{this.activateBtn.classList.add("phantom-fail");this.activateBtn.textContent="验证失败"}return confirmed}_classify403(e){let d=e&&e.body?e.body.detail:undefined;if(d==null&&e)d=e.detail;if(typeof d==="string"){const s=d.trim();if(s.charAt(0)==="{"||s.charAt(0)==="["){try{d=JSON.parse(s)}catch(err){d=s}}}if(d&&typeof d==="object"){const points=Number(d.points);const need=Number(d.minRequired);if(Number.isFinite(points)||Number.isFinite(need)){const fmt=n=>Number.isFinite(n)?String(Math.round(n*100)/100):"?";return{kind:"points",text:`点数不足（当前 ${fmt(points)} / 需要 ${fmt(need)} 点）`}}d=String(d.reason||d.detail||d.error||"")}const s=String(d==null?"":d);if(/binding\s*mismatch/i.test(s))return{kind:"binding",text:"网络环境变化，正在重新验证…"};if(/not allowed for this key/i.test(s))return{kind:"method",text:"该密钥的「验证方式」设置不允许本次验证，请到「我的密钥」检查后重试"};if(/environment/i.test(s))return{kind:"env",text:"浏览器环境校验未通过，请更换浏览器后重试"};if(/insufficient|点数不足|quota|balance/i.test(s))return{kind:"points",text:"点数不足，请先补充点数后重试"};return{kind:"unknown",text:"环境校验未通过，正在重新取题…"}}scheduleRetry(delayMs,mode){window.clearTimeout(this.retryTimer);const auto=mode==="auto-restart";if(auto){this._autoRestarts=(this._autoRestarts||0)+1;if(this._autoRestarts>3){this.turnIntoRetryButton();this.status.textContent="验证暂时不可用，请点击刷新重试";return}}this.retryTimer=window.setTimeout(()=>{if(auto){this._autoRestarting=true;this.turnIntoRetryButton();this.activateBtn.click();this._autoRestarting=false}else{this.turnIntoRetryButton()}},delayMs||1e3)}turnIntoRetryButton(){this._unbind();this._unbind=()=>{};this.activateBtn.classList.remove("phantom-holding","phantom-success","phantom-fail");this.activateBtn.classList.add("phantom-retry");this.activateBtn.textContent="点击刷新重试";this.activateBtn.disabled=false;const onClick=()=>{this.activateBtn.removeEventListener("click",onClick);if(!this._autoRestarting)this._autoRestarts=0;this.onRetry()};this.activateBtn.addEventListener("click",onClick);this._unbind=()=>{this.activateBtn.removeEventListener("click",onClick);this.activateBtn.classList.remove("phantom-retry")}}destroy(){this._sessionClosed=true;this._unbind();this._videoAbort?.abort();this._videoAbort=null;const powAbort=this._powAbort;this._powAbort=null;powAbort?.();this._powTask?.cancel();this._powTask=null;window.clearTimeout(this.retryTimer);window.clearTimeout(this.previewTimer);window.clearInterval(this.streamTimer);this.streamTimer=0;this.renderer?.stop();this.tracker?.stop();this._teardownMedia();if(this.videoEl){try{this.videoEl.pause()}catch(e){}this.videoEl.removeAttribute("src");this.videoEl.remove();this.videoEl=null}if(this.videoUrl){URL.revokeObjectURL(this.videoUrl);this.videoUrl=""}}}export function mount(el,opts){injectStyles();if(opts.antidebug??true){installAntidebug(true)}const container=resolveContainer(el);container.innerHTML="";const root=document.createElement("div");root.className="phantom-widget";root.setAttribute("data-theme",opts.theme??"dark");const bar=document.createElement("div");bar.className="phantom-bar";bar.setAttribute("data-state","idle");bar.setAttribute("role","checkbox");bar.setAttribute("aria-checked","false");bar.tabIndex=0;bar.title="点击进行人机验证";const check=document.createElement("span");check.className="phantom-check";check.innerHTML="";const barText=document.createElement("span");barText.className="phantom-bar-text";barText.textContent="我不是机器人";const brand=document.createElement("span");brand.className="phantom-bar-brand";const barLogo=document.createElement("span");barLogo.className="phantom-bar-logo";barLogo.innerHTML=LOGO_SVG;const copyright=document.createElement("span");copyright.className="phantom-bar-copyright";copyright.innerHTML='ZIYIT STUDIO/<a href="https://ziyit-hacker.github.io/" target="_blank" rel="noopener">ZIYIT人机验证</a>';brand.appendChild(barLogo);brand.appendChild(copyright);bar.appendChild(check);bar.appendChild(barText);bar.appendChild(brand);root.appendChild(bar);container.appendChild(root);let modal=null;const setBarState=state=>{bar.setAttribute("data-state",state);bar.setAttribute("aria-checked",state==="verified"?"true":"false");if(state==="verified"){check.innerHTML=CHECK_SVG;barText.textContent="已验证"}else if(state==="error"){check.innerHTML=ALERT_SVG;barText.textContent="验证失败，点击重试"}else if(state==="verifying"){check.innerHTML="";barText.textContent="验证中…"}else{check.innerHTML="";barText.textContent="我不是机器人"}};const buildModalBody=modalCard=>{const head=document.createElement("div");head.className="phantom-modal-head";const headLogo=document.createElement("span");headLogo.className="phantom-modal-logo";headLogo.innerHTML=LOGO_SVG;const title=document.createElement("span");title.className="phantom-modal-title";title.textContent="ZIYIT 人机验证系统";const closeBtn=document.createElement("button");closeBtn.className="phantom-modal-close";closeBtn.type="button";closeBtn.title="关闭";closeBtn.setAttribute("aria-label","关闭验证");closeBtn.innerHTML=CLOSE_SVG;closeBtn.addEventListener("click",()=>closeModal(false));head.appendChild(headLogo);head.appendChild(title);head.appendChild(closeBtn);const body=document.createElement("div");body.className="phantom-modal-body";const hint=document.createElement("div");hint.className="phantom-hint";hint.setAttribute("data-stage","loading");const stageWrap=document.createElement("div");stageWrap.className="phantom-stage-wrap";const canvas=document.createElement("canvas");canvas.className="phantom-stage";const overlay=document.createElement("div");overlay.className="phantom-overlay phantom-hidden";const overlayText=document.createElement("div");overlayText.className="phantom-overlay-text";overlayText.innerHTML="按住下方按钮<br>马上拖动到闪烁方块处<br>方块出发后跟随移动<br>方块停止则松手";overlay.appendChild(overlayText);stageWrap.appendChild(canvas);stageWrap.appendChild(overlay);const activateBtn=document.createElement("button");activateBtn.className="phantom-activate";activateBtn.type="button";activateBtn.textContent="按住并跟随方块";activateBtn.disabled=true;const progress=document.createElement("span");progress.className="phantom-progress";activateBtn.appendChild(progress);const status=document.createElement("div");status.className="phantom-status";status.textContent="正在准备验证题…";body.appendChild(hint);body.appendChild(stageWrap);body.appendChild(activateBtn);body.appendChild(status);const a11y=document.createElement("div");a11y.className="phantom-a11y-help";a11y.style.cssText="margin-top:10px;font-size:12px;line-height:1.6;text-align:center;opacity:.75;";a11y.appendChild(document.createTextNode("无障碍用户（低视力 / 色觉障碍 / 运动障碍）无法完成本验证？"));a11y.appendChild(document.createTextNode(" "));const a11yBtn=document.createElement("button");a11yBtn.type="button";a11yBtn.className="phantom-a11y-switch";a11yBtn.style.cssText="border:0;background:transparent;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer;";a11yBtn.textContent="换一种方式验证";a11y.appendChild(a11yBtn);modalCard.appendChild(head);modalCard.appendChild(body);return{hint,canvas,overlay,activateBtn,status,progress,a11yWrap:a11y,a11yBtn,body}};const dispatch=async r=>{if(r.passed===false||!r.receipt&&r.passed!==true){opts.onFail?.(r);return false}return await(opts.onSuccess?.(r))!==false};const handleResult=async r=>{const ok=await dispatch(r);if(ok)onVerified();return ok};const openModal=()=>{if(modal)return;const node=document.createElement("div");node.className="phantom-modal";node.setAttribute("data-theme",opts.theme??"dark");node.setAttribute("role","dialog");node.setAttribute("aria-modal","true");node.setAttribute("aria-label","Phantom 人机验证");const modalCard=document.createElement("div");modalCard.className="phantom-modal-card";node.appendChild(modalCard);const{hint,canvas,overlay,activateBtn,status,progress,a11yWrap,a11yBtn,body}=buildModalBody(modalCard);const applySessionCaps=(caps,showEntry)=>{const show=!!(showEntry&&caps&&caps.canSwitch&&caps.defaultMethod==="phantom");if(show){if(!a11yWrap.parentNode)body.appendChild(a11yWrap)}else if(a11yWrap.parentNode){a11yWrap.parentNode.removeChild(a11yWrap)}};node.addEventListener("click",e=>{if(e.target===node)closeModal(false)});modalCard.addEventListener("click",e=>e.stopPropagation());document.body.appendChild(node);const resetSession=()=>{try{session?.destroy()}catch(e){}activateBtn.classList.remove("phantom-holding","phantom-success","phantom-fail","phantom-retry");activateBtn.textContent="按住并跟随方块";activateBtn.appendChild(progress);activateBtn.disabled=true;a11yBtn.disabled=false;status.textContent="正在准备验证题…";session=new WidgetSession(canvas,opts.apiBase,status,overlay,hint,activateBtn,handleResult,e=>opts.onError?.(e),resetSession,applySessionCaps);if(modal)modal.session=session;void session.start()};let session=new WidgetSession(canvas,opts.apiBase,status,overlay,hint,activateBtn,handleResult,e=>opts.onError?.(e),resetSession,applySessionCaps);a11yBtn.addEventListener("click",()=>{if(a11yBtn.disabled)return;a11yBtn.disabled=true;void session.switchToPow().then(handled=>{if(!handled)a11yBtn.disabled=false},()=>{a11yBtn.disabled=false})});modal={node,session,closing:false};setBarState("verifying");void session.start()};const closeModal=verified=>{if(!modal||modal.closing)return;modal.closing=true;modal.session.destroy();const node=modal.node;const finalize=()=>{node.remove()};node.classList.add("phantom-leaving");window.setTimeout(finalize,160);modal=null;setBarState(verified?"verified":"idle")};const onVerified=()=>{window.setTimeout(()=>closeModal(true),700)};const onBarClick=()=>{if(bar.getAttribute("data-state")==="verified")return;if(bar.getAttribute("data-state")==="verifying")return;openModal()};bar.addEventListener("click",onBarClick);bar.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();onBarClick()}});return{destroy(){if(modal){modal.session.destroy();modal.node.remove();modal=null}bar.removeEventListener("click",onBarClick);root.remove()},reset(){closeModal(false);setBarState("idle")},open(){const st=bar.getAttribute("data-state");if(st==="verified"||st==="verifying")return;openModal()}}}export const Phantom={mount,version:VERSION};if(typeof window!=="undefined"){const w=window;if(!w.Phantom)w.Phantom=Phantom}export default Phantom;
+import { CONFIG, isMobileViewport } from "./config.js";
+import { isMethodNotAllowed, requestChallenge, requestPowChallenge, sessionInfo, submitPowStream, submitVerify, submitStreamChunk, verifyPow, videoBinary, videoReady, videoChunk } from "./api.js";
+import { decrypt, deriveSessionKey, encrypt, generateClientKeyPair, importServerPublic } from "./crypto.js";
+import { installAntidebug } from "./antidebug.js";
+import { PhantomRenderer } from "./renderer.js";
+import { TrajectoryTracker } from "./tracker.js";
+import { injectStyles } from "./styles.js";
+import { collectEnvEvidence } from "./env.js";
+const VERSION = "0.1.0";
+const PREVIEW_MS = CONFIG.previewSeconds * 1e3;
+const LOGO_SVG = '<img src="https://ziyit-hacker.github.io/assets/logo.ico" alt="Logo" style="width:22px;height:22px;display:block;border-radius:4px;" />';
+const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + '<path d="M5 12.5l4.5 4.5L19 7"/>' + "</svg>";
+const CLOSE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + '<path d="M18 6 6 18M6 6l12 12"/>' + "</svg>";
+const ALERT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + '<path d="M12 8v5M12 16.5v.5"/>' + "</svg>";
+const POW_WORKER_URL = new URL("./pow-worker.js", import.meta.url);
+function base64ToBytes(b64) {
+    const bin = atob(String(b64 || ""));
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+}
+class PowTask {
+    constructor() {
+        this.worker = null;
+        this.blobUrl = "";
+        this.cancelled = false;
+        this._reject = null;
+    }
+    async _spawn() {
+        try {
+            return new Worker(POW_WORKER_URL);
+        } catch (e) {}
+        const res = await fetch(POW_WORKER_URL);
+        if (!res.ok) {
+            throw new Error(`pow worker fetch ${res.status}`);
+        }
+        const src = await res.text();
+        this.blobUrl = URL.createObjectURL(new Blob([ src ], {
+            type: "application/javascript"
+        }));
+        return new Worker(this.blobUrl);
+    }
+    async run(nonce, difficulty, onProgress) {
+        const worker = await this._spawn();
+        if (this.cancelled) {
+            try {
+                worker.terminate();
+            } catch (e) {}
+            throw new Error("pow cancelled");
+        }
+        this.worker = worker;
+        return new Promise((resolve, reject) => {
+            this._reject = reject;
+            worker.addEventListener("message", ev => {
+                const msg = ev && ev.data;
+                if (!msg || this.cancelled) {
+                    return;
+                }
+                if (msg.type === "progress") {
+                    onProgress?.(msg);
+                    return;
+                }
+                this._reject = null;
+                this._dispose();
+                if (msg.type === "solved") {
+                    resolve({
+                        solution: String(msg.solution),
+                        hashes: msg.hashes,
+                        solveMs: msg.solveMs
+                    });
+                } else {
+                    reject(new Error(msg.message || "pow solve failed"));
+                }
+            });
+            worker.addEventListener("error", e => {
+                this._reject = null;
+                this._dispose();
+                reject(new Error(e && e.message || "pow worker error"));
+            });
+            worker.postMessage({
+                type: "solve",
+                nonce,
+                difficulty
+            });
+        });
+    }
+    _dispose() {
+        if (this.worker) {
+            try {
+                this.worker.terminate();
+            } catch (e) {}
+            this.worker = null;
+        }
+        if (this.blobUrl) {
+            try {
+                URL.revokeObjectURL(this.blobUrl);
+            } catch (e) {}
+            this.blobUrl = "";
+        }
+    }
+    cancel() {
+        this.cancelled = true;
+        this._dispose();
+        const reject = this._reject;
+        this._reject = null;
+        reject?.(new Error("pow cancelled"));
+    }
+}
+function resolveContainer(el) {
+    const node = typeof el === "string" ? document.querySelector(el) : el;
+    if (!(node instanceof HTMLElement)) {
+        throw new Error(`Phantom.mount: 容器未找到 (${el})`);
+    }
+    return node;
+}
+class WidgetSession {
+    constructor(canvas, apiBase, status, overlay, hint, activateBtn, onResult, onError, onRetry, onSessionInfo) {
+        Object.defineProperty(this, "canvas", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: canvas
+        });
+        Object.defineProperty(this, "apiBase", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: apiBase
+        });
+        Object.defineProperty(this, "status", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: status
+        });
+        Object.defineProperty(this, "overlay", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: overlay
+        });
+        Object.defineProperty(this, "hint", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: hint
+        });
+        Object.defineProperty(this, "activateBtn", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: activateBtn
+        });
+        Object.defineProperty(this, "onResult", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: onResult
+        });
+        Object.defineProperty(this, "onError", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: onError
+        });
+        Object.defineProperty(this, "onRetry", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: onRetry
+        });
+        Object.defineProperty(this, "onSessionInfo", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: onSessionInfo
+        });
+        Object.defineProperty(this, "renderer", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
+        });
+        Object.defineProperty(this, "tracker", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
+        });
+        Object.defineProperty(this, "sessionKey", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
+        });
+        Object.defineProperty(this, "challengeId", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: ""
+        });
+        Object.defineProperty(this, "sessionId", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: ""
+        });
+        Object.defineProperty(this, "collecting", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: false
+        });
+        Object.defineProperty(this, "finished", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: false
+        });
+        Object.defineProperty(this, "previewing", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: false
+        });
+        Object.defineProperty(this, "previewTimer", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: 0
+        });
+        Object.defineProperty(this, "previewMs", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: PREVIEW_MS
+        });
+        Object.defineProperty(this, "duration", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: 3
+        });
+        Object.defineProperty(this, "retryTimer", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: 0
+        });
+        Object.defineProperty(this, "device", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: "pc"
+        });
+        Object.defineProperty(this, "_unbind", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: () => {}
+        });
+        Object.defineProperty(this, "videoEl", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: null
+        });
+        Object.defineProperty(this, "videoUrl", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: ""
+        });
+        Object.defineProperty(this, "streamEnabled", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: false
+        });
+        Object.defineProperty(this, "streamIntervalMs", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: 50
+        });
+        this._autoRestarts = 0;
+        this._autoRestarting = false;
+        Object.defineProperty(this, "streamTimer", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: 0
+        });
+        Object.defineProperty(this, "streamSeq", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: 0
+        });
+        Object.defineProperty(this, "streamCursor", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: 0
+        });
+        Object.defineProperty(this, "_sessionClosed", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: false
+        });
+        this.requiredMethods = [];
+        this.powRequired = false;
+        this._powTask = null;
+        this._powAbort = null;
+        this._videoAbort = null;
+        this._mediaSource = null;
+        this._sourceBuffer = null;
+        this._a11ySwitched = false;
+        this._powAltUnavailable = false;
+        this._powChallengeId = "";
+        this._powSessionId = "";
+        this._sessionCaps = {
+            allowedMethods: [ "phantom", "pow" ],
+            defaultMethod: "phantom",
+            canSwitch: true
+        };
+        this._preReceipts = [];
+        this._powDone = false;
+    }
+    async loadSessionCaps() {
+        try {
+            this._sessionCaps = await sessionInfo();
+        } catch (e) {}
+        return this._sessionCaps;
+    }
+    notifyEntry(caps, showEntry) {
+        try {
+            this.onSessionInfo?.(caps, showEntry);
+        } catch (e) {}
+    }
+    setHint(stage, text) {
+        this.hint.setAttribute("data-stage", stage);
+        this.hint.textContent = text;
+    }
+    async start() {
+        const mobile = isMobileViewport();
+        this.device = mobile ? "mobile" : "pc";
+        this.canvas.width = mobile ? CONFIG.canvasWidthMobile : CONFIG.canvasWidthPC;
+        this.canvas.height = mobile ? CONFIG.canvasHeightMobile : CONFIG.canvasHeightPC;
+        this.status.textContent = "正在准备验证题…";
+        this.overlay.classList.add("phantom-hidden");
+        this.setHint("loading", "");
+        this.activateBtn.disabled = true;
+        try {
+            const caps = await this.loadSessionCaps();
+            if (this._sessionClosed) return;
+            if (caps.defaultMethod === "pow") {
+                const handled = await this._runPowFirst();
+                if (handled) return;
+            }
+            const {privateKey, publicJwk} = await generateClientKeyPair();
+            let challenge;
+            try {
+                challenge = await requestChallenge(this.apiBase, publicJwk, this.device);
+            } catch (e) {
+                if (!isMethodNotAllowed(e)) throw e;
+                const handled = await this._runPowFirst();
+                if (handled || this._sessionClosed) return;
+                throw e;
+            }
+            if (challenge && challenge.sessionId) this.sessionId = challenge.sessionId;
+            if (this._a11ySwitched) return;
+            const methods = challenge && Array.isArray(challenge.requiredMethods) ? challenge.requiredMethods : [];
+            this.requiredMethods = methods;
+            this.powRequired = methods.indexOf("pow") !== -1;
+            if (methods.indexOf("phantom") === -1 && this.powRequired) {
+                const handled = await this._runPowFirst();
+                if (handled || this._sessionClosed) return;
+            }
+            this.notifyEntry(caps, true);
+            const serverPub = await importServerPublic(challenge.serverPublicJwk);
+            this.sessionKey = await deriveSessionKey(privateKey, serverPub, challenge.salt);
+            this.challengeId = challenge.challengeId;
+            const paramsJson = await decrypt(this.sessionKey, challenge.encryptedParams.iv, challenge.encryptedParams.ciphertext);
+            const raw = JSON.parse((new TextDecoder).decode(paramsJson));
+            const streamCfg = raw.stream || {};
+            this.streamEnabled = !!streamCfg.enabled;
+            this.streamIntervalMs = Number(streamCfg.intervalMs) > 0 ? Number(streamCfg.intervalMs) : 50;
+            const videoEl = challenge && challenge.videoStream ? await this._prepareVideoChunked(challenge) : challenge && challenge.videoUrl ? await this._prepareVideo(challenge) : null;
+            if (this._sessionClosed || this._a11ySwitched) return;
+            const previewSeconds = Number(raw.previewSeconds) > 0 ? Number(raw.previewSeconds) : CONFIG.previewSeconds;
+            this.previewMs = previewSeconds * 1e3;
+            const params = {
+                video: videoEl,
+                duration: raw.duration,
+                previewSeconds,
+                fps: raw.fps,
+                targetHalf: raw.targetHalf
+            };
+            this.duration = params.duration;
+            this.renderer = new PhantomRenderer(this.canvas, params);
+            this.tracker = new TrajectoryTracker(this.canvas);
+            this.activateBtn.style.setProperty("--ph-charge-duration", `${this.duration}s`);
+            this.status.textContent = "";
+            this.setHint("ready", "按住下方按钮");
+            this.activateBtn.disabled = false;
+            this.renderer.drawStaticNoise();
+            this.overlay.classList.remove("phantom-hidden");
+            this.bindInteraction();
+        } catch (e) {
+            if (this._sessionClosed || this._a11ySwitched) return;
+            this.onError(e);
+            const code = e && e.status || 0;
+            if (e && e.code === "PLAYBACK_UNSUPPORTED") {
+                this.status.textContent = "当前浏览器无法播放验证视频。请使用最新版 Chrome / Edge / Firefox / Safari 后重试。";
+                this.setHint("blocked", "");
+                this.turnIntoRetryButton();
+            } else if (code === 429) {
+                this.status.textContent = "尝试次数过多，请约 1 分钟后重试";
+                this.scheduleRetry(6e4);
+            } else if (code === 401) {
+                this.status.textContent = "会话已刷新，正在重新取题…";
+                this.scheduleRetry(800, "auto-restart");
+            } else if (code === 403) {
+                const cls = this._classify403(e);
+                this.status.textContent = cls.text;
+                if (cls.kind === "env" || cls.kind === "points" || cls.kind === "method") {
+                    this.turnIntoRetryButton();
+                } else {
+                    this.scheduleRetry(800, "auto-restart");
+                }
+            } else if (code === 410) {
+                this.status.textContent = "验证已过期，正在重新取题…";
+                this.scheduleRetry(800, "auto-restart");
+            } else if (e && e.code === "VIDEO_TIMEOUT") {
+                this.status.textContent = "验证题加载超时，正在重新取题…";
+                this.scheduleRetry(800, "auto-restart");
+            } else {
+                this.status.textContent = `初始化失败: ${e.message}`;
+            }
+        }
+    }
+    bindInteraction() {
+        if (this._a11ySwitched) return;
+        const onDown = e => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            if (this.collecting || this.previewing || this.finished) return;
+            this.tracker?.notePress(e);
+            this.previewing = true;
+            this.overlay.classList.add("phantom-hidden");
+            this.setHint("preview", "手指/鼠标拖动到闪烁的方块等待");
+            this.renderer?.start((_center, t) => {
+                if (t >= 1) this.setHint("stopped", "请松手");
+            });
+            armPreviewSwitch();
+        };
+        const beginCollect = () => {
+            if (!this.previewing || this.finished) return;
+            this.previewing = false;
+            this.collecting = true;
+            this.status.textContent = "";
+            this.setHint("collect", "按住跟随方块移动");
+            this.tracker?.start();
+            this._startStream();
+            this.activateBtn.classList.add("phantom-holding");
+        };
+        const armPreviewSwitch = () => {
+            window.clearTimeout(this.previewTimer);
+            const startedAt = performance.now();
+            const maxWaitMs = Math.max(8e3, this.previewMs + 8e3);
+            let fromStart = false;
+            const fire = () => {
+                this.previewTimer = 0;
+                beginCollect();
+            };
+            const tick = () => {
+                if (!this.previewing || this.finished) return;
+                const now = performance.now();
+                const v = this.videoEl;
+                if (!v) {
+                    if (now - startedAt >= this.previewMs) {
+                        fire();
+                        return;
+                    }
+                } else {
+                    const playedMs = v.currentTime * 1e3;
+                    if (!fromStart) {
+                        if (playedMs < this.previewMs) fromStart = true;
+                    } else if (playedMs >= this.previewMs) {
+                        fire();
+                        return;
+                    }
+                }
+                if (now - startedAt >= maxWaitMs) {
+                    fire();
+                    return;
+                }
+                this.previewTimer = window.setTimeout(tick, 50);
+            };
+            this.previewTimer = window.setTimeout(tick, 50);
+        };
+        const onUp = async () => {
+            if (this.finished) return;
+            this.tracker?.noteRelease();
+            if (this.previewing) {
+                window.clearTimeout(this.previewTimer);
+                this.previewing = false;
+                this.renderer?.pause();
+                this.status.textContent = "";
+                this.setHint("ready", "按住下方按钮并马上拖动到方块");
+                return;
+            }
+            if (!this.collecting) return;
+            this.collecting = false;
+            this.activateBtn.classList.remove("phantom-holding");
+            this.renderer?.pause();
+            this.setHint("done", "");
+            const samples = this.tracker?.stop() ?? [];
+            await this._stopStream();
+            void this.verifyAndFinish(samples);
+        };
+        this.activateBtn.addEventListener("pointerdown", onDown);
+        window.addEventListener("pointerup", onUp);
+        const onSelectStart = e => e.preventDefault();
+        document.addEventListener("selectstart", onSelectStart, {
+            capture: true
+        });
+        document.addEventListener("dragstart", onSelectStart, {
+            capture: true
+        });
+        this._unbind = () => {
+            this.activateBtn.removeEventListener("pointerdown", onDown);
+            window.removeEventListener("pointerup", onUp);
+            document.removeEventListener("selectstart", onSelectStart, {
+                capture: true
+            });
+            document.removeEventListener("dragstart", onSelectStart, {
+                capture: true
+            });
+        };
+    }
+    async _prepareVideoChunked(challenge) {
+        const meta = challenge && challenge.videoStream || {};
+        const cid = this.challengeId || challenge && challenge.challengeId;
+        const sid = this.sessionId || challenge && challenge.sessionId;
+        if (!cid) throw new Error("挑战缺少会话信息");
+        this.status.textContent = "正在加载验证题…";
+        this._videoAbort?.abort();
+        const ctrl = new AbortController;
+        this._videoAbort = ctrl;
+        const aborted = () => ctrl.signal.aborted || this._sessionClosed || this._a11ySwitched;
+        let v = null;
+        let url = "";
+        let keepAbort = false;
+        try {
+            let ready = null;
+            try {
+                ready = await videoReady(this.apiBase, cid, sid, {
+                    signal: ctrl.signal
+                });
+            } catch (e) {
+                if (e && e.status === 404) return await this._fallbackFromChunked(challenge, aborted);
+                throw e;
+            }
+            if (aborted()) return null;
+            const mime = ready.mime || meta.mime || "video/mp4";
+            const codec = ready.codec || meta.codec || "";
+            const type = codec ? `${mime}; codecs="${codec}"` : mime;
+            const count = Number(ready.chunkCount || meta.chunkCount) || 0;
+            if (!count) throw this._playbackUnsupported("视频分包信息不可用");
+            const chunkMs = Number(ready.chunkDurationMs || meta.chunkDurationMs) || 0;
+            const leadMs = Math.max(0, Number(ready.minPrefetch) || 0) * 1e3;
+            const gateOn = ready.gateEnforce !== false;
+            const win = Math.max(1, Math.floor(Number(ready.window ?? meta.window) || 2));
+            const t0 = performance.now();
+            const useMse = typeof window.MediaSource !== "undefined" && window.MediaSource.isTypeSupported(type);
+            let ms = null;
+            let sb = null;
+            v = document.createElement("video");
+            v.muted = true;
+            v.playsInline = true;
+            v.setAttribute("playsinline", "");
+            v.preload = "auto";
+            v.style.cssText = "position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
+            this.canvas.parentElement?.appendChild(v);
+            this.videoEl = v;
+            if (useMse) {
+                ms = new window.MediaSource;
+                url = URL.createObjectURL(ms);
+                v.src = url;
+                this.videoUrl = url;
+                this._mediaSource = ms;
+                await new Promise((resolve, reject) => {
+                    ms.addEventListener("sourceopen", () => resolve(), {
+                        once: true
+                    });
+                    ms.addEventListener("error", () => reject(this._playbackUnsupported("流式播放器初始化失败")), {
+                        once: true
+                    });
+                });
+                if (aborted()) return null;
+                sb = ms.addSourceBuffer(type);
+                sb.mode = "segments";
+                this._sourceBuffer = sb;
+            }
+            let firstReady = null;
+            let handedOff = false;
+            const firstReadyP = new Promise(resolve => {
+                firstReady = resolve;
+            });
+            const pumped = this._pumpVideoChunks({
+                challengeId: cid,
+                sessionId: sid,
+                count,
+                win,
+                gateOn,
+                t0,
+                chunkMs,
+                leadMs,
+                signal: ctrl.signal,
+                aborted,
+                useMse,
+                sourceBuffer: sb,
+                mediaSource: ms,
+                mime,
+                onFirst: () => firstReady(),
+                onProgress: done => {
+                    if (aborted() || handedOff) return;
+                    this.status.textContent = `正在加载验证题… ${Math.min(99, Math.floor(done * 100 / count))}%`;
+                }
+            });
+            pumped.catch(() => {});
+            if (useMse) {
+                await Promise.race([ firstReadyP, pumped ]);
+                if (aborted()) return null;
+                handedOff = true;
+                await this._waitBuffered(v, {
+                    aborted
+                });
+            } else {
+                const ordered = await pumped;
+                if (aborted() || !ordered) return null;
+                url = URL.createObjectURL(new Blob(ordered, {
+                    type: mime
+                }));
+                v.src = url;
+                this.videoUrl = url;
+            }
+            await new Promise((resolve, reject) => {
+                if (v.readyState >= 1 && v.videoWidth) return resolve();
+                const done = () => resolve();
+                v.addEventListener("loadedmetadata", done, {
+                    once: true
+                });
+                v.addEventListener("durationchange", done, {
+                    once: true
+                });
+                v.addEventListener("error", () => reject(this._playbackUnsupported("视频无法解码")), {
+                    once: true
+                });
+                window.setTimeout(done, 8e3);
+            });
+            if (aborted()) return null;
+            if (!v.videoWidth) throw this._playbackUnsupported("视频元数据不可用");
+            if (useMse) {
+                keepAbort = true;
+                pumped.then(() => {
+                    if (this._videoAbort === ctrl) this._videoAbort = null;
+                }, e => {
+                    this._onChunkPumpError(e, ctrl);
+                    if (this._videoAbort === ctrl) this._videoAbort = null;
+                });
+            }
+        } catch (e) {
+            if (!(e && e.status === 404)) {
+                try {
+                    ctrl.abort();
+                } catch (_e) {}
+            }
+            try {
+                if (v) v.remove();
+            } catch (_e) {}
+            try {
+                if (url) URL.revokeObjectURL(url);
+            } catch (_e) {}
+            this._teardownMedia();
+            this.videoEl = null;
+            this.videoUrl = "";
+            if (e && e.status === 404) return await this._fallbackFromChunked(challenge, aborted);
+            if (this._sessionClosed || this._a11ySwitched) throw e;
+            if (e && (e.status || e.code === "PLAYBACK_UNSUPPORTED" || e.code === "TIMEOUT")) throw e;
+            throw this._playbackUnsupported(e && e.message);
+        } finally {
+            if (!keepAbort && this._videoAbort === ctrl) this._videoAbort = null;
+        }
+        this.status.textContent = "";
+        return v;
+    }
+    async _fallbackFromChunked(challenge, aborted) {
+        if (!challenge || !challenge.videoUrl) return null;
+        if (aborted && aborted()) return null;
+        try {
+            return await this._prepareVideo(challenge);
+        } catch (e) {
+            if (e && e.status) throw e;
+            return null;
+        }
+    }
+    _pumpVideoChunks(opt) {
+        const {challengeId, sessionId, count, win, gateOn, t0, chunkMs, leadMs, signal, aborted, useMse, sourceBuffer, mediaSource, onFirst, onProgress} = opt;
+        const slots = new Map;
+        let next = 0;
+        let inflight = 0;
+        let failure = null;
+        let wake = null;
+        const notify = () => {
+            const w = wake;
+            wake = null;
+            if (w) w();
+        };
+        const launch = () => {
+            while (!failure && !aborted() && next < count && inflight < win) {
+                const index = next++;
+                inflight++;
+                const slot = this._fetchVideoChunk(challengeId, sessionId, index, {
+                    gateOn,
+                    t0,
+                    chunkMs,
+                    leadMs,
+                    signal,
+                    aborted
+                }).then(bytes => {
+                    inflight--;
+                    launch();
+                    notify();
+                    return bytes;
+                }, e => {
+                    inflight--;
+                    failure = e || new Error("视频分片加载失败");
+                    notify();
+                    throw failure;
+                });
+                slot.catch(() => {});
+                slots.set(index, slot);
+            }
+        };
+        const waitSlot = index => new Promise(resolve => {
+            const check = () => {
+                if (slots.has(index) || failure) return resolve();
+                wake = check;
+            };
+            check();
+        });
+        launch();
+        return (async () => {
+            const ordered = useMse ? null : [];
+            for (let i = 0; i < count; i++) {
+                if (aborted()) return null;
+                if (!slots.has(i)) await waitSlot(i);
+                if (aborted()) return null;
+                if (failure) throw failure;
+                const slot = slots.get(i);
+                slots.delete(i);
+                const bytes = await slot;
+                if (aborted() || !bytes) return null;
+                if (useMse) await this._appendSourceBuffer(sourceBuffer, bytes); else ordered.push(bytes);
+                launch();
+                if (i === 0 && onFirst) onFirst();
+                if (onProgress) onProgress(i + 1);
+            }
+            if (aborted()) return null;
+            if (useMse) {
+                try {
+                    if (mediaSource.readyState === "open") mediaSource.endOfStream();
+                } catch (e) {}
+                return null;
+            }
+            return ordered;
+        })();
+    }
+    _onChunkPumpError(e, ctrl) {
+        if (!e || this._videoAbort !== ctrl || this._sessionClosed || this._a11ySwitched) return;
+        const code = e && e.status || 0;
+        this.onError(e);
+        if (code === 410 || code === 404 || code === 401) {
+            this.status.textContent = code === 410 ? "验证已过期，正在重新取题…" : code === 404 ? "验证题已失效，正在重新取题…" : "会话已刷新，正在重新取题…";
+            this.scheduleRetry(800, "auto-restart");
+        } else if (code === 403) {
+            const cls = this._classify403(e);
+            this.status.textContent = cls.text;
+            if (cls.kind === "env" || cls.kind === "points" || cls.kind === "method") this.turnIntoRetryButton(); else this.scheduleRetry(800, "auto-restart");
+        } else {
+            this.status.textContent = "验证题加载中断，正在重新取题…";
+            this.scheduleRetry(800, "auto-restart");
+        }
+    }
+    async _fetchVideoChunk(challengeId, sessionId, index, opt) {
+        const {gateOn, t0, chunkMs, leadMs, signal, aborted} = opt;
+        if (gateOn) {
+            const earliest = t0 + Math.max(0, index * chunkMs - leadMs);
+            for (;;) {
+                const wait = earliest - performance.now();
+                if (wait <= 0) break;
+                if (aborted()) return null;
+                await new Promise(r => window.setTimeout(r, Math.min(wait, 250)));
+            }
+        }
+        let lastErr = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            if (aborted()) return null;
+            try {
+                const res = await videoChunk(this.apiBase, challengeId, sessionId, index, {
+                    signal
+                });
+                return base64ToBytes(res && res.data);
+            } catch (e) {
+                lastErr = e;
+                if (aborted()) return null;
+                if (e && e.status === 409 && attempt < 2) {
+                    await new Promise(r => window.setTimeout(r, 500 * (attempt + 1)));
+                    continue;
+                }
+                throw e;
+            }
+        }
+        throw lastErr;
+    }
+    _appendSourceBuffer(sb, bytes) {
+        return new Promise((resolve, reject) => {
+            const onEnd = () => {
+                cleanup();
+                resolve();
+            };
+            const onErr = () => {
+                cleanup();
+                reject(new Error("视频分片写入失败"));
+            };
+            const cleanup = () => {
+                sb.removeEventListener("updateend", onEnd);
+                sb.removeEventListener("error", onErr);
+            };
+            sb.addEventListener("updateend", onEnd);
+            sb.addEventListener("error", onErr);
+            try {
+                sb.appendBuffer(bytes);
+            } catch (e) {
+                cleanup();
+                reject(e);
+            }
+        });
+    }
+    _waitBuffered(v, opt = {}) {
+        const timeoutMs = Number(opt.timeoutMs) > 0 ? Number(opt.timeoutMs) : 8e3;
+        const aborted = opt.aborted || (() => false);
+        return new Promise(resolve => {
+            const deadline = performance.now() + timeoutMs;
+            const tick = () => {
+                if (aborted() || !v) return resolve();
+                try {
+                    if (v.readyState >= 2) return resolve();
+                    const b = v.buffered;
+                    const t = v.currentTime || 0;
+                    for (let i = 0; i < b.length; i++) {
+                        if (b.start(i) <= t + .05 && b.end(i) > t + .05) return resolve();
+                    }
+                } catch (e) {}
+                if (performance.now() >= deadline) return resolve();
+                window.setTimeout(tick, 100);
+            };
+            tick();
+        });
+    }
+    _teardownMedia() {
+        const ms = this._mediaSource;
+        const sb = this._sourceBuffer;
+        this._mediaSource = null;
+        this._sourceBuffer = null;
+        if (!ms) return;
+        try {
+            if (ms.readyState === "open" && (!sb || !sb.updating)) ms.endOfStream();
+        } catch (e) {}
+    }
+    async _prepareVideo(challenge) {
+        const remote = challenge && challenge.videoUrl;
+        if (!remote) {
+            throw new Error("挑战缺少视频信息");
+        }
+        const mime = challenge.videoMime || "video/mp4";
+        this.status.textContent = "正在下载验证题…";
+        this._videoAbort?.abort();
+        const ctrl = new AbortController;
+        this._videoAbort = ctrl;
+        let v = null;
+        let url = "";
+        try {
+            const buf = await videoBinary(this.apiBase, this.challengeId || challenge.challengeId, this.sessionId || challenge.sessionId, remote, {
+                signal: ctrl.signal,
+                onProgress: (loaded, total) => {
+                    if (this._sessionClosed || this._a11ySwitched) return;
+                    const mb = n => (n / 1048576).toFixed(1);
+                    this.status.textContent = total > 0 ? `正在下载验证题… ${Math.min(99, Math.floor(loaded * 100 / total))}%（${mb(loaded)}/${mb(total)}MB）` : `正在下载验证题… ${mb(loaded)}MB`;
+                }
+            });
+            if (this._sessionClosed || this._a11ySwitched) return null;
+            url = URL.createObjectURL(new Blob([ buf ], {
+                type: mime
+            }));
+            v = document.createElement("video");
+            v.src = url;
+            v.muted = true;
+            v.playsInline = true;
+            v.setAttribute("playsinline", "");
+            v.preload = "auto";
+            v.style.cssText = "position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
+            this.canvas.parentElement?.appendChild(v);
+            this.videoEl = v;
+            this.videoUrl = url;
+            await new Promise((resolve, reject) => {
+                if (v.readyState >= 1) return resolve();
+                const done = () => resolve();
+                v.addEventListener("loadedmetadata", done, {
+                    once: true
+                });
+                v.addEventListener("durationchange", done, {
+                    once: true
+                });
+                v.addEventListener("error", () => reject(this._playbackUnsupported("视频无法解码")), {
+                    once: true
+                });
+                window.setTimeout(done, 8e3);
+            });
+            if (!v.videoWidth || !v.duration) throw this._playbackUnsupported("视频元数据不可用");
+        } catch (e) {
+            if (v) v.remove();
+            if (url) URL.revokeObjectURL(url);
+            this.videoEl = null;
+            this.videoUrl = "";
+            if (this._sessionClosed || this._a11ySwitched) throw e;
+            if (e && (e.status || e.code === "PLAYBACK_UNSUPPORTED" || e.code === "TIMEOUT")) throw e;
+            throw this._playbackUnsupported(e && e.message);
+        } finally {
+            if (this._videoAbort === ctrl) this._videoAbort = null;
+        }
+        this.status.textContent = "";
+        return v;
+    }
+    _playbackUnsupported(message) {
+        const err = new Error(message || "当前浏览器无法播放该视频编码");
+        err.status = 0;
+        err.code = "PLAYBACK_UNSUPPORTED";
+        return err;
+    }
+    _startStream() {
+        if (!this.streamEnabled || !this.sessionKey || !this.challengeId) return;
+        this.streamSeq = 0;
+        this.streamCursor = 0;
+        window.clearInterval(this.streamTimer);
+        this.streamTimer = window.setInterval(() => {
+            void this._flushStream();
+        }, this.streamIntervalMs);
+    }
+    async _flushStream() {
+        if (!this.streamEnabled || !this.sessionKey || !this.challengeId) return;
+        const points = this.tracker?.takeSince(this.streamCursor) ?? [];
+        this.streamCursor += points.length;
+        if (!points.length) return;
+        const seq = ++this.streamSeq;
+        try {
+            const plaintext = (new TextEncoder).encode(JSON.stringify({
+                seq,
+                points
+            }));
+            const {iv, ciphertext} = await encrypt(this.sessionKey, plaintext);
+            await submitStreamChunk(this.apiBase, this.challengeId, this.sessionId, iv, ciphertext);
+        } catch (e) {}
+    }
+    async _stopStream() {
+        window.clearInterval(this.streamTimer);
+        this.streamTimer = 0;
+        await this._flushStream();
+    }
+    async verifyAndFinish(samples) {
+        if (!this.sessionKey) return;
+        const envEvidence = collectEnvEvidence();
+        if (envEvidence && envEvidence.gated) {
+            this.finished = true;
+            this.activateBtn.classList.remove("phantom-holding");
+            this.activateBtn.disabled = true;
+            this.status.textContent = "检测到自动化工具环境，已中止验证";
+            this.setHint("blocked", "");
+            const err = new Error("browser automation environment detected");
+            err.status = 0;
+            err.code = "ENV_AUTOMATION";
+            err.detail = "automation environment detected";
+            this.onError(err);
+            return;
+        }
+        const payload = {
+            points: samples,
+            lastPointT_ms: Date.now(),
+            env: envEvidence && envEvidence.env || undefined,
+            beh: this.tracker?.getBehavior() || undefined
+        };
+        const plaintext = (new TextEncoder).encode(JSON.stringify(payload));
+        const {iv, ciphertext} = await encrypt(this.sessionKey, plaintext);
+        try {
+            const result = await submitVerify(this.apiBase, this.challengeId, this.sessionId, iv, ciphertext);
+            this.renderer?.stop();
+            this.finished = true;
+            this.status.textContent = "";
+            result.challengeId = this.challengeId;
+            result.sessionId = this.sessionId;
+            if (this.powRequired && result.receipt && !this._powDone) {
+                const powReceipt = await this._runPowPhase();
+                if (!powReceipt) {
+                    this.renderer?.stop();
+                    this.status.textContent = "安全校验未完成，请重试";
+                    this.activateBtn.classList.add("phantom-fail");
+                    this.activateBtn.textContent = "验证未完成";
+                    this.scheduleRetry();
+                    return;
+                }
+                result.receipts = [ ...this._preReceipts, result.receipt, powReceipt ];
+            } else if (this._preReceipts.length) {
+                result.receipts = [ ...this._preReceipts, result.receipt ];
+            }
+            if (result.passed === null || result.passed === undefined) {
+                this.status.textContent = result.receipt ? "验证完成，正在确认结果…" : "正在确认验证结果…";
+            }
+            const confirmed = await this.onResult(result) !== false;
+            this.status.textContent = "";
+            if (confirmed) {
+                this.activateBtn.classList.add("phantom-success");
+                this.activateBtn.textContent = "验证通过";
+            } else {
+                this.activateBtn.classList.add("phantom-fail");
+                this.activateBtn.textContent = "验证失败";
+                this.scheduleRetry();
+            }
+        } catch (e) {
+            this.renderer?.stop();
+            this.finished = true;
+            const code = e && e.status || 0;
+            this.activateBtn.classList.add("phantom-fail");
+            if (code === 429) {
+                this.status.textContent = "尝试次数过多，请约 1 分钟后重试";
+                this.activateBtn.textContent = "尝试次数过多";
+                this.scheduleRetry(6e4);
+            } else if (code === 410) {
+                this.status.textContent = "验证已失效，请重新滑动";
+                this.activateBtn.textContent = "验证已失效";
+                this.scheduleRetry(800, "auto-restart");
+            } else if (code === 401) {
+                this.status.textContent = "会话已刷新，正在重新验证…";
+                this.activateBtn.textContent = "正在重试";
+                this.scheduleRetry(800, "auto-restart");
+            } else if (code === 403) {
+                const cls = this._classify403(e);
+                this.status.textContent = cls.text;
+                this.activateBtn.textContent = cls.kind === "points" ? "点数不足" : cls.kind === "env" ? "环境校验未通过" : "正在重新取题";
+                if (cls.kind === "env" || cls.kind === "points") {
+                    this.turnIntoRetryButton();
+                } else {
+                    this.scheduleRetry(800, "auto-restart");
+                }
+            } else {
+                this.status.textContent = "提交失败";
+                this.activateBtn.textContent = "验证失败";
+                this.scheduleRetry();
+            }
+            this.onError(e);
+        }
+    }
+    async _runPowPhase(preferredMethod, stopOnDual = false) {
+        const btn = this.activateBtn;
+        const label = document.createElement("span");
+        label.textContent = "按住完成安全校验";
+        const bar = document.createElement("span");
+        bar.className = "phantom-progress";
+        btn.textContent = "";
+        btn.appendChild(label);
+        btn.appendChild(bar);
+        btn.style.setProperty("--ph-charge-duration", "8s");
+        btn.disabled = false;
+        this.renderer?.drawStaticNoise();
+        this.setHint("ready", "按住下方按钮完成安全校验");
+        let challenge = null;
+        this._powAltUnavailable = false;
+        const load = async () => {
+            try {
+                challenge = await requestPowChallenge(this.apiBase, preferredMethod);
+            } catch (e) {
+                challenge = null;
+            }
+            if (challenge) {
+                this._powChallengeId = challenge.challengeId || "";
+                this._powSessionId = challenge.sessionId || "";
+                if (Array.isArray(challenge.requiredMethods)) this.requiredMethods = challenge.requiredMethods;
+            }
+            return !!challenge;
+        };
+        try {
+            if (!await load()) {
+                this.status.textContent = "安全校验暂不可用，请稍后重试";
+                this.setHint("blocked", "");
+                return null;
+            }
+            if (stopOnDual && this.requiredMethods.indexOf("phantom") !== -1) {
+                this._powAltUnavailable = true;
+                this.setHint("blocked", "");
+                return null;
+            }
+            for (;;) {
+                if (this._sessionClosed) return null;
+                const attempt = await this._awaitPowAttempt(challenge);
+                if (this._sessionClosed || attempt.failed) return null;
+                if (attempt.released) {
+                    if (!await load()) {
+                        this.status.textContent = "安全校验暂不可用，请稍后重试";
+                        this.setHint("blocked", "");
+                        return null;
+                    }
+                    this.status.textContent = "已放弃，请重新按住";
+                    continue;
+                }
+                try {
+                    const res = await verifyPow(this.apiBase, challenge.challengeId, attempt.solution, challenge.sessionId);
+                    if (res && res.receipt) {
+                        btn.classList.remove("phantom-holding");
+                        this.status.textContent = "";
+                        return res.receipt;
+                    }
+                } catch (e) {}
+                if (!await load()) {
+                    this.status.textContent = "安全校验暂不可用，请稍后重试";
+                    this.setHint("blocked", "");
+                    return null;
+                }
+                btn.classList.remove("phantom-holding");
+                this.setHint("ready", "按住下方按钮完成安全校验");
+                this.status.textContent = "校验未通过，请再试一次";
+            }
+        } finally {
+            const abort = this._powAbort;
+            this._powAbort = null;
+            abort?.();
+            this._powTask?.cancel();
+            this._powTask = null;
+        }
+    }
+    _awaitPowAttempt(challenge) {
+        const btn = this.activateBtn;
+        return new Promise(resolve => {
+            const task = new PowTask;
+            this._powTask = task;
+            let solving = false;
+            let settled = false;
+            let fails = 0;
+            let streamSeq = 0;
+            const reportPowStream = (hashes, solveMs) => submitPowStream(this.apiBase, challenge.challengeId, challenge.sessionId, streamSeq++, hashes, solveMs).catch(() => {});
+            const finish = out => {
+                if (settled) return;
+                settled = true;
+                this._powAbort = null;
+                btn.removeEventListener("pointerdown", onDown);
+                window.removeEventListener("pointerup", onUp);
+                resolve(out);
+            };
+            this._powAbort = () => finish({
+                failed: true
+            });
+            const onDown = e => {
+                if (e.button !== 0 || solving || btn.disabled) return;
+                e.preventDefault();
+                solving = true;
+                btn.classList.add("phantom-holding");
+                this.status.textContent = "正在校验…";
+                task.run(challenge.nonce, challenge.difficulty, p => {
+                    if (solving) void reportPowStream(p.hashes, p.solveMs);
+                }).then(async out => {
+                    if (!solving) return;
+                    solving = false;
+                    await reportPowStream(out.hashes, out.solveMs);
+                    finish({
+                        solution: out.solution
+                    });
+                }).catch(() => {
+                    if (!solving) return;
+                    solving = false;
+                    btn.classList.remove("phantom-holding");
+                    if (++fails >= 2) {
+                        finish({
+                            failed: true
+                        });
+                        return;
+                    }
+                    this.status.textContent = "校验失败，请重新按住";
+                });
+            };
+            const onUp = () => {
+                if (!solving) return;
+                solving = false;
+                btn.classList.remove("phantom-holding");
+                task.cancel();
+                finish({
+                    released: true
+                });
+            };
+            btn.addEventListener("pointerdown", onDown);
+            window.addEventListener("pointerup", onUp);
+        });
+    }
+    async switchToPow() {
+        if (this._a11ySwitched || this.finished || this._sessionClosed) return false;
+        this._a11ySwitched = true;
+        this._unbind?.();
+        this._unbind = () => {};
+        this._videoAbort?.abort();
+        this.renderer?.pause();
+        this.overlay.classList.add("phantom-hidden");
+        this.activateBtn.classList.remove("phantom-holding");
+        this.setHint("ready", "");
+        let receipt = null;
+        try {
+            receipt = await this._runPowPhase("pow", true);
+        } catch (e) {
+            receipt = null;
+        }
+        if (this._sessionClosed) return true;
+        if (!receipt) {
+            this.status.textContent = this._powAltUnavailable ? "当前验证暂不支持无障碍替代方式" : "安全校验未完成，请重试";
+            this.turnIntoRetryButton();
+            this._a11ySwitched = false;
+            return false;
+        }
+        await this._finalize({
+            receipt,
+            receipts: [ receipt ],
+            challengeId: this._powChallengeId || this.challengeId,
+            sessionId: this._powSessionId || this.sessionId
+        });
+        return true;
+    }
+    async _runPowFirst() {
+        const stage = this.canvas.parentElement;
+        if (stage) stage.style.display = "none";
+        this.notifyEntry(this._sessionCaps, false);
+        const receipt = await this._runPowPhase("pow");
+        if (this._sessionClosed) return true;
+        if (!receipt) {
+            this.status.textContent = "安全校验未完成，请重试";
+            this.turnIntoRetryButton();
+            return true;
+        }
+        this._powDone = true;
+        this._preReceipts = [ receipt ];
+        if (this.requiredMethods.indexOf("phantom") !== -1) {
+            if (stage) stage.style.display = "";
+            this._resetActivateBtn();
+            return false;
+        }
+        await this._finalize({
+            receipt,
+            receipts: [ receipt ],
+            challengeId: this._powChallengeId || this.challengeId,
+            sessionId: this._powSessionId || this.sessionId
+        });
+        return true;
+    }
+    _resetActivateBtn() {
+        const btn = this.activateBtn;
+        btn.textContent = "按住并跟随方块";
+        const bar = document.createElement("span");
+        bar.className = "phantom-progress";
+        btn.appendChild(bar);
+        btn.classList.remove("phantom-holding", "phantom-success", "phantom-fail", "phantom-retry");
+        btn.disabled = true;
+    }
+    async _finalize(result) {
+        const confirmed = await this.onResult(result) !== false;
+        this.status.textContent = "";
+        if (confirmed) {
+            this.activateBtn.classList.add("phantom-success");
+            this.activateBtn.textContent = "验证通过";
+        } else {
+            this.activateBtn.classList.add("phantom-fail");
+            this.activateBtn.textContent = "验证失败";
+        }
+        return confirmed;
+    }
+    _classify403(e) {
+        let d = e && e.body ? e.body.detail : undefined;
+        if (d == null && e) d = e.detail;
+        if (typeof d === "string") {
+            const s = d.trim();
+            if (s.charAt(0) === "{" || s.charAt(0) === "[") {
+                try {
+                    d = JSON.parse(s);
+                } catch (err) {
+                    d = s;
+                }
+            }
+        }
+        if (d && typeof d === "object") {
+            const points = Number(d.points);
+            const need = Number(d.minRequired);
+            if (Number.isFinite(points) || Number.isFinite(need)) {
+                const fmt = n => Number.isFinite(n) ? String(Math.round(n * 100) / 100) : "?";
+                return {
+                    kind: "points",
+                    text: `点数不足（当前 ${fmt(points)} / 需要 ${fmt(need)} 点）`
+                };
+            }
+            d = String(d.reason || d.detail || d.error || "");
+        }
+        const s = String(d == null ? "" : d);
+        if (/binding\s*mismatch/i.test(s)) return {
+            kind: "binding",
+            text: "网络环境变化，正在重新验证…"
+        };
+        if (/not allowed for this key/i.test(s)) return {
+            kind: "method",
+            text: "该密钥的「验证方式」设置不允许本次验证，请到「我的密钥」检查后重试"
+        };
+        if (/environment/i.test(s)) return {
+            kind: "env",
+            text: "浏览器环境校验未通过，请更换浏览器后重试"
+        };
+        if (/insufficient|点数不足|quota|balance/i.test(s)) return {
+            kind: "points",
+            text: "点数不足，请先补充点数后重试"
+        };
+        return {
+            kind: "unknown",
+            text: "环境校验未通过，正在重新取题…"
+        };
+    }
+    scheduleRetry(delayMs, mode) {
+        window.clearTimeout(this.retryTimer);
+        const auto = mode === "auto-restart";
+        if (auto) {
+            this._autoRestarts = (this._autoRestarts || 0) + 1;
+            if (this._autoRestarts > 3) {
+                this.turnIntoRetryButton();
+                this.status.textContent = "验证暂时不可用，请点击刷新重试";
+                return;
+            }
+        }
+        this.retryTimer = window.setTimeout(() => {
+            if (auto) {
+                this._autoRestarting = true;
+                this.turnIntoRetryButton();
+                this.activateBtn.click();
+                this._autoRestarting = false;
+            } else {
+                this.turnIntoRetryButton();
+            }
+        }, delayMs || 1e3);
+    }
+    turnIntoRetryButton() {
+        this._unbind();
+        this._unbind = () => {};
+        this.activateBtn.classList.remove("phantom-holding", "phantom-success", "phantom-fail");
+        this.activateBtn.classList.add("phantom-retry");
+        this.activateBtn.textContent = "点击刷新重试";
+        this.activateBtn.disabled = false;
+        const onClick = () => {
+            this.activateBtn.removeEventListener("click", onClick);
+            if (!this._autoRestarting) this._autoRestarts = 0;
+            this.onRetry();
+        };
+        this.activateBtn.addEventListener("click", onClick);
+        this._unbind = () => {
+            this.activateBtn.removeEventListener("click", onClick);
+            this.activateBtn.classList.remove("phantom-retry");
+        };
+    }
+    destroy() {
+        this._sessionClosed = true;
+        this._unbind();
+        this._videoAbort?.abort();
+        this._videoAbort = null;
+        const powAbort = this._powAbort;
+        this._powAbort = null;
+        powAbort?.();
+        this._powTask?.cancel();
+        this._powTask = null;
+        window.clearTimeout(this.retryTimer);
+        window.clearTimeout(this.previewTimer);
+        window.clearInterval(this.streamTimer);
+        this.streamTimer = 0;
+        this.renderer?.stop();
+        this.tracker?.stop();
+        this._teardownMedia();
+        if (this.videoEl) {
+            try {
+                this.videoEl.pause();
+            } catch (e) {}
+            this.videoEl.removeAttribute("src");
+            this.videoEl.remove();
+            this.videoEl = null;
+        }
+        if (this.videoUrl) {
+            URL.revokeObjectURL(this.videoUrl);
+            this.videoUrl = "";
+        }
+    }
+}
+export function mount(el, opts) {
+    injectStyles();
+    if (opts.antidebug ?? true) {
+        installAntidebug(true);
+    }
+    const container = resolveContainer(el);
+    container.innerHTML = "";
+    const root = document.createElement("div");
+    root.className = "phantom-widget";
+    root.setAttribute("data-theme", opts.theme ?? "dark");
+    const bar = document.createElement("div");
+    bar.className = "phantom-bar";
+    bar.setAttribute("data-state", "idle");
+    bar.setAttribute("role", "checkbox");
+    bar.setAttribute("aria-checked", "false");
+    bar.tabIndex = 0;
+    bar.title = "点击进行人机验证";
+    const check = document.createElement("span");
+    check.className = "phantom-check";
+    check.innerHTML = "";
+    const barText = document.createElement("span");
+    barText.className = "phantom-bar-text";
+    barText.textContent = "我不是机器人";
+    const brand = document.createElement("span");
+    brand.className = "phantom-bar-brand";
+    const barLogo = document.createElement("span");
+    barLogo.className = "phantom-bar-logo";
+    barLogo.innerHTML = LOGO_SVG;
+    const copyright = document.createElement("span");
+    copyright.className = "phantom-bar-copyright";
+    copyright.innerHTML = 'ZIYIT STUDIO/<a href="https://ziyit-hacker.github.io/" target="_blank" rel="noopener">ZIYIT人机验证</a>';
+    brand.appendChild(barLogo);
+    brand.appendChild(copyright);
+    bar.appendChild(check);
+    bar.appendChild(barText);
+    bar.appendChild(brand);
+    root.appendChild(bar);
+    container.appendChild(root);
+    let modal = null;
+    const setBarState = state => {
+        bar.setAttribute("data-state", state);
+        bar.setAttribute("aria-checked", state === "verified" ? "true" : "false");
+        if (state === "verified") {
+            check.innerHTML = CHECK_SVG;
+            barText.textContent = "已验证";
+        } else if (state === "error") {
+            check.innerHTML = ALERT_SVG;
+            barText.textContent = "验证失败，点击重试";
+        } else if (state === "verifying") {
+            check.innerHTML = "";
+            barText.textContent = "验证中…";
+        } else {
+            check.innerHTML = "";
+            barText.textContent = "我不是机器人";
+        }
+    };
+    const buildModalBody = modalCard => {
+        const head = document.createElement("div");
+        head.className = "phantom-modal-head";
+        const headLogo = document.createElement("span");
+        headLogo.className = "phantom-modal-logo";
+        headLogo.innerHTML = LOGO_SVG;
+        const title = document.createElement("span");
+        title.className = "phantom-modal-title";
+        title.textContent = "ZIYIT 人机验证系统";
+        const closeBtn = document.createElement("button");
+        closeBtn.className = "phantom-modal-close";
+        closeBtn.type = "button";
+        closeBtn.title = "关闭";
+        closeBtn.setAttribute("aria-label", "关闭验证");
+        closeBtn.innerHTML = CLOSE_SVG;
+        closeBtn.addEventListener("click", () => closeModal(false));
+        head.appendChild(headLogo);
+        head.appendChild(title);
+        head.appendChild(closeBtn);
+        const body = document.createElement("div");
+        body.className = "phantom-modal-body";
+        const hint = document.createElement("div");
+        hint.className = "phantom-hint";
+        hint.setAttribute("data-stage", "loading");
+        const stageWrap = document.createElement("div");
+        stageWrap.className = "phantom-stage-wrap";
+        const canvas = document.createElement("canvas");
+        canvas.className = "phantom-stage";
+        const overlay = document.createElement("div");
+        overlay.className = "phantom-overlay phantom-hidden";
+        const overlayText = document.createElement("div");
+        overlayText.className = "phantom-overlay-text";
+        overlayText.innerHTML = "按住下方按钮<br>马上拖动到闪烁方块处<br>方块出发后跟随移动<br>方块停止则松手";
+        overlay.appendChild(overlayText);
+        stageWrap.appendChild(canvas);
+        stageWrap.appendChild(overlay);
+        const activateBtn = document.createElement("button");
+        activateBtn.className = "phantom-activate";
+        activateBtn.type = "button";
+        activateBtn.textContent = "按住并跟随方块";
+        activateBtn.disabled = true;
+        const progress = document.createElement("span");
+        progress.className = "phantom-progress";
+        activateBtn.appendChild(progress);
+        const status = document.createElement("div");
+        status.className = "phantom-status";
+        status.textContent = "正在准备验证题…";
+        body.appendChild(hint);
+        body.appendChild(stageWrap);
+        body.appendChild(activateBtn);
+        body.appendChild(status);
+        const a11y = document.createElement("div");
+        a11y.className = "phantom-a11y-help";
+        a11y.style.cssText = "margin-top:10px;font-size:12px;line-height:1.6;text-align:center;opacity:.75;";
+        a11y.appendChild(document.createTextNode("无障碍用户（低视力 / 色觉障碍 / 运动障碍）无法完成本验证？"));
+        a11y.appendChild(document.createTextNode(" "));
+        const a11yBtn = document.createElement("button");
+        a11yBtn.type = "button";
+        a11yBtn.className = "phantom-a11y-switch";
+        a11yBtn.style.cssText = "border:0;background:transparent;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer;";
+        a11yBtn.textContent = "换一种方式验证";
+        a11y.appendChild(a11yBtn);
+        modalCard.appendChild(head);
+        modalCard.appendChild(body);
+        return {
+            hint,
+            canvas,
+            overlay,
+            activateBtn,
+            status,
+            progress,
+            a11yWrap: a11y,
+            a11yBtn,
+            body
+        };
+    };
+    const dispatch = async r => {
+        if (r.passed === false || !r.receipt && r.passed !== true) {
+            opts.onFail?.(r);
+            return false;
+        }
+        return await (opts.onSuccess?.(r)) !== false;
+    };
+    const handleResult = async r => {
+        const ok = await dispatch(r);
+        if (ok) onVerified();
+        return ok;
+    };
+    const openModal = () => {
+        if (modal) return;
+        const node = document.createElement("div");
+        node.className = "phantom-modal";
+        node.setAttribute("data-theme", opts.theme ?? "dark");
+        node.setAttribute("role", "dialog");
+        node.setAttribute("aria-modal", "true");
+        node.setAttribute("aria-label", "Phantom 人机验证");
+        const modalCard = document.createElement("div");
+        modalCard.className = "phantom-modal-card";
+        node.appendChild(modalCard);
+        const {hint, canvas, overlay, activateBtn, status, progress, a11yWrap, a11yBtn, body} = buildModalBody(modalCard);
+        const applySessionCaps = (caps, showEntry) => {
+            const show = !!(showEntry && caps && caps.canSwitch && caps.defaultMethod === "phantom");
+            if (show) {
+                if (!a11yWrap.parentNode) body.appendChild(a11yWrap);
+            } else if (a11yWrap.parentNode) {
+                a11yWrap.parentNode.removeChild(a11yWrap);
+            }
+        };
+        node.addEventListener("click", e => {
+            if (e.target === node) closeModal(false);
+        });
+        modalCard.addEventListener("click", e => e.stopPropagation());
+        document.body.appendChild(node);
+        const resetSession = () => {
+            try {
+                session?.destroy();
+            } catch (e) {}
+            activateBtn.classList.remove("phantom-holding", "phantom-success", "phantom-fail", "phantom-retry");
+            activateBtn.textContent = "按住并跟随方块";
+            activateBtn.appendChild(progress);
+            activateBtn.disabled = true;
+            a11yBtn.disabled = false;
+            status.textContent = "正在准备验证题…";
+            session = new WidgetSession(canvas, opts.apiBase, status, overlay, hint, activateBtn, handleResult, e => opts.onError?.(e), resetSession, applySessionCaps);
+            if (modal) modal.session = session;
+            void session.start();
+        };
+        let session = new WidgetSession(canvas, opts.apiBase, status, overlay, hint, activateBtn, handleResult, e => opts.onError?.(e), resetSession, applySessionCaps);
+        a11yBtn.addEventListener("click", () => {
+            if (a11yBtn.disabled) return;
+            a11yBtn.disabled = true;
+            void session.switchToPow().then(handled => {
+                if (!handled) a11yBtn.disabled = false;
+            }, () => {
+                a11yBtn.disabled = false;
+            });
+        });
+        modal = {
+            node,
+            session,
+            closing: false
+        };
+        setBarState("verifying");
+        void session.start();
+    };
+    const closeModal = verified => {
+        if (!modal || modal.closing) return;
+        modal.closing = true;
+        modal.session.destroy();
+        const node = modal.node;
+        const finalize = () => {
+            node.remove();
+        };
+        node.classList.add("phantom-leaving");
+        window.setTimeout(finalize, 160);
+        modal = null;
+        setBarState(verified ? "verified" : "idle");
+    };
+    const onVerified = () => {
+        window.setTimeout(() => closeModal(true), 700);
+    };
+    const onBarClick = () => {
+        if (bar.getAttribute("data-state") === "verified") return;
+        if (bar.getAttribute("data-state") === "verifying") return;
+        openModal();
+    };
+    bar.addEventListener("click", onBarClick);
+    bar.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onBarClick();
+        }
+    });
+    return {
+        destroy() {
+            if (modal) {
+                modal.session.destroy();
+                modal.node.remove();
+                modal = null;
+            }
+            bar.removeEventListener("click", onBarClick);
+            root.remove();
+        },
+        reset() {
+            closeModal(false);
+            setBarState("idle");
+        },
+        open() {
+            const st = bar.getAttribute("data-state");
+            if (st === "verified" || st === "verifying") return;
+            openModal();
+        }
+    };
+}
+export const Phantom = {
+    mount,
+    version: VERSION
+};
+if (typeof window !== "undefined") {
+    const w = window;
+    if (!w.Phantom) w.Phantom = Phantom;
+}
+export default Phantom;

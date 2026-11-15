@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh">
-
 <head>
     <meta charset="UTF-8">
     <title>ZIYIT部署时刻表</title>
@@ -8,44 +7,35 @@
     <script src="../assets/f12check.js"></script>
     <script src="../assets/blacklist.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        @media (max-width: 768px) {
+    <style>        @media (max-width: 768px) {
             body {
                 font-size: 16px;
             }
-
             div[style*="max-width: 400px"] {
                 width: 90%;
                 margin: 10px auto;
                 padding: 15px;
             }
-
             input,
             select {
                 width: 100%;
             }
-
             button {
                 width: 100%;
                 padding: 12px;
             }
-        }
-    </style>
-    <style>
-        nav {
+        }</style>
+    <style>        nav {
             display: flex;
             justify-content: space-between;
             padding: 10px;
         }
-
         .brg {
             text-align: left;
         }
-
         a {
             text-decoration: none;
         }
-
         h1 {
             color: #ffffff;
             text-shadow: 0 0 10px rgba(243, 167, 7, 0.8), 0 0 20px rgba(243, 167, 7, 0.6);
@@ -60,7 +50,6 @@
             background-clip: text;
             animation: glow 2s ease-in-out infinite alternate;
         }
-
         h4 {
             color: #ffffff;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
@@ -70,23 +59,19 @@
             margin: 10px 0;
             text-align: center;
         }
-
         @keyframes glow {
             from {
                 text-shadow: 0 0 10px rgba(243, 167, 7, 0.8), 0 0 20px rgba(243, 167, 7, 0.6);
             }
-
             to {
                 text-shadow: 0 0 15px rgba(243, 167, 7, 1), 0 0 30px rgba(243, 167, 7, 0.8);
             }
         }
-
         * {
             margin: 0px;
             padding: 0;
             list-style: none;
         }
-
         a {
             text-decoration: none;
             color: #f8f8f8;
@@ -98,12 +83,10 @@
             background: rgba(243, 167, 7, 0.2);
             border: 1px solid rgba(243, 167, 7, 0.3);
         }
-
         .pod {
             width: 100%;
             height: 100%;
         }
-
         p {
             color: #ffffff;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
@@ -111,65 +94,52 @@
             line-height: 1.6;
             margin: 15px 0;
         }
-
         ul li {
             display: inline-block;
             line-height: 35px;
         }
-
         li a {
             padding-left: 20px;
             padding-right: 20px;
         }
-
         li p {
             padding-left: 20px;
             padding-right: 20px;
         }
-
         .bid {
             color: #ff6b6b;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
             font-weight: 600;
         }
-
         .tit {
             color: #ffffff;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
             font-weight: 600;
         }
-
         .line {
             width: 1px;
             height: 12px;
             background-color: #f3a707;
         }
-
         a:hover {
             color: #ffffff;
             background: rgba(243, 167, 7, 0.5);
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(243, 167, 7, 0.4);
         }
-
         #timess {
             color: #ffffff;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
         }
-
         * {
             cursor: default !important;
         }
-
-         
         hr {
             border: none;
             height: 2px;
             background: linear-gradient(90deg, transparent, #f3a707, transparent);
             margin: 30px 0;
         }
-
-         
         .schedule-table {
             width: 100%;
             border-collapse: collapse;
@@ -181,7 +151,6 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(243, 167, 7, 0.3);
         }
-
         .schedule-table th,
         .schedule-table td {
             border: 1px solid rgba(243, 167, 7, 0.4);
@@ -192,7 +161,6 @@
             font-size: 1rem;
             transition: all 0.3s ease;
         }
-
         .schedule-table th {
             background: linear-gradient(135deg, rgba(243, 167, 7, 0.8), rgba(243, 167, 7, 0.6));
             font-weight: 700;
@@ -201,27 +169,21 @@
             font-size: 1.1rem;
             letter-spacing: 1px;
         }
-
         .schedule-table tr:nth-child(even) {
             background: rgba(255, 255, 255, 0.05);
         }
-
         .schedule-table tr:hover {
             background: rgba(243, 167, 7, 0.2);
             transform: scale(1.01);
         }
-
         .schedule-table td:hover {
             background: rgba(243, 167, 7, 0.3);
         }
-
         .placeholder {
             color: #cccccc;
             font-style: italic;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
         }
-
-         
         p:last-child {
             text-align: center;
             font-size: 1rem;
@@ -233,8 +195,6 @@
             border-radius: 10px;
             border: 1px solid rgba(243, 167, 7, 0.2);
         }
-
-         
         a[href="./"] {
             display: inline-block;
             margin: 20px;
@@ -244,37 +204,30 @@
             border-radius: 25px;
             border: 2px solid rgba(243, 167, 7, 0.5);
         }
-
         a[href="./"]:hover {
             background: rgba(243, 167, 7, 0.6);
             transform: translateY(-3px);
             box-shadow: 0 8px 20px rgba(243, 167, 7, 0.4);
         }
-
-         
         @keyframes pulse {
             0% {
                 opacity: 1;
                 text-shadow: 0 0 5px rgba(243, 167, 7, 0.8);
             }
-
             50% {
                 opacity: 0.7;
                 text-shadow: 0 0 10px rgba(243, 167, 7, 1);
             }
-
             100% {
                 opacity: 1;
                 text-shadow: 0 0 5px rgba(243, 167, 7, 0.8);
             }
         }
-
         .random-number {
             font-family: monospace !important;
             font-weight: bold !important;
             color: #f3a707 !important;
         }
-
         .no-data {
             color: #888888 !important;
             font-style: italic !important;
@@ -283,30 +236,37 @@
             position: relative !important;
             transition: all 0.3s ease !important;
         }
-
         .no-data:hover {
             background-color: rgba(136, 136, 136, 0.3) !important;
             color: #666666 !important;
             transform: scale(1.05) !important;
         }
-
-         
         .placeholder {
             color: #888;
             font-style: italic;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
-        }
-    </style>
+        }</style>
     <script src="../assets/xss_guard.js?v=20261114"></script>
-    <script src="../assets/ziyit_api.js?v=20261114b"></script>
+    <script src="../assets/ziyit_api.js?v=20261115a"></script>
 </head>
-
 <body id="html-body">
-    
-
     <a href="./">返回backrooms wiki</a>
     <a href="times.txt">浏览具体文件</a>
-    <script>function getCookie(name){const value=`; ${document.cookie}`;const parts=value.split(`; ${name}=`);if(parts.length===2)return decodeURIComponent(parts.pop().split(";").shift());return null}function checkUserPermission(){const authToken=getCookie("authToken")||localStorage.getItem("authToken");if(!authToken){alert("请先登录以访问该页面");window.location.href="../";return}}document.addEventListener("DOMContentLoaded",checkUserPermission);</script>
+    <script>function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return decodeURIComponent(parts.pop().split(";").shift());
+    return null;
+}
+function checkUserPermission() {
+    const authToken = getCookie("authToken") || localStorage.getItem("authToken");
+    if (!authToken) {
+        alert("请先登录以访问该页面");
+        window.location.href = "../";
+        return;
+    }
+}
+document.addEventListener("DOMContentLoaded", checkUserPermission);</script>
     <hr>
     <h1 id="top">网页常规部署时刻表</h1>
 <div style="position: absolute; right: 10px; top: 10px; text-align: center;">
@@ -316,13 +276,150 @@
             <strong><span id="userTypeDisplay"></span></strong>
         </div>
     </div>
-    <script>function getCookie(name){const value=`; ${document.cookie}`;const parts=value.split(`; ${name}=`);if(parts.length===2)return parts.pop().split(";").shift()}async function getUserPermission(username){try{const response=await fetch("/backrooms/user.json");const userData=await response.json();const usernameIndex=userData.Username.indexOf(username);if(usernameIndex!==-1){const permission=userData.Permission[usernameIndex];return{permission}}return null}catch(error){console.error("读取用户权限信息失败:",error);return null}}document.addEventListener("DOMContentLoaded",async function(){const authToken=getCookie("authToken")||localStorage.getItem("authToken");const usernameDisplay=document.getElementById("usernameDisplay");const userTypeDisplay=document.getElementById("userTypeDisplay");const pageContent=document.getElementById("page-content");if(!authToken){if(usernameDisplay)usernameDisplay.innerHTML='您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';if(userTypeDisplay)userTypeDisplay.textContent=""}else{const user=await ZIYIT_API.currentUser();const username=user?user.username:"";const type=user&&ZIYIT_API.isVip(user)?"ZC":"UR";if(usernameDisplay)usernameDisplay.textContent=user?user.username:"";if(userTypeDisplay){try{userTypeDisplay.textContent=await ZIYIT_API.userType()||(ZIYIT_API.isVip(user)?"VIP用户":"普通用户")}catch(e){userTypeDisplay.textContent=ZIYIT_API.isVip(user)?"VIP用户":"普通用户"}}}});</script>
+    <script>function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+}
+async function getUserPermission(username) {
+    try {
+        const response = await fetch("/backrooms/user.json");
+        const userData = await response.json();
+        const usernameIndex = userData.Username.indexOf(username);
+        if (usernameIndex !== -1) {
+            const permission = userData.Permission[usernameIndex];
+            return {
+                permission
+            };
+        }
+        return null;
+    } catch (error) {
+        console.error("读取用户权限信息失败:", error);
+        return null;
+    }
+}
+document.addEventListener("DOMContentLoaded", async function() {
+    const authToken = getCookie("authToken") || localStorage.getItem("authToken");
+    const usernameDisplay = document.getElementById("usernameDisplay");
+    const userTypeDisplay = document.getElementById("userTypeDisplay");
+    const pageContent = document.getElementById("page-content");
+    if (!authToken) {
+        if (usernameDisplay) usernameDisplay.innerHTML = '您还未登录，<a href="/user/">登录</a> 或 <a href="/user/register">注册</a>';
+        if (userTypeDisplay) userTypeDisplay.textContent = "";
+    } else {
+        const user = await ZIYIT_API.currentUser();
+        const username = user ? user.username : "";
+        const type = user && ZIYIT_API.isVip(user) ? "ZC" : "UR";
+        if (usernameDisplay) usernameDisplay.textContent = user ? user.username : "";
+        if (userTypeDisplay) {
+            try {
+                userTypeDisplay.textContent = await ZIYIT_API.userType() || (ZIYIT_API.isVip(user) ? "VIP用户" : "普通用户");
+            } catch (e) {
+                userTypeDisplay.textContent = ZIYIT_API.isVip(user) ? "VIP用户" : "普通用户";
+            }
+        }
+    }
+});</script>
     <h4>ZIYIT Deployment Schedule</h4>
     <hr>
     <div>
         <div id="timess"></div>
     </div>
-    <script>const timessElement=document.getElementById("timess");fetch("times.txt").then(response=>response.text()).then(data=>{const lines=data.trim().split("\n");let tableHTML='<table class="schedule-table">';const headerLine=lines[0].replace(/^####\s+/,"");const headers=headerLine.split(/\s+/);tableHTML+="<tr>";tableHTML+="<th>序号</th>";headers.forEach(header=>{tableHTML+=`<th>${header}</th>`});tableHTML+="</tr>";for(let i=1;i<lines.length;i++){const line=lines[i].trim();if(line){const parts=line.split(/\s+/);tableHTML+="<tr>";tableHTML+=`<td>${parts[0]}</td>`;for(let j=1;j<parts.length;j++){const cell=parts[j];if(cell==="#####"){tableHTML+='<td class="no-data" title="本格无任何数据">[NO DATA]</td>'}else if(cell.includes("~")){tableHTML+=`<td class="random-number" data-original="${cell}">${cell}</td>`}else{tableHTML+=`<td>${cell}</td>`}}tableHTML+="</tr>"}}tableHTML+="</table>";timessElement.innerHTML=tableHTML;startRandomNumberAnimation()}).catch(error=>{console.error("Error fetching timess:",error);timessElement.innerHTML="<p>无法加载时刻表文件。</p>"});function startRandomNumberAnimation(){const randomCells=document.querySelectorAll(".random-number");randomCells.forEach(cell=>{const originalText=cell.getAttribute("data-original");let animationInterval;function startAnimation(){animationInterval=setInterval(()=>{if(originalText.includes(":")){const timeParts=originalText.split(":");let newText="";if(timeParts[0].includes("~")){const hour=Math.floor(Math.random()*24);newText+=hour.toString().padStart(2,"0")}else{newText+=timeParts[0]}newText+=":";if(timeParts[1].includes("~")){const minute=Math.floor(Math.random()*60);newText+=minute.toString().padStart(2,"0")}else{newText+=timeParts[1]}cell.textContent=newText}else{let newText=originalText;let hasChanged=false;newText=newText.replace(/~/g,()=>{hasChanged=true;return Math.floor(Math.random()*10)});if(hasChanged){cell.textContent=newText}}},50)}cell.addEventListener("mouseenter",()=>{if(animationInterval){clearInterval(animationInterval);animationInterval=null}cell.textContent="完成后立即部署";cell.style.color="#ff6b6b"});cell.addEventListener("mouseleave",()=>{cell.style.color="";if(!animationInterval){startAnimation()}});startAnimation();cell.style.fontFamily="monospace";cell.style.fontWeight="bold";cell.style.animation="pulse 1s infinite"})}</script>
+    <script>const timessElement = document.getElementById("timess");
+fetch("times.txt").then(response => response.text()).then(data => {
+    const lines = data.trim().split("\n");
+    let tableHTML = '<table class="schedule-table">';
+    const headerLine = lines[0].replace(/^####\s+/, "");
+    const headers = headerLine.split(/\s+/);
+    tableHTML += "<tr>";
+    tableHTML += "<th>序号</th>";
+    headers.forEach(header => {
+        tableHTML += `<th>${header}</th>`;
+    });
+    tableHTML += "</tr>";
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line) {
+            const parts = line.split(/\s+/);
+            tableHTML += "<tr>";
+            tableHTML += `<td>${parts[0]}</td>`;
+            for (let j = 1; j < parts.length; j++) {
+                const cell = parts[j];
+                if (cell === "#####") {
+                    tableHTML += '<td class="no-data" title="本格无任何数据">[NO DATA]</td>';
+                } else if (cell.includes("~")) {
+                    tableHTML += `<td class="random-number" data-original="${cell}">${cell}</td>`;
+                } else {
+                    tableHTML += `<td>${cell}</td>`;
+                }
+            }
+            tableHTML += "</tr>";
+        }
+    }
+    tableHTML += "</table>";
+    timessElement.innerHTML = tableHTML;
+    startRandomNumberAnimation();
+}).catch(error => {
+    console.error("Error fetching timess:", error);
+    timessElement.innerHTML = "<p>无法加载时刻表文件。</p>";
+});
+function startRandomNumberAnimation() {
+    const randomCells = document.querySelectorAll(".random-number");
+    randomCells.forEach(cell => {
+        const originalText = cell.getAttribute("data-original");
+        let animationInterval;
+        function startAnimation() {
+            animationInterval = setInterval(() => {
+                if (originalText.includes(":")) {
+                    const timeParts = originalText.split(":");
+                    let newText = "";
+                    if (timeParts[0].includes("~")) {
+                        const hour = Math.floor(Math.random() * 24);
+                        newText += hour.toString().padStart(2, "0");
+                    } else {
+                        newText += timeParts[0];
+                    }
+                    newText += ":";
+                    if (timeParts[1].includes("~")) {
+                        const minute = Math.floor(Math.random() * 60);
+                        newText += minute.toString().padStart(2, "0");
+                    } else {
+                        newText += timeParts[1];
+                    }
+                    cell.textContent = newText;
+                } else {
+                    let newText = originalText;
+                    let hasChanged = false;
+                    newText = newText.replace(/~/g, () => {
+                        hasChanged = true;
+                        return Math.floor(Math.random() * 10);
+                    });
+                    if (hasChanged) {
+                        cell.textContent = newText;
+                    }
+                }
+            }, 50);
+        }
+        cell.addEventListener("mouseenter", () => {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            cell.textContent = "完成后立即部署";
+            cell.style.color = "#ff6b6b";
+        });
+        cell.addEventListener("mouseleave", () => {
+            cell.style.color = "";
+            if (!animationInterval) {
+                startAnimation();
+            }
+        });
+        startAnimation();
+        cell.style.fontFamily = "monospace";
+        cell.style.fontWeight = "bold";
+        cell.style.animation = "pulse 1s infinite";
+    });
+}</script>
     <hr>
     <a href="#top">
         <img src="../assets/up.png" alt="上滑">
@@ -335,5 +432,4 @@
     <br>
     <p>&copy;2026&nbsp;&nbsp;ZIYIT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>版权所有，侵权必究</strong></p>
 </body>
-
 </html>

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,29 +7,34 @@
     <meta name="description" content="ZIYIT 聊天墙：公开问答留言板，可发布、回复、点赞与搜索。">
     <meta name="author" content="ZIYIT STUDIO">
     <link rel="icon" href="./assets/ziyit.png" type="image/x-icon">
-    <script>(function(){var pref="auto";try{var m=document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));if(m)pref=decodeURIComponent(m[1])||"auto"}catch(e){}var dark=pref==="dark"||pref==="auto"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",dark?"dark":"light");document.documentElement.setAttribute("data-theme-pref",pref)})();</script>
+    <script>(function() {
+    var pref = "auto";
+    try {
+        var m = document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));
+        if (m) pref = decodeURIComponent(m[1]) || "auto";
+    } catch (e) {}
+    var dark = pref === "dark" || pref === "auto" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme-pref", pref);
+})();</script>
     <link rel="stylesheet" href="./assets/ziyit-theme.css">
     <script src="./assets/xss_guard.js?v=20261114"></script>
-    <script src="./assets/ziyit_api.js?v=20261114b"></script>
+    <script src="./assets/ziyit_api.js?v=20261115a"></script>
     <script src="./assets/ziyit_report.js?v=20261114b"></script>
-    <style>
-        * {
+    <style>        * {
             box-sizing: border-box;
         }
-
         body {
             margin: 0;
             font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
             background: var(--ziyit-bg);
             color: var(--ziyit-text-primary);
         }
-
         .page {
             max-width: 860px;
             margin: 0 auto;
             padding: 28px 20px 60px;
         }
-
         .page-head {
             display: flex;
             align-items: flex-end;
@@ -39,18 +43,15 @@
             flex-wrap: wrap;
             margin-bottom: 8px;
         }
-
         .page-head h1 {
             margin: 0;
             font-size: 28px;
         }
-
         .page-sub {
             margin: 6px 0 18px;
             color: var(--ziyit-text-secondary);
             font-size: 14px;
         }
-
         .btn {
             border: 1px solid var(--ziyit-border);
             background: var(--ziyit-bg-card);
@@ -61,29 +62,23 @@
             cursor: pointer;
             transition: all .2s;
         }
-
         .btn:hover {
             border-color: var(--ziyit-primary);
             color: var(--ziyit-primary);
         }
-
         .btn.primary {
             background: var(--ziyit-primary);
             border-color: var(--ziyit-primary);
             color: #fff;
         }
-
         .btn.primary:hover {
             background: var(--ziyit-primary-dark);
             color: #fff;
         }
-
         .btn:disabled {
             opacity: .6;
             cursor: not-allowed;
         }
-
-         
         .composer {
             background: var(--ziyit-bg-card);
             border: 1px solid var(--ziyit-border);
@@ -91,13 +86,11 @@
             padding: 14px;
             margin-bottom: 16px;
         }
-
         .composer-main {
             display: flex;
             gap: 12px;
             align-items: flex-start;
         }
-
         .composer textarea {
             flex: 1;
             min-height: 84px;
@@ -111,12 +104,10 @@
             line-height: 1.6;
             font-family: inherit;
         }
-
         .composer textarea:focus {
             outline: none;
             border-color: var(--ziyit-primary);
         }
-
         .composer-foot {
             display: flex;
             align-items: center;
@@ -124,30 +115,24 @@
             gap: 12px;
             margin-top: 10px;
         }
-
         .composer-tip {
             font-size: 12px;
             color: var(--ziyit-text-secondary);
         }
-
         .composer-tip.warn {
             color: var(--ziyit-danger);
         }
-
         .counter {
             font-size: 12px;
             color: var(--ziyit-text-secondary);
             margin-left: auto;
             margin-right: 10px;
         }
-
-         
         .search-bar {
             display: flex;
             gap: 10px;
             margin-bottom: 16px;
         }
-
         .search-bar input {
             flex: 1;
             padding: 9px 12px;
@@ -158,30 +143,23 @@
             font-size: 14px;
             font-family: inherit;
         }
-
         .search-bar input:focus {
             outline: none;
             border-color: var(--ziyit-primary);
         }
-
         .search-meta {
             font-size: 12px;
             color: var(--ziyit-text-secondary);
             margin: -6px 0 12px;
         }
-
-         
         .wall-list {
             display: grid;
             gap: 14px;
         }
-
-         
         .wall-skeleton {
             display: grid;
             gap: 14px;
         }
-
         .wall-skeleton .sk-card {
             height: 116px;
             border: 1px solid var(--ziyit-border);
@@ -190,31 +168,26 @@
             background-size: 200% 100%;
             animation: wall-sk 1.2s ease-in-out infinite;
         }
-
         @keyframes wall-sk {
             0% {
                 background-position: 200% 0;
             }
-
             100% {
                 background-position: -200% 0;
             }
         }
-
         .wall-card {
             background: var(--ziyit-bg-card);
             border: 1px solid var(--ziyit-border);
             border-radius: 10px;
             padding: 16px 18px;
         }
-
         .msg-head {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-bottom: 10px;
         }
-
         .avatar {
             width: 34px;
             height: 34px;
@@ -224,20 +197,17 @@
             border: 1px solid var(--ziyit-border);
             flex: 0 0 auto;
         }
-
         .nickname {
             font-size: 14px;
             font-weight: 600;
             color: var(--ziyit-text-primary);
         }
-
         .wall-time {
             font-size: 12px;
             color: var(--ziyit-text-disabled);
             margin-left: auto;
             white-space: nowrap;
         }
-
         .wall-content {
             font-size: 15px;
             line-height: 1.75;
@@ -245,16 +215,13 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
-
         .wall-content .wall-q {
             font-weight: 600;
             margin-bottom: 6px;
         }
-
         .wall-content .wall-a {
             color: var(--ziyit-text-secondary);
         }
-
         .msg-actions {
             display: flex;
             align-items: center;
@@ -262,7 +229,6 @@
             margin-top: 12px;
             flex-wrap: wrap;
         }
-
         .act {
             border: 0;
             background: transparent;
@@ -273,23 +239,18 @@
             cursor: pointer;
             transition: all .18s;
         }
-
         .act:hover {
             background: var(--ziyit-bg);
             color: var(--ziyit-primary);
         }
-
         .act.liked {
             color: var(--ziyit-primary);
             font-weight: 600;
         }
-
         .act:disabled {
             opacity: .55;
             cursor: not-allowed;
         }
-
-         
         .replies {
             margin-top: 12px;
             padding-left: 14px;
@@ -297,23 +258,19 @@
             display: grid;
             gap: 10px;
         }
-
         .reply-item {
             display: flex;
             gap: 10px;
             align-items: flex-start;
         }
-
         .reply-item .avatar {
             width: 26px;
             height: 26px;
         }
-
         .reply-body {
             flex: 1;
             min-width: 0;
         }
-
         .reply-meta {
             display: flex;
             align-items: center;
@@ -321,13 +278,11 @@
             font-size: 12px;
             color: var(--ziyit-text-secondary);
         }
-
         .reply-nick {
             font-weight: 600;
             color: var(--ziyit-text-primary);
             font-size: 13px;
         }
-
         .reply-text {
             font-size: 14px;
             line-height: 1.65;
@@ -335,16 +290,13 @@
             word-break: break-word;
             margin-top: 3px;
         }
-
         .reply-editor {
             margin-top: 8px;
             display: none;
         }
-
         .reply-editor.show {
             display: block;
         }
-
         .reply-editor textarea {
             width: 100%;
             min-height: 64px;
@@ -358,12 +310,10 @@
             line-height: 1.6;
             font-family: inherit;
         }
-
         .reply-editor textarea:focus {
             outline: none;
             border-color: var(--ziyit-primary);
         }
-
         .reply-editor-foot {
             display: flex;
             align-items: center;
@@ -371,7 +321,6 @@
             gap: 8px;
             margin-top: 6px;
         }
-
         .wall-empty,
         .wall-error {
             padding: 40px 16px;
@@ -380,7 +329,6 @@
             border: 1px dashed var(--ziyit-border);
             border-radius: 10px;
         }
-
         .toast {
             position: fixed;
             left: 50%;
@@ -396,23 +344,18 @@
             pointer-events: none;
             transition: opacity .25s;
         }
-
         .toast.show {
             opacity: 1;
         }
-
         @media (max-width: 560px) {
             .page {
                 padding: 20px 14px 48px;
             }
-
             .composer-main {
                 gap: 8px;
             }
-        }
-    </style>
+        }</style>
 </head>
-
 <body>
     <div class="page">
         <div class="page-head">
@@ -421,7 +364,6 @@
             </div>
         </div>
         <p class="page-sub">公开留言板：发布 500 字以内的消息，可回复、点赞；每 30 秒自动刷新。</p>
-
         <div class="composer" id="composer">
             <div class="composer-main">
                 <textarea id="composer-input" maxlength="500" placeholder="说点什么…（发布、回复、点赞需要登录）"></textarea>
@@ -432,14 +374,12 @@
                 <button class="btn primary" id="composer-send">发布</button>
             </div>
         </div>
-
         <div class="search-bar">
             <input type="search" id="wall-search" maxlength="100" placeholder="搜索聊天墙内容…">
             <button class="btn" id="wall-search-btn">搜索</button>
             <button class="btn" id="wall-search-clear">清除</button>
         </div>
         <div class="search-meta" id="search-meta"></div>
-
         <div class="wall-list" id="wall-list">
             <div class="wall-skeleton">
                 <div class="sk-card"></div>
@@ -448,10 +388,625 @@
             </div>
         </div>
     </div>
-
     <div class="toast" id="toast"></div>
-
-    <script>(function(){var listEl=document.getElementById("wall-list");var toastEl=document.getElementById("toast");var toastTimer=null;var loading=false;var pendingReload=false;var composerEl=document.getElementById("composer");var inputEl=document.getElementById("composer-input");var countEl=document.getElementById("composer-count");var tipEl=document.getElementById("composer-tip");var sendEl=document.getElementById("composer-send");var searchEl=document.getElementById("wall-search");var searchBtn=document.getElementById("wall-search-btn");var searchClear=document.getElementById("wall-search-clear");var searchMeta=document.getElementById("search-meta");var query="";var items=[];var expanded={};var repliesMap={};var lastBase="";var DEFAULT_AVATAR="./assets/ziyit.png";var MAX_LEN=500;function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}function toast(text){toastEl.textContent=text;toastEl.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastEl.classList.remove("show")},2800)}function isLoggedIn(){try{return!!(window.ZIYIT_API&&ZIYIT_API.getToken&&ZIYIT_API.getToken())}catch(e){return false}}function requireLogin(action){if(isLoggedIn())return true;toast("请先登录后再"+action);setTimeout(function(){location.href="/user/"},900);return false}var CACHE_PREFIX="ziyit_cw_";var CACHE_MAX_CHUNKS=10;var CACHE_CHUNK_BYTES=3e3;var CACHE_MAX_BYTES=CACHE_MAX_CHUNKS*CACHE_CHUNK_BYTES;var CACHE_TTL=60*60*24*30;function setCookie(name,val,maxAge){document.cookie=name+"="+encodeURIComponent(val)+"; path=/; max-age="+maxAge+"; SameSite=Lax"}function getCookie(name){var m=document.cookie.match(new RegExp("(?:^|;\\s*)"+name+"=([^;]*)"));if(!m)return"";try{return decodeURIComponent(m[1])}catch(e){return""}}function clearWallCache(){for(var i=0;i<CACHE_MAX_CHUNKS;i++)setCookie(CACHE_PREFIX+i,"",0);setCookie(CACHE_PREFIX+"n","",0)}function splitWallCache(json){var chunks=[],cur="",curLen=0;for(var i=0;i<json.length;i++){var ch=json.charAt(i);var enc=encodeURIComponent(ch);if(curLen+enc.length>CACHE_CHUNK_BYTES&&cur){chunks.push(cur);cur="";curLen=0}cur+=ch;curLen+=enc.length}if(cur)chunks.push(cur);return chunks}function saveWallCache(list){var arr=list.slice(0,20);var json="";while(arr.length){json=JSON.stringify(arr);if(encodeURIComponent(json).length<=CACHE_MAX_BYTES)break;arr.pop()}clearWallCache();if(!arr.length)return;var chunks=splitWallCache(json);chunks.forEach(function(c,idx){setCookie(CACHE_PREFIX+idx,c,CACHE_TTL)});setCookie(CACHE_PREFIX+"n",String(chunks.length),CACHE_TTL)}function readWallCache(){var n=parseInt(getCookie(CACHE_PREFIX+"n"),10);if(!n||n>CACHE_MAX_CHUNKS)return[];var json="";for(var i=0;i<n;i++)json+=getCookie(CACHE_PREFIX+i);try{var v=JSON.parse(json);return Array.isArray(v)?v:[]}catch(e){return[]}}function appendWallCache(item){var cached=readWallCache();cached.unshift(item);saveWallCache(cached)}function resolveApiBase(){if(window.ZIYIT_API&&ZIYIT_API.resolveBase)return ZIYIT_API.resolveBase();if(window.ZIYIT_API&&ZIYIT_API.backendReady)return ZIYIT_API.backendReady();return Promise.resolve("")}function apiFetch(path,options){options=options||{};try{var b=ZIYIT_API.base?ZIYIT_API.base():"";if(typeof b==="string"&&b)lastBase=b}catch(e){}var reqOpts={method:(options.method||"GET").toUpperCase(),headers:options.headers||{}};if(options.body!=null)reqOpts.body=options.body;if(options.cache)reqOpts.cache=options.cache;var plainHeaders={get:function(){return null}};return ZIYIT_API.request(path,reqOpts).then(function(data){try{var nb=ZIYIT_API.base?ZIYIT_API.base():"";if(typeof nb==="string"&&nb)lastBase=nb}catch(e){}return{ok:true,status:200,headers:plainHeaders,json:function(){return Promise.resolve(data)}}}).catch(function(err){return{ok:false,status:err&&err.status||0,headers:plainHeaders,json:function(){return Promise.resolve(err&&err.data||{})}}})}function parseItems(data){var arr=Array.isArray(data)?data:data&&(data.items||data.list||data.data)||[];return Array.isArray(arr)?arr:[]}function itemId(it){return it&&it.id!=null?String(it.id):""}function itemContent(it){if(!it)return"";if(it.content!=null&&it.content!=="")return String(it.content);var q=it.question!=null?String(it.question):"";var a=it.answer!=null?String(it.answer):"";return[q,a].filter(function(x){return x}).join("\n")}function itemUser(it){var a=it&&it.author||{};return{name:a.username||a.name||it.username||"匿名用户",avatar:a.avatarUrl||a.avatar||it.avatarUrl||""}}function avatarSrc(u){var raw=u&&u.avatar?String(u.avatar):"";if(!raw)return DEFAULT_AVATAR;if(raw.charAt(0)==="/")return(lastBase||"")+raw;if(/^https?:\/\//i.test(raw)){var m=raw.match(/^https?:\/\/[^\/]+(\/[^?#]*)/i);if(m&&/^\/img\//i.test(m[1])&&lastBase)return lastBase+m[1];return raw}return raw}function likeCount(it){var n=it&&(it.likes!=null?it.likes:it.likeCount);n=Number(n);return isFinite(n)&&n>0?n:0}function isLiked(it){return!!(it&&(it.liked||it.likedByMe))}function replyCount(it){var n=it&&(it.replyCount!=null?it.replyCount:it.replies);if(Array.isArray(n))return n.length;n=Number(n);return isFinite(n)&&n>0?n:0}function fmtTime(t){return t==null?"":String(t).replace("T"," ").replace(/\.\d+Z?$/,"").replace(/\+00:00$/,"")}var MAX_REPLY_DEPTH=5;function messageHtml(it,depth){depth=depth||0;var id=itemId(it);var u=itemUser(it);var content=itemContent(it);var likedCls=isLiked(it)?" liked":"";var likeBtn='<button class="act like'+likedCls+'" data-like="'+esc(id)+'">♡'+(depth===0?" 点赞":"")+' <span class="like-count">'+likeCount(it)+"</span></button>";var quoteBtn=content?'<button class="act quote" data-quote="'+esc(content)+'">引用给 AI 客服</button>':"";var reportBtn='<button class="act report" data-report-msg="'+esc(id)+'">举报</button>';var canNest=depth<MAX_REPLY_DEPTH;var replyBtn=canNest?'<button class="act reply-toggle" data-reply-toggle="'+esc(id)+'" data-nick="'+esc(u.name)+'">回复'+(replyCount(it)?" "+replyCount(it):"")+"</button>":"";var children='<div class="replies" data-replies="'+esc(id)+'" style="display:none;"></div>';var editor=canNest?'<div class="reply-editor" data-editor="'+esc(id)+'">'+'<textarea maxlength="500" placeholder="回复 '+esc(u.name)+'…"></textarea>'+'<div class="reply-editor-foot"><button class="btn" data-cancel-reply="'+esc(id)+'">取消</button>'+'<button class="btn primary" data-send-reply="'+esc(id)+'">回复</button></div></div>':"";if(depth===0){return'<article class="wall-card" data-id="'+esc(id)+'">'+'<div class="msg-head"><span class="nickname">'+esc(u.name)+'</span><span class="wall-time">'+esc(fmtTime(it.createdAt))+"</span></div>"+'<div class="wall-content">'+(it.question!=null&&it.content==null?'<div class="wall-q">'+esc(it.question)+'</div><div class="wall-a">'+esc(it.answer||"")+"</div>":esc(content))+"</div>"+'<div class="msg-actions">'+likeBtn+replyBtn+quoteBtn+reportBtn+(content?'<button class="act ask" data-question="'+esc(content)+'">我也要问这个</button>':"")+"</div>"+children+editor+"</article>"}return'<div class="reply-item" data-id="'+esc(id)+'" data-depth="'+depth+'">'+'<img class="avatar" src="'+esc(avatarSrc(u))+'" alt="'+esc(u.name)+'" onerror="this.src=\''+DEFAULT_AVATAR+"'\">"+'<div class="reply-body"><div class="reply-meta"><span class="reply-nick">'+esc(u.name)+"</span><span>"+esc(fmtTime(it.createdAt))+"</span></div>"+'<div class="reply-text">'+esc(content)+"</div>"+'<div class="msg-actions">'+likeBtn+replyBtn+quoteBtn+reportBtn+"</div>"+children+editor+"</div></div>"}function depthOfContainer(box){var d=0,n=box;while(n&&n!==listEl){if(n.classList&&n.classList.contains("reply-item"))d++;n=n.parentElement}return d}function renderList(list){items=list;if(!list.length){listEl.innerHTML=query?'<div class="wall-empty">没有找到匹配的内容</div>':'<div class="wall-empty">还没有公开消息，来发第一条吧。</div>';return}listEl.innerHTML=list.map(function(it){return messageHtml(it,0)}).join("");Object.keys(expanded).forEach(function(id){if(expanded[id])loadReplies(id,true)})}function updateListCount(){if(query){searchMeta.textContent="搜索「"+query+"」："+items.length+" 条结果"}else{searchMeta.textContent=""}}function loadWall(opts){opts=opts||{};if(loading){pendingReload=true;return}loading=true;var q=query?"&q="+encodeURIComponent(query):"";apiFetch("/api/chatwall?limit=20"+q,{method:"GET",cache:"no-store",headers:{"ngrok-skip-browser-warning":"1"}}).then(function(res){if(!res.ok){var e=new Error("加载失败（"+res.status+"）");e.status=res.status;throw e}return res.json()}).then(function(data){var list=parseItems(data);if(!query&&list.length)saveWallCache(list);renderList(list);updateListCount()}).catch(function(err){if(listEl.querySelector(".wall-card"))return;listEl.innerHTML='<div class="wall-error">'+esc(err&&err.status===429?"请求过于频繁，请稍后再试":err&&err.message||"加载失败")+"，稍后自动重试</div>"}).finally(function(){loading=false;if(pendingReload){pendingReload=false;loadWall()}})}function postJson(path,body){return apiFetch(path,{method:"POST",headers:{"Content-Type":"application/json","ngrok-skip-browser-warning":"1",Authorization:"Bearer "+function(){try{return ZIYIT_API.getToken?ZIYIT_API.getToken():""}catch(e){return""}}()},body:JSON.stringify(body)}).then(function(res){return res.json().catch(function(){return null}).then(function(data){if(!res.ok){var detail=data&&(data.detail||data.message);var msg=detail;if(res.status===429){var wait=res.headers.get("Retry-After");msg="请求过于频繁，请"+(wait?" "+wait+" 秒后":"稍后")+"再试"}else if(res.status===404){msg=detail||"目标不存在，可能已被删除"}else if(res.status===400){msg=detail||"内容不符合要求（不能为空或超过 500 字）"}else if(res.status>=500){msg=detail||"服务器繁忙，请稍后再试"}else if(!msg){msg="请求失败（"+res.status+"）"}var e=new Error(msg);e.status=res.status;throw e}return data||{}})})}function publishMessage(content,parentId){var body={content};if(parentId)body.parentId=parentId;return postJson("/api/chatwall/share",body)}function sendMain(){var text=String(inputEl.value||"").trim();if(!requireLogin("发布消息"))return;if(!text){toast("消息内容不能为空");return}if(text.length>MAX_LEN){toast("单条消息不能超过 "+MAX_LEN+" 字");return}sendEl.disabled=true;publishMessage(text).then(function(data){toast("发布成功");appendWallCache({id:data&&data.id,content:text,createdAt:(new Date).toLocaleString("zh-CN"),author:{username:"我",avatarUrl:""},likes:0});inputEl.value="";countEl.textContent="0 / "+MAX_LEN;loadWall({quiet:true})}).catch(function(err){toast(err&&err.message||"发布失败")}).finally(function(){sendEl.disabled=false})}function loadReplies(parentId,keepOpen){var box=listEl.querySelector('[data-replies="'+parentId+'"]');if(!box)return;box.style.display="block";expanded[parentId]=true;if(keepOpen&&repliesMap[parentId]){renderReplies(parentId)}apiFetch("/api/chatwall?limit=50&parentId="+encodeURIComponent(parentId),{method:"GET",cache:"no-store",headers:{"ngrok-skip-browser-warning":"1"}}).then(function(res){if(!res.ok){var e=new Error("回复加载失败（"+res.status+"）");e.status=res.status;throw e}return res.json()}).then(function(data){repliesMap[parentId]=parseItems(data);renderReplies(parentId);var btn=listEl.querySelector('[data-reply-toggle="'+parentId+'"]');if(btn)btn.textContent="回复"+(repliesMap[parentId].length?" "+repliesMap[parentId].length:"")}).catch(function(err){if(err&&err.status===404){box.style.display="none";expanded[parentId]=false;toast("该消息不存在，可能已被删除");loadWall({quiet:true});return}box.innerHTML='<div class="wall-error">'+esc(err&&err.message||"回复加载失败")+"</div>"})}function renderReplies(parentId){var box=listEl.querySelector('[data-replies="'+parentId+'"]');if(!box)return;var depth=depthOfContainer(box)+1;var list=repliesMap[parentId]||[];box.innerHTML=list.length?list.map(function(r){return messageHtml(r,depth)}).join(""):'<div class="reply-item"><div class="reply-body"><div class="reply-text" style="color:var(--ziyit-text-secondary);">还没有回复</div></div></div>';list.forEach(function(r){var cid=itemId(r);if(!expanded[cid])return;var sub=box.querySelector('[data-replies="'+cid+'"]');if(!sub)return;sub.style.display="block";if(repliesMap[cid])renderReplies(cid)})}function sendReply(parentId){if(!requireLogin("回复"))return;var editor=listEl.querySelector('[data-editor="'+parentId+'"]');if(!editor)return;var ta=editor.querySelector("textarea");var btn=editor.querySelector('[data-send-reply="'+parentId+'"]');var text=String(ta.value||"").trim();if(!text){toast("回复内容不能为空");return}if(text.length>MAX_LEN){toast("回复不能超过 "+MAX_LEN+" 字");return}btn.disabled=true;publishMessage(text,parentId).then(function(){toast("回复成功");ta.value="";editor.classList.remove("show");delete repliesMap[parentId];loadReplies(parentId,true)}).catch(function(err){toast(err&&err.message||"回复失败")}).finally(function(){btn.disabled=false})}function toggleLike(id,btn){if(!requireLogin("点赞"))return;btn.disabled=true;postJson("/api/chatwall/like",{id}).then(function(data){var liked=data&&data.liked!=null?!!data.liked:true;var count=data&&data.likes!=null?Number(data.likes):null;var span=btn.querySelector(".like-count");if(count==null){count=Math.max(0,likeCount({likes:Number(span.textContent)})+(liked?1:-1))}span.textContent=count;btn.classList.toggle("liked",liked);items.forEach(function(it){if(itemId(it)===id){it.likes=count;it.liked=liked}});Object.keys(repliesMap).forEach(function(pid){(repliesMap[pid]||[]).forEach(function(it){if(itemId(it)===id){it.likes=count;it.liked=liked}})})}).catch(function(err){toast(err&&err.message||"点赞失败")}).finally(function(){btn.disabled=false})}inputEl.addEventListener("input",function(){countEl.textContent=inputEl.value.length+" / "+MAX_LEN});sendEl.addEventListener("click",sendMain);inputEl.addEventListener("keydown",function(e){if((e.ctrlKey||e.metaKey)&&e.key==="Enter")sendMain()});searchBtn.addEventListener("click",function(){query=String(searchEl.value||"").trim().slice(0,100);expanded={};repliesMap={};listEl.innerHTML='<div class="wall-skeleton"><div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div></div>';loadWall()});searchClear.addEventListener("click",function(){searchEl.value="";query="";expanded={};repliesMap={};loadWall()});searchEl.addEventListener("keydown",function(e){if(e.key==="Enter")searchBtn.click()});listEl.addEventListener("click",function(e){var t=e.target.closest?e.target.closest("button"):null;if(!t)return;var reportId=t.getAttribute("data-report-msg");if(reportId){e.stopPropagation();ZIYIT_REPORT.open({targetType:"chat_message",targetId:reportId});return}var likeId=t.getAttribute("data-like");if(likeId){toggleLike(likeId,t);return}var toggleId=t.getAttribute("data-reply-toggle");if(toggleId){var box=listEl.querySelector('[data-replies="'+toggleId+'"]');if(box&&box.style.display!=="none"){box.style.display="none";expanded[toggleId]=false}else{loadReplies(toggleId)}return}var sendReplyId=t.getAttribute("data-send-reply");if(sendReplyId){sendReply(sendReplyId);return}var cancelId=t.getAttribute("data-cancel-reply");if(cancelId){var editor=listEl.querySelector('[data-editor="'+cancelId+'"]');if(editor)editor.classList.remove("show");return}var quote=t.getAttribute("data-quote");if(quote!=null){location.href="guide.html?quote="+encodeURIComponent(quote);return}var question=t.getAttribute("data-question");if(question!=null){location.href="guide.html?prompt="+encodeURIComponent(question)}});listEl.addEventListener("click",function(e){var t=e.target.closest?e.target.closest("[data-reply-toggle]"):null;if(!t)return;var id=t.getAttribute("data-reply-toggle");if(!expanded[id])return;var editor=listEl.querySelector('[data-editor="'+id+'"]');if(editor){editor.classList.add("show");var ta=editor.querySelector("textarea");if(ta){var nick=t.getAttribute("data-nick")||"";if(nick&&!ta.value)ta.value="回复 @"+nick+"：";ta.focus()}}});function refreshLoginTip(){if(isLoggedIn()){tipEl.textContent="已登录：可发布、回复、点赞";tipEl.classList.remove("warn")}else{tipEl.innerHTML='未登录只能浏览，<a href="/user/" style="color:var(--ziyit-primary);">去登录</a>';tipEl.classList.add("warn")}}refreshLoginTip();var cachedWall=readWallCache();if(cachedWall.length)renderList(cachedWall);loadWall();setInterval(function(){loadWall({quiet:true})},3e4)})();</script>
+    <script>(function() {
+    var listEl = document.getElementById("wall-list");
+    var toastEl = document.getElementById("toast");
+    var toastTimer = null;
+    var loading = false;
+    var pendingReload = false;
+    var composerEl = document.getElementById("composer");
+    var inputEl = document.getElementById("composer-input");
+    var countEl = document.getElementById("composer-count");
+    var tipEl = document.getElementById("composer-tip");
+    var sendEl = document.getElementById("composer-send");
+    var searchEl = document.getElementById("wall-search");
+    var searchBtn = document.getElementById("wall-search-btn");
+    var searchClear = document.getElementById("wall-search-clear");
+    var searchMeta = document.getElementById("search-meta");
+    var query = "";
+    var items = [];
+    var expanded = {};
+    var repliesMap = {};
+    var lastBase = "";
+    var DEFAULT_AVATAR = "./assets/ziyit.png";
+    var MAX_LEN = 500;
+    function esc(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function(c) {
+            return {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[c];
+        });
+    }
+    function toast(text) {
+        toastEl.textContent = text;
+        toastEl.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function() {
+            toastEl.classList.remove("show");
+        }, 2800);
+    }
+    function isLoggedIn() {
+        try {
+            return !!(window.ZIYIT_API && ZIYIT_API.getToken && ZIYIT_API.getToken());
+        } catch (e) {
+            return false;
+        }
+    }
+    function requireLogin(action) {
+        if (isLoggedIn()) return true;
+        toast("请先登录后再" + action);
+        setTimeout(function() {
+            location.href = "/user/";
+        }, 900);
+        return false;
+    }
+    var CACHE_PREFIX = "ziyit_cw_";
+    var CACHE_MAX_CHUNKS = 10;
+    var CACHE_CHUNK_BYTES = 3e3;
+    var CACHE_MAX_BYTES = CACHE_MAX_CHUNKS * CACHE_CHUNK_BYTES;
+    var CACHE_TTL = 60 * 60 * 24 * 30;
+    function setCookie(name, val, maxAge) {
+        document.cookie = name + "=" + encodeURIComponent(val) + "; path=/; max-age=" + maxAge + "; SameSite=Lax";
+    }
+    function getCookie(name) {
+        var m = document.cookie.match(new RegExp("(?:^|;\\s*)" + name + "=([^;]*)"));
+        if (!m) return "";
+        try {
+            return decodeURIComponent(m[1]);
+        } catch (e) {
+            return "";
+        }
+    }
+    function clearWallCache() {
+        for (var i = 0; i < CACHE_MAX_CHUNKS; i++) setCookie(CACHE_PREFIX + i, "", 0);
+        setCookie(CACHE_PREFIX + "n", "", 0);
+    }
+    function splitWallCache(json) {
+        var chunks = [], cur = "", curLen = 0;
+        for (var i = 0; i < json.length; i++) {
+            var ch = json.charAt(i);
+            var enc = encodeURIComponent(ch);
+            if (curLen + enc.length > CACHE_CHUNK_BYTES && cur) {
+                chunks.push(cur);
+                cur = "";
+                curLen = 0;
+            }
+            cur += ch;
+            curLen += enc.length;
+        }
+        if (cur) chunks.push(cur);
+        return chunks;
+    }
+    function saveWallCache(list) {
+        var arr = list.slice(0, 20);
+        var json = "";
+        while (arr.length) {
+            json = JSON.stringify(arr);
+            if (encodeURIComponent(json).length <= CACHE_MAX_BYTES) break;
+            arr.pop();
+        }
+        clearWallCache();
+        if (!arr.length) return;
+        var chunks = splitWallCache(json);
+        chunks.forEach(function(c, idx) {
+            setCookie(CACHE_PREFIX + idx, c, CACHE_TTL);
+        });
+        setCookie(CACHE_PREFIX + "n", String(chunks.length), CACHE_TTL);
+    }
+    function readWallCache() {
+        var n = parseInt(getCookie(CACHE_PREFIX + "n"), 10);
+        if (!n || n > CACHE_MAX_CHUNKS) return [];
+        var json = "";
+        for (var i = 0; i < n; i++) json += getCookie(CACHE_PREFIX + i);
+        try {
+            var v = JSON.parse(json);
+            return Array.isArray(v) ? v : [];
+        } catch (e) {
+            return [];
+        }
+    }
+    function appendWallCache(item) {
+        var cached = readWallCache();
+        cached.unshift(item);
+        saveWallCache(cached);
+    }
+    function resolveApiBase() {
+        if (window.ZIYIT_API && ZIYIT_API.resolveBase) return ZIYIT_API.resolveBase();
+        if (window.ZIYIT_API && ZIYIT_API.backendReady) return ZIYIT_API.backendReady();
+        return Promise.resolve("");
+    }
+    function apiFetch(path, options) {
+        options = options || {};
+        try {
+            var b = ZIYIT_API.base ? ZIYIT_API.base() : "";
+            if (typeof b === "string" && b) lastBase = b;
+        } catch (e) {}
+        var reqOpts = {
+            method: (options.method || "GET").toUpperCase(),
+            headers: options.headers || {}
+        };
+        if (options.body != null) reqOpts.body = options.body;
+        if (options.cache) reqOpts.cache = options.cache;
+        var plainHeaders = {
+            get: function() {
+                return null;
+            }
+        };
+        return ZIYIT_API.request(path, reqOpts).then(function(data) {
+            try {
+                var nb = ZIYIT_API.base ? ZIYIT_API.base() : "";
+                if (typeof nb === "string" && nb) lastBase = nb;
+            } catch (e) {}
+            return {
+                ok: true,
+                status: 200,
+                headers: plainHeaders,
+                json: function() {
+                    return Promise.resolve(data);
+                }
+            };
+        }).catch(function(err) {
+            return {
+                ok: false,
+                status: err && err.status || 0,
+                headers: plainHeaders,
+                json: function() {
+                    return Promise.resolve(err && err.data || {});
+                }
+            };
+        });
+    }
+    function parseItems(data) {
+        var arr = Array.isArray(data) ? data : data && (data.items || data.list || data.data) || [];
+        return Array.isArray(arr) ? arr : [];
+    }
+    function itemId(it) {
+        return it && it.id != null ? String(it.id) : "";
+    }
+    function itemContent(it) {
+        if (!it) return "";
+        if (it.content != null && it.content !== "") return String(it.content);
+        var q = it.question != null ? String(it.question) : "";
+        var a = it.answer != null ? String(it.answer) : "";
+        return [ q, a ].filter(function(x) {
+            return x;
+        }).join("\n");
+    }
+    function itemUser(it) {
+        var a = it && it.author || {};
+        return {
+            name: a.username || a.name || it.username || "匿名用户",
+            avatar: a.avatarUrl || a.avatar || it.avatarUrl || ""
+        };
+    }
+    function avatarSrc(u) {
+        var raw = u && u.avatar ? String(u.avatar) : "";
+        if (!raw) return DEFAULT_AVATAR;
+        if (raw.charAt(0) === "/") return (lastBase || "") + raw;
+        if (/^https?:\/\//i.test(raw)) {
+            var m = raw.match(/^https?:\/\/[^\/]+(\/[^?#]*)/i);
+            if (m && /^\/img\//i.test(m[1]) && lastBase) return lastBase + m[1];
+            return raw;
+        }
+        return raw;
+    }
+    function likeCount(it) {
+        var n = it && (it.likes != null ? it.likes : it.likeCount);
+        n = Number(n);
+        return isFinite(n) && n > 0 ? n : 0;
+    }
+    function isLiked(it) {
+        return !!(it && (it.liked || it.likedByMe));
+    }
+    function replyCount(it) {
+        var n = it && (it.replyCount != null ? it.replyCount : it.replies);
+        if (Array.isArray(n)) return n.length;
+        n = Number(n);
+        return isFinite(n) && n > 0 ? n : 0;
+    }
+    function fmtTime(t) {
+        return t == null ? "" : String(t).replace("T", " ").replace(/\.\d+Z?$/, "").replace(/\+00:00$/, "");
+    }
+    var MAX_REPLY_DEPTH = 5;
+    function messageHtml(it, depth) {
+        depth = depth || 0;
+        var id = itemId(it);
+        var u = itemUser(it);
+        var content = itemContent(it);
+        var likedCls = isLiked(it) ? " liked" : "";
+        var likeBtn = '<button class="act like' + likedCls + '" data-like="' + esc(id) + '">♡' + (depth === 0 ? " 点赞" : "") + ' <span class="like-count">' + likeCount(it) + "</span></button>";
+        var quoteBtn = content ? '<button class="act quote" data-quote="' + esc(content) + '">引用给 AI 客服</button>' : "";
+        var reportBtn = '<button class="act report" data-report-msg="' + esc(id) + '">举报</button>';
+        var canNest = depth < MAX_REPLY_DEPTH;
+        var replyBtn = canNest ? '<button class="act reply-toggle" data-reply-toggle="' + esc(id) + '" data-nick="' + esc(u.name) + '">回复' + (replyCount(it) ? " " + replyCount(it) : "") + "</button>" : "";
+        var children = '<div class="replies" data-replies="' + esc(id) + '" style="display:none;"></div>';
+        var editor = canNest ? '<div class="reply-editor" data-editor="' + esc(id) + '">' + '<textarea maxlength="500" placeholder="回复 ' + esc(u.name) + '…"></textarea>' + '<div class="reply-editor-foot"><button class="btn" data-cancel-reply="' + esc(id) + '">取消</button>' + '<button class="btn primary" data-send-reply="' + esc(id) + '">回复</button></div></div>' : "";
+        if (depth === 0) {
+            return '<article class="wall-card" data-id="' + esc(id) + '">' + '<div class="msg-head"><span class="nickname">' + esc(u.name) + '</span><span class="wall-time">' + esc(fmtTime(it.createdAt)) + "</span></div>" + '<div class="wall-content">' + (it.question != null && it.content == null ? '<div class="wall-q">' + esc(it.question) + '</div><div class="wall-a">' + esc(it.answer || "") + "</div>" : esc(content)) + "</div>" + '<div class="msg-actions">' + likeBtn + replyBtn + quoteBtn + reportBtn + (content ? '<button class="act ask" data-question="' + esc(content) + '">我也要问这个</button>' : "") + "</div>" + children + editor + "</article>";
+        }
+        return '<div class="reply-item" data-id="' + esc(id) + '" data-depth="' + depth + '">' + '<img class="avatar" src="' + esc(avatarSrc(u)) + '" alt="' + esc(u.name) + '" onerror="this.src=\'' + DEFAULT_AVATAR + "'\">" + '<div class="reply-body"><div class="reply-meta"><span class="reply-nick">' + esc(u.name) + "</span><span>" + esc(fmtTime(it.createdAt)) + "</span></div>" + '<div class="reply-text">' + esc(content) + "</div>" + '<div class="msg-actions">' + likeBtn + replyBtn + quoteBtn + reportBtn + "</div>" + children + editor + "</div></div>";
+    }
+    function depthOfContainer(box) {
+        var d = 0, n = box;
+        while (n && n !== listEl) {
+            if (n.classList && n.classList.contains("reply-item")) d++;
+            n = n.parentElement;
+        }
+        return d;
+    }
+    function renderList(list) {
+        items = list;
+        if (!list.length) {
+            listEl.innerHTML = query ? '<div class="wall-empty">没有找到匹配的内容</div>' : '<div class="wall-empty">还没有公开消息，来发第一条吧。</div>';
+            return;
+        }
+        listEl.innerHTML = list.map(function(it) {
+            return messageHtml(it, 0);
+        }).join("");
+        Object.keys(expanded).forEach(function(id) {
+            if (expanded[id]) loadReplies(id, true);
+        });
+    }
+    function updateListCount() {
+        if (query) {
+            searchMeta.textContent = "搜索「" + query + "」：" + items.length + " 条结果";
+        } else {
+            searchMeta.textContent = "";
+        }
+    }
+    function loadWall(opts) {
+        opts = opts || {};
+        if (loading) {
+            pendingReload = true;
+            return;
+        }
+        loading = true;
+        var q = query ? "&q=" + encodeURIComponent(query) : "";
+        apiFetch("/api/chatwall?limit=20" + q, {
+            method: "GET",
+            cache: "no-store",
+            headers: {
+                "ngrok-skip-browser-warning": "1"
+            }
+        }).then(function(res) {
+            if (!res.ok) {
+                var e = new Error("加载失败（" + res.status + "）");
+                e.status = res.status;
+                throw e;
+            }
+            return res.json();
+        }).then(function(data) {
+            var list = parseItems(data);
+            if (!query && list.length) saveWallCache(list);
+            renderList(list);
+            updateListCount();
+        }).catch(function(err) {
+            if (listEl.querySelector(".wall-card")) return;
+            listEl.innerHTML = '<div class="wall-error">' + esc(err && err.status === 429 ? "请求过于频繁，请稍后再试" : err && err.message || "加载失败") + "，稍后自动重试</div>";
+        }).finally(function() {
+            loading = false;
+            if (pendingReload) {
+                pendingReload = false;
+                loadWall();
+            }
+        });
+    }
+    function postJson(path, body) {
+        return apiFetch(path, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "1",
+                Authorization: "Bearer " + function() {
+                    try {
+                        return ZIYIT_API.getToken ? ZIYIT_API.getToken() : "";
+                    } catch (e) {
+                        return "";
+                    }
+                }()
+            },
+            body: JSON.stringify(body)
+        }).then(function(res) {
+            return res.json().catch(function() {
+                return null;
+            }).then(function(data) {
+                if (!res.ok) {
+                    var detail = data && (data.detail || data.message);
+                    var msg = detail;
+                    if (res.status === 429) {
+                        var wait = res.headers.get("Retry-After");
+                        msg = "请求过于频繁，请" + (wait ? " " + wait + " 秒后" : "稍后") + "再试";
+                    } else if (res.status === 404) {
+                        msg = detail || "目标不存在，可能已被删除";
+                    } else if (res.status === 400) {
+                        msg = detail || "内容不符合要求（不能为空或超过 500 字）";
+                    } else if (res.status >= 500) {
+                        msg = detail || "服务器繁忙，请稍后再试";
+                    } else if (!msg) {
+                        msg = "请求失败（" + res.status + "）";
+                    }
+                    var e = new Error(msg);
+                    e.status = res.status;
+                    throw e;
+                }
+                return data || {};
+            });
+        });
+    }
+    function publishMessage(content, parentId) {
+        var body = {
+            content
+        };
+        if (parentId) body.parentId = parentId;
+        return postJson("/api/chatwall/share", body);
+    }
+    function sendMain() {
+        var text = String(inputEl.value || "").trim();
+        if (!requireLogin("发布消息")) return;
+        if (!text) {
+            toast("消息内容不能为空");
+            return;
+        }
+        if (text.length > MAX_LEN) {
+            toast("单条消息不能超过 " + MAX_LEN + " 字");
+            return;
+        }
+        sendEl.disabled = true;
+        publishMessage(text).then(function(data) {
+            toast("发布成功");
+            appendWallCache({
+                id: data && data.id,
+                content: text,
+                createdAt: (new Date).toLocaleString("zh-CN"),
+                author: {
+                    username: "我",
+                    avatarUrl: ""
+                },
+                likes: 0
+            });
+            inputEl.value = "";
+            countEl.textContent = "0 / " + MAX_LEN;
+            loadWall({
+                quiet: true
+            });
+        }).catch(function(err) {
+            toast(err && err.message || "发布失败");
+        }).finally(function() {
+            sendEl.disabled = false;
+        });
+    }
+    function loadReplies(parentId, keepOpen) {
+        var box = listEl.querySelector('[data-replies="' + parentId + '"]');
+        if (!box) return;
+        box.style.display = "block";
+        expanded[parentId] = true;
+        if (keepOpen && repliesMap[parentId]) {
+            renderReplies(parentId);
+        }
+        apiFetch("/api/chatwall?limit=50&parentId=" + encodeURIComponent(parentId), {
+            method: "GET",
+            cache: "no-store",
+            headers: {
+                "ngrok-skip-browser-warning": "1"
+            }
+        }).then(function(res) {
+            if (!res.ok) {
+                var e = new Error("回复加载失败（" + res.status + "）");
+                e.status = res.status;
+                throw e;
+            }
+            return res.json();
+        }).then(function(data) {
+            repliesMap[parentId] = parseItems(data);
+            renderReplies(parentId);
+            var btn = listEl.querySelector('[data-reply-toggle="' + parentId + '"]');
+            if (btn) btn.textContent = "回复" + (repliesMap[parentId].length ? " " + repliesMap[parentId].length : "");
+        }).catch(function(err) {
+            if (err && err.status === 404) {
+                box.style.display = "none";
+                expanded[parentId] = false;
+                toast("该消息不存在，可能已被删除");
+                loadWall({
+                    quiet: true
+                });
+                return;
+            }
+            box.innerHTML = '<div class="wall-error">' + esc(err && err.message || "回复加载失败") + "</div>";
+        });
+    }
+    function renderReplies(parentId) {
+        var box = listEl.querySelector('[data-replies="' + parentId + '"]');
+        if (!box) return;
+        var depth = depthOfContainer(box) + 1;
+        var list = repliesMap[parentId] || [];
+        box.innerHTML = list.length ? list.map(function(r) {
+            return messageHtml(r, depth);
+        }).join("") : '<div class="reply-item"><div class="reply-body"><div class="reply-text" style="color:var(--ziyit-text-secondary);">还没有回复</div></div></div>';
+        list.forEach(function(r) {
+            var cid = itemId(r);
+            if (!expanded[cid]) return;
+            var sub = box.querySelector('[data-replies="' + cid + '"]');
+            if (!sub) return;
+            sub.style.display = "block";
+            if (repliesMap[cid]) renderReplies(cid);
+        });
+    }
+    function sendReply(parentId) {
+        if (!requireLogin("回复")) return;
+        var editor = listEl.querySelector('[data-editor="' + parentId + '"]');
+        if (!editor) return;
+        var ta = editor.querySelector("textarea");
+        var btn = editor.querySelector('[data-send-reply="' + parentId + '"]');
+        var text = String(ta.value || "").trim();
+        if (!text) {
+            toast("回复内容不能为空");
+            return;
+        }
+        if (text.length > MAX_LEN) {
+            toast("回复不能超过 " + MAX_LEN + " 字");
+            return;
+        }
+        btn.disabled = true;
+        publishMessage(text, parentId).then(function() {
+            toast("回复成功");
+            ta.value = "";
+            editor.classList.remove("show");
+            delete repliesMap[parentId];
+            loadReplies(parentId, true);
+        }).catch(function(err) {
+            toast(err && err.message || "回复失败");
+        }).finally(function() {
+            btn.disabled = false;
+        });
+    }
+    function toggleLike(id, btn) {
+        if (!requireLogin("点赞")) return;
+        btn.disabled = true;
+        postJson("/api/chatwall/like", {
+            id
+        }).then(function(data) {
+            var liked = data && data.liked != null ? !!data.liked : true;
+            var count = data && data.likes != null ? Number(data.likes) : null;
+            var span = btn.querySelector(".like-count");
+            if (count == null) {
+                count = Math.max(0, likeCount({
+                    likes: Number(span.textContent)
+                }) + (liked ? 1 : -1));
+            }
+            span.textContent = count;
+            btn.classList.toggle("liked", liked);
+            items.forEach(function(it) {
+                if (itemId(it) === id) {
+                    it.likes = count;
+                    it.liked = liked;
+                }
+            });
+            Object.keys(repliesMap).forEach(function(pid) {
+                (repliesMap[pid] || []).forEach(function(it) {
+                    if (itemId(it) === id) {
+                        it.likes = count;
+                        it.liked = liked;
+                    }
+                });
+            });
+        }).catch(function(err) {
+            toast(err && err.message || "点赞失败");
+        }).finally(function() {
+            btn.disabled = false;
+        });
+    }
+    inputEl.addEventListener("input", function() {
+        countEl.textContent = inputEl.value.length + " / " + MAX_LEN;
+    });
+    sendEl.addEventListener("click", sendMain);
+    inputEl.addEventListener("keydown", function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") sendMain();
+    });
+    searchBtn.addEventListener("click", function() {
+        query = String(searchEl.value || "").trim().slice(0, 100);
+        expanded = {};
+        repliesMap = {};
+        listEl.innerHTML = '<div class="wall-skeleton"><div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div></div>';
+        loadWall();
+    });
+    searchClear.addEventListener("click", function() {
+        searchEl.value = "";
+        query = "";
+        expanded = {};
+        repliesMap = {};
+        loadWall();
+    });
+    searchEl.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") searchBtn.click();
+    });
+    listEl.addEventListener("click", function(e) {
+        var t = e.target.closest ? e.target.closest("button") : null;
+        if (!t) return;
+        var reportId = t.getAttribute("data-report-msg");
+        if (reportId) {
+            e.stopPropagation();
+            ZIYIT_REPORT.open({
+                targetType: "chat_message",
+                targetId: reportId
+            });
+            return;
+        }
+        var likeId = t.getAttribute("data-like");
+        if (likeId) {
+            toggleLike(likeId, t);
+            return;
+        }
+        var toggleId = t.getAttribute("data-reply-toggle");
+        if (toggleId) {
+            var box = listEl.querySelector('[data-replies="' + toggleId + '"]');
+            if (box && box.style.display !== "none") {
+                box.style.display = "none";
+                expanded[toggleId] = false;
+            } else {
+                loadReplies(toggleId);
+            }
+            return;
+        }
+        var sendReplyId = t.getAttribute("data-send-reply");
+        if (sendReplyId) {
+            sendReply(sendReplyId);
+            return;
+        }
+        var cancelId = t.getAttribute("data-cancel-reply");
+        if (cancelId) {
+            var editor = listEl.querySelector('[data-editor="' + cancelId + '"]');
+            if (editor) editor.classList.remove("show");
+            return;
+        }
+        var quote = t.getAttribute("data-quote");
+        if (quote != null) {
+            location.href = "guide.html?quote=" + encodeURIComponent(quote);
+            return;
+        }
+        var question = t.getAttribute("data-question");
+        if (question != null) {
+            location.href = "guide.html?prompt=" + encodeURIComponent(question);
+        }
+    });
+    listEl.addEventListener("click", function(e) {
+        var t = e.target.closest ? e.target.closest("[data-reply-toggle]") : null;
+        if (!t) return;
+        var id = t.getAttribute("data-reply-toggle");
+        if (!expanded[id]) return;
+        var editor = listEl.querySelector('[data-editor="' + id + '"]');
+        if (editor) {
+            editor.classList.add("show");
+            var ta = editor.querySelector("textarea");
+            if (ta) {
+                var nick = t.getAttribute("data-nick") || "";
+                if (nick && !ta.value) ta.value = "回复 @" + nick + "：";
+                ta.focus();
+            }
+        }
+    });
+    function refreshLoginTip() {
+        if (isLoggedIn()) {
+            tipEl.textContent = "已登录：可发布、回复、点赞";
+            tipEl.classList.remove("warn");
+        } else {
+            tipEl.innerHTML = '未登录只能浏览，<a href="/user/" style="color:var(--ziyit-primary);">去登录</a>';
+            tipEl.classList.add("warn");
+        }
+    }
+    refreshLoginTip();
+    var cachedWall = readWallCache();
+    if (cachedWall.length) renderList(cachedWall);
+    loadWall();
+    setInterval(function() {
+        loadWall({
+            quiet: true
+        });
+    }, 3e4);
+})();</script>
 </body>
-
 </html>

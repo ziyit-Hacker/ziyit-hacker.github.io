@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="zh-CN">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -34,98 +33,58 @@
   <link
     href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@400;500&display=swap"
     rel="stylesheet" />
-  <style>
-    
-
-    :root {
+  <style>    :root {
       --radius: 0.5rem;
       --radius-sm: calc(var(--radius) - 4px);
-       
       --radius-md: calc(var(--radius) - 2px);
-       
       --radius-lg: var(--radius);
-       
       --radius-xl: calc(var(--radius) + 4px);
-       
       --radius-full: 999px;
-
       --font-display: "DM Sans", system-ui, sans-serif;
       --font-body: "DM Sans", system-ui, sans-serif;
       --font-mono: "IBM Plex Mono", ui-monospace, monospace;
-
-       
       --bg: oklch(0.985 0.001 106.424);
-       
       --fg: oklch(0.216 0.006 56.043);
-       
       --card: oklch(1 0 0);
-       
       --card-fg: oklch(0.216 0.006 56.043);
       --muted: oklch(0.97 0.001 106.424);
-       
       --muted-fg: oklch(0.444 0.011 73.639);
-       
       --subtle-fg: oklch(0.553 0.013 58.071);
-       
       --border: oklch(0.923 0.003 48.717);
-       
       --border-subtle: oklch(0.97 0.001 106.424);
-       
       --primary: oklch(0.216 0.006 56.043);
-       
       --primary-fg: oklch(0.985 0.001 106.424);
-       
       --accent: oklch(0.648 0.2 131.684);
-       
       --accent-soft: color-mix(in oklch, var(--accent) 25%, transparent);
       --link: #6ea8fe;
-
       --shadow-sm: 0 1px 2px 0 rgba(28, 25, 23, 0.04);
     }
-
     .dark {
-       
       --bg: oklch(0.216 0.006 56.043);
-       
       --fg: oklch(0.985 0.001 106.424);
-       
       --card: oklch(0.268 0.007 34.298);
-       
       --card-fg: oklch(0.985 0.001 106.424);
       --muted: oklch(0.318 0.008 43.185);
-       
       --muted-fg: oklch(0.709 0.01 56.259);
-       
       --subtle-fg: oklch(0.553 0.013 58.071);
-       
       --border: oklch(0.370 0.010 67.558);
-       
       --border-subtle: oklch(0.318 0.008 43.185);
-       
       --primary: oklch(0.923 0.003 48.717);
-       
       --primary-fg: oklch(0.216 0.006 56.043);
-       
       --accent: oklch(0.648 0.2 131.684);
-       
       --accent-soft: color-mix(in oklch, var(--accent) 25%, transparent);
       --link: #93c5fd;
-
       --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
     }
-
     * {
       box-sizing: border-box;
     }
-
     html {
       color-scheme: light;
     }
-
     html.dark {
       color-scheme: dark;
     }
-
     body {
       margin: 0;
       min-height: 100vh;
@@ -136,7 +95,6 @@
       -moz-osx-font-smoothing: grayscale;
       animation: fade-in 200ms ease-out;
     }
-
     h1,
     h2,
     h3,
@@ -148,36 +106,28 @@
       letter-spacing: -0.01em;
       margin: 0;
     }
-
     code,
     pre,
     kbd {
       font-family: var(--font-mono);
     }
-
     a {
       color: inherit;
       text-decoration: none;
     }
-
     @keyframes fade-in {
       from {
         opacity: 0;
       }
-
       to {
         opacity: 1;
       }
     }
-
-     
     .shell {
       display: flex;
       flex-direction: column;
       min-height: 100vh;
     }
-
-     
     .header {
       position: sticky;
       top: 0;
@@ -187,7 +137,6 @@
       backdrop-filter: saturate(180%) blur(8px);
       -webkit-backdrop-filter: saturate(180%) blur(8px);
     }
-
     .header-inner {
       max-width: 768px;
       margin: 0 auto;
@@ -196,13 +145,11 @@
       align-items: center;
       gap: 1rem;
     }
-
     .brand {
       display: flex;
       align-items: center;
       gap: 0.625rem;
     }
-
     .brand-mark {
       width: 28px;
       height: 28px;
@@ -214,19 +161,16 @@
       justify-content: center;
       box-shadow: var(--shadow-sm);
     }
-
     .brand-mark svg {
       width: 16px;
       height: 16px;
     }
-
     .brand-name {
       font-family: var(--font-display);
       font-size: 0.95rem;
       font-weight: 600;
       letter-spacing: -0.01em;
     }
-
     .brand-tag {
       font-size: 0.75rem;
       color: var(--muted-fg);
@@ -235,12 +179,9 @@
       border-radius: var(--radius-full);
       margin-left: 0.25rem;
     }
-
     .header-spacer {
       flex: 1;
     }
-
-     
     .theme-toggle {
       width: 32px;
       height: 32px;
@@ -254,18 +195,14 @@
       cursor: pointer;
       transition: color 150ms ease, background 150ms ease;
     }
-
     .theme-toggle:hover {
       color: var(--fg);
       background: var(--muted);
     }
-
     .theme-toggle svg {
       width: 16px;
       height: 16px;
     }
-
-     
     .main {
       flex: 1;
       width: 100%;
@@ -276,7 +213,6 @@
       flex-direction: column;
       gap: 4rem;
     }
-
     .eyebrow {
       font-size: 0.8rem;
       font-weight: 500;
@@ -287,7 +223,6 @@
       align-items: center;
       gap: 0.5rem;
     }
-
     .eyebrow::before {
       content: "";
       width: 6px;
@@ -296,15 +231,12 @@
       background: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-soft);
     }
-
-     
     .hero h1 {
       font-size: clamp(1.9rem, 5vw, 2.75rem);
       line-height: 1.1;
       margin-top: 1rem;
       margin-bottom: 1rem;
     }
-
     .hero .lede {
       font-size: 1.05rem;
       line-height: 1.6;
@@ -312,7 +244,6 @@
       max-width: 40rem;
       margin: 0;
     }
-
     .hero-steps {
       margin-top: 1.5rem;
       display: inline-flex;
@@ -327,7 +258,6 @@
       color: var(--muted-fg);
       font-family: var(--font-mono);
     }
-
     .hero-steps .dot {
       width: 4px;
       height: 4px;
@@ -335,18 +265,14 @@
       background: var(--subtle-fg);
       opacity: 0.6;
     }
-
-     
     .section {
       display: flex;
       flex-direction: column;
     }
-
     .section-title {
       font-size: 1.5rem;
       margin-bottom: 0.5rem;
     }
-
     .section-desc {
       color: var(--muted-fg);
       font-size: 0.95rem;
@@ -354,14 +280,11 @@
       margin: 0 0 1.75rem;
       max-width: 42rem;
     }
-
-     
     .features {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 1rem;
     }
-
     .feature-card {
       background: var(--card);
       color: var(--card-fg);
@@ -373,7 +296,6 @@
       flex-direction: column;
       gap: 0.625rem;
     }
-
     .feature-icon {
       width: 32px;
       height: 32px;
@@ -384,25 +306,20 @@
       align-items: center;
       justify-content: center;
     }
-
     .feature-icon svg {
       width: 16px;
       height: 16px;
     }
-
     .feature-title {
       font-size: 1rem;
       font-weight: 600;
     }
-
     .feature-body {
       font-size: 0.875rem;
       line-height: 1.6;
       color: var(--muted-fg);
       margin: 0;
     }
-
-     
     .demo-card {
       background: var(--card);
       color: var(--card-fg);
@@ -411,7 +328,6 @@
       box-shadow: var(--shadow-sm);
       overflow: hidden;
     }
-
     .demo-card-head {
       display: flex;
       align-items: center;
@@ -420,24 +336,20 @@
       padding: 1rem 1.25rem;
       border-bottom: 1px solid var(--border-subtle);
     }
-
     .demo-card-title {
       font-size: 1rem;
       font-weight: 600;
     }
-
     .demo-card-sub {
       font-size: 0.8rem;
       color: var(--muted-fg);
       font-family: var(--font-mono);
     }
-
     .demo-card-body {
       padding: 1.5rem;
       display: flex;
       justify-content: center;
     }
-
     .demo-launch {
       display: inline-flex;
       align-items: center;
@@ -452,13 +364,10 @@
       text-decoration: none;
       transition: border-color 150ms ease, background 150ms ease;
     }
-
     .demo-launch:hover {
       border-color: var(--accent);
       background: var(--card);
     }
-
-     
     .code-block {
       margin: 0;
       background: var(--muted);
@@ -467,7 +376,6 @@
       padding: 1rem 1.25rem;
       overflow-x: auto;
     }
-
     .code-block pre {
       margin: 0;
       font-size: 0.8rem;
@@ -475,16 +383,12 @@
       color: var(--fg);
       white-space: pre;
     }
-
     .code-block .tok-com {
       color: var(--muted-fg);
     }
-
     .code-block .tok-key {
       color: var(--accent);
     }
-
-     
     .footer {
       padding: 2rem 1.5rem;
       display: flex;
@@ -496,16 +400,13 @@
       line-height: 1.8;
       text-align: center;
     }
-
     .footer a {
       color: var(--link);
       transition: text-decoration 150ms ease;
     }
-
     .footer a:hover {
       text-decoration: underline;
     }
-
     .footer code {
       font-size: 0.72rem;
       color: var(--fg);
@@ -513,7 +414,6 @@
       padding: 0.125rem 0.4rem;
       border-radius: var(--radius-sm);
     }
-
     .footer-divider {
       height: 1px;
       width: 100%;
@@ -521,26 +421,29 @@
       background: var(--border-subtle);
       margin: 0 auto;
     }
-
-     
     @media (max-width: 640px) {
       .main {
         padding: 2rem 1.25rem;
         gap: 3rem;
       }
-
       .brand-tag {
         display: none;
       }
-    }
-  </style>
-    <script>(function(){var pref="auto";try{var m=document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));if(m)pref=decodeURIComponent(m[1])||"auto"}catch(e){}var dark=pref==="dark"||pref==="auto"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",dark?"dark":"light");document.documentElement.setAttribute("data-theme-pref",pref)})();</script>
+    }</style>
+    <script>(function() {
+    var pref = "auto";
+    try {
+        var m = document.cookie.match(new RegExp("(?:^|;\\s*)ziyit-theme=([^;]*)"));
+        if (m) pref = decodeURIComponent(m[1]) || "auto";
+    } catch (e) {}
+    var dark = pref === "dark" || pref === "auto" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme-pref", pref);
+})();</script>
     <link rel="stylesheet" href="./assets/ziyit-theme.css">
 </head>
-
 <body>
   <div class="shell">
-    
     <header class="header">
       <div class="header-inner">
         <div class="brand">
@@ -555,10 +458,7 @@
         <button id="theme-toggle" class="theme-toggle" type="button" title="切换主题" aria-label="切换主题"></button>
       </div>
     </header>
-
-    
     <main class="main">
-      
       <section class="hero">
         <span class="eyebrow">动态显影 · Common Fate</span>
         <h1>无感人机验证<br />藏在噪声里的方块</h1>
@@ -573,8 +473,6 @@
           <span>方块停止后松开</span>
         </div>
       </section>
-
-      
       <section class="section">
         <h2 class="section-title">核心机制</h2>
         <p class="section-desc">
@@ -583,7 +481,6 @@
         <div class="features">
           <div class="feature-card">
             <span class="feature-icon" aria-hidden="true">
-              
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
                 stroke-linejoin="round">
                 <path d="M7 16.5 3 14.25v-4.5L7 7.5l4 2.25v4.5L7 16.5Z" />
@@ -596,10 +493,8 @@
               利用 Common Fate 视觉原理，目标方块仅在运动中被肉眼整合识别；单帧对机器人完全不可见，无法静态分析。
             </p>
           </div>
-
           <div class="feature-card">
             <span class="feature-icon" aria-hidden="true">
-              
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
                 stroke-linejoin="round">
                 <rect x="4" y="11" width="16" height="10" rx="2" />
@@ -611,10 +506,8 @@
               ECDH P-256 协商会话密钥 + AES-256-GCM 端到端加密，轨迹参数与提交数据全程密文，前端拿不到明文路径。
             </p>
           </div>
-
           <div class="feature-card">
             <span class="feature-icon" aria-hidden="true">
-              
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
                 stroke-linejoin="round">
                 <path
@@ -629,8 +522,6 @@
           </div>
         </div>
       </section>
-
-      
       <section class="section">
         <h2 class="section-title">在线体验</h2>
         <p class="section-desc">
@@ -647,9 +538,7 @@
         </div>
       </section>
     </main>
-
     <div class="footer-divider"></div>
-    
     <footer class="footer">
       <div>
         一键部署：<a href=".\人机验证使用方式.html" download>下载模板</a>
@@ -657,9 +546,7 @@
       <div>Powered by ZIYIT STUDIO · 动态显影人机验证系统</div>
     </footer>
   </div>
-
-  <script type="importmap">
-    {
+  <script type="importmap">    {
       "imports": {
         "@noble/curves/nist.js": "./assets/noble/curves-nist.js",
         "@noble/hashes/sha2.js": "./assets/noble/hashes-sha2.js",
@@ -668,11 +555,319 @@
         "@noble/hashes/utils.js": "./assets/noble/hashes-utils.js",
         "@noble/ciphers/aes.js": "./assets/noble/ciphers-aes.js"
       }
-    }
-  </script>
+    }</script>
   <script type="module" src="./Human_verification/main.js"></script>
-  <script>(function(){var BASE_COOKIE="ziyit_api_base_ok";var BASE_URL="";var backendPromise=null;var fileBases=[];function readCookie(name){try{var m=document.cookie.match(new RegExp("(?:^|; )"+name+"=([^;]*)"));return m?decodeURIComponent(m[1]):""}catch(e){return""}}function writeCookie(name,value){try{var d=new Date;d.setTime(d.getTime()+7*864e5);document.cookie=name+"="+encodeURIComponent(value)+"; expires="+d.toUTCString()+"; path=/"}catch(e){}}function clearCookie(name){try{document.cookie=name+"=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"}catch(e){}}function customBase(){try{var c=localStorage.getItem("ziyit_api_base");if(c)return String(c).replace(/\/+$/,"")}catch(e){}return""}function baseCookie(){var v=readCookie(BASE_COOKIE).replace(/\/+$/,"");return/^https?:\/\//i.test(v)?v:""}function rememberBase(b){if(!b)return;BASE_URL=b;if(b===customBase())return;writeCookie(BASE_COOKIE,b)}function backendTxtUrl(){try{return new URL("./backend.txt",location.href).href}catch(e){return"backend.txt"}}function parseFileBases(txt){var out=[];String(txt||"").split(/\r?\n/).forEach(function(line){var m=line.trim().match(/https?:\/\/[^\s]+/i);if(!m)return;var u=m[0].replace(/\/+$/,"");if(out.indexOf(u)===-1)out.push(u)});return out}function loadFileBases(){return fetch(backendTxtUrl(),{cache:"no-store",headers:{"ngrok-skip-browser-warning":"1"}}).then(function(res){return res.ok?res.text():""}).catch(function(){return""}).then(function(txt){fileBases=parseFileBases(txt);return fileBases})}function invalidateBase(){BASE_URL="";backendPromise=null;fileBases=[];clearCookie(BASE_COOKIE)}function baseCandidates(){var list=[];function add(u){if(!u)return;var v=String(u).replace(/\/+$/,"");if(list.indexOf(v)===-1)list.push(v)}add(baseCookie());add(customBase());add(BASE_URL);fileBases.forEach(function(b){if(list.indexOf(b)===-1)list.push(b)});return list}function backendReady(){if(backendPromise)return backendPromise;function probe(b,timeoutMs){return new Promise(function(resolve){var ctrl=null;try{ctrl=new AbortController}catch(e){}var done=false;function finish(ok){if(done)return;done=true;if(!ok&&ctrl){try{ctrl.abort()}catch(e){}}resolve(ok)}var timer=setTimeout(function(){finish(false)},timeoutMs||2e3);try{fetch(b+"/",{method:"GET",mode:"cors",cache:"no-store",headers:{"ngrok-skip-browser-warning":"1"},signal:ctrl?ctrl.signal:undefined}).then(function(res){clearTimeout(timer);finish(res.status<500)}).catch(function(){clearTimeout(timer);finish(false)})}catch(e){clearTimeout(timer);finish(false)}})}function pick(list){var round=0;function scanRound(){var i=0;var p=new Promise(function(resolve){function step(){if(i>=list.length)return resolve("");var b=list[i++];probe(b,round===0?2e3:1e3).then(function(ok){if(ok)resolve(b);else step()})}step()});return p.then(function(found){if(found)return found;round++;if(round>=3)return"";return new Promise(function(r){setTimeout(r,300)}).then(scanRound)})}return scanRound()}backendPromise=loadFileBases().then(function(){return pick(baseCandidates()).then(function(b){BASE_URL=b||"";if(b)rememberBase(b);else clearCookie(BASE_COOKIE);return BASE_URL})}).catch(function(){return BASE_URL});return backendPromise}function showToast(message,type){var existing=document.querySelector(".toast-container");if(existing)existing.remove();var container=document.createElement("div");container.className="toast-container";container.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;max-width:90%;text-align:center;background:"+(type==="success"?"#28a745":"#dc3545")+";color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:fade-in 200ms ease-out;";container.textContent=message;document.body.appendChild(container);setTimeout(function(){container.remove()},5e3)}function copyToClipboard(text){if(navigator.clipboard&&navigator.clipboard.writeText){return navigator.clipboard.writeText(text)}return new Promise(function(resolve,reject){var textarea=document.createElement("textarea");textarea.value=text;textarea.style.cssText="position:fixed;opacity:0;pointer-events:none;";document.body.appendChild(textarea);textarea.select();try{var result=document.execCommand("copy");document.body.removeChild(textarea);if(result)resolve();else reject(new Error("复制失败"))}catch(err){document.body.removeChild(textarea);reject(err)}})}function getLocalToken(){var m=document.cookie.match(/(?:^|;\s*)authToken=([^;]*)/);if(m&&m[1]){try{return decodeURIComponent(m[1])}catch(e){return m[1]}}return localStorage.getItem("authToken")||""}async function getFreeApiKey(){var token=getLocalToken();if(!token){showToast("请先登录 ZIYIT 账号后再获取免费 API Key","error");setTimeout(function(){window.location.href="../user/"},1500);return}try{await backendReady();var list=baseCandidates();var response=null,data=null;for(var round=0;round<3&&!response;round++){for(var i=0;i<list.length;i++){try{var r=await fetch(list[i]+"/api-key/free",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token}});if(r.status>=500)continue;response=r;data=await r.json();rememberBase(list[i]);break}catch(e){}}if(!response&&round<2)await new Promise(function(res){setTimeout(res,300)})}if(!response){invalidateBase();throw new Error("后端地址全部不可用")}if(!response.ok){var detail=data.detail||data.message||"请重试";if(Array.isArray(detail))detail=detail.map(function(d){return d.msg||JSON.stringify(d)}).join("; ");showToast("获取失败："+detail,"error");return}if(data.api_key){localStorage.setItem("phantom_api_key",data.api_key);window.PHANTOM_API_KEY=data.api_key;await copyToClipboard(data.api_key);showToast("获取成功！API Key 已自动复制到剪贴板"+(data.remaining!==undefined?"，剩余次数："+data.remaining:""),"success");setTimeout(function(){location.reload()},1500)}else{showToast("获取失败："+(data.message||"请重试"),"error")}}catch(error){showToast("网络错误："+error.message,"error")}}function showApiKeyDialog(){getFreeApiKey()}var style=document.createElement("style");style.textContent=".api-key-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:var(--radius-full);background:var(--card);color:var(--fg);font-size:0.85rem;cursor:pointer;transition:all 150ms ease;font-family:var(--font-body);}.api-key-btn:hover{border-color:var(--accent);background:var(--muted);}.api-key-btn svg{width:16px;height:16px;}";document.head.appendChild(style);var btn=document.createElement("button");btn.className="api-key-btn";btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2L3 12l6 3 3 6 9-18z"/><path d="M15 9l-6 6"/></svg>免费获取 API Key';btn.onclick=showApiKeyDialog;var myKeyBtn=null;var fileKeysBtn=null;if(getLocalToken()){myKeyBtn=document.createElement("a");myKeyBtn.className="api-key-btn";myKeyBtn.href="./user/api-key.html";myKeyBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>我的密钥';fileKeysBtn=document.createElement("a");fileKeysBtn.className="api-key-btn";fileKeysBtn.href="./user/file-keys.html";fileKeysBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>我的文件密钥'}var headerInner=document.querySelector(".header-inner");if(headerInner){var spacer=headerInner.querySelector(".header-spacer");if(spacer){if(myKeyBtn)spacer.parentNode.insertBefore(myKeyBtn,spacer.nextSibling);if(fileKeysBtn)spacer.parentNode.insertBefore(fileKeysBtn,spacer.nextSibling);spacer.parentNode.insertBefore(btn,spacer.nextSibling)}}})();</script>
+  <script>(function() {
+    var BASE_COOKIE = "ziyit_api_base_ok";
+    var BASE_URL = "";
+    var backendPromise = null;
+    var fileBases = [];
+    function readCookie(name) {
+        try {
+            var m = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+            return m ? decodeURIComponent(m[1]) : "";
+        } catch (e) {
+            return "";
+        }
+    }
+    function writeCookie(name, value) {
+        try {
+            var d = new Date;
+            d.setTime(d.getTime() + 7 * 864e5);
+            document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + d.toUTCString() + "; path=/";
+        } catch (e) {}
+    }
+    function clearCookie(name) {
+        try {
+            document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        } catch (e) {}
+    }
+    function customBase() {
+        try {
+            var c = localStorage.getItem("ziyit_api_base");
+            if (c) return String(c).replace(/\/+$/, "");
+        } catch (e) {}
+        return "";
+    }
+    function baseCookie() {
+        var v = readCookie(BASE_COOKIE).replace(/\/+$/, "");
+        return /^https?:\/\//i.test(v) ? v : "";
+    }
+    function rememberBase(b) {
+        if (!b) return;
+        BASE_URL = b;
+        if (b === customBase()) return;
+        writeCookie(BASE_COOKIE, b);
+    }
+    function backendTxtUrl() {
+        try {
+            return new URL("./backend.txt", location.href).href;
+        } catch (e) {
+            return "backend.txt";
+        }
+    }
+    function parseFileBases(txt) {
+        var out = [];
+        String(txt || "").split(/\r?\n/).forEach(function(line) {
+            var m = line.trim().match(/https?:\/\/[^\s]+/i);
+            if (!m) return;
+            var u = m[0].replace(/\/+$/, "");
+            if (out.indexOf(u) === -1) out.push(u);
+        });
+        return out;
+    }
+    function loadFileBases() {
+        return fetch(backendTxtUrl(), {
+            cache: "no-store",
+            headers: {
+                "ngrok-skip-browser-warning": "1"
+            }
+        }).then(function(res) {
+            return res.ok ? res.text() : "";
+        }).catch(function() {
+            return "";
+        }).then(function(txt) {
+            fileBases = parseFileBases(txt);
+            return fileBases;
+        });
+    }
+    function invalidateBase() {
+        BASE_URL = "";
+        backendPromise = null;
+        fileBases = [];
+        clearCookie(BASE_COOKIE);
+    }
+    function baseCandidates() {
+        var list = [];
+        function add(u) {
+            if (!u) return;
+            var v = String(u).replace(/\/+$/, "");
+            if (list.indexOf(v) === -1) list.push(v);
+        }
+        add(baseCookie());
+        add(customBase());
+        add(BASE_URL);
+        fileBases.forEach(function(b) {
+            if (list.indexOf(b) === -1) list.push(b);
+        });
+        return list;
+    }
+    function backendReady() {
+        if (backendPromise) return backendPromise;
+        function probe(b, timeoutMs) {
+            return new Promise(function(resolve) {
+                var ctrl = null;
+                try {
+                    ctrl = new AbortController;
+                } catch (e) {}
+                var done = false;
+                function finish(ok) {
+                    if (done) return;
+                    done = true;
+                    if (!ok && ctrl) {
+                        try {
+                            ctrl.abort();
+                        } catch (e) {}
+                    }
+                    resolve(ok);
+                }
+                var timer = setTimeout(function() {
+                    finish(false);
+                }, timeoutMs || 2e3);
+                try {
+                    fetch(b + "/", {
+                        method: "GET",
+                        mode: "cors",
+                        cache: "no-store",
+                        headers: {
+                            "ngrok-skip-browser-warning": "1"
+                        },
+                        signal: ctrl ? ctrl.signal : undefined
+                    }).then(function(res) {
+                        clearTimeout(timer);
+                        finish(res.status < 500);
+                    }).catch(function() {
+                        clearTimeout(timer);
+                        finish(false);
+                    });
+                } catch (e) {
+                    clearTimeout(timer);
+                    finish(false);
+                }
+            });
+        }
+        function pick(list) {
+            var round = 0;
+            function scanRound() {
+                var i = 0;
+                var p = new Promise(function(resolve) {
+                    function step() {
+                        if (i >= list.length) return resolve("");
+                        var b = list[i++];
+                        probe(b, round === 0 ? 2e3 : 1e3).then(function(ok) {
+                            if (ok) resolve(b); else step();
+                        });
+                    }
+                    step();
+                });
+                return p.then(function(found) {
+                    if (found) return found;
+                    round++;
+                    if (round >= 3) return "";
+                    return new Promise(function(r) {
+                        setTimeout(r, 300);
+                    }).then(scanRound);
+                });
+            }
+            return scanRound();
+        }
+        backendPromise = loadFileBases().then(function() {
+            return pick(baseCandidates()).then(function(b) {
+                BASE_URL = b || "";
+                if (b) rememberBase(b); else clearCookie(BASE_COOKIE);
+                return BASE_URL;
+            });
+        }).catch(function() {
+            return BASE_URL;
+        });
+        return backendPromise;
+    }
+    function showToast(message, type) {
+        var existing = document.querySelector(".toast-container");
+        if (existing) existing.remove();
+        var container = document.createElement("div");
+        container.className = "toast-container";
+        container.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;max-width:90%;text-align:center;background:" + (type === "success" ? "#28a745" : "#dc3545") + ";color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:fade-in 200ms ease-out;";
+        container.textContent = message;
+        document.body.appendChild(container);
+        setTimeout(function() {
+            container.remove();
+        }, 5e3);
+    }
+    function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text);
+        }
+        return new Promise(function(resolve, reject) {
+            var textarea = document.createElement("textarea");
+            textarea.value = text;
+            textarea.style.cssText = "position:fixed;opacity:0;pointer-events:none;";
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                var result = document.execCommand("copy");
+                document.body.removeChild(textarea);
+                if (result) resolve(); else reject(new Error("复制失败"));
+            } catch (err) {
+                document.body.removeChild(textarea);
+                reject(err);
+            }
+        });
+    }
+    function getLocalToken() {
+        var m = document.cookie.match(/(?:^|;\s*)authToken=([^;]*)/);
+        if (m && m[1]) {
+            try {
+                return decodeURIComponent(m[1]);
+            } catch (e) {
+                return m[1];
+            }
+        }
+        return localStorage.getItem("authToken") || "";
+    }
+    async function getFreeApiKey() {
+        var token = getLocalToken();
+        if (!token) {
+            showToast("请先登录 ZIYIT 账号后再获取免费 API Key", "error");
+            setTimeout(function() {
+                window.location.href = "../user/";
+            }, 1500);
+            return;
+        }
+        try {
+            await backendReady();
+            var list = baseCandidates();
+            var response = null, data = null;
+            for (var round = 0; round < 3 && !response; round++) {
+                for (var i = 0; i < list.length; i++) {
+                    try {
+                        var r = await fetch(list[i] + "/api-key/free", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: "Bearer " + token
+                            }
+                        });
+                        if (r.status >= 500) continue;
+                        response = r;
+                        data = await r.json();
+                        rememberBase(list[i]);
+                        break;
+                    } catch (e) {}
+                }
+                if (!response && round < 2) await new Promise(function(res) {
+                    setTimeout(res, 300);
+                });
+            }
+            if (!response) {
+                invalidateBase();
+                throw new Error("后端地址全部不可用");
+            }
+            if (!response.ok) {
+                var detail = data.detail || data.message || "请重试";
+                if (Array.isArray(detail)) detail = detail.map(function(d) {
+                    return d.msg || JSON.stringify(d);
+                }).join("; ");
+                showToast("获取失败：" + detail, "error");
+                return;
+            }
+            if (data.api_key) {
+                localStorage.setItem("phantom_api_key", data.api_key);
+                window.PHANTOM_API_KEY = data.api_key;
+                await copyToClipboard(data.api_key);
+                showToast("获取成功！API Key 已自动复制到剪贴板" + (data.remaining !== undefined ? "，剩余次数：" + data.remaining : ""), "success");
+                setTimeout(function() {
+                    location.reload();
+                }, 1500);
+            } else {
+                showToast("获取失败：" + (data.message || "请重试"), "error");
+            }
+        } catch (error) {
+            showToast("网络错误：" + error.message, "error");
+        }
+    }
+    function showApiKeyDialog() {
+        getFreeApiKey();
+    }
+    var style = document.createElement("style");
+    style.textContent = ".api-key-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:var(--radius-full);background:var(--card);color:var(--fg);font-size:0.85rem;cursor:pointer;transition:all 150ms ease;font-family:var(--font-body);}.api-key-btn:hover{border-color:var(--accent);background:var(--muted);}.api-key-btn svg{width:16px;height:16px;}";
+    document.head.appendChild(style);
+    var btn = document.createElement("button");
+    btn.className = "api-key-btn";
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2L3 12l6 3 3 6 9-18z"/><path d="M15 9l-6 6"/></svg>免费获取 API Key';
+    btn.onclick = showApiKeyDialog;
+    var myKeyBtn = null;
+    var fileKeysBtn = null;
+    if (getLocalToken()) {
+        myKeyBtn = document.createElement("a");
+        myKeyBtn.className = "api-key-btn";
+        myKeyBtn.href = "./user/api-key.html";
+        myKeyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>我的密钥';
+        fileKeysBtn = document.createElement("a");
+        fileKeysBtn.className = "api-key-btn";
+        fileKeysBtn.href = "./user/file-keys.html";
+        fileKeysBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>我的文件密钥';
+    }
+    var headerInner = document.querySelector(".header-inner");
+    if (headerInner) {
+        var spacer = headerInner.querySelector(".header-spacer");
+        if (spacer) {
+            if (myKeyBtn) spacer.parentNode.insertBefore(myKeyBtn, spacer.nextSibling);
+            if (fileKeysBtn) spacer.parentNode.insertBefore(fileKeysBtn, spacer.nextSibling);
+            spacer.parentNode.insertBefore(btn, spacer.nextSibling);
+        }
+    }
+})();</script>
 <script src="./assets/ziyit-theme.js"></script>
 </body>
-
 </html>
