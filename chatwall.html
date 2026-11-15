@@ -469,7 +469,14 @@
     function splitWallCache(json) {
         var chunks = [], cur = "", curLen = 0;
         for (var i = 0; i < json.length; i++) {
+            // emoji 等增补平面字符在 UTF-16 里占两个码元，必须整对搬运；
+            // 若按单个码元切分，孤立代理字符会让 encodeURIComponent 抛 URIError: URI malformed
             var ch = json.charAt(i);
+            var code = json.charCodeAt(i);
+            if (code >= 55296 && code <= 56319 && i + 1 < json.length) {
+                ch += json.charAt(i + 1);
+                i++;
+            }
             var enc = encodeURIComponent(ch);
             if (curLen + enc.length > CACHE_CHUNK_BYTES && cur) {
                 chunks.push(cur);
@@ -483,20 +490,29 @@
         return chunks;
     }
     function saveWallCache(list) {
-        var arr = list.slice(0, 20);
-        var json = "";
-        while (arr.length) {
-            json = JSON.stringify(arr);
-            if (encodeURIComponent(json).length <= CACHE_MAX_BYTES) break;
-            arr.pop();
+        // 本地缓存只是离屏兜底：任何异常（超配额、编码失败、隐私模式禁写）都不该影响列表渲染
+        try {
+            var arr = list.slice(0, 20);
+            var json = "";
+            while (arr.length) {
+                json = JSON.stringify(arr);
+                if (encodeURIComponent(json).length <= CACHE_MAX_BYTES) break;
+                arr.pop();
+            }
+            clearWallCache();
+            if (!arr.length) return;
+            var chunks = splitWallCache(json);
+            // 分块数超过读取上限时整份放弃：写进去也读不回来，白白占用 cookie 配额
+            if (chunks.length > CACHE_MAX_CHUNKS) return;
+            chunks.forEach(function(c, idx) {
+                setCookie(CACHE_PREFIX + idx, c, CACHE_TTL);
+            });
+            setCookie(CACHE_PREFIX + "n", String(chunks.length), CACHE_TTL);
+        } catch (e) {
+            try {
+                clearWallCache();
+            } catch (e2) {}
         }
-        clearWallCache();
-        if (!arr.length) return;
-        var chunks = splitWallCache(json);
-        chunks.forEach(function(c, idx) {
-            setCookie(CACHE_PREFIX + idx, c, CACHE_TTL);
-        });
-        setCookie(CACHE_PREFIX + "n", String(chunks.length), CACHE_TTL);
     }
     function readWallCache() {
         var n = parseInt(getCookie(CACHE_PREFIX + "n"), 10);
@@ -687,7 +703,10 @@
             updateListCount();
         }).catch(function(err) {
             if (listEl.querySelector(".wall-card")) return;
-            listEl.innerHTML = '<div class="wall-error">' + esc(err && err.status === 429 ? "请求过于频繁，请稍后再试" : err && err.message || "加载失败") + "，稍后自动重试</div>";
+            var raw = err && err.message || "";
+            var low = raw.toLowerCase();
+            var friendly = raw && !/uri|malformed|unexpected token|is not a function|is not defined|null is not an object/.test(low) ? raw : "加载失败";
+            listEl.innerHTML = '<div class="wall-error">' + esc(err && err.status === 429 ? "请求过于频繁，请稍后再试" : friendly) + "，稍后自动重试</div>";
         }).finally(function() {
             loading = false;
             if (pendingReload) {

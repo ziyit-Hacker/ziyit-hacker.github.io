@@ -3,6 +3,14 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.65 — 2026-11-15
+### 修复
+- **聊天墙接口 200 OK 但页面显示「URI malformed，稍后自动重试」**（[chatwall.html](file:///f:/Code/html/ziyit/chatwall.html)）：离线缓存把列表 JSON 按 **UTF-16 码元**逐字符切块（每块 ≤3000 编码字节），而 emoji（如 `😂`、`❗` 所在增补平面字符）占两个码元；切点落在代理对中间时，`encodeURIComponent(孤立代理字符)` 抛 `URIError: URI malformed`，异常冒泡到 `loadWall` 的 `.catch`，把已经成功返回的列表覆盖成错误提示。后端与网络层无异常，纯前端致命错误。
+  - `splitWallCache` 改为按**完整码点**搬运：遇到高位代理（`0xD800–0xDBFF`）时连同低位代理一起入块，永不拆开代理对。
+  - `saveWallCache` 整体包 `try/catch`：缓存失败（超配额、隐私模式禁写、编码异常）只清缓存，绝不影响列表渲染。
+  - 分块数超过 `CACHE_MAX_CHUNKS` 时直接放弃本次缓存，避免写入读不回来的碎片占用 cookie 配额。
+  - `loadWall` 的错误文案过滤底层异常（`URI malformed`、`Unexpected token` 等），只对用户展示「加载失败」，不再把内部错误抛到页面上。
+
 ## v1.64 — 2026-11-15
 ### 修复
 - **举报弹窗在暗色主题下文字看不清**：[ziyit_report.js](file:///f:/Code/html/ziyit/assets/ziyit_report.js) 里正文/下拉框/取消按钮误用了并不存在的 token `--ziyit-text`，回落到写死的 `#222`，而背景 `--ziyit-bg-card` 在暗色下是 `#1f2229`，导致「目标」「系统级攻击」「取消」等文字几乎与背景同色。
