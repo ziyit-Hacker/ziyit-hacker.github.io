@@ -3,6 +3,14 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.72 — 2026-11-21
+### 变更
+- **翻译器流式协议升级到 v0.3.111**（[Translator.html](file:///f:/Code/html/ziyit/Translator.html#L479-L522)）：事件由 `meta / unit / partial / done` 改为 AI 客服同款 `status / delta / final / done / error`；`delta` **追加**渲染（保留原文顺序、天然打字机效果），`final.reply` **覆盖**定稿，`done.translated` 兜底；`status` 直接展示后端 `message`（如「正在逐单元翻译（共 8 个单元）…」）。
+- **计费 UI**：结果区新增计费信息位——`status.billing === "free"` 显示「免费额度（今日 1/10 次）」，`points` 显示「按 Token 扣点」；`done` 后显示「本次使用免费额度」或「本次消耗 X 点，余额 Y 点」。
+- **取消字数限制**：删除本地 2000 字拦截，改用 `/translate/modes` 的防御上限 `hardMaxChars`（默认 10 万字）与 `maxUnits`（2000）；空文本校验保留。
+- **错误处理**：新增 **402** 分支——展示后端「预计需要 X 点，当前可用 Y 点」并给出 [我的点数](file:///f:/Code/html/ziyit/user/points.html) 充值入口；**429** 文案改为「你已有一笔付费翻译正在进行，请等它结束后再试」；流中 `error` 保留最后一次 `final` 文本。
+- 管理后台词库接口未变，无需调整。
+
 ## v1.71 — 2026-11-21
 ### 变更
 - **翻译器改为「强制风格 + SSE 流式」**（后端 v0.3.110，[Translator.html](file:///f:/Code/html/ziyit/Translator.html#L340-L520)）：

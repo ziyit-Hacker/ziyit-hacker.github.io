@@ -249,7 +249,7 @@
                     <button id="cancelBtn" style="display: none; padding: 10px 18px; border: 1px solid var(--ziyit-border, #d0d7de); border-radius: 6px; background: transparent; color: var(--ziyit-text-primary); font-size: 14px;">取消</button>
                 </div>
                 <div class="result" id="result">翻译结果将显示在这里...</div>
-                <div class="result-meta"><span id="resultTitle"></span><span id="progress" style="margin-left: 10px;"></span></div>
+                <div class="result-meta"><span id="resultTitle"></span><span id="progress" style="margin-left: 10px;"></span><span id="billing" style="margin-left: 10px;"></span></div>
                 <div class="language-select">
                     <label for="source">源语言：</label>
                     <select id="source" name="source">
@@ -295,7 +295,7 @@ const CUSTOM_LANG = "__custom__";
 const languageSelect = document.getElementById("language");
 const customLanguageInput = document.getElementById("customLanguage");
 window.TRANSLATOR_TARGET_META = {};
-window.TRANSLATOR_LIMITS = { maxUnits: 60, maxTextLen: 2000 };
+window.TRANSLATOR_LIMITS = { maxUnits: 2000, hardMaxChars: 100000 };
 
 function targetStyleLabel(t) {
     return t && (t.styleLabel || (t.style === "ms" ? "微软式" : "中式")) || "";
@@ -326,8 +326,8 @@ if (window.ZIYIT_API) {
         const targets = data.targets || data.languages || [];
         if (targets.length) fillTargetOptions(targets);
         window.TRANSLATOR_LIMITS = {
-            maxUnits: Number(data.maxUnits) || 60,
-            maxTextLen: Number(data.maxTextLen) || 2000
+            maxUnits: Number(data.maxUnits) || 2000,
+            hardMaxChars: Number(data.hardMaxChars) || 100000
         };
     }).catch(function() {});
 }
@@ -346,6 +346,17 @@ function errText(e) {
     if (typeof d === "string" && d) return d;
     if (d && typeof d === "object") return d.message || d.error || "";
     return (e && e.message) || "未知错误";
+}
+function escHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c) {
+        return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        }[c];
+    });
 }
 /* 从 SSE 帧里取出所有 data: 行（跳过 ": ping" 注释帧） */
 function ssePayload(frame) {
@@ -417,6 +428,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var resultEl = document.getElementById("result");
     var titleEl = document.getElementById("resultTitle");
     var progressEl = document.getElementById("progress");
+    var billingEl = document.getElementById("billing");
     var sourceSelect = document.getElementById("source");
     var currentAbort = null;
 
@@ -440,8 +452,8 @@ document.addEventListener("DOMContentLoaded", function() {
             customLanguageInput.focus();
             return;
         }
-        if (text.length > window.TRANSLATOR_LIMITS.maxTextLen) {
-            resultEl.textContent = "原文最多 " + window.TRANSLATOR_LIMITS.maxTextLen + " 字，请分段提交";
+        if (text.length > window.TRANSLATOR_LIMITS.hardMaxChars) {
+            resultEl.textContent = "原文过长（防御上限 " + window.TRANSLATOR_LIMITS.hardMaxChars + " 字），请分段提交";
             return;
         }
         if (!window.ZIYIT_API || !ZIYIT_API.getToken()) {
@@ -456,6 +468,7 @@ document.addEventListener("DOMContentLoaded", function() {
         setRunning(true);
         resultEl.textContent = "";
         progressEl.textContent = "连接中…";
+        billingEl.textContent = "";
         try {
             await translateStream({
                 body: {
@@ -466,28 +479,45 @@ document.addEventListener("DOMContentLoaded", function() {
                 signal: myAbort.signal,
                 onEvent: function(evt) {
                     switch (evt.type) {
-                        case "meta":
+                        case "status":
                             titleEl.textContent = evt.modeLabel || "";
-                            progressEl.textContent = "0 / " + (evt.totalUnits || 0) + (evt.cachedUnits ? "（缓存 " + evt.cachedUnits + "）" : "");
+                            progressEl.textContent = evt.message || ("0 / " + (evt.totalUnits || 0));
+                            billingEl.textContent = evt.billing === "points" ? "按 Token 扣点" : "免费额度";
+                            if (typeof evt.used === "number" && typeof evt.quota === "number") {
+                                billingEl.textContent += "（今日 " + evt.used + "/" + evt.quota + " 次）";
+                            }
                             break;
-                        case "partial":
+                        case "delta":
+                            // delta 是追加，final 会再覆盖定稿
+                            if (evt.text) {
+                                resultEl.textContent += evt.text;
+                                lastGood = resultEl.textContent;
+                            }
+                            if (evt.progress) progressEl.textContent = evt.progress.done + " / " + evt.progress.total;
+                            break;
+                        case "final":
+                            if (evt.reply) {
+                                resultEl.textContent = evt.reply;
+                                lastGood = evt.reply;
+                            }
+                            break;
+                        case "done":
                             if (evt.translated) {
                                 resultEl.textContent = evt.translated;
                                 lastGood = evt.translated;
                             }
-                            if (evt.progress) progressEl.textContent = evt.progress.done + " / " + evt.progress.total;
-                            break;
-                        case "done":
-                            if (evt.translated) resultEl.textContent = evt.translated;
                             if (evt.modeLabel) titleEl.textContent = evt.modeLabel;
                             progressEl.textContent = "完成";
-                            if (typeof evt.used === "number" && typeof evt.quota === "number") {
-                                progressEl.textContent += " · 今日 " + evt.used + "/" + evt.quota + " 次";
+                            if (evt.billing === "free" || !evt.cost) {
+                                billingEl.textContent = "本次使用免费额度" + (typeof evt.used === "number" && typeof evt.quota === "number" ? "（今日 " + evt.used + "/" + evt.quota + " 次）" : "");
+                            } else {
+                                billingEl.textContent = "本次消耗 " + evt.cost + " 点" + (evt.points && typeof evt.points.balance === "number" ? "，余额 " + evt.points.balance + " 点" : "");
                             }
                             break;
                         case "error":
                             resultEl.textContent = (lastGood ? lastGood + "\n\n" : "") + "翻译中断：" + (evt.detail || "请稍后重试");
                             progressEl.textContent = "已中断";
+                            billingEl.textContent = "";
                             break;
                     }
                 }
@@ -495,8 +525,11 @@ document.addEventListener("DOMContentLoaded", function() {
         } catch (e) {
             if (e && e.name === "AbortError") {
                 progressEl.textContent = "已取消";
+            } else if (e && e.status === 402) {
+                resultEl.innerHTML = "点数不足：" + escHtml(errText(e)) + '<br><br>请到 <a href="./user/points.html">我的点数</a> 充值后再试，或明天使用免费额度。';
+                progressEl.textContent = "余额不足";
             } else if (e && e.status === 429) {
-                resultEl.textContent = "今日翻译次数已用完，请稍后再试；或联系 ziyitstudio@qq.com 升级为 VIP（价格为 RC 专业版价格）";
+                resultEl.textContent = "你已有一笔付费翻译正在进行，请等它结束后再试";
             } else if (e && e.status === 401) {
                 resultEl.textContent = "登录已失效，请重新登录后再试";
             } else {
