@@ -43,6 +43,12 @@ document.addEventListener("DOMContentLoaded", function() {
         loadUsers();
         loadIpBans();
     });
+    document.querySelector('[data-section="points-usage"]').addEventListener("click", function() {
+        switchSection("points-usage");
+        updateSystemInfo("切换到点数用量");
+        loadPointsUsage();
+    });
+    document.getElementById("pu-query").addEventListener("click", loadPointsUsage);
     document.getElementById("refresh-users").addEventListener("click", function() {
         loadUsers();
         updateSystemInfo("用户列表已刷新");
@@ -6231,6 +6237,133 @@ function initTranslateTerms() {
 }
 document.addEventListener("DOMContentLoaded", initTranslateTerms);
 
+function puEsc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c) {
+        return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        }[c];
+    });
+}
+function puNum(n) {
+    const v = Number(n || 0);
+    if (!isFinite(v)) return "0";
+    return Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : v.toFixed(2);
+}
+const PU_COLORS = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"];
+function puPie(rows) {
+    let total = 0;
+    rows.forEach(function(r) {
+        total += Number(r.spent || 0);
+    });
+    if (!(total > 0)) return '<div class="loading">该区间没有消耗记录。</div>';
+    const cx = 110, cy = 110, rad = 92;
+    let start = -Math.PI / 2;
+    const paths = [], legend = [];
+    rows.forEach(function(r, i) {
+        const v = Number(r.spent || 0);
+        if (!(v > 0)) return;
+        const ang = v / total * Math.PI * 2;
+        const end = start + ang;
+        const color = PU_COLORS[i % PU_COLORS.length];
+        const label = r.label || r.reason || "其他";
+        if (ang >= Math.PI * 2 - 1e-6) {
+            paths.push('<circle cx="' + cx + '" cy="' + cy + '" r="' + rad + '" fill="' + color + '"><title>' + puEsc(label + "：" + puNum(v) + " 点") + "</title></circle>");
+        } else if (ang > 0) {
+            const x1 = cx + rad * Math.cos(start), y1 = cy + rad * Math.sin(start);
+            const x2 = cx + rad * Math.cos(end), y2 = cy + rad * Math.sin(end);
+            const large = ang > Math.PI ? 1 : 0;
+            paths.push('<path d="M' + cx + " " + cy + " L" + x1.toFixed(2) + " " + y1.toFixed(2) + " A" + rad + " " + rad + " 0 " + large + " 1 " + x2.toFixed(2) + " " + y2.toFixed(2) + ' Z" fill="' + color + '"><title>' + puEsc(label + "：" + puNum(v) + " 点") + "</title></path>");
+        }
+        legend.push('<div style="display:flex;align-items:center;gap:8px;padding:4px 0;"><span style="width:10px;height:10px;border-radius:2px;flex:0 0 auto;background:' + color + ';"></span><span style="flex:1 1 auto;">' + puEsc(label) + '</span><span style="font-variant-numeric:tabular-nums;">' + puEsc(puNum(v)) + " 点 · " + puEsc((v / total * 100).toFixed(1)) + "%</span></div>");
+        start = end;
+    });
+    return '<div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">' + '<svg viewBox="0 0 220 220" role="img" aria-label="按类型点数消耗占比" style="width:220px;max-width:48vw;height:auto;flex:0 0 auto;">' + paths.join("") + "</svg>" + '<div style="flex:1 1 240px;min-width:220px;font-size:13px;color:var(--ziyit-text-secondary);">' + legend.join("") + "</div></div>";
+}
+function puLine(rows) {
+    if (!rows || !rows.length) return '<div class="loading">该区间没有按天数据。</div>';
+    const pts = rows.map(function(r) {
+        return {
+            day: String(r.date || r.day || ""),
+            spent: Number(r.spent || 0),
+            gained: Number(r.gained || 0)
+        };
+    });
+    const W = 720, H = 320, L = 54, R = 16, T = 16, B = 34;
+    const plotW = W - L - R, plotH = H - T - B, baseY = T + plotH;
+    const band = plotW / pts.length;
+    let maxV = 0;
+    pts.forEach(function(p) {
+        maxV = Math.max(maxV, p.spent, p.gained);
+    });
+    const exp = Math.pow(10, Math.floor(Math.log(maxV || 1) / Math.LN10));
+    const f = (maxV || 1) / exp;
+    const nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;
+    const max = nf * exp;
+    const parts = [];
+    for (let i = 0; i <= 4; i++) {
+        const y = baseY - plotH * (i / 4);
+        parts.push('<line x1="' + L + '" y1="' + y.toFixed(2) + '" x2="' + (W - R) + '" y2="' + y.toFixed(2) + '" style="stroke:var(--ziyit-border-light);stroke-width:1;"></line>');
+        parts.push('<text x="' + (L - 8) + '" y="' + (y + 4).toFixed(2) + '" text-anchor="end" style="fill:var(--ziyit-text-secondary);font-size:11px;">' + puEsc(puNum(max * i / 4)) + "</text>");
+    }
+    const step = Math.max(1, Math.ceil(pts.length / 12));
+    pts.forEach(function(p, i) {
+        if (i % step !== 0 && i !== pts.length - 1) return;
+        const x = L + band * (i + .5);
+        parts.push('<text x="' + x.toFixed(2) + '" y="' + (H - 12) + '" text-anchor="middle" style="fill:var(--ziyit-text-secondary);font-size:11px;">' + puEsc(p.day.slice(5)) + "</text>");
+    });
+    function series(key, stroke) {
+        const coords = [], dots = [];
+        pts.forEach(function(p, i) {
+            const v = p[key];
+            const x = L + band * (i + .5);
+            const y = baseY - plotH * (v / max);
+            coords.push(x.toFixed(2) + "," + y.toFixed(2));
+            dots.push('<circle cx="' + x.toFixed(2) + '" cy="' + y.toFixed(2) + '" r="3" style="fill:' + stroke + ';"><title>' + puEsc(p.day + "：" + puNum(v) + " 点") + "</title></circle>");
+        });
+        const line = pts.length > 1 ? '<polyline points="' + coords.join(" ") + '" style="fill:none;stroke:' + stroke + ';stroke-width:2;"></polyline>' : "";
+        return line + dots.join("");
+    }
+    parts.push(series("spent", "#e15759"));
+    parts.push(series("gained", "#59a14f"));
+    const legend = '<div style="display:flex;gap:16px;font-size:13px;color:var(--ziyit-text-secondary);margin:4px 0 8px;"><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#e15759;margin-right:6px;"></span>消耗</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#59a14f;margin-right:6px;"></span>获得</span><span style="margin-left:auto;">Y 轴单位：点</span></div>';
+    return legend + '<svg viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="按天点数消耗折线图" style="display:block;width:100%;height:auto;">' + parts.join("") + "</svg>";
+}
+function loadPointsUsage() {
+    const bodyEl = document.getElementById("pu-body");
+    const statusEl = document.getElementById("pu-status");
+    if (!bodyEl || !statusEl) return;
+    const days = parseInt(document.getElementById("pu-days").value, 10) || 30;
+    const uid = document.getElementById("pu-user").value.trim();
+    statusEl.style.color = "var(--ziyit-text-secondary)";
+    statusEl.textContent = "加载中…";
+    bodyEl.innerHTML = "";
+    ZIYIT_API.adminPointsUsage(days, uid).then(function(data) {
+        data = data || {};
+        const totals = data.totals || {};
+        const spent = Number(totals.spent || 0);
+        const gained = Number(totals.gained || 0);
+        const count = Number(totals.count || 0);
+        statusEl.textContent = (uid ? "用户 " + uid + " · " : "全站 · ") + "近 " + (data.days || days) + " 天：" + puNum(count) + " 条流水";
+        const byReason = (data.byReason || []).filter(function(r) {
+            return Number(r && r.spent || 0) > 0;
+        });
+        let html = '<div class="stats" style="margin-bottom:16px;">' + '<div class="stat"><div class="stat-num">' + puEsc(puNum(spent)) + '</div><div class="stat-label">消耗点数</div></div>' + '<div class="stat"><div class="stat-num">' + puEsc(puNum(gained)) + '</div><div class="stat-label">获得点数</div></div>' + '<div class="stat"><div class="stat-num">' + puEsc(puNum(count)) + '</div><div class="stat-label">流水条数</div></div>' + "</div>";
+        html += '<h3 style="font-size:14px;margin:18px 0 8px;">按类型（消耗占比）</h3>' + puPie(byReason);
+        html += '<h3 style="font-size:14px;margin:18px 0 8px;">按天（消耗 / 获得）</h3>' + puLine(data.byDay || []);
+        if (data.retentionDays) {
+            html += '<p style="font-size:12px;color:var(--ziyit-text-secondary);margin-top:8px;">明细保留最近 ' + puEsc(puNum(data.retentionDays)) + " 天，更早记录只保留归档合计。</p>";
+        }
+        bodyEl.innerHTML = html;
+    }).catch(function(err) {
+        statusEl.style.color = "var(--danger-color,#d33)";
+        statusEl.textContent = "加载失败：" + (err && err.message || "未知错误");
+        bodyEl.innerHTML = "";
+    });
+}
 function initSidebarGroups() {
     var menu = document.querySelector(".sidebar-menu");
     if (!menu) return;

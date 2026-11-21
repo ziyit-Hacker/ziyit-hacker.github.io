@@ -3,6 +3,16 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.73 — 2026-11-21
+### 变更
+- **点数流水直接用后端展示名**（[points.html](file:///f:/Code/html/ziyit/user/points.html)）：`/points/ledger` 每条记录的类型改用 `scene`（后端 `reason_label()`，如「防注入检测」「签到」），不再在前端按 `reason` 自建映射；`reasonText()` 仅作旧数据兜底。
+- **归档提示**：响应带 `archived`（`{delta, count, until}`）时，列表底部追加一行虚线提示「N 天前的记录已归档（合计 X 点）」，`N` 取 `retentionDays`（默认 90），说明更早明细已清理、只剩合计。新增 `.ledger-archived` 样式（虚线边框 + 弱底色）。
+- **用量可视化改调聚合接口**（[injection.html](file:///f:/Code/html/ziyit/user/injection.html)）：不再分页遍历 `/points/ledger` 在前端聚合，改为请求 `GET /points/usage?days=30`；`byReason` 画 SVG 饼图（按消耗占比，含点数与百分比图例），`byDay` 画双线折线（消耗 / 获得）。统计三卡改为「近 N 天消耗 / 近 N 天获得 / 流水条数」，底部注明 `retentionDays` 保留期。
+- **简化工具栏**：因新接口无「按 API KEY」维度，删除「统计维度」「API KEY 选择」「图表类型（条形/折线）」三组控件，只保留时间区间（7 / 30 / 90 天）；分密钥明细仍在同页下方表格中查看。
+- **管理端新增「点数用量」报表**（[admin.html](file:///f:/Code/html/ziyit/music/admin.html)、[admin.js](file:///f:/Code/html/ziyit/music/admin.js)）：用户与社区分组、Lv.3+；区间下拉 + 可选「用户 ID」筛选，调 `GET /admin/points/usage?days=N&userId=` 渲染同款饼图 + 折线，留空即全站汇总。
+- **API 层**（[ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)）：新增 `pointsUsage(days)` 与 `adminPointsUsage(days, userId)`，`days` 统一夹取 1–365、默认 30。
+- 资源版本：`ziyit_api.js?v=20261121a`、`admin.js?v=20261121d`、`admin.css?v=20261121a`（全站 79 个 HTML 同步升级）。
+
 ## v1.72 — 2026-11-21
 ### 变更
 - **翻译器流式协议升级到 v0.3.111**（[Translator.html](file:///f:/Code/html/ziyit/Translator.html#L479-L522)）：事件由 `meta / unit / partial / done` 改为 AI 客服同款 `status / delta / final / done / error`；`delta` **追加**渲染（保留原文顺序、天然打字机效果），`final.reply` **覆盖**定稿，`done.translated` 兜底；`status` 直接展示后端 `message`（如「正在逐单元翻译（共 8 个单元）…」）。

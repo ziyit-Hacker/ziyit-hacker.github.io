@@ -730,6 +730,20 @@
         l = Math.min(l, 100);
         return request("/points/ledger?limit=" + l + "&offset=" + o);
     }
+    function pointsUsage(days) {
+        var d = parseInt(days, 10);
+        if (isNaN(d) || d <= 0) d = 30;
+        d = Math.min(d, 365);
+        return request("/points/usage?days=" + d);
+    }
+    function adminPointsUsage(days, userId) {
+        var d = parseInt(days, 10);
+        if (isNaN(d) || d <= 0) d = 30;
+        d = Math.min(d, 365);
+        var q = "days=" + d;
+        if (userId) q += "&userId=" + encodeURIComponent(userId);
+        return request("/admin/points/usage?" + q);
+    }
     function pointsPurchase(units) {
         var u = parseInt(units, 10);
         if (isNaN(u) || u < 1) u = 1;
@@ -2138,6 +2152,8 @@
         getFreeMods,
         pointsBalance,
         pointsLedger,
+        pointsUsage,
+        adminPointsUsage,
         pointsPurchase,
         pointsPricing,
         pricingHtml,

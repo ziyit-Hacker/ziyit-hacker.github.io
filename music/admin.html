@@ -8,9 +8,9 @@
     <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
     <script src="../assets/blacklist.js"></script>
     <script src="../assets/xss_guard.js?v=20261114"></script>
-    <script src="../assets/ziyit_api.js?v=20261115b"></script>
+    <script src="../assets/ziyit_api.js?v=20261121a"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./admin.css?v=20261115b">
+    <link rel="stylesheet" href="./admin.css?v=20261121a">
     <script>(function() {
     var pref = "auto";
     try {
@@ -71,6 +71,7 @@
                         <button type="button" class="menu-group-title"><span class="menu-group-text">用户与社区</span><span class="menu-caret" aria-hidden="true"></span></button>
                         <ul class="menu-sub">
                             <li class="menu-item" data-section="user-management" data-level="4">用户管理</li>
+                            <li class="menu-item" data-section="points-usage" data-level="3">点数用量</li>
                             <li class="menu-item" data-section="backrooms-members" data-level="2">后室成员管理</li>
                             <li class="menu-item" data-section="report-management" data-level="1">举报审核</li>
                             <li class="menu-item" data-section="email-broadcast" data-level="3">邮件群发</li>
@@ -275,6 +276,23 @@
                             <p style="padding: 20px; color: var(--ziyit-text-secondary);">点击"刷新封禁列表"查看已封禁的 IP</p>
                         </div>
                     </div>
+                </section>
+                <section id="points-usage" class="content-section">
+                    <div class="section-header">
+                        <h2>点数用量</h2>
+                        <p style="color: var(--ziyit-text-secondary); font-size: 13px; margin: 6px 0 0;">按时间区间查看点数消耗与获得：按类型饼图 + 按天折线。用户 ID 留空为全站汇总，填入后只看该用户。</p>
+                    </div>
+                    <div class="user-controls" style="flex-wrap: wrap;">
+                        <select class="form-select" id="pu-days" style="max-width: 160px;">
+                            <option value="7">最近 7 天</option>
+                            <option value="30" selected>最近 30 天</option>
+                            <option value="90">最近 90 天</option>
+                        </select>
+                        <input type="text" class="user-search" id="pu-user" placeholder="用户 ID（可选）" style="max-width: 200px;">
+                        <button class="user-btn" id="pu-query">查询</button>
+                    </div>
+                    <p id="pu-status" style="margin: 4px 0 10px; font-size: 13px; color: var(--ziyit-text-secondary);">选择区间后点击查询。</p>
+                    <div id="pu-body"></div>
                 </section>
                 <section id="translate-terms" class="content-section">
                     <div class="section-header">
@@ -1725,7 +1743,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-    <script src="./admin.js?v=20261121c"></script>
+    <script src="./admin.js?v=20261121d"></script>
 <script src="../assets/ziyit-theme.js"></script>
 </body>
 </html>

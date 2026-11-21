@@ -12,7 +12,7 @@
     <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
     <script src="../assets/f12check.js"></script>
     <script src="../assets/xss_guard.js?v=20261114"></script>
-    <script src="../assets/ziyit_api.js?v=20261115b"></script>
+    <script src="../assets/ziyit_api.js?v=20261121a"></script>
     <style>        * {
             margin: 0;
             padding: 0;
@@ -216,6 +216,15 @@
         }
         .ledger-item:last-child {
             border-bottom: none;
+        }
+        .ledger-archived {
+            margin-top: 12px;
+            padding: 10px 12px;
+            font-size: 12px;
+            color: var(--ziyit-text-secondary);
+            background: var(--ziyit-bg-soft, rgba(127, 127, 127, 0.08));
+            border: 1px dashed var(--ziyit-border);
+            border-radius: 8px;
         }
         .ledger-left {
             min-width: 0;
@@ -484,8 +493,16 @@
         var entries = data && data.entries || [];
         ledgerTotal = data && data.total || 0;
         ledgerOffset = data && data.offset || 0;
+        var archived = data && data.archived;
+        var archivedHtml = "";
+        if (archived && (Number(archived.delta || 0) !== 0 || Number(archived.count || 0) > 0)) {
+            // 早于保留期的明细已被清理，只剩归档合计，单独提示一行
+            var days = Number(data.retentionDays) || 90;
+            var ad = Number(archived.delta || 0);
+            archivedHtml = '<div class="ledger-archived">' + esc(days) + " 天前的记录已归档（合计 " + esc(fmtNum(ad)) + " 点）</div>";
+        }
         if (!entries.length) {
-            ledgerArea.innerHTML = '<div class="empty-box">暂无点数流水。</div>';
+            ledgerArea.innerHTML = '<div class="empty-box">暂无点数流水。</div>' + archivedHtml;
             ledgerPager.style.display = "none";
             return;
         }
@@ -496,8 +513,8 @@
             if (e.orderNo) sub += " · 订单 " + esc(e.orderNo);
             if (e.challengeId) sub += " · 验证 " + esc(e.challengeId);
             if (e.note) sub += " · " + esc(e.note);
-            return '<div class="ledger-item">' + '<div class="ledger-left">' + '<div class="ledger-reason">' + esc(reasonText(e.reason)) + "</div>" + '<div class="ledger-sub">' + sub + "</div>" + "</div>" + '<div class="ledger-right">' + '<div class="ledger-delta ' + (plus ? "plus" : "minus") + '">' + (plus ? "+" : "") + esc(fmtNum(delta)) + "</div>" + '<div class="ledger-after">余额 ' + esc(fmtNum(e.balanceAfter)) + "</div>" + "</div>" + "</div>";
-        }).join("");
+            return '<div class="ledger-item">' + '<div class="ledger-left">' + '<div class="ledger-reason">' + esc(e.scene || reasonText(e.reason)) + "</div>" + '<div class="ledger-sub">' + sub + "</div>" + "</div>" + '<div class="ledger-right">' + '<div class="ledger-delta ' + (plus ? "plus" : "minus") + '">' + (plus ? "+" : "") + esc(fmtNum(delta)) + "</div>" + '<div class="ledger-after">余额 ' + esc(fmtNum(e.balanceAfter)) + "</div>" + "</div>" + "</div>";
+        }).join("") + archivedHtml;
         var from = ledgerTotal === 0 ? 0 : ledgerOffset + 1;
         var to = Math.min(ledgerOffset + PAGE_SIZE, ledgerTotal);
         pagerInfo.textContent = from + "-" + to + " / 共 " + ledgerTotal + " 条";
