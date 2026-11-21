@@ -3587,7 +3587,7 @@ document.addEventListener("DOMContentLoaded", function() {
 function updateSystemInfo(message) {
     const lastUpdate = document.getElementById("last-update");
     const now = new Date;
-    lastUpdate.textContent = now.toLocaleTimeString();
+    if (lastUpdate) lastUpdate.textContent = now.toLocaleTimeString();
     console.log(`[系统] ${message}`);
 }
 function fmtBytes(bytes, digits) {
@@ -3619,11 +3619,13 @@ function fmtServerTime(st) {
     }
     return String(st);
 }
-let serverStatsTimer = null;
 function loadServerStats() {
     ZIYIT_API.request("/admin/server/stats", null, 0, false, true).then(function(res) {
         const data = res && res.data ? res.data : res;
         if (!data) return;
+        // 每次轮询成功都要打点，否则「最后更新」只在切页/刷新列表时才动
+        const lastUpdateEl = document.getElementById("last-update");
+        if (lastUpdateEl) lastUpdateEl.textContent = new Date().toLocaleTimeString();
         const serverTimeEl = document.getElementById("server-time");
         if (serverTimeEl) {
             const st = data.server_time || data.serverTime || data.timestamp || data.time || data.current_time || data.datetime || data.date;

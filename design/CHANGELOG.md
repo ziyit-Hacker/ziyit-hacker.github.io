@@ -3,6 +3,12 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.69 — 2026-11-21
+### 修复
+- **管理员管理页底部「最后更新」时间不动**：[admin.js](file:///f:/Code/html/ziyit/music/admin.js#L3622-L3629) 的 `loadServerStats()` 每 5 秒轮询 `/admin/server/stats`，但只回写服务器时间、内存、CPU、磁盘、网络，从不更新 `#last-update`；该字段只在切换页面/刷新列表时由 `updateSystemInfo()` 写入，所以停在页面上就定格。现在每次轮询成功都会刷新「最后更新」。
+- `updateSystemInfo()` 补元素判空；删除从未使用的 `serverStatsTimer` 声明。
+- `admin.js` 引用升至 `?v=20261121a`。
+
 ## v1.68 — 2026-11-21
 ### 变更
 - **管理后台侧栏改为二级菜单**（[admin.html](file:///f:/Code/html/ziyit/music/admin.html#L59-L106) / [admin.css](file:///f:/Code/html/ziyit/music/admin.css#L159-L258)）：原 23 项平铺改为 5 个可折叠分组——内容管理、用户与社区、AI 与计费、软件与授权、系统与安全；**默认全部折叠**，仅自动展开当前页面所在分组，组标题点击收起/展开，当前项所在分组标题高亮，全部子项无权限时整组隐藏。侧栏改为 `position: sticky`，长页面滚动时保持可见（≤1024px 自动取消）。
