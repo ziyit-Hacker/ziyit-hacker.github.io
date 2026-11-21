@@ -10,7 +10,7 @@
     <script src="../assets/xss_guard.js?v=20261114"></script>
     <script src="../assets/ziyit_api.js?v=20261115b"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./admin.css">
+    <link rel="stylesheet" href="./admin.css?v=20261115b">
     <script>(function() {
     var pref = "auto";
     try {
@@ -58,71 +58,51 @@
         <div class="admin-content">
             <aside class="sidebar">
                 <ul class="sidebar-menu">
-                    <li class="menu-item active" data-section="music-management" data-level="1">
- 音乐管理
+                    <li class="menu-group">
+                        <button type="button" class="menu-group-title"><span class="menu-group-text">内容管理</span><span class="menu-caret" aria-hidden="true"></span></button>
+                        <ul class="menu-sub">
+                            <li class="menu-item active" data-section="music-management" data-level="1">音乐管理</li>
+                            <li class="menu-item" data-section="knowledge-management" data-level="4">知识库管理</li>
+                            <li class="menu-item" data-section="mod-management" data-level="3">MOD / DLC 管理</li>
+                            <li class="menu-item" data-level="1" onclick="window.location.href = '../backrooms/review.html'">层级审核</li>
+                        </ul>
                     </li>
-                    <li class="menu-item" data-section="user-management" data-level="4">
- 用户管理
+                    <li class="menu-group">
+                        <button type="button" class="menu-group-title"><span class="menu-group-text">用户与社区</span><span class="menu-caret" aria-hidden="true"></span></button>
+                        <ul class="menu-sub">
+                            <li class="menu-item" data-section="user-management" data-level="4">用户管理</li>
+                            <li class="menu-item" data-section="backrooms-members" data-level="2">后室成员管理</li>
+                            <li class="menu-item" data-section="report-management" data-level="1">举报审核</li>
+                            <li class="menu-item" data-section="email-broadcast" data-level="3">邮件群发</li>
+                        </ul>
                     </li>
-                    <li class="menu-item" data-section="admin-management" data-level="1">
- 管理员管理
+                    <li class="menu-group">
+                        <button type="button" class="menu-group-title"><span class="menu-group-text">AI 与计费</span><span class="menu-caret" aria-hidden="true"></span></button>
+                        <ul class="menu-sub">
+                            <li class="menu-item" data-section="guide-console" data-level="1">在线客服</li>
+                            <li class="menu-item" data-section="api-key-management" data-level="3">API Key 管理</li>
+                            <li class="menu-item" data-section="pricing-management" data-level="3">定价管理</li>
+                            <li class="menu-item" data-section="ai-pricing-management" data-level="3">AI 工具权重</li>
+                            <li class="menu-item" data-section="injection-management" data-level="3">防注入检测</li>
+                        </ul>
                     </li>
-                    <li class="menu-item" data-section="knowledge-management" data-level="4">
- 知识库管理
+                    <li class="menu-group">
+                        <button type="button" class="menu-group-title"><span class="menu-group-text">软件与授权</span><span class="menu-caret" aria-hidden="true"></span></button>
+                        <ul class="menu-sub">
+                            <li class="menu-item" data-section="rc-key-management" data-level="3">RC 软件密钥</li>
+                            <li class="menu-item" data-section="rc-bug-management" data-level="3">RC BUG 管理</li>
+                            <li class="menu-item" data-section="rcu-management" data-level="3">RCU 更新管理</li>
+                            <li class="menu-item" data-section="afdian-management" data-level="3">爱发电订单</li>
+                        </ul>
                     </li>
-                    <li class="menu-item" data-section="guide-console" data-level="1">
- 在线客服
-                    </li>
-                    <li class="menu-item" data-section="api-key-management" data-level="3">
- API Key 管理
-                    </li>
-                    <li class="menu-item" data-section="pricing-management" data-level="3">
- 定价管理
-                    </li>
-                    <li class="menu-item" data-section="ai-pricing-management" data-level="3">
- AI 工具权重
-                    </li>
-                    <li class="menu-item" data-section="injection-management" data-level="3">
- 防注入检测
-                    </li>
-                    <li class="menu-item" data-section="mod-management" data-level="3">
- MOD / DLC 管理
-                    </li>
-                    <li class="menu-item" data-section="rc-key-management" data-level="3">
- RC 软件密钥
-                    </li>
-                    <li class="menu-item" data-section="rc-bug-management" data-level="3">
- RC BUG 管理
-                    </li>
-                    <li class="menu-item" data-section="rcu-management" data-level="3">
- RCU 更新管理
-                    </li>
-                    <li class="menu-item" data-section="afdian-management" data-level="3">
- 爱发电订单
-                    </li>
-                    <li class="menu-item" data-section="pentest-management" data-level="1">
- 渗透测试
-                    </li>
-                    <li class="menu-item" data-section="backrooms-members" data-level="2">
- 后室成员管理
-                    </li>
-                    <li class="menu-item" data-section="report-management" data-level="1">
- 举报审核
-                    </li>
-                    <li class="menu-item" data-section="email-broadcast" data-level="3">
- 邮件群发
-                    </li>
-                    <li class="menu-item" data-section="account-create" data-level="3">
- 创建账号
-                    </li>
-                    <li class="menu-item" data-level="1" onclick="window.location.href = '../backrooms/review.html'">
- 层级审核
-                    </li>
-                    <li class="menu-item" data-section="log-viewer" data-level="3" onclick="window.location.href = '../developers/'">
- 日志查看
-                    </li>
-                    <li class="menu-item" data-level="1" onclick="window.location.href = 'javascript:history.back()'">
- 返回
+                    <li class="menu-group">
+                        <button type="button" class="menu-group-title"><span class="menu-group-text">系统与安全</span><span class="menu-caret" aria-hidden="true"></span></button>
+                        <ul class="menu-sub">
+                            <li class="menu-item" data-section="admin-management" data-level="1">管理员管理</li>
+                            <li class="menu-item" data-section="pentest-management" data-level="1">渗透测试</li>
+                            <li class="menu-item" data-level="3" onclick="window.location.href = '../developers/'">日志查看</li>
+                            <li class="menu-item menu-item-muted" data-level="1" onclick="window.history.back()">返回上一页</li>
+                        </ul>
                     </li>
                 </ul>
             </aside>
@@ -702,12 +682,6 @@
                     </div>
                     <p>系统设置功能开发中...</p>
                 </section>
-                <section id="log-viewer" class="content-section">
-                    <div class="section-header">
-                        <h2>日志查看</h2>
-                    </div>
-                    <p>日志查看功能开发中...</p>
-                </section>
                 <section id="permission-management" class="content-section">
                     <div class="section-header">
                         <h2>权限管理</h2>
@@ -1203,45 +1177,6 @@
                         <iframe id="email-broadcast-preview-frame" title="邮件预览" sandbox style="width: 100%; height: 420px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff;"></iframe>
                     </div>
                 </section>
-                <section id="account-create" class="content-section">
-                    <div class="section-header">
-                        <h2>创建账号</h2>
-                        <p style="color: var(--ziyit-text-secondary); font-size: 13px; margin: 6px 0 0;">Lv.3+ 管理员可直接建号，走 POST /admin/users，无需人机验证；同一管理员每小时最多 10 个。</p>
-                    </div>
-                    <div style="max-width: 640px;">
-                        <div class="form-group">
-                            <label class="form-label" for="ac-username">用户名</label>
-                            <input class="form-input" id="ac-username" type="text" maxlength="32" autocomplete="off" placeholder="3-32 位，支持中英文与下划线">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="ac-email">邮箱</label>
-                            <input class="form-input" id="ac-email" type="email" maxlength="120" autocomplete="off" placeholder="name@example.com">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="ac-password">初始密码</label>
-                            <input class="form-input" id="ac-password" type="password" maxlength="64" autocomplete="new-password" placeholder="至少 8 位">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="ac-role">角色</label>
-                            <select class="form-select" id="ac-role">
-                                <option value="UR">UR（普通用户）</option>
-                                <option value="ZC">ZC（内测 / 受邀）</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="ac-email-verified">邮箱验证状态</label>
-                            <select class="form-select" id="ac-email-verified">
-                                <option value="true">已验证（默认，不发送验证邮件）</option>
-                                <option value="false">未验证（生成 token 并发送验证邮件）</option>
-                            </select>
-                        </div>
-                        <div style="display: flex; gap: 10px; margin-top: 8px;">
-                            <button class="user-btn success" type="button" id="ac-submit">创建账号</button>
-                            <button class="user-btn" type="button" id="ac-reset">清空</button>
-                        </div>
-                        <p id="ac-status" style="margin: 12px 0 0; font-size: 13px; color: var(--ziyit-text-secondary);">填写后点击「创建账号」。</p>
-                    </div>
-                </section>
             </main>
         </div>
         <footer class="system-info">
@@ -1324,16 +1259,31 @@
             <form id="add-user-form">
                 <div class="form-group">
                     <label class="form-label">用户名</label>
-                    <input type="text" class="form-input" id="add-username" maxlength="15" required>
+                    <input type="text" class="form-input" id="add-username" maxlength="32" required placeholder="3-32 位，支持中英文与下划线">
                 </div>
                 <div class="form-group">
                     <label class="form-label">邮箱</label>
-                    <input type="email" class="form-input" id="add-email" placeholder="user@example.com（可留空）">
+                    <input type="email" class="form-input" id="add-email" maxlength="120" placeholder="name@example.com">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">密码</label>
-                    <input type="password" class="form-input" id="add-password" required>
+                    <label class="form-label">初始密码</label>
+                    <input type="password" class="form-input" id="add-password" maxlength="64" required placeholder="至少 8 位">
                 </div>
+                <div class="form-group">
+                    <label class="form-label">角色</label>
+                    <select class="form-select" id="add-role">
+                        <option value="UR">UR（普通用户）</option>
+                        <option value="ZC">ZC（内测 / 受邀）</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">邮箱验证状态</label>
+                    <select class="form-select" id="add-email-verified">
+                        <option value="true">已验证（默认，不发送验证邮件）</option>
+                        <option value="false">未验证（生成 token 并发送验证邮件）</option>
+                    </select>
+                </div>
+                <p id="add-user-status" style="margin: 4px 0 0; font-size: 13px; line-height: 1.6; color: var(--ziyit-text-secondary);">无需人机验证，同一管理员每小时最多创建 10 个账号。</p>
                 <div class="modal-actions">
                     <button type="button" class="user-btn danger" id="cancel-add-user">取消</button>
                     <button type="submit" class="user-btn success">创建</button>

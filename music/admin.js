@@ -247,6 +247,13 @@ function applyMenuByLevel() {
         const need = Number(item.getAttribute("data-level")) || 1;
         item.style.display = level >= need ? "" : "none";
     });
+    // 整个分组都无权限时，连分组标题一起隐藏，避免侧栏出现空壳
+    document.querySelectorAll(".sidebar-menu .menu-group").forEach(function(group) {
+        var anyVisible = Array.prototype.some.call(group.querySelectorAll(".menu-item"), function(it) {
+            return it.style.display !== "none";
+        });
+        group.style.display = anyVisible ? "" : "none";
+    });
 }
 function canAccess(needLevel) {
     return (currentAdminLevel || 0) >= needLevel;
@@ -3369,6 +3376,11 @@ function confirmDeleteUser() {
 }
 function openAddUserModal() {
     document.getElementById("add-user-form").reset();
+    var statusEl = document.getElementById("add-user-status");
+    if (statusEl) {
+        statusEl.textContent = "无需人机验证，同一管理员每小时最多创建 10 个账号。";
+        statusEl.style.color = "var(--ziyit-text-secondary)";
+    }
     document.getElementById("add-user-modal").classList.add("active");
 }
 function closeAddUserModal() {
@@ -3376,21 +3388,77 @@ function closeAddUserModal() {
 }
 function saveAddUser(e) {
     e.preventDefault();
-    const username = document.getElementById("add-username").value.trim();
-    const email = document.getElementById("add-email").value.trim();
-    const password = document.getElementById("add-password").value;
-    if (!username || !password) {
-        alert("用户名和密码必填");
+    var username = document.getElementById("add-username").value.trim();
+    var email = document.getElementById("add-email").value.trim();
+    var password = document.getElementById("add-password").value;
+    var roleEl = document.getElementById("add-role");
+    var role = roleEl ? roleEl.value : "UR";
+    var verifiedEl = document.getElementById("add-email-verified");
+    var emailVerified = verifiedEl ? verifiedEl.value === "true" : true;
+    var statusEl = document.getElementById("add-user-status");
+    function setStatus(msg, isErr) {
+        if (!statusEl) return;
+        statusEl.textContent = msg;
+        statusEl.style.color = isErr ? "var(--danger-color,#d33)" : "var(--ziyit-text-secondary)";
+    }
+    if (!canAccess(3)) {
+        setStatus("需要 Lv.3 及以上权限", true);
         return;
     }
-    ZIYIT_API.register(username, email || "noemail@example.com", password).then(function() {
-        alert("用户 " + username + " 创建成功");
+    if (username.length < 3) {
+        setStatus("用户名至少 3 个字符", true);
+        return;
+    }
+    if (!email || email.indexOf("@") < 1) {
+        setStatus("请输入有效邮箱", true);
+        return;
+    }
+    if (password.length < 8) {
+        setStatus("密码至少 8 位", true);
+        return;
+    }
+    var submitBtn = document.querySelector('#add-user-form button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "创建中…";
+    }
+    setStatus("正在创建…");
+    ZIYIT_API.request("/admin/users", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            username,
+            email,
+            password,
+            role,
+            emailVerified
+        })
+    }).then(function(res) {
+        var u = res && (res.user || res.data || res) || {};
+        var name = u.username || username;
+        setStatus("已创建：" + name);
+        showToast("账号 " + name + " 创建成功");
+        document.getElementById("add-password").value = "";
         closeAddUserModal();
         loadUsers();
     }).catch(function(err) {
-        let msg = err && err.message || "创建失败";
-        if (err && err.status === 409) msg = "用户名已存在"; else if (err && err.data && err.data.detail) msg = "创建失败: " + err.data.detail;
-        alert(msg);
+        var msg = err && err.message || "创建失败";
+        if (err && err.status === 429) {
+            msg = "创建过于频繁，请稍后再试" + (err.retryAfter ? "（" + err.retryAfter + " 秒）" : "");
+        } else if (err && err.status === 403) {
+            msg = "权限不足（需要 Lv.3+ 且邮箱已验证）";
+        } else if (err && err.status === 409) {
+            msg = "用户名或邮箱已被占用";
+        }
+        setStatus(msg, true);
+        showToast(msg, "error");
+    }).then(function() {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "创建";
+        }
     });
 }
 document.addEventListener("DOMContentLoaded", function() {
@@ -5970,90 +6038,21 @@ document.addEventListener("DOMContentLoaded", function() {
     initReportAdmin();
     initEmailBroadcast();
 });
-function initAccountCreate() {
-    var menu = document.querySelector('.menu-item[data-section="account-create"]');
-    if (menu) menu.addEventListener("click", function() {
-        switchSection("account-create");
-    });
-    var submit = document.getElementById("ac-submit");
-    var reset = document.getElementById("ac-reset");
-    if (!submit) return;
-    function setStatus(msg, isErr) {
-        var el = document.getElementById("ac-status");
-        if (el) {
-            el.textContent = msg;
-            el.style.color = isErr ? "var(--danger-color,#d33)" : "var(--ziyit-text-secondary)";
-        }
-    }
-    if (reset) reset.addEventListener("click", function() {
-        [ "ac-username", "ac-email", "ac-password" ].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.value = "";
-        });
-        var r = document.getElementById("ac-role");
-        if (r) r.value = "UR";
-        var v = document.getElementById("ac-email-verified");
-        if (v) v.value = "true";
-        setStatus("已清空");
-    });
-    submit.addEventListener("click", function() {
-        if (!canAccess(3)) {
-            showToast("需要 Lv.3 及以上权限", "error");
-            return;
-        }
-        var username = (document.getElementById("ac-username").value || "").trim();
-        var email = (document.getElementById("ac-email").value || "").trim();
-        var password = document.getElementById("ac-password").value || "";
-        var role = document.getElementById("ac-role").value || "UR";
-        var emailVerified = document.getElementById("ac-email-verified").value === "true";
-        if (username.length < 3) {
-            showToast("用户名至少 3 个字符", "error");
-            return;
-        }
-        if (!email || email.indexOf("@") < 1) {
-            showToast("请输入有效邮箱", "error");
-            return;
-        }
-        if (password.length < 8) {
-            showToast("密码至少 8 位", "error");
-            return;
-        }
-        submit.disabled = true;
-        setStatus("正在创建…");
-        ZIYIT_API.request("/admin/users", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                username,
-                email,
-                password,
-                role,
-                emailVerified
-            })
-        }).then(function(res) {
-            var u = res && (res.user || res.data || res) || {};
-            setStatus("已创建：" + (u.username || u.userId || username));
-            showToast("账号已创建");
-            var pw = document.getElementById("ac-password");
-            if (pw) pw.value = "";
-        }).catch(function(err) {
-            var msg = err && err.message || "创建失败";
-            if (err && err.status === 429) {
-                msg = "创建过于频繁，请稍后再试" + (err.retryAfter ? "（" + err.retryAfter + " 秒）" : "");
-            } else if (err && err.status === 403) {
-                msg = "权限不足（需要 Lv.3+ 且邮箱已验证）";
-            } else if (err && err.status === 409) {
-                msg = "用户名或邮箱已被占用";
-            }
-            setStatus(msg, true);
-            showToast(msg, "error");
-        }).then(function() {
-            submit.disabled = false;
+
+
+function initSidebarGroups() {
+    var menu = document.querySelector(".sidebar-menu");
+    if (!menu) return;
+    menu.querySelectorAll(".menu-group").forEach(function(group) {
+        var title = group.querySelector(".menu-group-title");
+        if (!title) return;
+        title.addEventListener("click", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            group.classList.toggle("collapsed");
         });
     });
 }
 document.addEventListener("DOMContentLoaded", function() {
-    initAccountCreate();
+    initSidebarGroups();
 });

@@ -3,6 +3,14 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.68 — 2026-11-21
+### 变更
+- **管理后台侧栏改为二级菜单**（[admin.html](file:///f:/Code/html/ziyit/music/admin.html#L59-L107) / [admin.css](file:///f:/Code/html/ziyit/music/admin.css#L159-L258)）：原 23 项平铺改为 5 个可折叠分组——内容管理、用户与社区、AI 与计费、软件与授权、系统与安全；组标题点击收起/展开，当前项所在分组高亮，全部子项无权限时整组隐藏。侧栏改为 `position: sticky`，长页面滚动时保持可见（≤1024px 自动取消）。
+- **取消独立「创建账号」页**：删除 `account-create` 菜单项与整块 `section`，能力并入用户管理内的「添加用户」弹窗——新增角色（UR / ZC）、邮箱验证状态选项与内联状态提示，提交改走 `POST /admin/users`（与独立页一致），保留 429/403/409 的针对性文案。`initAccountCreate()` 一并移除，`saveAddUser()` 重写。
+- **取消「日志查看」占位页**：删除空的 `log-viewer` section；入口保留为「系统与安全」分组下的跳转项（`../developers/`），不再占用一级位置。
+- 侧栏「返回」改为「返回上一页」，使用 `window.history.back()`。
+- `admin.css` 引用加 `?v=20261115b`。
+
 ## v1.67 — 2026-11-15
 ### 修复
 - **封禁申诉提交后永远提示「未获取到申诉令牌」**：[ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js#L1224-L1247) 的 `authFetch` 在 `request()` 结果外又包了一层 `{ok, status, json()}`，`appeal.html` 解构 `d.appealToken` 自然为空；同时它把错误转成 `{ok:false}` 而不 reject，导致 401「用户名或密码错误」被静默吞掉。改为直接返回后端 JSON、失败正常 reject，申诉登录/轮询/发消息三处恢复可用。

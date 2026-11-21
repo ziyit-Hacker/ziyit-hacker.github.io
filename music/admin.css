@@ -156,6 +156,110 @@ body {
     color: white;
 }
 
+/* ---- 侧栏二级菜单 ---- */
+.sidebar {
+    align-self: start;
+    position: sticky;
+    top: 20px;
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.menu-group-title {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ziyit-text-secondary, #6b7280);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.menu-group-title:hover {
+    background: rgba(52, 152, 219, 0.1);
+    color: var(--accent-color);
+}
+
+.menu-group.has-active > .menu-group-title {
+    color: var(--accent-color);
+}
+
+.menu-caret {
+    width: 7px;
+    height: 7px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+    margin-right: 3px;
+    flex: 0 0 auto;
+}
+
+.menu-group.collapsed .menu-caret {
+    transform: rotate(-45deg);
+}
+
+.menu-sub {
+    list-style: none;
+    margin: 2px 0 4px;
+    padding-left: 8px;
+    border-left: 1px solid rgba(52, 152, 219, 0.18);
+}
+
+.menu-group.collapsed .menu-sub {
+    display: none;
+}
+
+.menu-sub .menu-item {
+    padding: 9px 12px;
+    margin: 3px 0;
+    font-size: 14px;
+    border-radius: 7px;
+}
+
+.menu-sub .menu-item::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.35;
+    flex: 0 0 auto;
+    transition: opacity 0.2s ease;
+}
+
+.menu-sub .menu-item:hover::before,
+.menu-sub .menu-item.active::before {
+    opacity: 1;
+}
+
+.menu-item-muted {
+    color: var(--ziyit-text-secondary, #6b7280);
+    font-size: 13px;
+}
+
+[data-theme="dark"] .menu-group-title:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .menu-sub {
+    border-left-color: rgba(255, 255, 255, 0.12);
+}
+
 .main-content {
     display: flex;
     flex-direction: column;
@@ -725,6 +829,7 @@ body {
 
     .sidebar {
         order: 2;
+        position: static;
     }
 
     .search-input {
