@@ -6172,6 +6172,14 @@ function initTranslateTerms() {
         });
     }
 
+    const menuItem = document.querySelector('[data-section="translate-terms"]');
+    if (menuItem) {
+        menuItem.addEventListener("click", function() {
+            switchSection("translate-terms");
+            updateSystemInfo("切换到翻译词库");
+            load();
+        });
+    }
     modeSel.addEventListener("change", load);
     document.getElementById("tt-add").addEventListener("click", function() {
         addRow("", "");

@@ -3,6 +3,11 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.75 — 2026-11-21
+### 修复
+- **管理后台「翻译词库」点击无反应**（[admin.js](file:///f:/Code/html/ziyit/music/admin.js#L6175-L6182)）：侧栏菜单项 `[data-section="translate-terms"]` 没有任何点击监听，`initTranslateTerms()` 只初始化了表单元素，从未调用 `switchSection()`，所以页面停在原分区、看起来「打不开」。现在补上监听：切换分区 + 更新状态栏 + 重新加载当前词库。
+- `admin.js` 引用升至 `?v=20261121e`。
+
 ## v1.74 — 2026-11-21
 ### 变更
 - **翻译器识别「免费超额」计费**（[Translator.html](file:///f:/Code/html/ziyit/Translator.html)）：`status.billing` 新增 `free_over` 分支，显示「免费额度（超出 N 字部分扣点）」；`done` 时按 `billing / freeChars / billedChars / cost` 展示「超出 N 字部分已扣 X 点（计费 M 字），余额 Y 点」。`points`（免费次数已用完）与 `free`（全免费）文案保持原样。
