@@ -212,6 +212,11 @@ document.addEventListener("DOMContentLoaded", function() {
         guideStartPolling();
         loadGuideInjection();
     });
+    document.querySelector('[data-section="guide-sessions"]').addEventListener("click", function() {
+        switchSection("guide-sessions");
+        updateSystemInfo("切换到会话总览");
+        guideOvLoad();
+    });
     document.getElementById("guide-inj-refresh").addEventListener("click", loadGuideInjection);
     document.getElementById("guide-inj-range").addEventListener("change", loadGuideInjection);
     document.getElementById("add-admin-btn").addEventListener("click", openAddAdminModal);
@@ -4445,6 +4450,17 @@ function guidePollInbox() {
             const k = m.id || m.sessionId + "|" + (m.content || "") + "|" + (m.ts || "");
             if (guideConsole.msgSeen[k]) return;
             guideConsole.msgSeen[k] = true;
+            // co_join 是「有人加入协助」的通知，不是聊天消息：只提示原客服，不新建会话
+            if (m.type === "co_join") {
+                showToast(m.content || "有新的协助者加入会话", "info");
+                const opened = guideConsole.sessions[m.sessionId];
+                if (opened) {
+                    opened.msgs.push({ type: "system", fromUserId: null, content: m.content || "", ts: m.ts });
+                    if (guideConsole.activeSession === m.sessionId) guideRenderSessionMessages(m.sessionId);
+                }
+                if (guideOv.activeId === m.sessionId) guideOvLoad(true);
+                return;
+            }
             if (!guideConsole.sessions[m.sessionId]) {
                 guideConsole.sessions[m.sessionId] = {
                     sessionId: m.sessionId,
@@ -4835,6 +4851,12 @@ document.addEventListener("DOMContentLoaded", function() {
         updateSystemInfo("切换到在线客服");
         guideStartPolling();
     }
+    if (location.hash === "#guide-sessions") {
+        adminSectionLocked = true;
+        switchSection("guide-sessions");
+        updateSystemInfo("切换到会话总览");
+        guideOvLoad();
+    }
     const refreshBtn = document.getElementById("guide-console-refresh");
     if (refreshBtn) refreshBtn.addEventListener("click", function() {
         showToast("队列已刷新");
@@ -4871,6 +4893,423 @@ document.addEventListener("DOMContentLoaded", function() {
     if (agentsRefresh) agentsRefresh.addEventListener("click", function() {
         showToast("客服名单已刷新");
         guideLoadAgents();
+    });
+});
+
+// ============================================================
+// 会话总览（站长视角，v0.3.113）
+// 列表：GET /guide/human/sessions?status=active
+// 详情：GET /guide/human/session/{id}
+// 加入协助：POST /guide/human/join（不影响原客服）
+// 接管：POST /guide/human/accept（顶替原客服，需二次确认）
+// ============================================================
+var guideOv = {
+    loading: false,
+    sessions: [],
+    activeId: null,
+    detail: null,
+    detailSeq: 0,
+    acting: "",
+    joined: {}
+};
+function guideOvMe() {
+    if (guideConsole.myUserId != null) return guideConsole.myUserId;
+    if (currentAdminInfo) return currentAdminInfo.userId != null ? currentAdminInfo.userId : currentAdminInfo.user_id;
+    return null;
+}
+function guideOvErrText(err, fallback) {
+    var d = err && err.data && err.data.detail;
+    if (typeof d === "string" && d) return d;
+    return (err && err.message) || fallback || "未知错误";
+}
+function guideOvRow(sid) {
+    for (var i = 0; i < guideOv.sessions.length; i++) {
+        if (guideOv.sessions[i].sessionId === sid) return guideOv.sessions[i];
+    }
+    return null;
+}
+function guideOvStatusBadge(status) {
+    if (status === "waiting") return '<span class="gs-badge gs-badge-waiting">等待接入</span>';
+    if (status === "human") return '<span class="gs-badge gs-badge-human">人工中</span>';
+    return "";
+}
+function guideOvRoleLabel(role) {
+    if (role === "human") return "客服";
+    if (role === "ai") return "AI";
+    return "用户";
+}
+function guideOvAgentText(s) {
+    if (s && s.humanAdmin && s.humanAdmin.username) return s.humanAdmin.username;
+    if (s && s.assignedAdmin && s.assignedAdmin.username) return "待接入（已分配 " + s.assignedAdmin.username + "）";
+    return "未分配";
+}
+function guideOvRenderList() {
+    var box = document.getElementById("gs-list");
+    if (!box) return;
+    var sum = document.getElementById("gs-summary");
+    var list = guideOv.sessions.slice().sort(function(a, b) {
+        var ta = String(a.lastActivityAt || "");
+        var tb = String(b.lastActivityAt || "");
+        return tb > ta ? 1 : tb < ta ? -1 : 0;
+    });
+    if (sum) {
+        var waiting = list.filter(function(x) { return x.status === "waiting"; }).length;
+        var human = list.filter(function(x) { return x.status === "human"; }).length;
+        sum.textContent = list.length ? "共 " + list.length + " 个 · 等待接入 " + waiting + " · 人工中 " + human : "";
+    }
+    if (!list.length) {
+        box.innerHTML = '<div class="chat-empty">暂无活跃会话</div>';
+        return;
+    }
+    box.innerHTML = list.map(function(s) {
+        var badges = guideOvStatusBadge(s.status);
+        if (s.appeal) badges += '<span class="gs-badge gs-badge-appeal">申诉</span>';
+        if (s.mine) badges += '<span class="gs-badge gs-badge-mine">我的会话</span>';
+        var lastText = s.lastMessage ? guideOvRoleLabel(s.lastMessageRole) + "：" + s.lastMessage : "（暂无消息）";
+        return '<div class="gs-row' + (s.sessionId === guideOv.activeId ? " active" : "") + '" data-gs-id="' + escAdmin(s.sessionId) + '">' +
+            '<div class="gs-row-top"><span class="gs-row-user">' + escAdmin(s.username || "未命名用户") + '</span>' +
+            '<span class="gs-uid">#' + escAdmin(s.userId != null ? s.userId : "-") + "</span>" + badges + "</div>" +
+            '<div class="gs-row-line">当前客服：' + escAdmin(guideOvAgentText(s)) + "</div>" +
+            '<div class="gs-row-line">' + escAdmin(lastText) + "</div>" +
+            '<div class="gs-row-line gs-row-time">' + escAdmin(kbFmtTime(s.lastActivityAt || s.createdAt)) + "</div>" +
+            "</div>";
+    }).join("");
+}
+function guideOvIdleDetail(text) {
+    var head = document.getElementById("gs-detail-head");
+    var info = document.getElementById("gs-detail-info");
+    var msgs = document.getElementById("gs-messages");
+    var actions = document.getElementById("gs-actions");
+    var row = document.getElementById("gs-input-row");
+    if (head) head.textContent = text || "从左侧选择一个会话";
+    if (info) info.innerHTML = "";
+    if (msgs) msgs.innerHTML = '<div class="chat-empty">暂无消息</div>';
+    if (actions) actions.innerHTML = "";
+    if (row) row.style.display = "none";
+}
+function guideOvIsOwner(meta) {
+    var me = guideOvMe();
+    return !!(meta && meta.humanAdmin && meta.humanAdmin.userId != null && me != null &&
+        String(meta.humanAdmin.userId) === String(me));
+}
+function guideOvHasJoined(meta) {
+    var sid = guideOv.activeId;
+    if (sid && guideOv.joined[sid]) return true;
+    var me = guideOvMe();
+    if (me == null || !meta) return false;
+    if ((meta.coAdminIds || []).some(function(id) { return String(id) === String(me); })) return true;
+    var msgs = (guideOv.detail && guideOv.detail.messages) || [];
+    return msgs.some(function(m) {
+        return m && m.replyType === "co_joined" && String(m.fromAdminId) === String(me);
+    });
+}
+function guideOvMeta() {
+    var row = guideOvRow(guideOv.activeId) || {};
+    var d = guideOv.detail || {};
+    return {
+        sessionId: guideOv.activeId,
+        userId: row.userId,
+        username: row.username,
+        appeal: row.appeal,
+        mine: row.mine,
+        coAdminIds: row.coAdminIds,
+        status: d.status || row.status,
+        humanAdmin: d.humanAdmin !== undefined ? d.humanAdmin : row.humanAdmin,
+        assignedAdmin: d.assignedAdmin !== undefined ? d.assignedAdmin : row.assignedAdmin,
+        banInfo: d.banInfo || row.banInfo,
+        createdAt: d.createdAt || row.createdAt,
+        lastActivityAt: d.lastActivityAt || row.lastActivityAt
+    };
+}
+function guideOvRenderActions() {
+    var box = document.getElementById("gs-actions");
+    var inputRow = document.getElementById("gs-input-row");
+    var input = document.getElementById("gs-input");
+    var send = document.getElementById("gs-send");
+    if (!box) return;
+    if (!guideOv.detail) {
+        box.innerHTML = "";
+        if (inputRow) inputRow.style.display = "none";
+        return;
+    }
+    var meta = guideOvMeta();
+    var isOwner = guideOvIsOwner(meta);
+    var joined = guideOvHasJoined(meta);
+    var canReply = isOwner || joined;
+    var html = "";
+    if (!isOwner && meta.humanAdmin && meta.humanAdmin.userId != null) {
+        html += '<button type="button" class="user-btn" data-gs-act="join"' + (joined || guideOv.acting ? " disabled" : "") + ">" +
+            (joined ? "已加入协助" : "加入协助") + "</button>";
+    }
+    if (!isOwner) {
+        html += '<button type="button" class="user-btn danger" data-gs-act="accept"' + (guideOv.acting ? " disabled" : "") + ">接管</button>";
+    }
+    if (isOwner) html += '<span class="gs-actions-hint">你当前正在处理该会话</span>';
+    else if (joined) html += '<span class="gs-actions-hint">已加入协助，可协助回复</span>';
+    else html += '<span class="gs-actions-hint">加入协助或接管后可回复</span>';
+    box.innerHTML = html;
+    if (inputRow) inputRow.style.display = canReply ? "" : "none";
+    if (input) input.disabled = !canReply;
+    if (send) send.disabled = !canReply || guideOv.acting === "send";
+}
+function guideOvRenderMessages(meta) {
+    var box = document.getElementById("gs-messages");
+    if (!box) return;
+    var d = guideOv.detail || {};
+    var me = guideOvMe();
+    var html = "";
+    var b = d.banInfo || meta.banInfo;
+    if (b) {
+        var remain = String(b.remainingDays) === "inf" ? "永久封禁" :
+            "剩余 " + (b.remainingDays != null ? escAdmin(b.remainingDays) : "?") + " 天" +
+            (b.bannedUntil ? " / 解封时间 " + escAdmin(b.bannedUntil) : "");
+        html += '<div class="chat-broadcast chat-msg"><div class="chat-msg-bubble" style="border:1px solid rgba(231,76,60,.45);text-align:left;">' +
+            '<div style="font-weight:600;color:#e74c3c;">申诉中的封禁信息</div>' +
+            "用户 ID：" + escAdmin(b.userId != null ? b.userId : "-") + "<br>" +
+            "封禁理由：" + escAdmin(b.banReason || "无") + "<br>" +
+            "剩余时间：" + remain + "</div></div>";
+    }
+    (d.messages || []).forEach(function(m) {
+        var role = m.role || "";
+        var content = m.content || "";
+        var time = kbFmtTime(m.ts || m.sentAt || m.createdAt);
+        var isSystem = role === "system" || role === "sys" || m.type === "system" || m.type === "sys";
+        if (isSystem) {
+            html += '<div class="chat-broadcast chat-msg"><div class="chat-msg-meta">系统<span class="chat-msg-time">' + escAdmin(time) + "</span></div>" +
+                '<div class="chat-msg-bubble">' + escAdmin(content) + "</div></div>";
+            return;
+        }
+        var senderId = m.sender != null ? m.sender : (m.fromUserId != null ? m.fromUserId : null);
+        var mine = role === "human" && me != null && senderId != null && String(senderId) === String(me);
+        var name = role === "user" ? (meta.username || "用户") :
+            role === "ai" ? "AI" : (m.senderName || m.fromAdminName || "客服");
+        html += '<div class="chat-msg ' + (mine ? "chat-mine" : "chat-theirs") + '">' +
+            '<div class="chat-msg-meta">' + escAdmin(name) + '<span class="chat-msg-time">' + escAdmin(time) + "</span></div>" +
+            '<div class="chat-msg-bubble">' + escAdmin(content) + "</div></div>";
+    });
+    box.innerHTML = html || '<div class="chat-empty">暂无消息</div>';
+    box.scrollTop = box.scrollHeight;
+}
+function guideOvRenderDetail() {
+    if (!guideOv.detail) {
+        guideOvIdleDetail();
+        return;
+    }
+    var meta = guideOvMeta();
+    var head = document.getElementById("gs-detail-head");
+    var info = document.getElementById("gs-detail-info");
+    var sidText = String(meta.sessionId || "");
+    var badges = guideOvStatusBadge(meta.status);
+    if (meta.appeal) badges += '<span class="gs-badge gs-badge-appeal">申诉</span>';
+    if (guideOvIsOwner(meta)) badges += '<span class="gs-badge gs-badge-mine">我的会话</span>';
+    if (head) {
+        head.innerHTML = "会话 " + escAdmin(sidText.slice(0, 8)) + " · " +
+            escAdmin(meta.username || "未命名用户") +
+            '<span class="gs-uid">#' + escAdmin(meta.userId != null ? meta.userId : "-") + "</span>" + badges;
+    }
+    if (info) {
+        var parts = [];
+        parts.push("当前接管：<strong>" + escAdmin(guideOvAgentText(meta)) + "</strong>");
+        if (meta.assignedAdmin && meta.assignedAdmin.username) parts.push("分配客服：" + escAdmin(meta.assignedAdmin.username));
+        if (meta.coAdminIds && meta.coAdminIds.length) parts.push("协助者：" + escAdmin(meta.coAdminIds.length) + " 人");
+        parts.push("最后活动：" + escAdmin(kbFmtTime(meta.lastActivityAt || meta.createdAt)));
+        info.innerHTML = parts.join("");
+    }
+    guideOvRenderMessages(meta);
+    guideOvRenderActions();
+}
+function guideOvOpen(sid) {
+    guideOv.activeId = sid;
+    guideOv.detail = null;
+    guideOvRenderList();
+    var head = document.getElementById("gs-detail-head");
+    var info = document.getElementById("gs-detail-info");
+    var msgs = document.getElementById("gs-messages");
+    var actions = document.getElementById("gs-actions");
+    var inputRow = document.getElementById("gs-input-row");
+    if (head) head.textContent = "会话 " + String(sid).slice(0, 8) + " · 加载中…";
+    if (info) info.innerHTML = "";
+    if (msgs) msgs.innerHTML = '<div class="chat-empty">正在加载会话记录…</div>';
+    if (actions) actions.innerHTML = "";
+    if (inputRow) inputRow.style.display = "none";
+    var seq = ++guideOv.detailSeq;
+    ZIYIT_API.guideHumanSession(sid).then(function(d) {
+        if (seq !== guideOv.detailSeq) return;
+        guideOv.detail = d || {};
+        guideOvRenderDetail();
+    }).catch(function(err) {
+        if (seq !== guideOv.detailSeq) return;
+        if (head) head.textContent = "会话 " + String(sid).slice(0, 8);
+        if (msgs) {
+            msgs.innerHTML = '<div class="gs-error">加载失败：' + escAdmin(guideOvErrText(err)) +
+                ' <button type="button" class="user-btn" data-gs-retry-detail="1">重试</button></div>';
+        }
+    });
+}
+function guideOvLoad(keepDetail) {
+    if (guideOv.loading) return;
+    guideOv.loading = true;
+    var box = document.getElementById("gs-list");
+    if (!guideOv.sessions.length && box) box.innerHTML = '<div class="chat-empty">加载中…</div>';
+    ZIYIT_API.guideHumanSessions("active").then(function(data) {
+        guideOv.loading = false;
+        var list = (data && data.sessions) || [];
+        list.sort(function(a, b) {
+            var ta = String(a.lastActivityAt || "");
+            var tb = String(b.lastActivityAt || "");
+            return tb > ta ? 1 : tb < ta ? -1 : 0;
+        });
+        guideOv.sessions = list;
+        if (guideOv.activeId && !guideOvRow(guideOv.activeId)) {
+            guideOv.activeId = null;
+            guideOv.detail = null;
+        }
+        guideOvRenderList();
+        if (!guideOv.activeId) {
+            guideOvIdleDetail();
+        } else if (keepDetail && guideOv.detail) {
+            guideOvRenderDetail();
+        } else {
+            guideOvOpen(guideOv.activeId);
+        }
+    }).catch(function(err) {
+        guideOv.loading = false;
+        if (guideOv.sessions.length) {
+            showToast("刷新会话列表失败：" + guideOvErrText(err), "error");
+            return;
+        }
+        if (box) {
+            box.innerHTML = '<div class="gs-error">加载失败：' + escAdmin(guideOvErrText(err)) +
+                ' <button type="button" class="user-btn" data-gs-retry="1">重试</button></div>';
+        }
+        guideOvIdleDetail("会话列表加载失败");
+    });
+}
+function guideOvJoin() {
+    var sid = guideOv.activeId;
+    if (!sid || guideOv.acting) return;
+    guideOv.acting = "join";
+    guideOvRenderActions();
+    ZIYIT_API.guideHumanJoin(sid).then(function(res) {
+        guideOv.acting = "";
+        guideOv.joined[sid] = true;
+        if (res && res.session) {
+            // join/accept 返回的 session 不含 appeal 的 banInfo，沿用详情里已加载的
+            var oldBan = guideOv.detail && guideOv.detail.banInfo;
+            guideOv.detail = res.session;
+            if (!guideOv.detail.banInfo && oldBan) guideOv.detail.banInfo = oldBan;
+        }
+        var row = guideOvRow(sid);
+        if (row && res && res.coAdminIds) row.coAdminIds = res.coAdminIds;
+        showToast((res && res.message) || "已加入会话协助", "success");
+        guideOvRenderDetail();
+        guideOvLoad(true);
+    }).catch(function(err) {
+        guideOv.acting = "";
+        guideOvRenderActions();
+        showToast(guideOvErrText(err, "加入协助失败"), "error");
+    });
+}
+function guideOvAccept() {
+    var sid = guideOv.activeId;
+    if (!sid || guideOv.acting) return;
+    if (!window.confirm("接管后，原客服将失去该会话。确定继续？")) return;
+    guideOv.acting = "accept";
+    guideOvRenderActions();
+    ZIYIT_API.guideHumanAccept(sid).then(function(d) {
+        guideOv.acting = "";
+        guideOv.joined[sid] = true;
+        if (d) {
+            var oldBan = guideOv.detail && guideOv.detail.banInfo;
+            guideOv.detail = d;
+            if (!guideOv.detail.banInfo && oldBan) guideOv.detail.banInfo = oldBan;
+        }
+        var row = guideOvRow(sid);
+        if (row) {
+            row.humanAdmin = { userId: guideOvMe(), username: (currentAdminInfo && currentAdminInfo.username) || "" };
+            row.mine = true;
+        }
+        showToast("已接管该会话", "success");
+        guideOvRenderDetail();
+        guideOvLoad(true);
+    }).catch(function(err) {
+        guideOv.acting = "";
+        guideOvRenderActions();
+        showToast(guideOvErrText(err, "接管失败"), "error");
+    });
+}
+function guideOvSend() {
+    var sid = guideOv.activeId;
+    var d = guideOv.detail;
+    if (!sid || !d || guideOv.acting) return;
+    var input = document.getElementById("gs-input");
+    var content = (input && input.value || "").trim();
+    if (!content) return;
+    if (content.length > 500) {
+        showToast("回复不能超过 500 字", "error");
+        return;
+    }
+    guideOv.acting = "send";
+    guideOvRenderActions();
+    ZIYIT_API.guideHumanReply(sid, content).then(function() {
+        guideOv.acting = "";
+        if (input) input.value = "";
+        d.messages = d.messages || [];
+        d.messages.push({
+            role: "human",
+            content: content,
+            sender: guideOvMe(),
+            senderName: "我",
+            ts: (new Date).toISOString(),
+            replyType: "human"
+        });
+        var row = guideOvRow(sid);
+        if (row) {
+            row.lastMessage = content;
+            row.lastMessageRole = "human";
+            row.lastActivityAt = (new Date).toISOString();
+        }
+        guideOvRenderDetail();
+        guideOvRenderList();
+    }).catch(function(err) {
+        guideOv.acting = "";
+        guideOvRenderActions();
+        showToast(guideOvErrText(err, "回复失败"), "error");
+    });
+}
+document.addEventListener("DOMContentLoaded", function() {
+    var listBox = document.getElementById("gs-list");
+    if (listBox) listBox.addEventListener("click", function(e) {
+        if (e.target.closest("[data-gs-retry]")) {
+            guideOvLoad();
+            return;
+        }
+        var row = e.target.closest("[data-gs-id]");
+        if (row) guideOvOpen(row.getAttribute("data-gs-id"));
+    });
+    var msgBox = document.getElementById("gs-messages");
+    if (msgBox) msgBox.addEventListener("click", function(e) {
+        if (e.target.closest("[data-gs-retry-detail]") && guideOv.activeId) guideOvOpen(guideOv.activeId);
+    });
+    var actionsBox = document.getElementById("gs-actions");
+    if (actionsBox) actionsBox.addEventListener("click", function(e) {
+        var btn = e.target.closest("[data-gs-act]");
+        if (!btn || btn.disabled) return;
+        if (btn.getAttribute("data-gs-act") === "join") guideOvJoin();
+        else if (btn.getAttribute("data-gs-act") === "accept") guideOvAccept();
+    });
+    var refreshBtn = document.getElementById("gs-refresh");
+    if (refreshBtn) refreshBtn.addEventListener("click", function() {
+        guideOvLoad(true);
+    });
+    var sendBtn = document.getElementById("gs-send");
+    if (sendBtn) sendBtn.addEventListener("click", guideOvSend);
+    var input = document.getElementById("gs-input");
+    if (input) input.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            guideOvSend();
+        }
     });
 });
 var kbState = {

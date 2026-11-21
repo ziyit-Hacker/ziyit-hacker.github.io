@@ -1193,6 +1193,15 @@
     function guideHumanInbox() {
         return request("/guide/human/inbox");
     }
+    function guideHumanSessions(status) {
+        var s = status || "active";
+        return request("/guide/human/sessions?status=" + encodeURIComponent(s));
+    }
+    function guideHumanJoin(sessionId) {
+        return post("/guide/human/join", {
+            sessionId
+        });
+    }
     function guideHumanAccept(sessionId) {
         return post("/guide/human/accept", {
             sessionId
@@ -2218,6 +2227,8 @@
         guideSession,
         guideStatus,
         guideHumanInbox,
+        guideHumanSessions,
+        guideHumanJoin,
         guideHumanAccept,
         guideHumanReply,
         guideHumanSession,

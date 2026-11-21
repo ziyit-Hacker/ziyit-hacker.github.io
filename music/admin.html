@@ -8,9 +8,9 @@
     <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
     <script src="../assets/blacklist.js"></script>
     <script src="../assets/xss_guard.js?v=20261114"></script>
-    <script src="../assets/ziyit_api.js?v=20261121a"></script>
+    <script src="../assets/ziyit_api.js?v=20261121b"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./admin.css?v=20261121a">
+    <link rel="stylesheet" href="./admin.css?v=20261121b">
     <script>(function() {
     var pref = "auto";
     try {
@@ -81,6 +81,7 @@
                         <button type="button" class="menu-group-title"><span class="menu-group-text">AI 与计费</span><span class="menu-caret" aria-hidden="true"></span></button>
                         <ul class="menu-sub">
                             <li class="menu-item" data-section="guide-console" data-level="1">在线客服</li>
+                            <li class="menu-item" data-section="guide-sessions" data-level="3">会话总览</li>
                             <li class="menu-item" data-section="translate-terms" data-level="2">翻译词库</li>
                             <li class="menu-item" data-section="api-key-management" data-level="3">API Key 管理</li>
                             <li class="menu-item" data-section="pricing-management" data-level="3">定价管理</li>
@@ -989,6 +990,39 @@
                         <p style="padding:6px 2px; color:var(--ziyit-text-secondary); font-size:12px;">说明：仅名单内客服可接收/回复转人工消息（超级管理员自动兜底）。转人工优先分配给在线客服。</p>
                     </div>
                 </section>
+                <section id="guide-sessions" class="content-section">
+                    <div class="section-header">
+                        <h2>会话总览</h2>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span class="gs-summary" id="gs-summary"></span>
+                            <button class="user-btn" id="gs-refresh">刷新</button>
+                        </div>
+                    </div>
+                    <p class="gs-hint">
+                        列出你有权查看的「等待接入 / 人工中」会话（站长可见全部，普通客服只见自己的），按最后活动时间倒序。
+                        点条目查看完整记录；「加入协助」不影响原客服的权限，「接管」会顶替原客服。
+                    </p>
+                    <div class="gs-layout">
+                        <div class="gs-list-col">
+                            <div class="gs-list" id="gs-list">
+                                <div class="chat-empty">加载中…</div>
+                            </div>
+                        </div>
+                        <div class="gs-detail-col">
+                            <div class="gs-detail-head" id="gs-detail-head">从左侧选择一个会话</div>
+                            <div class="gs-detail-info" id="gs-detail-info"></div>
+                            <div class="gs-messages" id="gs-messages">
+                                <div class="chat-empty">暂无消息</div>
+                            </div>
+                            <div class="gs-actions" id="gs-actions"></div>
+                            <div class="chat-input-row" id="gs-input-row" style="display: none;">
+                                <textarea class="form-input chat-input" id="gs-input" rows="2"
+                                    placeholder="输入回复，Enter 发送（Shift+Enter 换行）"></textarea>
+                                <button class="user-btn success chat-send-btn" id="gs-send">回复</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
                 <section id="pentest-management" class="content-section">
                     <div class="section-header">
                         <h2>渗透测试管理</h2>
@@ -1743,7 +1777,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-    <script src="./admin.js?v=20261121e"></script>
+    <script src="./admin.js?v=20261121f"></script>
 <script src="../assets/ziyit-theme.js"></script>
 </body>
 </html>

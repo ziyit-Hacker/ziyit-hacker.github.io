@@ -3,9 +3,19 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.76 — 2026-11-21
+### 变更
+- **管理后台新增「会话总览」页**（[admin.html](file:///f:/Code/html/ziyit/music/admin.html#L993-L1025)、[admin.js](file:///f:/Code/html/ziyit/music/admin.js#L4884-L5300)）：AI 与计费分组、Lv.3+；进入即调 `GET /guide/human/sessions?status=active`，按 `lastActivityAt` 倒序展示关联用户（用户名 + ID）、状态角标（等待接入 / 人工中）、当前接管客服、最后一条消息、`appeal` 申诉标记与 `mine`「我的会话」标记；顶部汇总总数与两种状态数量。
+- **会话详情**：点条目调 `GET /guide/human/session/{id}` 渲染完整记录（用户 / AI / 人工 / 系统消息分样式），申诉会话额外渲染 `banInfo` 卡（用户 ID、封禁理由、剩余天数 / 解封时间）。
+- **操作按钮**：有原客服时显示「加入协助」（`POST /guide/human/join`，成功后直接激活回复框，不影响原客服）与「接管」（`POST /guide/human/accept`，二次确认「原客服将失去该会话」）；未接管时显示「加入协助或接管后可回复」。
+- **健壮性**：列表与详情均有加载态、失败提示与「重试」；操作按钮在请求期间禁用防重复提交；`guideOv.acting` 同时挡住回复连点；窄屏（≤900px）列表与详情自动上下堆叠。
+- **`co_join` 通知**（[admin.js](file:///f:/Code/html/ziyit/music/admin.js#L4453-L4463)）：收件箱轮询遇到 `type="co_join"` 不再当作聊天消息/新会话，改为 toast 提示原客服，并在其已打开的会话中插入一条系统提示；同一通知按 `id` 去重，避免重复渲染。
+- **API 层**（[ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)）：新增 `guideHumanSessions(status)`、`guideHumanJoin(sessionId)`。
+- 版本：`ziyit_api.js?v=20261121b`、`admin.js?v=20261121f`、`admin.css?v=20261121b`（79 个 HTML 同步）。
+
 ## v1.75 — 2026-11-21
 ### 修复
-- **管理后台「翻译词库」点击无反应**（[admin.js](file:///f:/Code/html/ziyit/music/admin.js#L6175-L6182)）：侧栏菜单项 `[data-section="translate-terms"]` 没有任何点击监听，`initTranslateTerms()` 只初始化了表单元素，从未调用 `switchSection()`，所以页面停在原分区、看起来「打不开」。现在补上监听：切换分区 + 更新状态栏 + 重新加载当前词库。
+- **管理后台「翻译词库」点击无反应**（[admin.js](file:///f:/Code/html/ziyit/music/admin.js#L6614-L6621)）：侧栏菜单项 `[data-section="translate-terms"]` 没有任何点击监听，`initTranslateTerms()` 只初始化了表单元素，从未调用 `switchSection()`，所以页面停在原分区、看起来「打不开」。现在补上监听：切换分区 + 更新状态栏 + 重新加载当前词库。
 - `admin.js` 引用升至 `?v=20261121e`。
 
 ## v1.74 — 2026-11-21
