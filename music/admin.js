@@ -9,6 +9,16 @@ function switchSection(sectionId) {
     });
     const menuItem = document.querySelector(`[data-section="${sectionId}"]`);
     if (menuItem) menuItem.classList.add("active");
+    syncSidebarActive();
+}
+function syncSidebarActive() {
+    const menu = document.querySelector(".sidebar-menu");
+    if (!menu) return;
+    menu.querySelectorAll(".menu-group").forEach(function(group) {
+        const active = group.querySelector(".menu-item.active");
+        group.classList.toggle("has-active", !!active);
+        if (active) group.classList.remove("collapsed");
+    });
 }
 document.addEventListener("DOMContentLoaded", function() {
     const sidebarMenu = document.querySelector(".sidebar-menu");
@@ -6051,6 +6061,15 @@ function initSidebarGroups() {
             e.stopPropagation();
             group.classList.toggle("collapsed");
         });
+    });
+    // 默认全部折叠，只展开当前页面所在分组
+    menu.querySelectorAll(".menu-group").forEach(function(group) {
+        group.classList.add("collapsed");
+    });
+    syncSidebarActive();
+    // 点击子项后展开其所在分组（switchSection 已更新 active）
+    menu.addEventListener("click", function(e) {
+        if (e.target && e.target.closest && e.target.closest(".menu-item[data-section]")) syncSidebarActive();
     });
 }
 document.addEventListener("DOMContentLoaded", function() {

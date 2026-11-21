@@ -5,9 +5,9 @@
 
 ## v1.68 — 2026-11-21
 ### 变更
-- **管理后台侧栏改为二级菜单**（[admin.html](file:///f:/Code/html/ziyit/music/admin.html#L59-L107) / [admin.css](file:///f:/Code/html/ziyit/music/admin.css#L159-L258)）：原 23 项平铺改为 5 个可折叠分组——内容管理、用户与社区、AI 与计费、软件与授权、系统与安全；组标题点击收起/展开，当前项所在分组高亮，全部子项无权限时整组隐藏。侧栏改为 `position: sticky`，长页面滚动时保持可见（≤1024px 自动取消）。
+- **管理后台侧栏改为二级菜单**（[admin.html](file:///f:/Code/html/ziyit/music/admin.html#L59-L106) / [admin.css](file:///f:/Code/html/ziyit/music/admin.css#L159-L258)）：原 23 项平铺改为 5 个可折叠分组——内容管理、用户与社区、AI 与计费、软件与授权、系统与安全；**默认全部折叠**，仅自动展开当前页面所在分组，组标题点击收起/展开，当前项所在分组标题高亮，全部子项无权限时整组隐藏。侧栏改为 `position: sticky`，长页面滚动时保持可见（≤1024px 自动取消）。
 - **取消独立「创建账号」页**：删除 `account-create` 菜单项与整块 `section`，能力并入用户管理内的「添加用户」弹窗——新增角色（UR / ZC）、邮箱验证状态选项与内联状态提示，提交改走 `POST /admin/users`（与独立页一致），保留 429/403/409 的针对性文案。`initAccountCreate()` 一并移除，`saveAddUser()` 重写。
-- **取消「日志查看」占位页**：删除空的 `log-viewer` section；入口保留为「系统与安全」分组下的跳转项（`../developers/`），不再占用一级位置。
+- **删除「日志查看」页与入口**：移除 `log-viewer` 占位 section 及侧栏菜单项。
 - 侧栏「返回」改为「返回上一页」，使用 `window.history.back()`。
 - `admin.css` 引用加 `?v=20261115b`。
 
