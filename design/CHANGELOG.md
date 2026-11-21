@@ -3,6 +3,18 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.71 — 2026-11-21
+### 变更
+- **翻译器改为「强制风格 + SSE 流式」**（后端 v0.3.110，[Translator.html](file:///f:/Code/html/ziyit/Translator.html#L340-L520)）：
+  - 移除风格下拉，风格由目标语言强制决定（无空格语言→微软式，有空格→中式），只在语言项括号内展示；
+  - 目标语言改用 `GET /translate/modes` 的 `targets`（兼容旧 `languages`），仍保留「其他语言（手动输入）」；
+  - 新增源语言下拉（自动识别 / 中文 / 日语 / 韩语 / 英文 / 泰语），提交时带 `source`；
+  - 请求改为 `{ text, target, source }`，响应由 JSON 改为 **SSE**：`fetch` + `ReadableStream` 手动分帧（`TextDecoder({stream:true})`、空行切帧、跨包缓冲、`: ping` 跳过、`done`/`error` 后 `reader.cancel()`）；
+  - 结果区 `partial` 实时覆盖、`done` 定稿；进度显示 `done / total`，完成后显示「今日 used/quota 次」；
+  - 新增「取消」按钮；连续点击会 `abort()` 上一条流，旧流的 `finally` 不会重置新流的按钮状态。
+- **后台翻译词库改为按目标语言维护**（[admin.js](file:///f:/Code/html/ziyit/music/admin.js#L6153-L6167)）：删除「风格 × 语言」76 项组合下拉，改为 `targets` 单下拉（`ja`、`fr`…，括号内标注强制风格）；读取 / 保存 / 清空均以语言代码为 `mode`，页面标题与状态展示后端 `modeLabel`；描述注明风格自动决定。
+- `admin.js` 引用升至 `?v=20261121c`。
+
 ## v1.70 — 2026-11-21
 ### 变更
 - **巨硬翻译器升级为「风格 × 任意语言」**（[Translator.html](file:///f:/Code/html/ziyit/Translator.html#L244-L255)）：原来固定 13 个语言选项改为「风格（微软式 / 中式）+ 目标语言」两级下拉；语言清单从 `GET /translate/modes` 动态加载（38 种，含 `nospace` 元数据），末尾保留「其他语言（手动输入）」；接口不可用时用内置常用清单兜底。

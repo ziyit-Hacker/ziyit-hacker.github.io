@@ -6150,15 +6150,19 @@ function initTranslateTerms() {
             setStatus("加载失败：" + (err && err.message || "未知错误"), true);
         });
     }
-    function buildModes(data) {
-        const styles = data && Array.isArray(data.styles) && data.styles.length ? data.styles : [{ id: "ms", label: "微软式" }, { id: "cn", label: "中式" }];
-        const langs = data && Array.isArray(data.languages) && data.languages.length ? data.languages : [{ code: "zh", label: "中文" }];
+    function buildTargets(data) {
+        const targets = data && (data.targets || data.languages) || [];
+        const list = targets.length ? targets : [
+            { code: "zh", label: "中文", styleLabel: "微软式" },
+            { code: "en", label: "英文", styleLabel: "中式" },
+            { code: "ja", label: "日语", styleLabel: "微软式" },
+            { code: "fr", label: "法语", styleLabel: "中式" }
+        ];
         modeSel.innerHTML = "";
-        styles.forEach(function(s) {
-            langs.forEach(function(l) {
-                if (!l || !l.code) return;
-                modeSel.add(new Option((s.label || s.id) + " · " + (l.label || l.code) + "（" + s.id + "-" + l.code + "）", s.id + "-" + l.code));
-            });
+        list.forEach(function(t) {
+            if (!t || !t.code) return;
+            const styleLabel = t.styleLabel || (t.style === "ms" ? "微软式" : "中式");
+            modeSel.add(new Option((t.label || t.code) + "（" + styleLabel + "）", t.code));
         });
     }
 
@@ -6218,9 +6222,9 @@ function initTranslateTerms() {
     }
 
     ZIYIT_API.request("/translate/modes").then(function(data) {
-        buildModes(data);
+        buildTargets(data);
     }).catch(function() {
-        buildModes(null);
+        buildTargets(null);
     }).then(function() {
         load();
     });
