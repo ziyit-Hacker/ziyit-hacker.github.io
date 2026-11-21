@@ -6052,6 +6052,181 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
+function initTranslateTerms() {
+    const modeSel = document.getElementById("tt-mode");
+    const rowsEl = document.getElementById("tt-rows");
+    const statusEl = document.getElementById("tt-status");
+    const builtinEl = document.getElementById("tt-builtin");
+    const filterEl = document.getElementById("tt-filter");
+    if (!modeSel || !rowsEl) return;
+    let currentMode = "";
+
+    function setStatus(msg, isErr) {
+        if (!statusEl) return;
+        statusEl.textContent = msg;
+        statusEl.style.color = isErr ? "var(--danger-color,#d33)" : "var(--ziyit-text-secondary)";
+    }
+    function addRow(key, value) {
+        const row = document.createElement("div");
+        row.className = "tt-row";
+        row.style.cssText = "display:flex;gap:8px;margin-bottom:8px;align-items:center;";
+        const k = document.createElement("input");
+        k.className = "form-input";
+        k.placeholder = "原文（≤100 字）";
+        k.maxLength = 100;
+        k.value = key || "";
+        k.style.flex = "1";
+        const v = document.createElement("input");
+        v.className = "form-input";
+        v.placeholder = "译文（≤100 字）";
+        v.maxLength = 100;
+        v.value = value || "";
+        v.style.flex = "1";
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "user-btn danger";
+        del.textContent = "删除";
+        del.addEventListener("click", function() {
+            row.remove();
+        });
+        row.appendChild(k);
+        row.appendChild(v);
+        row.appendChild(del);
+        rowsEl.appendChild(row);
+    }
+    function renderTerms(terms) {
+        rowsEl.innerHTML = "";
+        const keys = Object.keys(terms || {});
+        if (!keys.length) {
+            addRow("", "");
+            return;
+        }
+        keys.forEach(function(k) {
+            addRow(k, terms[k]);
+        });
+    }
+    function collectTerms() {
+        const out = {};
+        let dup = 0;
+        rowsEl.querySelectorAll(".tt-row").forEach(function(row) {
+            const inputs = row.querySelectorAll("input");
+            if (inputs.length < 2) return;
+            const k = inputs[0].value.trim();
+            const v = inputs[1].value.trim();
+            if (!k && !v) return;
+            if (!k || !v) throw new Error("原文和译文都不能为空");
+            if (k.length > 100 || v.length > 100) throw new Error("单条原文 / 译文最多 100 字");
+            if (out[k] !== undefined) dup++;
+            out[k] = v;
+        });
+        if (Object.keys(out).length > 5000) throw new Error("单个模式最多 5000 条");
+        return { terms: out, dup: dup };
+    }
+    function load() {
+        currentMode = modeSel.value;
+        if (!currentMode) return;
+        setStatus("加载 " + currentMode + " …");
+        builtinEl.innerHTML = "";
+        ZIYIT_API.request("/admin/translate/terms?mode=" + encodeURIComponent(currentMode)).then(function(data) {
+            if (!data) throw new Error("空响应");
+            renderTerms(data.terms || {});
+            setStatus((data.modeLabel || currentMode) + " · 生效 " + (data.effectiveCount || 0) + " 条（上限 " + (data.maxItems || 5000) + "）");
+            const builtin = data.builtinTerms || {};
+            const bkeys = Object.keys(builtin);
+            if (bkeys.length) {
+                const title = document.createElement("h3");
+                title.style.cssText = "font-size:14px;margin:0 0 8px;color:var(--ziyit-text-secondary);";
+                title.textContent = "内置词表（只读，共 " + bkeys.length + " 条）";
+                const wrap = document.createElement("div");
+                wrap.style.cssText = "max-height:240px;overflow:auto;font-size:13px;line-height:1.9;color:var(--ziyit-text-secondary);";
+                wrap.textContent = bkeys.map(function(k) {
+                    return k + " → " + builtin[k];
+                }).join("　·　");
+                builtinEl.appendChild(title);
+                builtinEl.appendChild(wrap);
+            }
+        }).catch(function(err) {
+            renderTerms({});
+            setStatus("加载失败：" + (err && err.message || "未知错误"), true);
+        });
+    }
+    function buildModes(data) {
+        const styles = data && Array.isArray(data.styles) && data.styles.length ? data.styles : [{ id: "ms", label: "微软式" }, { id: "cn", label: "中式" }];
+        const langs = data && Array.isArray(data.languages) && data.languages.length ? data.languages : [{ code: "zh", label: "中文" }];
+        modeSel.innerHTML = "";
+        styles.forEach(function(s) {
+            langs.forEach(function(l) {
+                if (!l || !l.code) return;
+                modeSel.add(new Option((s.label || s.id) + " · " + (l.label || l.code) + "（" + s.id + "-" + l.code + "）", s.id + "-" + l.code));
+            });
+        });
+    }
+
+    modeSel.addEventListener("change", load);
+    document.getElementById("tt-add").addEventListener("click", function() {
+        addRow("", "");
+    });
+    document.getElementById("tt-save").addEventListener("click", function() {
+        if (!currentMode) return;
+        let payload;
+        try {
+            payload = collectTerms();
+        } catch (e) {
+            setStatus(e.message, true);
+            return;
+        }
+        setStatus("保存中…");
+        ZIYIT_API.request("/admin/translate/terms", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                mode: currentMode,
+                terms: payload.terms
+            })
+        }).then(function(res) {
+            setStatus((res && res.modeLabel || currentMode) + " 已保存，生效 " + (res && res.effectiveCount || 0) + " 条" + (payload.dup ? "（重复键已合并 " + payload.dup + " 条）" : ""));
+            showToast("词库已保存");
+        }).catch(function(err) {
+            setStatus("保存失败：" + (err && err.message || "未知错误"), true);
+        });
+    });
+    document.getElementById("tt-reset").addEventListener("click", function() {
+        if (!currentMode) return;
+        if (!confirm("确定清空「" + currentMode + "」的管理员词库并回到内置词表？")) return;
+        setStatus("正在恢复…");
+        ZIYIT_API.request("/admin/translate/terms?mode=" + encodeURIComponent(currentMode), {
+            method: "DELETE"
+        }).then(function() {
+            setStatus("已恢复默认");
+            load();
+        }).catch(function(err) {
+            setStatus("恢复失败：" + (err && err.message || "未知错误"), true);
+        });
+    });
+    if (filterEl) {
+        filterEl.addEventListener("input", function() {
+            const q = filterEl.value.trim().toLowerCase();
+            rowsEl.querySelectorAll(".tt-row").forEach(function(row) {
+                const text = Array.prototype.map.call(row.querySelectorAll("input"), function(i) {
+                    return i.value.toLowerCase();
+                }).join(" ");
+                row.style.display = !q || text.indexOf(q) >= 0 ? "flex" : "none";
+            });
+        });
+    }
+
+    ZIYIT_API.request("/translate/modes").then(function(data) {
+        buildModes(data);
+    }).catch(function() {
+        buildModes(null);
+    }).then(function() {
+        load();
+    });
+}
+document.addEventListener("DOMContentLoaded", initTranslateTerms);
+
 function initSidebarGroups() {
     var menu = document.querySelector(".sidebar-menu");
     if (!menu) return;

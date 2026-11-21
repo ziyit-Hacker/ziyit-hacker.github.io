@@ -3,6 +3,13 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.70 — 2026-11-21
+### 变更
+- **巨硬翻译器升级为「风格 × 任意语言」**（[Translator.html](file:///f:/Code/html/ziyit/Translator.html#L244-L255)）：原来固定 13 个语言选项改为「风格（微软式 / 中式）+ 目标语言」两级下拉；语言清单从 `GET /translate/modes` 动态加载（38 种，含 `nospace` 元数据），末尾保留「其他语言（手动输入）」；接口不可用时用内置常用清单兜底。
+- 提交改为 `{ text, mode }`（如 `ms-ja`、`cn-fr`），结果区下方新增元信息行，展示后端返回的 `modeLabel` 与 `used / quota`；400 的 `detail` 字符串直接展示（文本为空、超 2000 字、单元超 60、模式非法等）；保留 429 的 VIP 提示与 401 重新登录提示。
+- **管理后台新增「翻译词库」页**（AI 与计费分组，Lv.2+，[admin.html](file:///f:/Code/html/ziyit/music/admin.html#L279-L294)）：模式下拉由 `styles × languages` 生成（如 `ms-ja`），支持词条增删、按原文/译文筛选、整份保存（`PUT /admin/translate/terms`）、恢复默认（`DELETE`）；展示 `modeLabel`、`effectiveCount`、上限，以及只读的 `builtinTerms`。
+- `admin.js` 引用升至 `?v=20261121b`。
+
 ## v1.69 — 2026-11-21
 ### 修复
 - **管理员管理页底部「最后更新」时间不动**：[admin.js](file:///f:/Code/html/ziyit/music/admin.js#L3622-L3629) 的 `loadServerStats()` 每 5 秒轮询 `/admin/server/stats`，但只回写服务器时间、内存、CPU、磁盘、网络，从不更新 `#last-update`；该字段只在切换页面/刷新列表时由 `updateSystemInfo()` 写入，所以停在页面上就定格。现在每次轮询成功都会刷新「最后更新」。

@@ -80,6 +80,7 @@
                         <button type="button" class="menu-group-title"><span class="menu-group-text">AI 与计费</span><span class="menu-caret" aria-hidden="true"></span></button>
                         <ul class="menu-sub">
                             <li class="menu-item" data-section="guide-console" data-level="1">在线客服</li>
+                            <li class="menu-item" data-section="translate-terms" data-level="2">翻译词库</li>
                             <li class="menu-item" data-section="api-key-management" data-level="3">API Key 管理</li>
                             <li class="menu-item" data-section="pricing-management" data-level="3">定价管理</li>
                             <li class="menu-item" data-section="ai-pricing-management" data-level="3">AI 工具权重</li>
@@ -274,6 +275,22 @@
                             <p style="padding: 20px; color: var(--ziyit-text-secondary);">点击"刷新封禁列表"查看已封禁的 IP</p>
                         </div>
                     </div>
+                </section>
+                <section id="translate-terms" class="content-section">
+                    <div class="section-header">
+                        <h2>翻译词库</h2>
+                        <p style="color: var(--ziyit-text-secondary); font-size: 13px; margin: 6px 0 0;">按「风格 + 目标语言」分别维护；命中的短语不调用 AI，最长短语优先，西文大小写不敏感。保存为整份替换，立即生效。</p>
+                    </div>
+                    <div class="user-controls" style="flex-wrap: wrap;">
+                        <select class="form-select" id="tt-mode" style="max-width: 360px; min-width: 240px;"></select>
+                        <button class="user-btn" id="tt-add">添加词条</button>
+                        <button class="user-btn success" id="tt-save">保存</button>
+                        <button class="user-btn danger" id="tt-reset">恢复默认</button>
+                        <input type="text" class="user-search" id="tt-filter" placeholder="筛选原文 / 译文..." style="max-width: 220px;">
+                    </div>
+                    <p id="tt-status" style="margin: 4px 0 10px; font-size: 13px; color: var(--ziyit-text-secondary);">选择模式后加载词库。</p>
+                    <div id="tt-rows"></div>
+                    <div id="tt-builtin" style="margin-top: 18px;"></div>
                 </section>
                 <section id="api-key-management" class="content-section">
                     <div class="section-header">
@@ -1708,7 +1725,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-    <script src="./admin.js?v=20261121a"></script>
+    <script src="./admin.js?v=20261121b"></script>
 <script src="../assets/ziyit-theme.js"></script>
 </body>
 </html>
