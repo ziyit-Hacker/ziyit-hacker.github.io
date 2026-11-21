@@ -9,9 +9,10 @@
 - **会话详情**：点条目调 `GET /guide/human/session/{id}` 渲染完整记录（用户 / AI / 人工 / 系统消息分样式），申诉会话额外渲染 `banInfo` 卡（用户 ID、封禁理由、剩余天数 / 解封时间）。
 - **操作按钮**：有原客服时显示「加入协助」（`POST /guide/human/join`，成功后直接激活回复框，不影响原客服）与「接管」（`POST /guide/human/accept`，二次确认「原客服将失去该会话」）；未接管时显示「加入协助或接管后可回复」。
 - **健壮性**：列表与详情均有加载态、失败提示与「重试」；操作按钮在请求期间禁用防重复提交；`guideOv.acting` 同时挡住回复连点；窄屏（≤900px）列表与详情自动上下堆叠。
+- **操作栏位置修正**：「加入协助 / 接管」原来在消息列表下方，长会话时会被挤出首屏看不见；现移到会话标题与消息区之间（列表顶部固定区），并取消整块的固定高度，改为滚动列表（≤640px）+ 消息区（≤480px），任何屏幕下操作按钮都直接可见。
 - **`co_join` 通知**（[admin.js](file:///f:/Code/html/ziyit/music/admin.js#L4453-L4463)）：收件箱轮询遇到 `type="co_join"` 不再当作聊天消息/新会话，改为 toast 提示原客服，并在其已打开的会话中插入一条系统提示；同一通知按 `id` 去重，避免重复渲染。
 - **API 层**（[ziyit_api.js](file:///f:/Code/html/ziyit/assets/ziyit_api.js)）：新增 `guideHumanSessions(status)`、`guideHumanJoin(sessionId)`。
-- 版本：`ziyit_api.js?v=20261121b`、`admin.js?v=20261121f`、`admin.css?v=20261121b`（79 个 HTML 同步）。
+- 版本：`ziyit_api.js?v=20261121b`、`admin.js?v=20261121f`、`admin.css?v=20261121c`（79 个 HTML 同步）。
 
 ## v1.75 — 2026-11-21
 ### 修复
