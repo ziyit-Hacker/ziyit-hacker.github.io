@@ -3,6 +3,12 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.74 — 2026-11-21
+### 变更
+- **翻译器识别「免费超额」计费**（[Translator.html](file:///f:/Code/html/ziyit/Translator.html)）：`status.billing` 新增 `free_over` 分支，显示「免费额度（超出 N 字部分扣点）」；`done` 时按 `billing / freeChars / billedChars / cost` 展示「超出 N 字部分已扣 X 点（计费 M 字），余额 Y 点」。`points`（免费次数已用完）与 `free`（全免费）文案保持原样。
+- **402 直接展示后端 detail**：去掉「点数不足：」前缀，原文渲染 detail（后端已区分「超出免费字数」与「免费次数用完」），下方仍给「我的点数」充值入口。
+- **人机验证拆分原因无需改前端**：`byReason` 的 `label` 与流水 `scene` 均来自后端，新增的「人机验证（Phantom）」「人机验证（PoW）」「人机验证（兑换）」以及「巨硬翻译器」会自动出现在[用量可视化](file:///f:/Code/html/ziyit/user/injection.html)饼图、[我的点数](file:///f:/Code/html/ziyit/user/points.html)流水与管理端点数用量报表中。
+
 ## v1.73 — 2026-11-21
 ### 变更
 - **点数流水直接用后端展示名**（[points.html](file:///f:/Code/html/ziyit/user/points.html)）：`/points/ledger` 每条记录的类型改用 `scene`（后端 `reason_label()`，如「防注入检测」「签到」），不再在前端按 `reason` 自建映射；`reasonText()` 仅作旧数据兜底。

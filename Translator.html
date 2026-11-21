@@ -483,7 +483,13 @@ document.addEventListener("DOMContentLoaded", function() {
                         case "status":
                             titleEl.textContent = evt.modeLabel || "";
                             progressEl.textContent = evt.message || ("0 / " + (evt.totalUnits || 0));
-                            billingEl.textContent = evt.billing === "points" ? "按 Token 扣点" : "免费额度";
+                            if (evt.billing === "points") {
+                                billingEl.textContent = "按 Token 扣点";
+                            } else if (evt.billing === "free_over") {
+                                billingEl.textContent = "免费额度" + (evt.freeChars ? "（超出 " + evt.freeChars + " 字部分扣点）" : "（超出部分扣点）");
+                            } else {
+                                billingEl.textContent = "免费额度";
+                            }
                             if (typeof evt.used === "number" && typeof evt.quota === "number") {
                                 billingEl.textContent += "（今日 " + evt.used + "/" + evt.quota + " 次）";
                             }
@@ -509,10 +515,15 @@ document.addEventListener("DOMContentLoaded", function() {
                             }
                             if (evt.modeLabel) titleEl.textContent = evt.modeLabel;
                             progressEl.textContent = "完成";
-                            if (evt.billing === "free" || !evt.cost) {
-                                billingEl.textContent = "本次使用免费额度" + (typeof evt.used === "number" && typeof evt.quota === "number" ? "（今日 " + evt.used + "/" + evt.quota + " 次）" : "");
+                            var balanceText = evt.points && typeof evt.points.balance === "number" ? "，余额 " + evt.points.balance + " 点" : "";
+                            if (evt.billing === "free_over" && evt.cost) {
+                                // 免费次数内、原文超出门槛：只对超出部分扣点
+                                billingEl.textContent = "超出 " + evt.freeChars + " 字部分已扣 " + evt.cost + " 点"
+                                    + (evt.billedChars ? "（计费 " + evt.billedChars + " 字）" : "") + balanceText;
+                            } else if (evt.billing === "points" || evt.cost) {
+                                billingEl.textContent = "本次消耗 " + evt.cost + " 点" + balanceText;
                             } else {
-                                billingEl.textContent = "本次消耗 " + evt.cost + " 点" + (evt.points && typeof evt.points.balance === "number" ? "，余额 " + evt.points.balance + " 点" : "");
+                                billingEl.textContent = "本次使用免费额度" + (typeof evt.used === "number" && typeof evt.quota === "number" ? "（今日 " + evt.used + "/" + evt.quota + " 次）" : "");
                             }
                             break;
                         case "error":
@@ -527,8 +538,10 @@ document.addEventListener("DOMContentLoaded", function() {
             if (e && e.name === "AbortError") {
                 progressEl.textContent = "已取消";
             } else if (e && e.status === 402) {
-                resultEl.innerHTML = "点数不足：" + escHtml(errText(e)) + '<br><br>请到 <a href="./user/points.html">我的点数</a> 充值后再试，或明天使用免费额度。';
-                progressEl.textContent = "余额不足";
+                // 后端 detail 已区分「超出免费字数」与「免费次数用完」，直接展示
+                resultEl.innerHTML = escHtml(errText(e)) + '<br><br>可到 <a href="./user/points.html">我的点数</a> 充值后再试，或明天使用免费额度。';
+                progressEl.textContent = "点数不足";
+                billingEl.textContent = "";
             } else if (e && e.status === 429) {
                 resultEl.textContent = "你已有一笔付费翻译正在进行，请等它结束后再试";
             } else if (e && e.status === 401) {
