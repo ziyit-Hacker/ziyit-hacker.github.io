@@ -220,6 +220,7 @@ document.addEventListener("DOMContentLoaded", function() {
         switchSection("guide-sessions");
         updateSystemInfo("切换到会话总览");
         guideOvLoad();
+        guideOvStartPolling();
     });
     document.getElementById("guide-inj-refresh").addEventListener("click", loadGuideInjection);
     document.getElementById("guide-inj-range").addEventListener("change", loadGuideInjection);
@@ -4860,6 +4861,7 @@ document.addEventListener("DOMContentLoaded", function() {
         switchSection("guide-sessions");
         updateSystemInfo("切换到会话总览");
         guideOvLoad();
+        guideOvStartPolling();
     }
     const refreshBtn = document.getElementById("guide-console-refresh");
     if (refreshBtn) refreshBtn.addEventListener("click", function() {
@@ -4914,8 +4916,31 @@ var guideOv = {
     detail: null,
     detailSeq: 0,
     acting: "",
-    joined: {}
+    joined: {},
+    pollTimer: null,
+    listSig: "",
+    msgSig: ""
 };
+// 会话总览自动刷新：仅在「会话总览」可见时轮询，离开后自动停表
+function guideOvStartPolling() {
+    if (guideOv.pollTimer) return;
+    guideOv.pollTimer = setInterval(guideOvPoll, 5e3);
+}
+function guideOvStopPolling() {
+    if (guideOv.pollTimer) {
+        clearInterval(guideOv.pollTimer);
+        guideOv.pollTimer = null;
+    }
+}
+function guideOvPoll() {
+    var sec = document.getElementById("guide-sessions");
+    if (!sec || !sec.classList.contains("active")) {
+        guideOvStopPolling();
+        return;
+    }
+    if (document.hidden) return;
+    guideOvLoad(true, true);
+}
 function guideOvMe() {
     if (guideConsole.myUserId != null) return guideConsole.myUserId;
     if (currentAdminInfo) return currentAdminInfo.userId != null ? currentAdminInfo.userId : currentAdminInfo.user_id;
@@ -4946,6 +4971,15 @@ function guideOvAgentText(s) {
     if (s && s.humanAdmin && s.humanAdmin.username) return s.humanAdmin.username;
     if (s && s.assignedAdmin && s.assignedAdmin.username) return "待接入（已分配 " + s.assignedAdmin.username + "）";
     return "未分配";
+}
+function guideOvListSig(list) {
+    return list.map(function(s) {
+        return [s.sessionId, s.status, s.username, s.userId, s.lastMessage, s.lastMessageRole,
+            s.lastActivityAt, s.mine ? 1 : 0, s.appeal ? 1 : 0,
+            s.humanAdmin && s.humanAdmin.username || "",
+            s.assignedAdmin && s.assignedAdmin.username || "",
+            (s.coAdminIds || []).length].join("|");
+    }).join("~");
 }
 function guideOvRenderList() {
     var box = document.getElementById("gs-list");
@@ -4993,8 +5027,11 @@ function guideOvIdleDetail(text) {
 }
 function guideOvIsOwner(meta) {
     var me = guideOvMe();
-    return !!(meta && meta.humanAdmin && meta.humanAdmin.userId != null && me != null &&
-        String(meta.humanAdmin.userId) === String(me));
+    if (!meta || me == null) return false;
+    if (meta.humanAdmin && meta.humanAdmin.userId != null &&
+        String(meta.humanAdmin.userId) === String(me)) return true;
+    // 兜底：后端未返回 humanAdmin.userId 时，用「分配给当前管理员且已人工接入」判定
+    return !!(meta.mine && meta.status === "human");
 }
 function guideOvHasJoined(meta) {
     var sid = guideOv.activeId;
@@ -5048,21 +5085,34 @@ function guideOvRenderActions() {
     if (!isOwner) {
         html += '<button type="button" class="user-btn danger" data-gs-act="accept"' + (guideOv.acting ? " disabled" : "") + ">接管</button>";
     }
-    if (isOwner) html += '<span class="gs-actions-hint">你当前正在处理该会话</span>';
-    else if (joined) html += '<span class="gs-actions-hint">已加入协助，可协助回复</span>';
+    if (isOwner) {
+        html += '<button type="button" class="user-btn danger" data-gs-act="end"' + (guideOv.acting ? " disabled" : "") + ">" +
+            (guideOv.acting === "end" ? "结束中…" : "结束会话") + "</button>";
+        html += '<span class="gs-actions-hint">你当前正在处理该会话</span>';
+    } else if (joined) html += '<span class="gs-actions-hint">已加入协助，可协助回复</span>';
     else html += '<span class="gs-actions-hint">加入协助或接管后可回复</span>';
     box.innerHTML = html;
     if (inputRow) inputRow.style.display = canReply ? "" : "none";
     if (input) input.disabled = !canReply;
     if (send) send.disabled = !canReply || guideOv.acting === "send";
 }
-function guideOvRenderMessages(meta) {
+function guideOvRenderMessages(meta, keepScroll) {
     var box = document.getElementById("gs-messages");
     if (!box) return;
     var d = guideOv.detail || {};
     var me = guideOvMe();
-    var html = "";
+    var list = d.messages || [];
     var b = d.banInfo || meta.banInfo;
+    // 轮询刷新时若消息没有变化就不重建 DOM，避免闪烁与滚动位置跳动
+    var sig = [d.status || "", b ? JSON.stringify(b) : ""].concat(list.map(function(m) {
+        return (m.id || "") + "|" + (m.role || "") + "|" + (m.replyType || "") + "|" +
+            (m.content || "") + "|" + (m.ts || m.sentAt || "");
+    })).join("~");
+    if (keepScroll && sig === guideOv.msgSig) return;
+    guideOv.msgSig = sig;
+    var atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 48;
+    var prevTop = box.scrollTop;
+    var html = "";
     if (b) {
         var remain = String(b.remainingDays) === "inf" ? "永久封禁" :
             "剩余 " + (b.remainingDays != null ? escAdmin(b.remainingDays) : "?") + " 天" +
@@ -5073,7 +5123,7 @@ function guideOvRenderMessages(meta) {
             "封禁理由：" + escAdmin(b.banReason || "无") + "<br>" +
             "剩余时间：" + remain + "</div></div>";
     }
-    (d.messages || []).forEach(function(m) {
+    list.forEach(function(m) {
         var role = m.role || "";
         var content = m.content || "";
         var time = kbFmtTime(m.ts || m.sentAt || m.createdAt);
@@ -5092,9 +5142,10 @@ function guideOvRenderMessages(meta) {
             '<div class="chat-msg-bubble">' + escAdmin(content) + "</div></div>";
     });
     box.innerHTML = html || '<div class="chat-empty">暂无消息</div>';
-    box.scrollTop = box.scrollHeight;
+    // 定时刷新时保留用户当前的阅读位置；原本就在底部则继续跟随新消息
+    box.scrollTop = keepScroll && !atBottom ? prevTop : box.scrollHeight;
 }
-function guideOvRenderDetail() {
+function guideOvRenderDetail(keepScroll) {
     if (!guideOv.detail) {
         guideOvIdleDetail();
         return;
@@ -5119,12 +5170,13 @@ function guideOvRenderDetail() {
         parts.push("最后活动：" + escAdmin(kbFmtTime(meta.lastActivityAt || meta.createdAt)));
         info.innerHTML = parts.join("");
     }
-    guideOvRenderMessages(meta);
+    guideOvRenderMessages(meta, keepScroll);
     guideOvRenderActions();
 }
 function guideOvOpen(sid) {
     guideOv.activeId = sid;
     guideOv.detail = null;
+    guideOv.msgSig = "";
     guideOvRenderList();
     var head = document.getElementById("gs-detail-head");
     var info = document.getElementById("gs-detail-info");
@@ -5150,7 +5202,20 @@ function guideOvOpen(sid) {
         }
     });
 }
-function guideOvLoad(keepDetail) {
+// 只刷新当前打开会话的详情（轮询 / 刷新按钮共用），消息无变化不重建 DOM
+function guideOvRefreshDetail() {
+    var sid = guideOv.activeId;
+    if (!sid || !guideOv.detail || guideOv.acting) return;
+    var seq = ++guideOv.detailSeq;
+    ZIYIT_API.guideHumanSession(sid).then(function(d) {
+        if (seq !== guideOv.detailSeq || guideOv.activeId !== sid) return;
+        guideOv.detail = d || {};
+        guideOvRenderDetail(true);
+    }).catch(function() {
+        // 静默刷新失败不打断当前界面，下一轮再试
+    });
+}
+function guideOvLoad(keepDetail, silent) {
     if (guideOv.loading) return;
     guideOv.loading = true;
     var box = document.getElementById("gs-list");
@@ -5164,22 +5229,33 @@ function guideOvLoad(keepDetail) {
             return tb > ta ? 1 : tb < ta ? -1 : 0;
         });
         guideOv.sessions = list;
+        var dropped = false;
         if (guideOv.activeId && !guideOvRow(guideOv.activeId)) {
             guideOv.activeId = null;
             guideOv.detail = null;
+            guideOv.msgSig = "";
+            dropped = true;
         }
-        guideOvRenderList();
+        // 列表内容没变化就不重建 DOM，避免轮询时选中态与滚动位置被打断
+        var sig = guideOvListSig(list);
+        if (sig !== guideOv.listSig) {
+            guideOv.listSig = sig;
+            guideOvRenderList();
+        }
         if (!guideOv.activeId) {
-            guideOvIdleDetail();
+            // 当前会话被结束（含他人结束）或列表为空时才重置右侧详情
+            if (dropped) guideOvIdleDetail("该会话已结束");
+            else if (!list.length) guideOvIdleDetail();
         } else if (keepDetail && guideOv.detail) {
-            guideOvRenderDetail();
+            // 之前只重渲染旧数据，消息永远不会更新；这里必须真正重新拉取详情
+            guideOvRefreshDetail();
         } else {
             guideOvOpen(guideOv.activeId);
         }
     }).catch(function(err) {
         guideOv.loading = false;
         if (guideOv.sessions.length) {
-            showToast("刷新会话列表失败：" + guideOvErrText(err), "error");
+            if (!silent) showToast("刷新会话列表失败：" + guideOvErrText(err), "error");
             return;
         }
         if (box) {
@@ -5188,6 +5264,43 @@ function guideOvLoad(keepDetail) {
         }
         guideOvIdleDetail("会话列表加载失败");
     });
+}
+function guideOvEnd() {
+    var sid = guideOv.activeId;
+    if (!sid || guideOv.acting) return;
+    if (!window.confirm("确定结束该会话吗？结束后将无法继续回复。")) return;
+    guideOv.acting = "end";
+    guideOvRenderActions();
+    ZIYIT_API.guideHumanClose(sid).then(function() {
+        guideOv.acting = "";
+        guideOvRemoveSession(sid);
+        showToast("会话已结束", "success");
+    }).catch(function(err) {
+        guideOv.acting = "";
+        if (err && (err.status === 400 || err.status === 404)) {
+            // 已被其他人结束，直接本地移除
+            guideOvRemoveSession(sid);
+            return;
+        }
+        guideOvRenderActions();
+        if (err && err.status === 403) {
+            showToast("无权结束该会话（仅被分配客服/超管可操作）", "error");
+            return;
+        }
+        showToast(guideOvErrText(err, "结束会话失败"), "error");
+    });
+}
+function guideOvRemoveSession(sid) {
+    guideOv.sessions = guideOv.sessions.filter(function(x) { return x.sessionId !== sid; });
+    guideOv.listSig = guideOvListSig(guideOv.sessions);
+    delete guideOv.joined[sid];
+    if (guideOv.activeId === sid) {
+        guideOv.activeId = null;
+        guideOv.detail = null;
+        guideOv.msgSig = "";
+        guideOvIdleDetail("会话已结束，从左侧选择其他会话");
+    }
+    guideOvRenderList();
 }
 function guideOvJoin() {
     var sid = guideOv.activeId;
@@ -5198,10 +5311,12 @@ function guideOvJoin() {
         guideOv.acting = "";
         guideOv.joined[sid] = true;
         if (res && res.session) {
-            // join/accept 返回的 session 不含 appeal 的 banInfo，沿用详情里已加载的
+            // join/accept 返回的 session 不含 appeal 的 banInfo，也不保证带 messages，均沿用详情已加载内容
             var oldBan = guideOv.detail && guideOv.detail.banInfo;
+            var oldMsgs = guideOv.detail && guideOv.detail.messages;
             guideOv.detail = res.session;
             if (!guideOv.detail.banInfo && oldBan) guideOv.detail.banInfo = oldBan;
+            if (!guideOv.detail.messages && oldMsgs) guideOv.detail.messages = oldMsgs;
         }
         var row = guideOvRow(sid);
         if (row && res && res.coAdminIds) row.coAdminIds = res.coAdminIds;
@@ -5225,8 +5340,10 @@ function guideOvAccept() {
         guideOv.joined[sid] = true;
         if (d) {
             var oldBan = guideOv.detail && guideOv.detail.banInfo;
+            var oldMsgs = guideOv.detail && guideOv.detail.messages;
             guideOv.detail = d;
             if (!guideOv.detail.banInfo && oldBan) guideOv.detail.banInfo = oldBan;
+            if (!guideOv.detail.messages && oldMsgs) guideOv.detail.messages = oldMsgs;
         }
         var row = guideOvRow(sid);
         if (row) {
@@ -5301,6 +5418,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!btn || btn.disabled) return;
         if (btn.getAttribute("data-gs-act") === "join") guideOvJoin();
         else if (btn.getAttribute("data-gs-act") === "accept") guideOvAccept();
+        else if (btn.getAttribute("data-gs-act") === "end") guideOvEnd();
     });
     var refreshBtn = document.getElementById("gs-refresh");
     if (refreshBtn) refreshBtn.addEventListener("click", function() {
