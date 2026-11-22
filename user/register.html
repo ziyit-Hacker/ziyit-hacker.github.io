@@ -147,6 +147,7 @@
                 font-size: 14px;
             }
         }</style>
+    <link rel="stylesheet" href="../assets/form-validation.css?v=1">
 </head>
 <body>
     <div class="site-nav">
@@ -193,7 +194,7 @@
     </div>
     <div class="form-container">
         <h1 class="bt">注册ZIYIT</h1>
-        <form method="get" autocomplete="off">
+        <form method="get" autocomplete="off" novalidate>
             <div style="margin-bottom: 16px;">
                 <label for="username" class="bt">昵 称</label>
                 <input type="text" id="username" name="username" maxlength="15" autocomplete="off" required>
@@ -226,6 +227,7 @@
     </div>
     <script src="../assets/xss_guard.js?v=20261114"></script>
     <script src="../assets/ziyit_api.js?v=20261121b"></script>
+    <script src="../assets/form-validation.js?v=1"></script>
     <script src="register.js"></script>
     <script type="importmap">        {
             "imports": {

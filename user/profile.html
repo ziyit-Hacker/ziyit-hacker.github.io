@@ -179,6 +179,7 @@
     document.documentElement.setAttribute("data-theme-pref", pref);
 })();</script>
     <link rel="stylesheet" href="../assets/ziyit-theme.css">
+    <link rel="stylesheet" href="../assets/form-validation.css?v=1">
 </head>
 <body>
     <div class="site-nav">
@@ -316,11 +317,27 @@
             <div class="result" id="deletionResult"></div>
         </div>
     </div>
+    <script src="../assets/form-validation.js?v=1"></script>
     <script>document.addEventListener("DOMContentLoaded", function() {
     if (!ZIYIT_API.getToken()) {
         alert("请先登录");
         window.location.href = "./";
         return;
+    }
+    // 统一表单校验：修改邮箱 / 修改密码与注册页共用同一套规则与交互
+    if (window.ZIYIT_FV) {
+        const FV = window.ZIYIT_FV;
+        FV.attach("newEmail", FV.presets.email());
+        FV.attach("oldPassword", FV.presets.oldPassword());
+        const newPwdCfg = FV.presets.password();
+        newPwdCfg.rules = newPwdCfg.rules.concat([{
+            test: function (v) {
+                const old = document.getElementById("oldPassword");
+                return old && old.value && v === old.value ? "新密码不能与原密码相同" : "";
+            }
+        }]);
+        FV.attach("newPassword", newPwdCfg);
+        FV.attach("confirmPassword", FV.presets.confirmPassword("newPassword"));
     }
     const infoUserId = document.getElementById("infoUserId");
     const infoUsername = document.getElementById("infoUsername");
@@ -775,13 +792,8 @@
     document.getElementById("emailBtn").addEventListener("click", function() {
         const btn = this;
         const result = document.getElementById("emailResult");
+        if (window.ZIYIT_FV && !window.ZIYIT_FV.validateAll(["newEmail"])) return;
         const email = document.getElementById("newEmail").value.trim();
-        if (!email || email.indexOf("@") < 0) {
-            result.textContent = "请输入正确的邮箱";
-            result.className = "result error";
-            result.style.display = "block";
-            return;
-        }
         btn.disabled = true;
         result.style.display = "none";
         ZIYIT_API.updateEmail(email).then(function() {
@@ -805,29 +817,8 @@
         const result = document.getElementById("passwordResult");
         const oldPwd = document.getElementById("oldPassword").value;
         const newPwd = document.getElementById("newPassword").value;
-        const confirmPwd = document.getElementById("confirmPassword").value;
-        if (!oldPwd) {
-            result.textContent = "请输入原密码";
-            result.className = "result error";
-            result.style.display = "block";
-            return;
-        }
-        if (!newPwd) {
-            result.textContent = "请输入新密码";
-            result.className = "result error";
-            result.style.display = "block";
-            return;
-        }
-        if (newPwd !== confirmPwd) {
-            result.textContent = "两次输入的新密码不一致";
-            result.className = "result error";
-            result.style.display = "block";
-            return;
-        }
-        if (newPwd === oldPwd) {
-            result.textContent = "新密码不能与原密码相同";
-            result.className = "result error";
-            result.style.display = "block";
+        if (window.ZIYIT_FV &&
+            !window.ZIYIT_FV.validateAll(["oldPassword", "newPassword", "confirmPassword"])) {
             return;
         }
         btn.disabled = true;

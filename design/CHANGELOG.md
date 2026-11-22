@@ -3,6 +3,17 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.77 — 2026-11-22
+### 新增
+- **统一表单校验体系**：新增 [form-validation.js](file:///f:/Code/html/ziyit/assets/form-validation.js) 与 [form-validation.css](file:///f:/Code/html/ziyit/assets/form-validation.css)，提供 `attach()` / `validateAll()` / 共用 `presets`。注册、修改邮箱、修改密码全部改为同一套逻辑：
+  - 输入框为空时，`blur` / `input` 阶段不提示必填，只有点击提交（`validateAll`）才显示「不能为空」；
+  - 非空时 `blur` 立即完整校验并显示红色错误；
+  - 已有错误时 `input` 每次变化即时复检，合规立刻移除红框与文案；
+  - 密码框下方固定展示 3 条灰色规则（6–16 位 / 含字母 / 含数字），输入时逐项变绿；
+  - 提交统一走 `validateAll()`，聚焦第一个非法项。
+- **接入页面**：[register.html](file:///f:/Code/html/ziyit/user/register.html)（去掉原生校验/alert 拦截）、[profile.html](file:///f:/Code/html/ziyit/user/profile.html)（修改邮箱 + 修改密码）、[password.html](file:///f:/Code/html/ziyit/user/password.html)（申请修改密码）。原密码仅校验必填，不展示强度清单。
+- **规范与测试**：[DESIGN.md](file:///f:/Code/html/ziyit/design/DESIGN.md#L445) 新增 §4.15 表单校验规范；[ui-test.html](file:///f:/Code/html/ziyit/design/ui-test.html) 在原页面基础上**追加**「§4.15 规范 + 三模块实时演示 + 12 条自动化用例」，未删除原有内容，浏览器实测 **12 / 12 通过**（空值失焦不提示、提交才提示必填、非空失焦报错、输入即清除、逐项点亮、长度边界、两次不一致、与原密码相同、提交拦截、三模块一致性、规则不重复渲染等）。
+
 ## v1.76 — 2026-11-21
 ### 变更
 - **管理后台新增「会话总览」页**（[admin.html](file:///f:/Code/html/ziyit/music/admin.html#L993-L1025)、[admin.js](file:///f:/Code/html/ziyit/music/admin.js#L4884-L5300)）：AI 与计费分组、Lv.3+；进入即调 `GET /guide/human/sessions?status=active`，按 `lastActivityAt` 倒序展示关联用户（用户名 + ID）、状态角标（等待接入 / 人工中）、当前接管客服、最后一条消息、`appeal` 申诉标记与 `mine`「我的会话」标记；顶部汇总总数与两种状态数量。

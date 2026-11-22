@@ -52,29 +52,11 @@
         const username = el("username").value.trim();
         const email = el("email").value.trim();
         const password = el("password").value;
-        const confirmPassword = el("confirmPassword").value;
-        if (!username) {
-            alert("用户名不能为空！");
+        // 统一校验：失焦/输入已实时提示，这里只做提交前的最终拦截
+        if (window.ZIYIT_FV &&
+            !window.ZIYIT_FV.validateAll(["username", "email", "password", "confirmPassword"])) {
             return false;
         }
-        if (!password) {
-            alert("密码不能为空！");
-            return false;
-        }
-        if (!email) {
-            alert("请输入有效的邮箱地址！");
-            return false;
-        }
-        const emailRe = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-        if (!emailRe.test(email)) {
-            alert("邮箱格式不正确，请检查后重试！");
-            return false;
-        }
-        if (!confirmPassword || confirmPassword !== password) {
-            showTip("confirmPasswordError", null);
-            return false;
-        }
-        hideTip("confirmPasswordError");
         if (!st || !st.challengeId || !st.sessionId) {
             if (captchaTip) captchaTip.style.display = "block";
             if (st) {
@@ -161,19 +143,13 @@
         }
     };
     window.addEventListener("DOMContentLoaded", function() {
-        const confirmPwd = el("confirmPassword");
-        const confirmErr = el("confirmPasswordError");
-        if (confirmPwd && confirmErr) {
-            confirmPwd.addEventListener("input", function() {
-                confirmErr.style.display = "none";
-            });
-        }
-        const usernameInput = el("username");
-        const usernameError = el("usernameError");
-        if (usernameInput && usernameError) {
-            usernameInput.addEventListener("input", function() {
-                usernameError.style.display = "none";
-            });
+        // 统一表单校验（注册 / 修改邮箱 / 修改密码同一套规则与交互）
+        if (window.ZIYIT_FV) {
+            const FV = window.ZIYIT_FV;
+            FV.attach("username", FV.presets.username());
+            FV.attach("email", FV.presets.email());
+            FV.attach("password", FV.presets.password());
+            FV.attach("confirmPassword", FV.presets.confirmPassword("password"));
         }
         const form = document.querySelector("form");
         if (form) {

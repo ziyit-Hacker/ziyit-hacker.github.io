@@ -2,7 +2,7 @@
 
 > 配套文档：[AGENTS.md](./AGENTS.md)（协作规范）。
 > 本文档是全站 UI 的**唯一视觉依据**，所有页面（除 `backrooms/` 外）必须遵守。
-> 版本：v1.20　|　最近更新：2026-08-09　|　变更记录见 [CHANGELOG.md](./CHANGELOG.md)
+> 版本：v1.21　|　最近更新：2026-11-22　|　变更记录见 [CHANGELOG.md](./CHANGELOG.md)
 
 ---
 
@@ -441,6 +441,68 @@ body { font-size: 15px; line-height: 1.6; color: var(--ziyit-text-primary); }
 - 老浏览器不支持 `prefers-color-scheme` 时，"跟随系统"自动回退浅色，不影响其余功能。
 
 **使用场景**：全站顶栏/设置页，用户可自定义明暗偏好。
+
+### 4.15 表单校验（Form Validation）
+
+**适用范围**：注册、修改邮箱、修改密码，以及后续任何包含同类输入框的表单。三处必须共用
+`assets/form-validation.js` + `assets/form-validation.css`，禁止在页面里各写一套校验逻辑。
+
+**触发时机（唯一标准）**
+
+| 时机 | 必须行为 | 视觉结果 |
+|---|---|---|
+| `blur` 失焦（空值） | 不提示、不报错，必填校验留到提交 | 保持默认样式，不计为失败 |
+| `blur` 失焦（非空） | 立即执行该输入框的完整规则校验，禁止延迟到点击提交 | 失败：红色描边 + 下方 13px 红色错误文案 |
+| `input` 输入中（已有错误） | 每次内容变化即时复检，不等待再次失焦 | 一旦合规：立刻移除红框与错误文案 |
+| `input` 输入中（密码） | 逐项实时判断强度规则 | 满足项由灰色 `○` 变绿色 `✓` + 绿色文字 |
+| 提交 | `ZIYIT_FV.validateAll([...])` 逐项校验 | 空值在此刻提示必填；聚焦第一个非法项并阻止请求 |
+
+> 空值提示时机：输入框为空时，`blur` 与 `input` 阶段一律不显示必填错误，避免用户刚进入表单就被标红；只有点击提交调用 `validateAll()` 时才提示「此项不能为空」。非空的格式/强度错误仍按上表即时反馈。
+
+**视觉标准**
+
+- 错误文案：`--ziyit-danger`、13px、行高 1.5、与输入框间距 6px；节点带 `role="alert"` 与 `aria-live="polite"`。
+- 错误边框：`--ziyit-danger` 1px + 3px 半透明红光环；与 focus 蓝环互斥（错误态优先）。
+- 出错输入框：`.fv-invalid` + `aria-invalid="true"`；恢复合规后立即移除两者。
+- 密码规则清单：12px、固定展示、默认 `--ziyit-text-secondary`；满足项 `.is-ok` 使用 `--ziyit-success`。
+
+**密码规则（清单与校验共用同一份定义）**
+
+1. 长度为 6–16 个字符；
+2. 至少包含 1 个字母；
+3. 至少包含 1 个数字。
+
+**例外**：修改密码页的「原密码」仅校验必填，不展示强度清单——它用于身份校验，不涉及设定新密码。
+「确认密码」与「新密码」一致性的错误文案统一为「两次输入的密码不一致」。
+
+**接入方式**
+
+```html
+<link rel="stylesheet" href="../assets/form-validation.css?v=1">
+<script src="../assets/form-validation.js?v=1"></script>
+```
+
+```js
+// 注册
+FV.attach("username", FV.presets.username());
+FV.attach("email", FV.presets.email());
+FV.attach("password", FV.presets.password());
+FV.attach("confirmPassword", FV.presets.confirmPassword("password"));
+
+// 修改邮箱 / 修改密码
+FV.attach("newEmail", FV.presets.email());
+FV.attach("oldPassword", FV.presets.oldPassword());
+FV.attach("newPassword", FV.presets.password());
+FV.attach("confirmPassword", FV.presets.confirmPassword("newPassword"));
+
+// 提交前
+if (!FV.validateAll(["email", "password"])) return;
+```
+
+**验收**：`design/ui-test.html` 内置规范说明、三个模块的实时演示与 12 条自动化用例，
+覆盖空值失焦不提示、提交才提示必填、非空失焦报错、输入即清除、逐项点亮、长度边界、
+两次不一致、与原密码相同、提交拦截、三模块一致性、规则清单不重复渲染等场景，
+改动校验逻辑后必须先让该页 12 / 12 通过。
 
 ## 5. 图标系统
 

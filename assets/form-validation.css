@@ -1,0 +1,46 @@
+/* ZIYIT 统一表单校验样式（与 assets/form-validation.js 配套） */
+.fv-error {
+    display: none;
+    margin-top: 6px;
+    color: var(--ziyit-danger, #f25767);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.fv-invalid,
+.fv-invalid:focus {
+    border-color: var(--ziyit-danger, #f25767) !important;
+    box-shadow: 0 0 0 3px rgba(242, 87, 103, 0.16) !important;
+}
+
+.fv-rules {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--ziyit-text-secondary, #666);
+}
+
+.fv-rules li {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    transition: color 0.15s ease;
+}
+
+.fv-rules li::before {
+    content: "○";
+    flex: none;
+    color: var(--ziyit-text-disabled, #999);
+}
+
+.fv-rules li.is-ok {
+    color: var(--ziyit-success, #28a745);
+}
+
+.fv-rules li.is-ok::before {
+    content: "✓";
+    font-weight: 700;
+    color: var(--ziyit-success, #28a745);
+}

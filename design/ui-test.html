@@ -344,7 +344,34 @@
         .theme-opt:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ziyit-primary-light); }
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { transition: none !important; animation: none !important; }
-        }</style>
+        }
+        /* 4.15 表单校验：演示与自动化用例（仅使用既有 token） */
+        .fv-demos { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+        .fv-demo {
+            background: var(--ziyit-bg-card); border: 1px solid var(--ziyit-border-light);
+            border-radius: 8px; padding: 16px 20px 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+        }
+        .fv-demo h3 { font-size: 15px; font-weight: 600; color: var(--ziyit-text-primary); margin-bottom: 4px; }
+        .fv-demo .fv-demo-desc { font-size: 12px; color: var(--ziyit-text-secondary); margin-bottom: 14px; }
+        .fv-demo .form-group { margin-bottom: 14px; }
+        .fv-demo .input { max-width: 100%; }
+        .fv-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .fv-table th, .fv-table td { border: 1px solid var(--ziyit-border-light); padding: 8px 12px; text-align: left; vertical-align: top; }
+        .fv-table th { background: var(--ziyit-bg-hover); color: var(--ziyit-text-primary); font-weight: 600; }
+        .fv-table code { font-size: 12px; }
+        .fv-test-result { display: grid; gap: 6px; margin-top: 12px; }
+        .fv-case {
+            display: flex; align-items: flex-start; gap: 8px;
+            padding: 6px 10px; border-radius: 6px; background: var(--ziyit-bg); font-size: 13px;
+        }
+        .fv-case .badge { flex: none; font-size: 12px; font-weight: 700; }
+        .fv-case.pass .badge { color: var(--ziyit-success); }
+        .fv-case.fail .badge { color: var(--ziyit-danger); }
+        .fv-summary { margin-top: 12px; font-size: 13px; font-weight: 600; }
+        .fv-summary.pass { color: var(--ziyit-success); }
+        .fv-summary.fail { color: var(--ziyit-danger); }
+</style>
+<link rel="stylesheet" href="../assets/form-validation.css?v=1">
 </head>
 <body>
     <div class="site-nav">
@@ -651,6 +678,57 @@
                 <div class="row"><span class="caption">实现要点：① 仅交换中性色 token，品牌主色不变；② 深色模式同时修正 code / 表格斑马纹 / 禁用输入框 / 骨架屏等硬编码浅色；③ 监听 <code>prefers-color-scheme</code>，系统切换时"跟随系统"模式自动响应。</span></div>
             </div>
         </div>
+        <div class="section" id="form-validation">
+            <h2>4.15 表单校验</h2>
+            <p class="desc">注册 / 修改邮箱 / 修改密码共用同一套规则与交互（DESIGN.md §4.15）。空值在失焦、输入阶段不提示，只有点击提交时才提示必填。</p>
+            <div class="panel">
+                <table class="fv-table">
+                    <thead>
+                        <tr><th style="width:150px">时机</th><th>必须行为</th><th style="width:230px">视觉结果</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>失焦（空值）</td><td>不提示、不报错，必填校验留到提交</td><td>保持默认样式</td></tr>
+                        <tr><td>失焦（非空）</td><td>立即执行该输入框的完整规则校验</td><td>失败：红框 + 13px 红色文案</td></tr>
+                        <tr><td>输入中（已有错误）</td><td>每次内容变化即时复检</td><td>一旦合规：立刻移除红框与文案</td></tr>
+                        <tr><td>输入中（密码）</td><td>逐项实时判断强度规则</td><td>满足项由灰色 ○ 变绿色 ✓</td></tr>
+                        <tr><td>提交</td><td><code>ZIYIT_FV.validateAll([...])</code> 逐项校验，聚焦第一个非法项</td><td>空值在此刻提示必填，并阻止请求</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="fv-demos">
+                <form class="fv-demo" id="fvDemoRegister" data-fv-name="注册" data-fv-demo="fvRegUsername fvRegEmail fvRegPassword fvRegConfirm" autocomplete="off" novalidate>
+                    <h3>注册</h3>
+                    <p class="fv-demo-desc">昵称 / 邮箱 / 密码 / 确认密码</p>
+                    <div class="form-group"><label for="fvRegUsername">昵称</label><input class="input" id="fvRegUsername" maxlength="15" placeholder="输入昵称"></div>
+                    <div class="form-group"><label for="fvRegEmail">邮箱</label><input class="input" id="fvRegEmail" placeholder="输入邮箱"></div>
+                    <div class="form-group"><label for="fvRegPassword">密码</label><input class="input" id="fvRegPassword" type="password" placeholder="输入密码"></div>
+                    <div class="form-group"><label for="fvRegConfirm">确认密码</label><input class="input" id="fvRegConfirm" type="password" placeholder="再次输入密码"></div>
+                    <button type="submit" class="btn btn-primary" style="width:100%">提交注册</button>
+                </form>
+                <form class="fv-demo" id="fvDemoEmail" data-fv-name="修改邮箱" data-fv-demo="fvMailEmail fvMailPassword" autocomplete="off" novalidate>
+                    <h3>修改邮箱</h3>
+                    <p class="fv-demo-desc">新邮箱 / 当前密码</p>
+                    <div class="form-group"><label for="fvMailEmail">新邮箱</label><input class="input" id="fvMailEmail" placeholder="输入新邮箱"></div>
+                    <div class="form-group"><label for="fvMailPassword">当前密码</label><input class="input" id="fvMailPassword" type="password" placeholder="验证身份"></div>
+                    <button type="submit" class="btn btn-primary" style="width:100%">提交修改</button>
+                </form>
+                <form class="fv-demo" id="fvDemoPassword" data-fv-name="修改密码" data-fv-demo="fvPwdOld fvPwdNew fvPwdConfirm" autocomplete="off" novalidate>
+                    <h3>修改密码</h3>
+                    <p class="fv-demo-desc">原密码 / 新密码 / 确认新密码</p>
+                    <div class="form-group"><label for="fvPwdOld">原密码</label><input class="input" id="fvPwdOld" type="password" placeholder="输入原密码"></div>
+                    <div class="form-group"><label for="fvPwdNew">新密码</label><input class="input" id="fvPwdNew" type="password" placeholder="输入新密码"></div>
+                    <div class="form-group"><label for="fvPwdConfirm">确认新密码</label><input class="input" id="fvPwdConfirm" type="password" placeholder="再次输入新密码"></div>
+                    <button type="submit" class="btn btn-primary" style="width:100%">提交申请</button>
+                </form>
+            </div>
+            <div class="panel" style="margin-top:20px">
+                <div class="row"><span class="caption">自动化用例（页面加载后自动执行，可重新运行）：</span></div>
+                <div class="row"><button type="button" class="btn btn-secondary btn-sm" onclick="runFormValidationTests()">重新运行测试</button></div>
+                <div class="fv-test-result" id="fvTestResult"></div>
+                <div class="fv-summary" id="fvTestSummary"></div>
+            </div>
+            <div id="fvTestArea" aria-hidden="true" style="position:fixed;left:0;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none"></div>
+        </div>
         <div class="section" id="toast">
             <h2>4.9 Toast 提示</h2>
             <p class="desc">成功 / 错误 / 信息，自动消失，替代 alert()（DESIGN.md §4.9）。</p>
@@ -827,5 +905,250 @@ if (swAuto && iUpdate) {
     swAuto.addEventListener("change", syncUpdate);
     syncUpdate();
 }</script>
+<script src="../assets/form-validation.js?v=1"></script>
+<script>(function () {
+    var FV = window.ZIYIT_FV;
+    if (!FV) return;
+
+    /* ---------- 三模块实时演示 ---------- */
+    FV.attach("fvRegUsername", FV.presets.username());
+    FV.attach("fvRegEmail", FV.presets.email());
+    FV.attach("fvRegPassword", FV.presets.password());
+    FV.attach("fvRegConfirm", FV.presets.confirmPassword("fvRegPassword"));
+
+    FV.attach("fvMailEmail", FV.presets.email());
+    FV.attach("fvMailPassword", FV.presets.oldPassword());
+
+    FV.attach("fvPwdOld", FV.presets.oldPassword());
+    var pwdCfg = FV.presets.password();
+    pwdCfg.rules = pwdCfg.rules.concat([{
+        test: function (v) {
+            var old = document.getElementById("fvPwdOld");
+            return old && old.value && v === old.value ? "新密码不能与原密码相同" : "";
+        }
+    }]);
+    FV.attach("fvPwdNew", pwdCfg);
+    FV.attach("fvPwdConfirm", FV.presets.confirmPassword("fvPwdNew"));
+
+    document.querySelectorAll("form[data-fv-demo]").forEach(function (form) {
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var ids = (form.getAttribute("data-fv-demo") || "").split(/\s+/).filter(Boolean);
+            if (!FV.validateAll(ids)) return;
+            showToast("ok", form.getAttribute("data-fv-name") + "校验通过（演示，不提交请求）");
+            form.querySelectorAll("input").forEach(function (input) {
+                input.value = "";
+                if (input.__fv) input.__fv.validate(false);
+            });
+        });
+    });
+
+    /* ---------- 自动化用例 ---------- */
+    var area = document.getElementById("fvTestArea");
+    var resultEl = document.getElementById("fvTestResult");
+    var summaryEl = document.getElementById("fvTestSummary");
+
+    function pick(id) { return document.getElementById(id); }
+    function mk(id, options, type) {
+        var input = document.createElement("input");
+        input.type = type || "text";
+        input.id = id;
+        input.className = "input";
+        input.setAttribute("tabindex", "-1");
+        area.appendChild(input);
+        FV.attach(id, options);
+        return input;
+    }
+    function fire(id, value, evt) {
+        var input = pick(id);
+        if (value !== undefined) input.value = value;
+        input.dispatchEvent(new Event(evt || "input"));
+    }
+    function errText(id) {
+        var api = pick(id).__fv;
+        return api && api.errorEl ? api.errorEl.textContent : "";
+    }
+    function isInvalid(id) { return pick(id).classList.contains("fv-invalid"); }
+    function okCount(id) {
+        var api = pick(id).__fv;
+        return api && api.rulesList ? api.rulesList.querySelectorAll("li.is-ok").length : 0;
+    }
+
+    // 12 条用例：空值失焦不提示、提交才提示必填，其余覆盖规则与一致性
+    var CASES = [
+        {
+            name: "空值失焦不提示必填",
+            run: function () {
+                mk("fvT1", FV.presets.username());
+                fire("fvT1", "", "blur");
+                return errText("fvT1") === "" && !isInvalid("fvT1");
+            }
+        },
+        {
+            name: "提交时才提示必填并拦截",
+            run: function () {
+                mk("fvT2", FV.presets.username());
+                var passed = FV.validateAll(["fvT2"]);
+                return passed === false && errText("fvT2") === "请输入昵称" && isInvalid("fvT2");
+            }
+        },
+        {
+            name: "非空失焦立即提示格式错误",
+            run: function () {
+                mk("fvT3", FV.presets.email());
+                fire("fvT3", "abc", "blur");
+                return /邮箱格式不正确/.test(errText("fvT3")) && isInvalid("fvT3");
+            }
+        },
+        {
+            name: "已有错误时输入合规立即清除",
+            run: function () {
+                mk("fvT4", FV.presets.email());
+                fire("fvT4", "abc", "blur");
+                fire("fvT4", "ziyit@example.com", "input");
+                return errText("fvT4") === "" && !isInvalid("fvT4");
+            }
+        },
+        {
+            name: "密码规则逐项点亮（abc → abc123）",
+            run: function () {
+                mk("fvT5", FV.presets.password(), "password");
+                fire("fvT5", "abc");
+                var partial = okCount("fvT5");
+                fire("fvT5", "abc123");
+                return partial === 1 && okCount("fvT5") === 3;
+            }
+        },
+        {
+            name: "密码长度边界：5 位报错、16 位通过",
+            run: function () {
+                mk("fvT6", FV.presets.password(), "password");
+                fire("fvT6", "abc12", "blur");
+                var shortFail = /长度/.test(errText("fvT6"));
+                fire("fvT6", "abcd123456789012", "blur");
+                return shortFail && errText("fvT6") === "";
+            }
+        },
+        {
+            name: "密码超过 16 位报错",
+            run: function () {
+                mk("fvT7", FV.presets.password(), "password");
+                fire("fvT7", "abcd1234567890123", "blur");
+                return /长度/.test(errText("fvT7"));
+            }
+        },
+        {
+            name: "两次密码不一致提示且修正后清除",
+            run: function () {
+                mk("fvT8a", FV.presets.password(), "password");
+                mk("fvT8b", FV.presets.confirmPassword("fvT8a"), "password");
+                fire("fvT8a", "abc123");
+                fire("fvT8b", "abc124", "blur");
+                var mismatch = /不一致/.test(errText("fvT8b"));
+                fire("fvT8b", "abc123", "input");
+                return mismatch && errText("fvT8b") === "";
+            }
+        },
+        {
+            name: "新密码不能与原密码相同",
+            run: function () {
+                mk("fvT9old", FV.presets.oldPassword(), "password");
+                var cfg = FV.presets.password();
+                cfg.rules = cfg.rules.concat([{
+                    test: function (v) {
+                        var old = pick("fvT9old");
+                        return old && old.value && v === old.value ? "新密码不能与原密码相同" : "";
+                    }
+                }]);
+                mk("fvT9new", cfg, "password");
+                fire("fvT9old", "abc123");
+                fire("fvT9new", "abc123", "blur");
+                return /不能与原密码相同/.test(errText("fvT9new"));
+            }
+        },
+        {
+            name: "清空后失焦不报错，再次提交才报必填",
+            run: function () {
+                mk("fvT10", FV.presets.username());
+                FV.validateAll(["fvT10"]);
+                var hadError = errText("fvT10") !== "";
+                fire("fvT10", "", "blur");
+                var clearedOnBlur = errText("fvT10") === "";
+                var blocked = FV.validateAll(["fvT10"]) === false;
+                return hadError && clearedOnBlur && blocked && errText("fvT10") === "请输入昵称";
+            }
+        },
+        {
+            name: "三个模块空值提交均被拦截并提示",
+            run: function () {
+                mk("fvT11a", FV.presets.email());
+                mk("fvT11b", FV.presets.password(), "password");
+                var register = FV.validateAll(["fvT11a", "fvT11b"]);
+                mk("fvT11c", FV.presets.email());
+                var email = FV.validateAll(["fvT11c"]);
+                mk("fvT11d", FV.presets.oldPassword(), "password");
+                mk("fvT11e", FV.presets.password(), "password");
+                mk("fvT11f", FV.presets.confirmPassword("fvT11e"), "password");
+                var password = FV.validateAll(["fvT11d", "fvT11e", "fvT11f"]);
+                return register === false && email === false && password === false &&
+                    !!errText("fvT11a") && !!errText("fvT11c") && !!errText("fvT11e");
+            }
+        },
+        {
+            name: "重复接入不重复渲染错误节点与规则清单",
+            run: function () {
+                mk("fvT12", FV.presets.password(), "password");
+                FV.attach("fvT12", FV.presets.password());
+                return area.querySelectorAll(".fv-error").length === 1 &&
+                    area.querySelectorAll(".fv-rules").length === 1 &&
+                    area.querySelectorAll(".fv-rules li").length === 3;
+            }
+        }
+    ];
+
+    function resetArea() { area.innerHTML = ""; }
+
+    function render(results) {
+        var passed = 0;
+        resultEl.innerHTML = "";
+        results.forEach(function (r, i) {
+            if (r.pass) passed++;
+            var row = document.createElement("div");
+            row.className = "fv-case " + (r.pass ? "pass" : "fail");
+            var badge = document.createElement("span");
+            badge.className = "badge";
+            badge.textContent = r.pass ? "PASS" : "FAIL";
+            var text = document.createElement("span");
+            text.textContent = (i + 1) + ". " + r.name + (r.detail ? "（" + r.detail + "）" : "");
+            row.appendChild(badge);
+            row.appendChild(text);
+            resultEl.appendChild(row);
+        });
+        summaryEl.className = "fv-summary " + (passed === results.length ? "pass" : "fail");
+        summaryEl.textContent = "自动化用例：" + passed + " / " + results.length +
+            (passed === results.length ? "，全部通过" : "，存在失败项");
+        window.FV_TEST_RESULTS = { passed: passed, total: results.length, results: results };
+    }
+
+    function runFormValidationTests() {
+        var results = [];
+        CASES.forEach(function (c) {
+            resetArea();
+            var pass = false, detail = "";
+            try {
+                pass = c.run() === true;
+            } catch (e) {
+                detail = e && e.message ? e.message : String(e);
+            }
+            results.push({ name: c.name, pass: pass, detail: detail });
+        });
+        resetArea();
+        render(results);
+        return window.FV_TEST_RESULTS;
+    }
+
+    window.runFormValidationTests = runFormValidationTests;
+    runFormValidationTests();
+})();</script>
 </body>
 </html>
