@@ -561,27 +561,35 @@
                 var err = new Error(errorText(detail) || (status === 428 ? "请求被拒绝（428），请刷新页面重试" : "请求失败 " + status));
                 err.status = status;
                 err.data = data;
-                var eulaCode = detail && typeof detail === "object" ? detail.code : "";
-                if (status === 403 && detail && typeof detail === "object" && detail.message && eulaCode !== "EULA_NOT_ACCEPTED") {
+                var detailObj = detail && typeof detail === "object" ? detail : null;
+                var eulaCode = detailObj ? (detailObj.code || detailObj.error_code || "") : "";
+                var detailMsg = errorText(detail);
+                // 后端对「登录成功但未同意 EULA」返回 428，detail 可能是对象也可能是纯文案，
+                // 因此除 code 外还需按状态码与文案兜底识别，否则同意页不会弹出。
+                var isEula = status === 428 || eulaCode === "EULA_NOT_ACCEPTED" ||
+                    !!(detailObj && detailObj.eula) ||
+                    /EULA|用户最终许可协议/i.test(detailMsg);
+                if (status === 403 && detailObj && detailObj.message && !isEula) {
                     try {
-                        showBlockedBanner(detail.message);
+                        showBlockedBanner(detailObj.message);
                     } catch (e) {}
                 }
-                if (eulaCode === "EULA_NOT_ACCEPTED" && (status === 403 || status === 428)) {
+                if (isEula) {
                     // EULA 未同意：403（业务接口）/428（登录成功但需先同意）
                     err.eulaRequired = true;
-                    err.eula = detail.eula || detail;
+                    err.eula = detailObj && (detailObj.eula || detailObj) || data && data.eula || {};
                     try { eulaMarkPending(true); } catch (e) {}
-                    if (status === 428) {
-                        // 428 的 detail 里带着刚签发的登录凭据，先落盘再拉起同意页
-                        try {
-                            if (detail.rememberToken) setRememberToken(detail.rememberToken);
-                            var _tk = detail.accessToken || detail.access_token || detail.token;
-                            if (_tk) setToken(_tk, false);
-                        } catch (e) {}
-                    }
+                    // 登录场景下 detail 里可能带着刚签发的凭据，先落盘再拉起同意页
                     try {
-                        showEulaGate(detail.eula || detail);
+                        var bag = detailObj || (data && typeof data === "object" ? data : {});
+                        var rt = bag.rememberToken || data && data.rememberToken;
+                        if (rt) setRememberToken(rt);
+                        var _tk = bag.accessToken || bag.access_token || bag.token ||
+                            data && (data.accessToken || data.access_token || data.token);
+                        if (_tk) setToken(_tk, false);
+                    } catch (e) {}
+                    try {
+                        showEulaGate(err.eula);
                     } catch (e) {}
                 }
                 try {

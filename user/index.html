@@ -294,7 +294,7 @@
         </div>
     </div>
     <script src="../assets/xss_guard.js?v=20261114"></script>
-    <script src="../assets/ziyit_api.js?v=20261121b"></script>
+    <script src="../assets/ziyit_api.js?v=20261122a"></script>
     <script src="../assets/webauthn.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script>let errorDiv = null;
@@ -410,10 +410,15 @@ function checkPassword() {
     pendingRemember = rememberMe;
     ZIYIT_API.login(username, password, rememberMe).then(handleLoginResponse).catch(error => {
         console.error("登录失败:", error);
-        if (error.status === 428 && error.eulaRequired) {
-            // 登录成功但未同意当前版本 EULA：凭据已由 api 层保存，同意页已拉起
-            showError("请先阅读并同意最新版《用户最终许可协议》");
+        if (error.eulaRequired || error.status === 428) {
+            // 登录成功但未同意当前版本 EULA：凭据已由 api 层保存，同意页应已拉起
+            showError("登录成功，请先阅读并同意最新版《用户最终许可协议（EULA）》");
             hideAppealLink();
+            // 兜底：若同意页因识别差异没有自动弹出，这里主动拉起
+            if (!document.getElementById("ziyit-eula-gate") && window.ZIYIT_API &&
+                typeof ZIYIT_API.showEulaGate === "function") {
+                ZIYIT_API.showEulaGate(error.eula || {});
+            }
         } else if (error.status === 401) {
             showError("用户名或密码错误");
         } else if (error.status === 422) {
