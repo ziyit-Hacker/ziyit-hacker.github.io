@@ -388,6 +388,10 @@ inputs.forEach(input => {
     input.addEventListener("focus", checkFocus);
     input.addEventListener("blur", checkFocus);
 });
+// EULA 同意完成后：登录页直接进入站点首页（同意前全屏遮罩禁止跳转）
+window.ZIYIT_EULA_AFTER_ACCEPT = function () {
+    window.location.href = "../";
+};
 function checkPassword() {
     hideAppealLink();
     const username = document.getElementById("username").value;
@@ -406,7 +410,11 @@ function checkPassword() {
     pendingRemember = rememberMe;
     ZIYIT_API.login(username, password, rememberMe).then(handleLoginResponse).catch(error => {
         console.error("登录失败:", error);
-        if (error.status === 401) {
+        if (error.status === 428 && error.eulaRequired) {
+            // 登录成功但未同意当前版本 EULA：凭据已由 api 层保存，同意页已拉起
+            showError("请先阅读并同意最新版《用户最终许可协议》");
+            hideAppealLink();
+        } else if (error.status === 401) {
             showError("用户名或密码错误");
         } else if (error.status === 422) {
             showError("输入格式有误");

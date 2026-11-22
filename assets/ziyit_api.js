@@ -561,9 +561,27 @@
                 var err = new Error(errorText(detail) || (status === 428 ? "请求被拒绝（428），请刷新页面重试" : "请求失败 " + status));
                 err.status = status;
                 err.data = data;
-                if (status === 403 && detail && typeof detail === "object" && detail.message) {
+                var eulaCode = detail && typeof detail === "object" ? detail.code : "";
+                if (status === 403 && detail && typeof detail === "object" && detail.message && eulaCode !== "EULA_NOT_ACCEPTED") {
                     try {
                         showBlockedBanner(detail.message);
+                    } catch (e) {}
+                }
+                if (eulaCode === "EULA_NOT_ACCEPTED" && (status === 403 || status === 428)) {
+                    // EULA 未同意：403（业务接口）/428（登录成功但需先同意）
+                    err.eulaRequired = true;
+                    err.eula = detail.eula || detail;
+                    try { eulaMarkPending(true); } catch (e) {}
+                    if (status === 428) {
+                        // 428 的 detail 里带着刚签发的登录凭据，先落盘再拉起同意页
+                        try {
+                            if (detail.rememberToken) setRememberToken(detail.rememberToken);
+                            var _tk = detail.accessToken || detail.access_token || detail.token;
+                            if (_tk) setToken(_tk, false);
+                        } catch (e) {}
+                    }
+                    try {
+                        showEulaGate(detail.eula || detail);
                     } catch (e) {}
                 }
                 try {
@@ -607,6 +625,8 @@
                             return request(path, options, 0, true, withMeta);
                         }, function(loginErr) {
                             if (loginErr && loginErr.status === 429) throw loginErr;
+                            // 428 = 登录成功但需先同意 EULA：同意页已拉起，切勿清掉刚拿到的凭据
+                            if (loginErr && loginErr.eulaRequired) throw loginErr;
                             clearToken();
                             handleUnauthorized();
                             throw err;
@@ -2320,4 +2340,336 @@
         backroomsTypeRewrite,
         backroomsTypeAdminDelete
     };
+    // ============================================================
+    // EULA 强制同意门（当前版本 SHA256 校验）
+    // ------------------------------------------------------------
+    // 触发方式：
+    //   1) 页面加载：已登录 → GET /eula/status，required=true 立即拉起同意页；
+    //   2) 任意业务请求 → 403 且 detail.code=EULA_NOT_ACCEPTED；
+    //   3) 登录成功 → 428 且 detail.code=EULA_NOT_ACCEPTED（凭据在 detail 里）。
+    // 交互与后端内置验证页一致：滚动阅读 + 计时 7 秒 + 到达底部后才可同意；
+    // 同意前全屏遮罩阻断页面其余操作，同意成功后提交 POST /eula/accept。
+    // ============================================================
+    var EULA_GATE_ID = "ziyit-eula-gate";
+    var EULA_REQUIRE_SECONDS = 7;
+    var eulaGate = {
+        doc: null,
+        after: null,
+        timer: null,
+        elapsed: 0,
+        timeOk: false,
+        bottomOk: false,
+        submitting: false,
+        checked: false,
+        loading: false
+    };
+    var EULA_GATE_EXPORTS = {
+        eulaStatus: eulaStatus,
+        eulaContent: eulaContent,
+        eulaAccept: eulaAccept,
+        showEulaGate: showEulaGate,
+        checkEulaOnLoad: checkEulaOnLoad
+    };
+    function eulaIsDark() {
+        try {
+            var t = document.documentElement.getAttribute("data-theme");
+            if (t === "dark") return true;
+            if (t === "light") return false;
+            return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        } catch (e) {
+            return false;
+        }
+    }
+    function eulaInjectStyle() {
+        try {
+            if (document.getElementById("ziyit-eula-style")) return;
+        } catch (e) {}
+        var css = ""
+            + "#ziyit-eula-gate{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:2147483600;display:flex;align-items:center;justify-content:center;padding:16px;"
+            + "font-family:\"Segoe UI\",\"Microsoft YaHei\",\"PingFang SC\",\"Helvetica Neue\",Arial,sans-serif;"
+            + "--zg-primary:#0078d4;--zg-primary-dark:#005a9e;--zg-primary-light:#e8f3fb;--zg-warning:#f3a707;--zg-success:#28a745;"
+            + "--zg-text:#333333;--zg-text2:#666666;--zg-disabled:#999999;--zg-border:#dddddd;--zg-border-light:#eeeeee;--zg-card:#ffffff;--zg-inverse:#ffffff;}"
+            + "#ziyit-eula-gate.zg-dark{--zg-text:#e6e6e6;--zg-text2:#a8adb8;--zg-disabled:#6b7078;--zg-border:#3a3f48;--zg-border-light:#2c3038;--zg-card:#1f2229;--zg-primary-light:rgba(0,120,212,.18);}"
+            + "#ziyit-eula-gate *{box-sizing:border-box;margin:0;padding:0;}"
+            + "#ziyit-eula-gate .zg-modal{background:var(--zg-card);border-radius:8px;width:100%;max-width:640px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.2);}"
+            + "#ziyit-eula-gate .zg-head{padding:16px 22px;border-bottom:1px solid var(--zg-border-light);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}"
+            + "#ziyit-eula-gate .zg-head h2{font-size:17px;color:var(--zg-text);font-weight:600;}"
+            + "#ziyit-eula-gate .zg-meta{font-size:12px;color:var(--zg-text2);margin-top:4px;}"
+            + "#ziyit-eula-gate .zg-timer{font-size:13px;color:var(--zg-warning);white-space:nowrap;}"
+            + "#ziyit-eula-gate .zg-timer.ok{color:var(--zg-success);}"
+            + "#ziyit-eula-gate .zg-content{overflow-y:auto;padding:18px 22px;flex:1;font-size:14px;line-height:1.9;color:var(--zg-text);}"
+            + "#ziyit-eula-gate .zg-content h1{font-size:20px;margin:16px 0 10px;}"
+            + "#ziyit-eula-gate .zg-content h2{font-size:17px;margin:14px 0 8px;}"
+            + "#ziyit-eula-gate .zg-content h3{font-size:15px;margin:12px 0 6px;}"
+            + "#ziyit-eula-gate .zg-content p{margin:8px 0;}"
+            + "#ziyit-eula-gate .zg-content ul,#ziyit-eula-gate .zg-content ol{padding-left:24px;margin:8px 0;}"
+            + "#ziyit-eula-gate .zg-content li{margin:4px 0;}"
+            + "#ziyit-eula-gate .zg-content a{color:var(--zg-primary);word-break:break-all;}"
+            + "#ziyit-eula-gate .zg-content hr{border:none;border-top:1px solid var(--zg-border-light);margin:16px 0;}"
+            + "#ziyit-eula-gate .zg-content blockquote{border-left:4px solid var(--zg-primary);background:var(--zg-primary-light);padding:8px 14px;margin:10px 0;color:var(--zg-text);}"
+            + "#ziyit-eula-gate .zg-hint{font-size:12px;color:var(--zg-disabled);text-align:center;padding:6px 0 0;}"
+            + "#ziyit-eula-gate .zg-foot{padding:14px 22px;border-top:1px solid var(--zg-border-light);display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;}"
+            + "#ziyit-eula-gate .zg-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 24px;border:none;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;background:var(--zg-primary);color:var(--zg-inverse);transition:background .2s,transform .1s;}"
+            + "#ziyit-eula-gate .zg-btn:hover:not(:disabled){background:var(--zg-primary-dark);}"
+            + "#ziyit-eula-gate .zg-btn:not(:disabled):active{transform:scale(.98);}"
+            + "#ziyit-eula-gate .zg-btn:disabled{background:#cccccc;color:#999999;cursor:not-allowed;}"
+            + "#ziyit-eula-gate .zg-err{font-size:13px;color:#f25767;margin-right:auto;line-height:1.5;}"
+            + "html.zg-lock,html.zg-lock body{overflow:hidden!important;}"
+            + "@media (max-width:480px){#ziyit-eula-gate .zg-modal{max-height:96vh;}}";
+        var st = document.createElement("style");
+        st.id = "ziyit-eula-style";
+        st.appendChild(document.createTextNode(css));
+        document.head.appendChild(st);
+    }
+    function eulaEsc(s) {
+        return String(s == null ? "" : s)
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+    function eulaInline(s) {
+        s = eulaEsc(s);
+        s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+        return s;
+    }
+    function eulaRenderMd(md) {
+        var lines = String(md || "").replace(/\r\n/g, "\n").split("\n");
+        var html = [], i = 0;
+        while (i < lines.length) {
+            var line = lines[i];
+            if (!line.trim()) { i++; continue; }
+            if (/^#{1,3}\s/.test(line)) {
+                var m = line.match(/^(#{1,3})\s+(.*)$/);
+                html.push("<h" + m[1].length + ">" + eulaInline(m[2]) + "</h" + m[1].length + ">");
+                i++; continue;
+            }
+            if (/^-{3,}$/.test(line.trim())) { html.push("<hr>"); i++; continue; }
+            if (/^>\s?/.test(line)) {
+                var q = [];
+                while (i < lines.length && /^>\s?/.test(lines[i])) { q.push(eulaInline(lines[i].replace(/^>\s?/, ""))); i++; }
+                html.push("<blockquote>" + q.join("<br>") + "</blockquote>"); continue;
+            }
+            if (/^[-*]\s+/.test(line)) {
+                var items = [];
+                while (i < lines.length && /^[-*]\s+/.test(lines[i])) { items.push("<li>" + eulaInline(lines[i].replace(/^[-*]\s+/, "")) + "</li>"); i++; }
+                html.push("<ul>" + items.join("") + "</ul>"); continue;
+            }
+            if (/^\d+\.\s+/.test(line)) {
+                var oitems = [];
+                while (i < lines.length && /^\d+\.\s+/.test(lines[i])) { oitems.push("<li>" + eulaInline(lines[i].replace(/^\d+\.\s+/, "")) + "</li>"); i++; }
+                html.push("<ol>" + oitems.join("") + "</ol>"); continue;
+            }
+            var p = [];
+            while (i < lines.length && lines[i].trim() && !/^(#|>|[-*]\s|\d+\.\s)/.test(lines[i])) { p.push(eulaInline(lines[i])); i++; }
+            html.push("<p>" + p.join("<br>") + "</p>");
+        }
+        return html.join("");
+    }
+    function eulaDecodeB64(str) {
+        var bin = atob(str);
+        var bytes = new Uint8Array(bin.length);
+        for (var j = 0; j < bin.length; j++) bytes[j] = bin.charCodeAt(j);
+        return new TextDecoder("utf-8").decode(bytes);
+    }
+    function eulaStatus() {
+        return request("/eula/status");
+    }
+    function eulaMarkPending(on) {
+        try {
+            if (on) localStorage.setItem("ziyit_eula_pending", "1");
+            else localStorage.removeItem("ziyit_eula_pending");
+        } catch (e) {}
+    }
+    function eulaIsPending() {
+        try {
+            return localStorage.getItem("ziyit_eula_pending") === "1";
+        } catch (e) {
+            return false;
+        }
+    }
+    function eulaContent() {
+        return request("/eula");
+    }
+    function eulaAccept(sha256, version) {
+        return post("/eula/accept", {
+            agree: true,
+            sha256: sha256 || "",
+            version: version || ""
+        });
+    }
+    function eulaCloseGate() {
+        var mask = document.getElementById(EULA_GATE_ID);
+        if (eulaGate.timer) { clearInterval(eulaGate.timer); eulaGate.timer = null; }
+        if (mask && mask.parentNode) mask.parentNode.removeChild(mask);
+        try { document.documentElement.classList.remove("zg-lock"); } catch (e) {}
+        eulaGate.bottomOk = false;
+        eulaGate.timeOk = false;
+        eulaGate.elapsed = 0;
+        eulaGate.submitting = false;
+    }
+    function showEulaGate(info, after) {
+        try {
+            if (typeof document === "undefined" || !document.body) return;
+            var existing = document.getElementById(EULA_GATE_ID);
+            if (existing) {
+                if (typeof after === "function") eulaGate.after = after;
+                return;
+            }
+            eulaInjectStyle();
+            eulaGate.doc = null;
+            eulaGate.after = typeof after === "function" ? after : null;
+            eulaGate.elapsed = 0;
+            eulaGate.timeOk = false;
+            eulaGate.bottomOk = false;
+            eulaGate.submitting = false;
+            var ver = info && (info.version || info.eulaVersion) || "";
+            var date = info && (info.updatedAt || "") || "";
+            var mask = document.createElement("div");
+            mask.id = EULA_GATE_ID;
+            mask.className = eulaIsDark() ? "zg-dark" : "";
+            mask.setAttribute("role", "dialog");
+            mask.setAttribute("aria-modal", "true");
+            mask.setAttribute("aria-label", "用户最终许可协议");
+            mask.innerHTML = ""
+                + '<div class="zg-modal">'
+                + '  <div class="zg-head"><div><h2>用户最终许可协议（EULA）</h2>'
+                + '    <div class="zg-meta" id="zgMeta">版本 ' + eulaEsc(ver || "-") + (date ? " · 更新于 " + eulaEsc(date) : "") + "</div></div>"
+                + '    <div class="zg-timer" id="zgTimer">请滑动阅读，开始计时</div></div>'
+                + '  <div class="zg-content" id="zgContent" tabindex="0"><p>协议内容加载中…</p></div>'
+                + '  <div class="zg-hint" id="zgHint">请滑动至协议最底部以继续</div>'
+                + '  <div class="zg-foot"><span class="zg-err" id="zgErr"></span>'
+                + '    <button type="button" class="zg-btn" id="zgAgree" disabled>同意并继续</button></div>'
+                + "</div>";
+            document.body.appendChild(mask);
+            try { document.documentElement.classList.add("zg-lock"); } catch (e) {}
+            var content = document.getElementById("zgContent");
+            var timerEl = document.getElementById("zgTimer");
+            var hintEl = document.getElementById("zgHint");
+            var errEl = document.getElementById("zgErr");
+            var agreeBtn = document.getElementById("zgAgree");
+            function syncBtn() {
+                agreeBtn.disabled = !(eulaGate.timeOk && eulaGate.bottomOk) || eulaGate.submitting;
+                if (eulaGate.timeOk) {
+                    timerEl.textContent = "已阅读 " + EULA_REQUIRE_SECONDS + " 秒";
+                    timerEl.className = "zg-timer ok";
+                }
+                if (eulaGate.bottomOk) hintEl.textContent = "已到达协议底部";
+            }
+            function startTimer() {
+                if (eulaGate.timer) return;
+                timerEl.textContent = "0 / " + EULA_REQUIRE_SECONDS + " 秒";
+                eulaGate.timer = setInterval(function () {
+                    eulaGate.elapsed++;
+                    if (eulaGate.elapsed >= EULA_REQUIRE_SECONDS) {
+                        eulaGate.elapsed = EULA_REQUIRE_SECONDS;
+                        eulaGate.timeOk = true;
+                        clearInterval(eulaGate.timer);
+                        eulaGate.timer = null;
+                    }
+                    timerEl.textContent = eulaGate.elapsed + " / " + EULA_REQUIRE_SECONDS + " 秒";
+                    syncBtn();
+                }, 1000);
+            }
+            content.addEventListener("scroll", function () {
+                if (!eulaGate.timeOk && !eulaGate.timer) startTimer();
+                if (content.scrollTop + content.clientHeight >= content.scrollHeight - 4) eulaGate.bottomOk = true;
+                syncBtn();
+            });
+            function loadDoc() {
+                eulaGate.loading = true;
+                eulaContent().then(function (data) {
+                    eulaGate.loading = false;
+                    eulaGate.doc = data || {};
+                    try {
+                        content.innerHTML = eulaRenderMd(eulaDecodeB64(data.content_base64 || ""));
+                    } catch (e) {
+                        content.innerHTML = "<p>协议内容加载失败，请刷新页面重试。</p>";
+                    }
+                    content.scrollTop = 0;
+                    document.getElementById("zgMeta").textContent = "版本 " + (data.version || "-") + (data.updatedAt ? " · 更新于 " + data.updatedAt : "");
+                    eulaGate.bottomOk = false;
+                    eulaGate.timeOk = false;
+                    eulaGate.elapsed = 0;
+                    timerEl.textContent = "请滑动阅读，开始计时";
+                    timerEl.className = "zg-timer";
+                    hintEl.textContent = "请滑动至协议最底部以继续";
+                    syncBtn();
+                }, function () {
+                    eulaGate.loading = false;
+                    content.innerHTML = "<p>协议内容加载失败，请检查网络后重试。</p>";
+                });
+            }
+            agreeBtn.addEventListener("click", function () {
+                if (agreeBtn.disabled || eulaGate.submitting) return;
+                if (!eulaGate.doc) {
+                    errEl.textContent = "协议尚未加载完成，请稍候。";
+                    return;
+                }
+                errEl.textContent = "";
+                eulaGate.submitting = true;
+                agreeBtn.disabled = true;
+                agreeBtn.textContent = "提交中…";
+                eulaAccept(eulaGate.doc.sha256, eulaGate.doc.version).then(function () {
+                    var cb = eulaGate.after;
+                    eulaMarkPending(false);
+                    eulaCloseGate();
+                    if (typeof window.ZIYIT_EULA_AFTER_ACCEPT === "function") {
+                        try { window.ZIYIT_EULA_AFTER_ACCEPT(); } catch (e) { window.location.reload(); }
+                    } else if (typeof cb === "function") {
+                        cb();
+                    } else {
+                        window.location.reload();
+                    }
+                }, function (err) {
+                    eulaGate.submitting = false;
+                    agreeBtn.textContent = "同意并继续";
+                    syncBtn();
+                    if (err && err.status === 409) {
+                        errEl.textContent = "协议刚刚更新，正在重新加载…";
+                        loadDoc();
+                    } else {
+                        errEl.textContent = "提交失败：" + (err && err.message || "请稍后重试");
+                    }
+                });
+            });
+            loadDoc();
+        } catch (e) {
+            try { console.warn("[EULA] 同意页渲染失败：", e); } catch (x) {}
+        }
+    }
+    function checkEulaOnLoad() {
+        if (eulaGate.checked) return;
+        eulaGate.checked = true;
+        if (typeof document === "undefined") return;
+        if (!getToken() && !getRememberToken()) return;
+        // 上一轮已被判定未同意：先立刻拉起遮罩（避免业务页面内容闪现），再用 status 校准
+        if (eulaIsPending()) showEulaGate({});
+        eulaStatus().then(function (st) {
+            if (st && st.authenticated && st.required) {
+                eulaMarkPending(true);
+                showEulaGate(st);
+            } else {
+                eulaMarkPending(false);
+                if (document.getElementById(EULA_GATE_ID)) eulaCloseGate();
+            }
+        }).catch(function (err) {
+            if (err && err.status === 403 && err.data && err.data.detail
+                    && err.data.detail.code === "EULA_NOT_ACCEPTED") {
+                eulaMarkPending(true);
+                showEulaGate(err.data.detail);
+            }
+        });
+    }
+    if (typeof document !== "undefined") {
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", checkEulaOnLoad);
+        } else {
+            setTimeout(checkEulaOnLoad, 0);
+        }
+    }
+    for (var _eulaKey in EULA_GATE_EXPORTS) {
+        if (Object.prototype.hasOwnProperty.call(EULA_GATE_EXPORTS, _eulaKey)) {
+            ZIYIT_API[_eulaKey] = EULA_GATE_EXPORTS[_eulaKey];
+        }
+    }
 })();
