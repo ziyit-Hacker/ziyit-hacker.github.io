@@ -86,9 +86,11 @@
         }
         return wrap;
     }
+    var MAX_TOASTS = 5;
     function dismiss(el) {
         var box = el.parentNode;
         if (!box) return;
+        el.__ziyitLeaving = true;
         // FLIP：先记录其余提示的位置，移除后再平滑归位，避免生硬上跳
         var sibs = Array.prototype.slice.call(box.children).filter(function(n) {
             return n !== el;
@@ -106,12 +108,23 @@
             setTimeout(function() { n.style.transition = ""; }, 260);
         });
     }
+    // 队列裁剪：同屏最多 MAX_TOASTS 条；用快照数组而非 children.length 循环，
+    // 因为 dismiss 是同步移除，这里必须保证每轮都能真正减少待处理条目，杜绝死循环。
+    function trim(box) {
+        var live = Array.prototype.filter.call(box.children, function(n) {
+            return !n.__ziyitLeaving;
+        });
+        while (live.length > MAX_TOASTS) dismiss(live.shift());
+        while (box.children.length > MAX_TOASTS + 3) box.removeChild(box.firstChild);
+    }
     function showToast(msg, type) {
         if (typeof msg === "string" && msg.length > 200) msg = msg.slice(0, 200) + "…";
         var el = document.createElement("div");
         el.className = "ziyit-toast " + (type || "info");
         el.textContent = msg == null ? "" : String(msg);
-        getWrap().appendChild(el);
+        var box = getWrap();
+        box.appendChild(el);
+        trim(box);
         requestAnimationFrame(function() {
             el.classList.add("show");
         });

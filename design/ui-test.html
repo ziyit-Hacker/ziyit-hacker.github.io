@@ -840,6 +840,20 @@ document.querySelectorAll(".modal-overlay").forEach(overlay => {
         if (e.target === overlay) overlay.classList.remove("active");
     });
 });
+var MAX_TOASTS = 3;       // 同屏最多 3 条
+var MAX_TOAST_DOM = 8;    // DOM 硬上限：突发消息时立即丢弃最旧的，避免无限增长
+function trimToasts(box) {
+    // 用快照数组判断，不能用 while 读 children.length：
+    // 关闭是异步的（先淡出再移除），同步 while 会永远等不到数量下降而死循环。
+    var live = Array.prototype.filter.call(box.children, function (n) { return !n.__leaving; });
+    while (live.length > MAX_TOASTS) {
+        dismissToast(live.shift());
+    }
+    // 兜底：仍在淡出中的旧节点直接移除，该循环每次都会让 children 减一，必然终止
+    while (box.children.length > MAX_TOAST_DOM) {
+        box.removeChild(box.firstChild);
+    }
+}
 function dismissToast(el) {
     var box = document.getElementById("toast-box");
     if (!el || !el.parentNode || el.__leaving) return;
@@ -870,7 +884,7 @@ function showToast(type, text) {
     t.className = "toast " + (type === "ok" ? "ok" : type === "err" ? "err" : "");
     t.innerHTML = text + '<button class="x" onclick="dismissToast(this.parentNode)">×</button>';
     box.appendChild(t);
-    while (box.children.length > 3) dismissToast(box.firstChild);
+    trimToasts(box);
     setTimeout(function() {
         dismissToast(t);
     }, type === "ok" ? 2e3 : 4e3);

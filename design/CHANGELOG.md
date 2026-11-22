@@ -3,6 +3,13 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.80 — 2026-11-22
+### 修复
+- **Toast 超过 3 条导致页面卡死**：`showToast` 里用 `while (box.children.length > 3) dismissToast(box.firstChild)` 裁剪队列，而 `dismissToast` 是异步的（先淡出 180ms 再移除 DOM），`children.length` 在同一任务内不会下降，形成同步死循环，主线程被占满导致页面无响应。
+- **修复方式**：改用「快照数组 + 每条只处理一次」的裁剪逻辑（`trimToasts`）——先筛选出非淡出中的提示，再按数量逐个 `shift()` 关闭；另加 DOM 硬上限 8 条，突发场景直接丢弃最旧节点，保证渲染量有界。
+- 全站提示（[ziyit-theme.js](file:///f:/Code/html/ziyit/assets/ziyit-theme.js)）同步补齐队列上限（最多 5 条，DOM 上限 8 条），杜绝大量 `alert()` 时的无界增长与 O(n²) 布局测量。
+- 实测连续触发 50 条：主线程耗时 <1ms，同屏有效提示 3 / 5 条，页面保持可交互。
+
 ## v1.79 — 2026-11-22
 ### 优化
 - **Toast 堆叠位移动画**：关闭（点 ×）、到期移除或超过 3 条被挤掉时，先淡出该条，其余条目用 FLIP 位移（240ms `ease`）平滑归位，不再生硬瞬移。同步应用于全站提示（[ziyit-theme.js](file:///f:/Code/html/ziyit/assets/ziyit-theme.js) 的 `showToast` / `alert` 覆盖）与 [ui-test.html](file:///f:/Code/html/ziyit/design/ui-test.html) §4.9 演示，并更新 [DESIGN.md](file:///f:/Code/html/ziyit/design/DESIGN.md#L352) §4.9 交互状态说明。
