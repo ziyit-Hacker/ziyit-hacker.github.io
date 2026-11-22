@@ -86,6 +86,26 @@
         }
         return wrap;
     }
+    function dismiss(el) {
+        var box = el.parentNode;
+        if (!box) return;
+        // FLIP：先记录其余提示的位置，移除后再平滑归位，避免生硬上跳
+        var sibs = Array.prototype.slice.call(box.children).filter(function(n) {
+            return n !== el;
+        });
+        var before = sibs.map(function(n) { return n.getBoundingClientRect().top; });
+        box.removeChild(el);
+        sibs.forEach(function(n, i) {
+            var dy = before[i] - n.getBoundingClientRect().top;
+            if (!dy) return;
+            n.style.transition = "none";
+            n.style.transform = "translateY(" + dy + "px)";
+            void n.offsetWidth;
+            n.style.transition = "transform .24s ease";
+            n.style.transform = "";
+            setTimeout(function() { n.style.transition = ""; }, 260);
+        });
+    }
     function showToast(msg, type) {
         if (typeof msg === "string" && msg.length > 200) msg = msg.slice(0, 200) + "…";
         var el = document.createElement("div");
@@ -99,7 +119,7 @@
             el.classList.remove("show");
             el.classList.add("hide");
             setTimeout(function() {
-                if (el.parentNode) el.parentNode.removeChild(el);
+                dismiss(el);
             }, 300);
         }, 3200);
     }

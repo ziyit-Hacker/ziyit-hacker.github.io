@@ -3,9 +3,9 @@
  * ------------------------------------------------------------
  * 规范见 design/DESIGN.md §4.1 / §4.16，交互用例见 design/ui-test.html §4.16。
  *
- * 1. 任意按钮被点击后，立即进入加载态（转圈 + 文案）并禁用，期间禁止重复点击；
+ * 1. 任意按钮被点击后立即拦截重复点击；操作耗时 ≥100ms 才展示加载态（转圈 + 文案）并禁用；
  * 2. 该次点击触发的 fetch / XMLHttpRequest 全部结束（成功或失败）后立即恢复；
- * 3. 所有按钮至少展示 MIN_VISIBLE 毫秒，同步操作与校验拦截也能被用户看见；
+ * 3. 完成时间 <100ms 的操作（同步、校验拦截、瞬时接口）不出现加载态，避免闪烁；
  * 4. 兜底：单个按钮加载超过 120s 强制恢复并在控制台告警，避免永久卡死。
  *
  * 页面底部引入本脚本即可，无需逐个按钮改造。特殊场景可用：
@@ -24,14 +24,14 @@
     var DEFAULT_TEXT = "处理中…";
     var ATTACH_WINDOW = 3000;   // 点击后 3s 内发起的请求归因到该次点击
     var MAX_LOADING = 120000;   // 单个按钮最长加载时间（兜底）
-    var MIN_VISIBLE = 300;      // 提交/已发请求的按钮最短可见时间，避免一闪而过
+    var SHOW_DELAY = 100;       // 完成时间 <100ms 的操作不展示加载态，避免闪烁
 
     var sessions = [];
 
     function now() { return Date.now(); }
 
     function isLoading(el) {
-        return !!el && el.getAttribute("data-ziyit-loading") === "1";
+        return !!el && (!!findSession(el) || el.getAttribute("data-ziyit-loading") === "1");
     }
 
     function findSession(el) {
@@ -175,29 +175,15 @@
         if (s.settleTimer) { clearTimeout(s.settleTimer); s.settleTimer = null; }
         if (s.deadline) { clearTimeout(s.deadline); s.deadline = null; }
         if (s.checkTimer) { clearTimeout(s.checkTimer); s.checkTimer = null; }
+        if (s.showTimer) { clearTimeout(s.showTimer); s.showTimer = null; }
 
         var idx = sessions.indexOf(s);
         if (idx > -1) sessions.splice(idx, 1);
 
-        // 所有按钮（含页面 wrap / hold 接管的手动任务）至少展示 MIN_VISIBLE，
-        // 避免同步操作、校验拦截、极快接口导致用户完全看不到加载反馈。
-        // 真正的请求结束时间仍以请求回调为准，这里只推迟“视觉恢复”。
-        var delay = 0;
-        if (reason !== "timeout") {
-            delay = MIN_VISIBLE - (now() - s.startedAt);
-        }
-
-        // 同步按钮可能在本任务内就结束，此时 0ms 的 checkTimer 已被取消，
-        // 需补一次禁用，保证加载期间按钮确实不可点击。
-        if (delay > 0 && !s.trapInstalled) {
-            setTimeout(function () { setLoadingDisabled(s); }, 0);
-        }
-
-        if (delay > 0) {
-            setTimeout(function () { restore(s.el, s, reason); }, delay);
-        } else {
-            restore(s.el, s, reason);
-        }
+        // 操作在 SHOW_DELAY 内结束：从未渲染加载态，直接静默收尾（不闪一下）；
+        // 已渲染的则立即恢复，符合“操作结束立即恢复可用”。
+        if (!s.shown) return;
+        restore(s.el, s, reason);
     }
 
     function scheduleFinish(s) {
@@ -221,7 +207,8 @@
         if (!el || el.nodeType !== 1) return null;
         if (el.disabled) return null;
         if (el.getAttribute("data-btn-loading") === "off") return null;
-        if (isLoading(el)) return findSession(el);
+        var running = findSession(el);
+        if (running) return running;
 
         var text = options.text || el.getAttribute("data-loading-text") || DEFAULT_TEXT;
         var s = {
@@ -231,6 +218,7 @@
             pending: 0,
             hadRequest: false,
             closed: false,
+            shown: false,
             manual: !!options.manual,
             taskChecked: !!options.manual,
             isSubmit: isSubmitControl(el),
@@ -241,17 +229,23 @@
             disabledDesc: null,
             settleTimer: null,
             checkTimer: null,
+            showTimer: null,
             deadline: null
         };
 
-        applyLoading(el, text, s);
         sessions.push(s);
+
+        // 完成时间 < SHOW_DELAY 的操作不进入加载态，避免瞬间任务导致闪烁；
+        // 期间仍靠会话本身拦截重复点击。
+        s.showTimer = setTimeout(function () {
+            s.showTimer = null;
+            showLoading(s, text);
+        }, SHOW_DELAY);
 
         // 提交按钮需等表单 default action（submit 事件）执行完再判定；
         // 其余按钮在冒泡阶段即可恢复，此处 0ms 定时器只作为 stopPropagation 的兜底。
         s.checkTimer = setTimeout(function () {
             s.checkTimer = null;
-            setLoadingDisabled(s);
             s.taskChecked = true;
             maybeFinish(s);
         }, 0);
@@ -264,8 +258,16 @@
             finish(s, "timeout");
         }, MAX_LOADING);
 
-        el.dispatchEvent(new CustomEvent("ziyit:loading-start", { bubbles: true }));
         return s;
+    }
+
+    // 真正把按钮渲染为加载态：此时已确认操作超过 SHOW_DELAY，不会被瞬间任务抹掉
+    function showLoading(s, text) {
+        if (!s || s.closed || s.shown) return;
+        s.shown = true;
+        applyLoading(s.el, text, s);
+        setLoadingDisabled(s);
+        s.el.dispatchEvent(new CustomEvent("ziyit:loading-start", { bubbles: true }));
     }
 
     // ---------- 请求跟踪 ----------

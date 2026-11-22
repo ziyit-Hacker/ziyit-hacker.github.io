@@ -3,19 +3,22 @@
 > 记录 `AGENTS.md` 与 `DESIGN.md` 的每一次变更，保证设计迭代可追溯。
 > 版本规则：小改动 +0.1（如 v1.0 → v1.1）；体系级重构 +1（如 v1.x → v2.0）。
 
+## v1.79 — 2026-11-22
+### 优化
+- **Toast 堆叠位移动画**：关闭（点 ×）、到期移除或超过 3 条被挤掉时，先淡出该条，其余条目用 FLIP 位移（240ms `ease`）平滑归位，不再生硬瞬移。同步应用于全站提示（[ziyit-theme.js](file:///f:/Code/html/ziyit/assets/ziyit-theme.js) 的 `showToast` / `alert` 覆盖）与 [ui-test.html](file:///f:/Code/html/ziyit/design/ui-test.html) §4.9 演示，并更新 [DESIGN.md](file:///f:/Code/html/ziyit/design/DESIGN.md#L352) §4.9 交互状态说明。
+
 ## v1.78 — 2026-11-22
 ### 新增
 - **全站统一按钮加载态**：新增 [button-loading.js](file:///f:/Code/html/ziyit/assets/button-loading.js) 与 [button-loading.css](file:///f:/Code/html/ziyit/assets/button-loading.css)，通过事件委托 + `fetch` / `XMLHttpRequest` 包装统一接管所有页面的按钮：
-  - 点击瞬间同步进入加载态（转圈 + 文案），立即禁止重复点击（含键盘回车与程序化 `click()`）；
+  - 点击瞬间先拦截重复点击；操作持续 ≥100ms 才显示加载态并禁用，完成时间 <100ms 的操作（同步、校验拦截、瞬时接口）完全不出现加载态，避免闪烁；
   - 该次点击触发的最后一个请求结束时，无论成功或失败都立即恢复原文案、原宽度与可点击状态；
-  - 点击后下一个任务内设置 `disabled`，加载期间真正不可点击；页面自行写入的 `disabled` 意图（倒计时、成功后锁定）不被覆盖；
-  - 所有按钮至少展示 300ms 加载态：同步操作、校验拦截（如修改邮箱 / 修改密码空值被 `validateAll` 拦下）也能看到转圈与禁用，不再一闪而过；
+  - 加载期间 `disabled` 生效；页面自行写入的 `disabled` 意图（倒计时、成功后锁定）不被覆盖；
   - SSE 流式响应（`text/event-stream`）读取到流结束才恢复，不在响应头返回时提前恢复；
   - 单个按钮加载超过 120s 强制恢复并 `console.warn`，避免永久卡死；
   - 页面自行改写的按钮文案（如「60s 后重发」）不会被恢复逻辑覆盖。
-- **修复**：页面用 `ZIYIT_BTN.wrap / hold` 接管点击后，加载态曾被事件冒泡收尾逻辑在点击当刻立即关闭（如 §4.16 的「保存 / 删除」演示只剩 300ms 甚至看不到转圈）；现改为页面接管后以 promise / `done()` 真正结束为准，手动任务同样享有 300ms 最短可见时间。
+- **修复**：页面用 `ZIYIT_BTN.wrap / hold` 接管点击后，加载态曾被事件冒泡收尾逻辑在点击当刻立即关闭（如 §4.16 的「保存 / 删除」演示看不到转圈）；现改为页面接管后以 promise / `done()` 真正结束为准。
 - **接入范围**：除 `backrooms/` 外全部可正常解析的 46 个 HTML 页面统一引入，无遗漏；`wsh/user.html`、`wsh/user/password.html` 两个二进制损坏文件保持原样不注入；`design/ui-test.html` §4.1 原有演示保留并标记 `data-btn-loading="off"`（继续使用自身 `demoLoading` 作为标准参考）。
-- **规范与测试**：[DESIGN.md](file:///f:/Code/html/ziyit/design/DESIGN.md#L507) 新增 §4.16 统一按钮加载态，并在 §4.1 交互状态中指向该节；[ui-test.html](file:///f:/Code/html/ziyit/design/ui-test.html) **追加** §4.16 规范说明、4 个实时演示与 9 条自动化用例（即时加载并禁用、成功恢复、失败恢复、防重复、自动跟踪 fetch、同步操作可见加载、文案与 disabled 不被覆盖、表单拦截后恢复、纯图标按钮）。
+- **规范与测试**：[DESIGN.md](file:///f:/Code/html/ziyit/design/DESIGN.md#L507) 新增 §4.16 统一按钮加载态，并在 §4.1 交互状态中指向该节；[ui-test.html](file:///f:/Code/html/ziyit/design/ui-test.html) **追加** §4.16 规范说明、4 个实时演示与 9 条自动化用例（100ms 后才显示加载并禁用、瞬时操作不闪、成功恢复、失败恢复、防重复、瞬时 fetch 不闪、同步无闪烁、文案与 disabled 不被覆盖、表单拦截不闪、纯图标按钮）。
 
 ## v1.77 — 2026-11-22
 ### 新增
