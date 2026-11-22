@@ -372,6 +372,7 @@
         .fv-summary.fail { color: var(--ziyit-danger); }
 </style>
 <link rel="stylesheet" href="../assets/form-validation.css?v=1">
+    <link rel="stylesheet" href="../assets/button-loading.css?v=1">
 </head>
 <body>
     <div class="site-nav">
@@ -477,7 +478,7 @@
                 <div class="row">
                     <button class="btn btn-primary" disabled>禁用主按钮</button>
                     <button class="btn btn-danger" disabled>禁用危险按钮</button>
-                    <button class="btn btn-primary" id="btnLoading" onclick="demoLoading(this)"><span class="spinner"></span>加载中…</button>
+                    <button class="btn btn-primary" id="btnLoading" onclick="demoLoading(this)" data-btn-loading="off"><span class="spinner"></span>加载中…</button>
                 </div>
             </div>
         </div>
@@ -728,6 +729,43 @@
                 <div class="fv-summary" id="fvTestSummary"></div>
             </div>
             <div id="fvTestArea" aria-hidden="true" style="position:fixed;left:0;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none"></div>
+        </div>
+        <div class="section" id="button-loading">
+            <h2>4.16 统一按钮加载态</h2>
+            <p class="desc">全站所有页面、所有按钮共用一套加载态（DESIGN.md §4.1 / §4.16）。点击后立即进入加载并禁止重复点击；该次操作触发的 fetch / XHR（含 SSE 流式响应）全部结束后，无论成功或失败都立即恢复。</p>
+            <div class="panel">
+                <table class="fv-table">
+                    <thead>
+                        <tr><th style="width:150px">时机</th><th>必须行为</th><th style="width:230px">视觉结果</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>点击瞬间</td><td>同步进入加载态，不再等待接口返回</td><td>转圈 + 加载文案，按钮不可再次点击</td></tr>
+                        <tr><td>加载中</td><td>拦截重复点击、回车与程序化 click</td><td>不重复提交，按钮保持加载态</td></tr>
+                        <tr><td>操作成功</td><td>最后一个请求结束时立即恢复</td><td>恢复原文案与原宽度，可再次点击</td></tr>
+                        <tr><td>操作失败</td><td>与成功一致，立即恢复可用</td><td>恢复原文案，由页面给出失败提示</td></tr>
+                        <tr><td>同步操作</td><td>同样立即进入加载态并禁用</td><td>至少可见 300ms 后恢复，不再一闪而过</td></tr>
+                        <tr><td>校验拦截</td><td>未发请求也保留最短可见时间</td><td>能看到加载反馈，随后恢复可用</td></tr>
+                        <tr><td>兜底</td><td>任何按钮加载超过 120s 强制恢复并告警</td><td>不会永久卡在加载态</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="panel" style="margin-top:20px">
+                <div class="row"><span class="caption">演示（统一脚本自动接管，无需逐个按钮写 loading 代码）：</span></div>
+                <div class="row">
+                    <button class="btn btn-primary" id="blDemoOk" data-loading-text="保存中…">保存（1.5s 成功）</button>
+                    <button class="btn btn-danger" id="blDemoFail" data-loading-text="删除中…">删除（1.5s 失败）</button>
+                    <button class="btn btn-secondary" id="blDemoSync">同步操作（弹 Toast）</button>
+                    <button class="btn btn-secondary" id="blDemoFetch">自动跟踪 fetch（瞬时）</button>
+                </div>
+                <div class="row"><span class="caption">说明：所有按钮点击后都会立即显示加载态并被禁用，即使操作同步完成或提交被校验拦截，也至少展示 300ms 让用户感知；异步操作以接口真正结束（含 SSE 流读取完毕）为准。特殊场景可用 <code>ZIYIT_BTN.wrap(btn, promise)</code> 手动指定异步任务。</span></div>
+            </div>
+            <div class="panel" style="margin-top:20px">
+                <div class="row"><span class="caption">自动化用例（页面加载后自动执行，可重新运行）：</span></div>
+                <div class="row"><button type="button" class="btn btn-secondary btn-sm" id="blRunTests">重新运行测试</button></div>
+                <div class="fv-test-result" id="blTestResult"></div>
+                <div class="fv-summary" id="blTestSummary"></div>
+            </div>
+            <div id="blTestArea" aria-hidden="true" style="position:fixed;left:0;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none"></div>
         </div>
         <div class="section" id="toast">
             <h2>4.9 Toast 提示</h2>
@@ -1081,17 +1119,24 @@ if (swAuto && iUpdate) {
         {
             name: "三个模块空值提交均被拦截并提示",
             run: function () {
+                // 注意：validateAll 会聚焦第一个非法项，聚焦会触发上一个输入框的 blur，
+                // 而 blur 的空值校验会清除「必填」提示。因此必须在进入下一个模块前
+                // 立即记录本模块的提示，不能在最后统一读取。
                 mk("fvT11a", FV.presets.email());
                 mk("fvT11b", FV.presets.password(), "password");
                 var register = FV.validateAll(["fvT11a", "fvT11b"]);
+                var registerErr = !!errText("fvT11a");
+
                 mk("fvT11c", FV.presets.email());
                 var email = FV.validateAll(["fvT11c"]);
+                var emailErr = !!errText("fvT11c");
+
                 mk("fvT11d", FV.presets.oldPassword(), "password");
                 mk("fvT11e", FV.presets.password(), "password");
                 mk("fvT11f", FV.presets.confirmPassword("fvT11e"), "password");
                 var password = FV.validateAll(["fvT11d", "fvT11e", "fvT11f"]);
                 return register === false && email === false && password === false &&
-                    !!errText("fvT11a") && !!errText("fvT11c") && !!errText("fvT11e");
+                    registerErr && emailErr && !!errText("fvT11e");
             }
         },
         {
@@ -1149,6 +1194,247 @@ if (swAuto && iUpdate) {
 
     window.runFormValidationTests = runFormValidationTests;
     runFormValidationTests();
+})();</script>
+    <script src="../assets/button-loading.js?v=1"></script>
+<script>(function () {
+    "use strict";
+
+    function $(id) { return document.getElementById(id); }
+    function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+    /* ---------- 交互演示 ---------- */
+    var demoOk = $("blDemoOk");
+    if (demoOk) demoOk.addEventListener("click", function () {
+        var p = new Promise(function (resolve) { setTimeout(resolve, 1500); });
+        ZIYIT_BTN.wrap(this, p, "保存中…").then(function () { showToast("ok", "保存成功"); });
+    });
+
+    var demoFail = $("blDemoFail");
+    if (demoFail) demoFail.addEventListener("click", function () {
+        var p = new Promise(function (_, reject) {
+            setTimeout(function () { reject(new Error("模拟失败")); }, 1500);
+        });
+        ZIYIT_BTN.wrap(this, p, "删除中…").catch(function () { showToast("err", "删除失败，请重试"); });
+    });
+
+    var demoSync = $("blDemoSync");
+    if (demoSync) demoSync.addEventListener("click", function () { showToast("info", "同步操作已完成"); });
+
+    var demoFetch = $("blDemoFetch");
+    if (demoFetch) demoFetch.addEventListener("click", function () {
+        fetch("data:application/json,%7B%22ok%22%3Atrue%7D").then(function (r) { return r.json(); });
+    });
+
+    /* ---------- 自动化用例 ---------- */
+    var area = $("blTestArea");
+    var resultEl = $("blTestResult");
+    var summaryEl = $("blTestSummary");
+    if (!area || !resultEl || !window.ZIYIT_BTN) return;
+
+    var B = window.ZIYIT_BTN;
+
+    function mkBtn(text) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "btn btn-primary";
+        b.textContent = text;
+        area.appendChild(b);
+        return b;
+    }
+    function clearSessions() {
+        B._sessions.slice().forEach(function (s) { B.release(s.el); });
+    }
+
+    var CASES = [
+        {
+            name: "点击瞬间进入加载态并禁用按钮",
+            run: async function () {
+                var b = mkBtn("立即加载");
+                var called = 0;
+                b.addEventListener("click", function () {
+                    called++;
+                    fetch("data:application/json,0");
+                });
+                b.click();
+                var on = B.isLoading(b) && b.classList.contains("btn-loading") &&
+                    b.getAttribute("aria-busy") === "true" &&
+                    window.getComputedStyle(b).pointerEvents === "none" &&
+                    !!b.querySelector(".btn-loading-spinner");
+                await sleep(20);
+                return on && b.disabled === true && called === 1;
+            }
+        },
+        {
+            name: "接口成功后恢复原文案与可用状态",
+            run: async function () {
+                var b = mkBtn("保存");
+                var p = new Promise(function (r) { setTimeout(r, 120); });
+                B.wrap(b, p, "保存中…");
+                var immediate = B.isLoading(b);
+                await p;
+                // 接口 120ms 结束，但按钮仍需展示满 300ms，故等待防闪烁窗口结束
+                await sleep(400);
+                return immediate && !B.isLoading(b) && b.textContent === "保存" &&
+                    b.getAttribute("aria-busy") === null;
+            }
+        },
+        {
+            name: "接口失败后同样恢复可用",
+            run: async function () {
+                var b = mkBtn("删除");
+                var p = new Promise(function (_, reject) {
+                    setTimeout(function () { reject(new Error("模拟失败")); }, 120);
+                });
+                B.wrap(b, p, "删除中…");
+                var immediate = B.isLoading(b);
+                var rejected = false;
+                await p.catch(function () { rejected = true; });
+                await sleep(400);
+                return immediate && rejected && !B.isLoading(b) && b.textContent === "删除";
+            }
+        },
+        {
+            name: "加载中重复点击被拦截",
+            run: async function () {
+                var b = mkBtn("防重复");
+                var calls = 0;
+                b.addEventListener("click", function () {
+                    calls++;
+                    fetch("data:application/json,0");
+                });
+                b.click();
+                b.click();
+                b.click();
+                var immediate = B.isLoading(b);
+                await sleep(400);
+                return immediate && calls === 1 && !B.isLoading(b);
+            }
+        },
+        {
+            name: "自动跟踪 fetch：进入加载并在结束后恢复",
+            run: async function () {
+                var b = mkBtn("自动 fetch");
+                var started = false;
+                b.addEventListener("click", function () {
+                    started = true;
+                    fetch("data:application/json,0");
+                });
+                b.click();
+                var immediate = B.isLoading(b);
+                await sleep(400);
+                return started && immediate && !B.isLoading(b);
+            }
+        },
+        {
+            name: "同步操作同样可见加载态并禁用，300ms 后恢复",
+            run: async function () {
+                var b = mkBtn("同步");
+                var clicked = 0;
+                b.addEventListener("click", function () { clicked++; });
+                b.click();
+                var on = clicked === 1 && B.isLoading(b) && !!b.querySelector(".btn-loading-spinner");
+                await sleep(20);
+                var locked = b.disabled === true;
+                await sleep(380);
+                return on && locked && !B.isLoading(b) && b.textContent === "同步" &&
+                    b.disabled === false;
+            }
+        },
+        {
+            name: "页面改写文案与 disabled 时不被覆盖",
+            run: async function () {
+                var b = mkBtn("发送验证码");
+                b.addEventListener("click", function () {
+                    this.textContent = "60s 后重发";
+                    this.disabled = true;
+                    fetch("data:application/json,0");
+                });
+                b.click();
+                await sleep(400);
+                return !B.isLoading(b) && b.textContent === "60s 后重发" && b.disabled === true;
+            }
+        },
+        {
+            name: "表单提交按钮被校验拦截后恢复可用（含防闪烁窗口）",
+            run: async function () {
+                var form = document.createElement("form");
+                var b = document.createElement("button");
+                b.type = "submit";
+                b.className = "btn btn-primary";
+                b.textContent = "提交";
+                form.appendChild(b);
+                area.appendChild(form);
+                form.addEventListener("submit", function (e) { e.preventDefault(); });
+                b.click();
+                var immediate = B.isLoading(b);
+                await sleep(400);
+                return immediate && !B.isLoading(b) && b.textContent === "提交";
+            }
+        },
+        {
+            name: "纯图标按钮只显示转圈且保持原宽度",
+            run: async function () {
+                var b = mkBtn("");
+                b.setAttribute("aria-label", "刷新");
+                b.style.width = "36px";
+                b.addEventListener("click", function () { fetch("data:application/json,0"); });
+                b.click();
+                var on = B.isLoading(b) && !!b.querySelector(".btn-loading-spinner") &&
+                    !b.querySelector(".btn-loading-text");
+                await sleep(400);
+                return on && !B.isLoading(b);
+            }
+        }
+    ];
+
+    function render(results) {
+        var passed = 0;
+        resultEl.innerHTML = "";
+        results.forEach(function (r, i) {
+            if (r.pass) passed++;
+            var row = document.createElement("div");
+            row.className = "fv-case " + (r.pass ? "pass" : "fail");
+            var badge = document.createElement("span");
+            badge.className = "badge";
+            badge.textContent = r.pass ? "PASS" : "FAIL";
+            var text = document.createElement("span");
+            text.textContent = (i + 1) + ". " + r.name + (r.detail ? "（" + r.detail + "）" : "");
+            row.appendChild(badge);
+            row.appendChild(text);
+            resultEl.appendChild(row);
+        });
+        summaryEl.className = "fv-summary " + (passed === results.length ? "pass" : "fail");
+        summaryEl.textContent = "自动化用例：" + passed + " / " + results.length +
+            (passed === results.length ? "，全部通过" : "，存在失败项");
+        window.BTN_TEST_RESULTS = { passed: passed, total: results.length, results: results };
+    }
+
+    async function runTests() {
+        resultEl.innerHTML = "";
+        summaryEl.className = "fv-summary";
+        summaryEl.textContent = "正在运行…";
+        var results = [];
+        for (var i = 0; i < CASES.length; i++) {
+            var c = CASES[i], pass = false, detail = "";
+            area.innerHTML = "";
+            clearSessions();
+            try {
+                pass = (await c.run()) === true;
+            } catch (e) {
+                detail = e && e.message ? e.message : String(e);
+            }
+            results.push({ name: c.name, pass: pass, detail: detail });
+        }
+        area.innerHTML = "";
+        clearSessions();
+        render(results);
+        return window.BTN_TEST_RESULTS;
+    }
+
+    window.runButtonLoadingTests = runTests;
+    var runBtn = $("blRunTests");
+    if (runBtn) runBtn.addEventListener("click", function () { runTests(); });
+    runTests();
 })();</script>
 </body>
 </html>

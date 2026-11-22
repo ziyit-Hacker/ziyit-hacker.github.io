@@ -2,7 +2,7 @@
 
 > 配套文档：[AGENTS.md](./AGENTS.md)（协作规范）。
 > 本文档是全站 UI 的**唯一视觉依据**，所有页面（除 `backrooms/` 外）必须遵守。
-> 版本：v1.21　|　最近更新：2026-11-22　|　变更记录见 [CHANGELOG.md](./CHANGELOG.md)
+> 版本：v1.22　|　最近更新：2026-11-22　|　变更记录见 [CHANGELOG.md](./CHANGELOG.md)
 
 ---
 
@@ -169,7 +169,7 @@ body { font-size: 15px; line-height: 1.6; color: var(--ziyit-text-primary); }
 | `.btn-success` | `--ziyit-success` | 白 | 无 | 明确成功语义的确认 |
 | 禁用 | `#cccccc` | `#999999` | 无 | 任何类型 + `:disabled` |
 
-**交互状态**：default → hover（底色加深：primary→`--ziyit-primary-dark`，其余→加深 10%）→ active（`scale(0.98)` + 底色再加深）→ focus（`box-shadow: 0 0 0 3px var(--ziyit-primary-light)`）→ disabled（灰底灰字 + `cursor: not-allowed`）。加载中显示转圈/省略号并 `disabled`，防止重复提交。
+**交互状态**：default → hover（底色加深：primary→`--ziyit-primary-dark`，其余→加深 10%）→ active（`scale(0.98)` + 底色再加深）→ focus（`box-shadow: 0 0 0 3px var(--ziyit-primary-light)`）→ disabled（灰底灰字 + `cursor: not-allowed`）。加载中显示转圈/省略号并禁止再次交互，防止重复提交；统一实现见 §4.16。
 
 **功能描述**：触发一个明确的操作（提交、跳转、删除、下载等）；按钮文字必须为动词或动词短语，直述结果。
 
@@ -504,6 +504,53 @@ if (!FV.validateAll(["email", "password"])) return;
 两次不一致、与原密码相同、提交拦截、三模块一致性、规则清单不重复渲染等场景，
 改动校验逻辑后必须先让该页 12 / 12 通过。
 
+### 4.16 统一按钮加载态（Button Loading）
+
+**适用范围**：全站所有页面、所有可点击按钮（`button`、`input[type="submit|button|reset"]`、`[role="button"]`）必须统一由
+`assets/button-loading.js` + `assets/button-loading.css` 接管，禁止在页面里各自实现加载态。
+
+**规则**
+
+| 时机 | 必须行为 |
+|---|---|
+| 点击触发操作 | 在同一次点击事件内同步进入加载态（转圈 + 文案），不等待接口返回；下一个任务内补上 `disabled`，期间不可再次点击 |
+| 加载中 | 禁止再次点击（含键盘回车与程序化 `click()`），防止重复提交 |
+| 操作结束（成功 / 失败） | 该次点击触发的最后一个请求结束时立即恢复原文案、原宽度与可点击状态 |
+| 同步操作 | 同样进入加载态并禁用，至少可见 300ms 后恢复，不允许一闪而过 |
+| 校验拦截 | 未发出请求也保留 300ms 可见时间，让用户看到点击已被响应 |
+| 页面自行禁用 | 加载期间页面主动写 `disabled`（倒计时、成功后锁定）时尊重页面意图，恢复时不强行解锁 |
+| 页面接管（`wrap` / `hold`） | 以页面传入的 promise / `done()` 真正结束为准，点击事件结束时不得提前关闭加载态 |
+| SSE 流式响应 | 以响应流读取完毕为结束，不得在响应头返回时提前恢复 |
+| 兜底 | 单个按钮加载超过 120s 强制恢复并输出 `console.warn`，不得永久卡死 |
+
+**视觉标准**
+
+- 加载文案默认「处理中…」，可用 `data-loading-text` 覆盖；纯图标按钮（无文字 + `aria-label`）只显示转圈。
+- 转圈：14×14px、2px 边框、`currentColor`（自动适配主按钮白字与文字按钮蓝字）、0.7s 匀速旋转。
+- 加载期间锁定按钮原宽度（临时 `min-width`），避免布局跳动；同时设置 `aria-busy="true"`、`aria-disabled="true"`，并在下一个任务内设置 `disabled`。
+- 最短可见时间 300ms：提交、请求、同步操作与校验拦截一视同仁；超时才结束的请求按真实结束时间恢复，不额外顺延。
+- 恢复时若页面已自行改写按钮内容（如「60s 后重发」）或已自行禁用，不得覆盖页面文案与禁用意图。
+
+**接入方式**
+
+```html
+<link rel="stylesheet" href="../assets/button-loading.css?v=1">
+<script src="../assets/button-loading.js?v=1"></script>
+```
+
+```html
+<button data-loading-text="保存中…">保存</button>
+<button data-btn-loading="off">不受统一管理</button>
+```
+
+```js
+// 异步过程不是 fetch / XHR（如 WebAuthn、定时模拟）时，手动包裹
+ZIYIT_BTN.wrap(btn, promise, "验证中…");
+```
+
+**验收**：`design/ui-test.html` §4.16 内置规范说明、4 个实时演示与 9 条自动化用例；
+改动加载态逻辑后必须先让该页 9 / 9 通过，并在真实接口失败场景下确认按钮恢复可用。
+
 ## 5. 图标系统
 
 - **风格**：线性（outline）、描边 1.5-2px、圆角端点、主色默认、中性色次级。
@@ -603,4 +650,4 @@ if (!FV.validateAll(["email", "password"])) return;
 
 ---
 
-*版本：v1.20　|　最近更新：2026-08-09　|　变更记录见 [CHANGELOG.md](./CHANGELOG.md)*
+*版本：v1.22　|　最近更新：2026-11-22　|　变更记录见 [CHANGELOG.md](./CHANGELOG.md)*

@@ -161,7 +161,11 @@ document.addEventListener("DOMContentLoaded", function() {
         updateSystemInfo("RCU 列表已刷新");
     });
     document.getElementById("rcu-search").addEventListener("input", renderRcuUpdates);
-    document.getElementById("rcu-publish-btn").addEventListener("click", publishRcuUpdate);
+    document.getElementById("rcu-publish-btn").addEventListener("click", function () {
+        // 发布流程先本地计算 sha256 再分片上传，异步起点不是 fetch，需手动纳入统一加载态
+        var task = publishRcuUpdate();
+        if (window.ZIYIT_BTN) ZIYIT_BTN.wrap(this, task);
+    });
     document.getElementById("rcu-revoke-add-btn").addEventListener("click", addRcuRevoked);
     document.querySelector('[data-section="afdian-management"]').addEventListener("click", function() {
         switchSection("afdian-management");
@@ -2666,7 +2670,7 @@ function publishRcuUpdate() {
     }
     statusEl.textContent = sha ? "正在上传..." : "正在计算 sha256 ...";
     const prep = sha ? Promise.resolve(sha) : rcuSha256Hex(file);
-    prep.then(function(digest) {
+    return prep.then(function(digest) {
         statusEl.textContent = "正在分片上传（" + rcuFmtSize(file.size) + "）...";
         return ZIYIT_API.rcuPublish(file, {
             version,

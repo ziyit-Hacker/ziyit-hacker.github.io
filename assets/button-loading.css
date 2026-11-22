@@ -1,0 +1,32 @@
+/* ZIYIT 统一按钮加载态：见 design/DESIGN.md §4.1 / §4.16 */
+.btn-loading {
+    pointer-events: none;
+    cursor: progress;
+    opacity: .7;
+}
+
+.btn-loading .btn-loading-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 8px;
+    vertical-align: -2px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: ziyit-btn-loading-spin .7s linear infinite;
+}
+
+.btn-loading .btn-loading-text {
+    white-space: nowrap;
+}
+
+@keyframes ziyit-btn-loading-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-loading .btn-loading-spinner {
+        animation-duration: 1.4s;
+    }
+}
