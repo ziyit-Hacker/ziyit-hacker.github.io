@@ -12,7 +12,7 @@
     <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
     <script src="../assets/f12check.js"></script>
     <script src="../assets/xss_guard.js?v=20261114"></script>
-    <script src="../assets/ziyit_api.js?v=20261122a"></script>
+    <script src="../assets/ziyit_api.js?v=20261128a"></script>
     <style>        * {
             margin: 0;
             padding: 0;
@@ -432,7 +432,8 @@
         .ak-msg.success {
             color: var(--ziyit-success);
             display: block;
-        }</style>
+        }
+</style>
     <script>(function() {
     var pref = "auto";
     try {
@@ -712,11 +713,13 @@
     }
     function renderPoints(data) {
         var points = data && data.points;
+        var gift = Number(data && (data.giftPointsBalance != null ? data.giftPointsBalance : data.giftPoints) || 0);
+        var bought = Number(data && (data.purchasedPointsBalance != null ? data.purchasedPointsBalance : data.purchasedPoints) || 0);
         var minRequired = data && data.minRequired;
         var pointsPerUnit = data && data.pointsPerUnit;
         var vip = data && data.vip;
         var enough = Number(points || 0) >= Number(minRequired || 0);
-        pointsArea.innerHTML = '<div class="key-card" style="border-color:var(--ziyit-primary);">' + '<div class="key-head">' + '<div class="key-line"><span style="font-size:15px;font-weight:600;color:var(--ziyit-text-primary);">点数余额</span></div>' + (vip ? '<span class="badge ok">VIP</span>' : "") + "</div>" + '<div style="font-size:30px;font-weight:700;color:var(--ziyit-primary);line-height:1.2;">' + esc(fmtPts(points)) + ' <span style="font-size:14px;font-weight:400;color:var(--ziyit-text-secondary);">点</span></div>' + '<div style="margin-top:10px;font-size:13px;line-height:1.9;color:var(--ziyit-text-secondary);">' + "最低可开始要求 " + esc(fmtPts(minRequired)) + " 点 ｜ 1 元 = " + esc(fmtPts(pointsPerUnit)) + " 点" + "</div>" + '<div style="margin-top:12px;">' + '<span style="font-size:13px;color:' + (enough ? "var(--ziyit-success)" : "var(--ziyit-danger)") + ';">' + (enough ? "余额充足，可以发起验证。" : "余额不足，无法发起验证。") + "</span>" + ' <a href="points.html" style="font-weight:600;">去充值 ›</a>' + "</div>" + "</div>";
+        pointsArea.innerHTML = '<div class="key-card" style="border-color:var(--ziyit-primary);">' + '<div class="key-head">' + '<div class="key-line"><span style="font-size:15px;font-weight:600;color:var(--ziyit-text-primary);">点数余额</span></div>' + (vip ? '<span class="badge ok">VIP</span>' : "") + "</div>" + '<div style="font-size:30px;font-weight:700;color:var(--ziyit-primary);line-height:1.2;">' + esc(fmtPts(points)) + ' <span style="font-size:14px;font-weight:400;color:var(--ziyit-text-secondary);">点</span></div>' + '<div style="margin-top:8px;font-size:13px;line-height:1.9;color:var(--ziyit-text-secondary);">' + "赠送 " + esc(fmtPts(gift)) + " 点 ｜ 购买 " + esc(fmtPts(bought)) + " 点 ｜ 扣减顺序：先赠送后购买" + "</div>" + '<div style="margin-top:10px;font-size:13px;line-height:1.9;color:var(--ziyit-text-secondary);">' + "最低可开始要求 " + esc(fmtPts(minRequired)) + " 点 ｜ 1 元 = " + esc(fmtPts(pointsPerUnit)) + " 点" + "</div>" + '<div style="margin-top:12px;">' + '<span style="font-size:13px;color:' + (enough ? "var(--ziyit-success)" : "var(--ziyit-danger)") + ';">' + (enough ? "余额充足，可以发起验证。" : "余额不足，无法发起验证。") + "</span>" + ' <a href="points.html" style="font-weight:600;">去充值 ›</a>' + "</div>" + "</div>";
     }
     function loadPoints() {
         pointsArea.innerHTML = '<div class="empty" style="padding:14px;text-align:center;font-size:13px;color:var(--ziyit-text-secondary);">点数余额加载中…</div>';

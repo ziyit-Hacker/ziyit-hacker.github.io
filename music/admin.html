@@ -8,7 +8,7 @@
     <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
     <script src="../assets/blacklist.js"></script>
     <script src="../assets/xss_guard.js?v=20261114"></script>
-    <script src="../assets/ziyit_api.js?v=20261122a"></script>
+    <script src="../assets/ziyit_api.js?v=20261128a"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./admin.css?v=20261121c">
     <script>(function() {
@@ -191,7 +191,10 @@
                 <section id="user-management" class="content-section">
                     <div class="section-header">
                         <h2>用户管理</h2>
-                        <button class="user-btn success" id="add-user-btn">添加用户</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="user-btn" id="gift-points-btn">赠送点数</button>
+                            <button class="user-btn success" id="add-user-btn">添加用户</button>
+                        </div>
                     </div>
                     <div class="user-controls">
                         <input type="text" class="user-search" id="user-search" placeholder="搜索用户名 / ID / IP / 角色 / 状态...">
@@ -715,8 +718,33 @@
                 <section id="system-settings" class="content-section">
                     <div class="section-header">
                         <h2>系统设置</h2>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="user-btn" id="points-settings-refresh">刷新</button>
+                            <button class="user-btn success" id="points-settings-save">保存配置</button>
+                        </div>
                     </div>
-                    <p>系统设置功能开发中...</p>
+                    <p class="user-del-date" id="points-settings-meta" style="display: block; margin-bottom: 16px;">加载中…</p>
+                    <div class="user-stats" style="align-items: stretch; flex-wrap: wrap;">
+                        <div class="user-stat-card" style="flex: 1; min-width: 280px; text-align: left; padding: 18px;">
+                            <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">新用户注册赠送点数</div>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 14px;">
+                                <input type="checkbox" id="points-register-gift-enabled"> 开启（关闭后新注册用户不发放赠送点数）
+                            </label>
+                            <label class="form-label">赠送额度（点）</label>
+                            <input type="number" class="form-input" id="points-register-gift-amount" min="0" step="0.1">
+                        </div>
+                        <div class="user-stat-card" style="flex: 1; min-width: 280px; text-align: left; padding: 18px;">
+                            <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">VIP 用户赠送点数</div>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 14px;">
+                                <input type="checkbox" id="points-vip-gift-enabled"> 开启（关闭后首次升级 VIP 不发放赠送点数）
+                            </label>
+                            <label class="form-label">赠送额度（点）</label>
+                            <input type="number" class="form-input" id="points-vip-gift-amount" min="0" step="0.1">
+                        </div>
+                    </div>
+                    <p style="margin-top: 14px; font-size: 12px; color: var(--ziyit-text-secondary); line-height: 1.8;">
+                        配置保存后立即生效（无需重启）；所有赠送点数进入用户的「赠送点数余额」，扣减顺序恒为「先赠送、后购买」。每次修改都会写入审计日志。
+                    </p>
                 </section>
                 <section id="permission-management" class="content-section">
                     <div class="section-header">
@@ -1322,6 +1350,46 @@
             </form>
         </div>
     </div>
+    <div class="modal" id="gift-modal">
+        <div class="modal-content" style="max-width: 720px;">
+            <div class="modal-header">站长赠送点数</div>
+            <div class="form-group">
+                <label class="form-label">选择用户（可多选）</label>
+                <input type="text" class="form-input" id="gift-user-search" placeholder="搜索用户名 / ID">
+                <label style="display: flex; align-items: center; gap: 6px; margin: 8px 0; font-size: 13px;">
+                    <input type="checkbox" id="gift-select-all"> 全选当前列表
+                </label>
+                <div id="gift-user-list" style="max-height: 200px; overflow: auto; border: 1px solid var(--ziyit-border); border-radius: 8px; padding: 8px;"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">赠送计算方式</label>
+                <label style="display: block; font-size: 13px; line-height: 2;"><input type="radio" name="gift-mode" value="fixed" checked> 按指定固定数值赠送</label>
+                <label style="display: block; font-size: 13px; line-height: 2;"><input type="radio" name="gift-mode" value="match_purchased"> 与用户当前购买点数余额等额赠送</label>
+                <label style="display: block; font-size: 13px; line-height: 2;"><input type="radio" name="gift-mode" value="period_consumption"> 按指定时间段内累计消耗总额赠送</label>
+            </div>
+            <div class="form-group" id="gift-fixed-box">
+                <label class="form-label">赠送点数</label>
+                <input type="number" class="form-input" id="gift-amount" min="0.1" step="0.1" placeholder="如 100">
+            </div>
+            <div class="form-group" id="gift-period-box" style="display: none;">
+                <label class="form-label">统计时间段（按该用户在区间内的累计消耗点数赠送）</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="date" class="form-input" id="gift-start">
+                    <input type="date" class="form-input" id="gift-end">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">备注（可选，会展示在用户通知里）</label>
+                <input type="text" class="form-input" id="gift-note" maxlength="200" placeholder="如：活动赠送">
+            </div>
+            <div id="gift-result" style="font-size: 13px; line-height: 1.8;"></div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn" id="gift-records-btn">查看赠送记录</button>
+                <button type="button" class="user-btn danger" id="gift-cancel">取消</button>
+                <button type="button" class="user-btn success" id="gift-submit">确认赠送</button>
+            </div>
+        </div>
+    </div>
     <div class="modal" id="add-user-modal">
         <div class="modal-content">
             <div class="modal-header">添加用户</div>
@@ -1778,7 +1846,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-    <script src="./admin.js?v=20261121f"></script>
+    <script src="./admin.js?v=20261128a"></script>
 <script src="../assets/ziyit-theme.js"></script>
     <script src="../assets/button-loading.js?v=1"></script>
 </body>

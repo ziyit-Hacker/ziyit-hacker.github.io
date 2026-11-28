@@ -783,6 +783,31 @@
     function pointsPricing() {
         return request("/points/pricing");
     }
+    // ---- 点数赠送配置 / 站长赠送 / 站内通知（v0.4.0）----
+    function adminPointsSettings() {
+        return request("/admin/settings/points");
+    }
+    function adminSavePointsSettings(payload) {
+        return put("/admin/settings/points", payload || {});
+    }
+    function adminGiftPoints(payload) {
+        return post("/admin/points/gift", payload || {});
+    }
+    function adminGiftRecords(limit) {
+        var l = parseInt(limit, 10);
+        if (isNaN(l) || l <= 0) l = 100;
+        return request("/admin/points/gift/records?limit=" + Math.min(l, 500));
+    }
+    function notifications(limit) {
+        var l = parseInt(limit, 10);
+        if (isNaN(l) || l <= 0) l = 20;
+        return request("/notifications?limit=" + Math.min(l, 200));
+    }
+    function readNotifications(ids) {
+        return post("/notifications/read", {
+            ids: ids || []
+        });
+    }
     function submitMod(payload) {
         return post("/mods/submit", payload);
     }
@@ -2193,6 +2218,12 @@
         adminPointsUsage,
         pointsPurchase,
         pointsPricing,
+        adminPointsSettings,
+        adminSavePointsSettings,
+        adminGiftPoints,
+        adminGiftRecords,
+        notifications,
+        readNotifications,
         pricingHtml,
         injectionDetect,
         injectionModels,

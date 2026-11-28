@@ -12,7 +12,7 @@
     <link rel="icon" href="../assets/ziyit.png" type="image/x-icon">
     <script src="../assets/f12check.js"></script>
     <script src="../assets/xss_guard.js?v=20261114"></script>
-    <script src="../assets/ziyit_api.js?v=20261122a"></script>
+    <script src="../assets/ziyit_api.js?v=20261128a"></script>
     <style>        * {
             margin: 0;
             padding: 0;
@@ -476,12 +476,15 @@
     }
     function renderBalance(data) {
         var points = data && data.points;
+        var gift = Number(data && (data.giftPointsBalance != null ? data.giftPointsBalance : data.giftPoints) || 0);
+        var bought = Number(data && (data.purchasedPointsBalance != null ? data.purchasedPointsBalance : data.purchasedPoints) || 0);
         var minRequired = data && data.minRequired;
         var pointsPerUnit = data && data.pointsPerUnit;
         var vip = data && data.vip;
         if (pointsPerUnit != null) perUnitHint.textContent = fmtNum(pointsPerUnit);
         var enough = Number(points || 0) >= Number(minRequired || 0);
-        var html = '<div class="balance-card">' + '<div class="balance-main">' + '<span class="balance-num">' + esc(fmtNum(points)) + "</span>" + '<span class="balance-unit">点' + (vip ? " · VIP" : "") + "</span>" + "</div>" + '<div class="balance-meta">' + '<div><span class="lbl">最低可开始要求：</span>' + esc(fmtNum(minRequired)) + " 点</div>" + '<div><span class="lbl">兑换比例：</span>1 元 = ' + esc(fmtNum(pointsPerUnit)) + " 点</div>" + "</div>" + '<div class="crit-hint ' + (enough ? "ok" : "bad") + '">' + (enough ? "余额充足，可以开始人机验证。" : "余额不足，无法开始人机验证，请先充值。") + "</div>" + "</div>";
+        var splitHtml = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;">' + '<div style="flex:1;min-width:140px;padding:10px 12px;border:1px solid var(--ziyit-border);border-radius:8px;">' + '<div style="font-size:12px;color:var(--ziyit-text-secondary);">赠送点数余额</div>' + '<div style="font-size:20px;font-weight:600;color:var(--ziyit-success);">' + esc(fmtNum(gift)) + " 点</div>" + "</div>" + '<div style="flex:1;min-width:140px;padding:10px 12px;border:1px solid var(--ziyit-border);border-radius:8px;">' + '<div style="font-size:12px;color:var(--ziyit-text-secondary);">购买点数余额</div>' + '<div style="font-size:20px;font-weight:600;color:var(--ziyit-primary);">' + esc(fmtNum(bought)) + " 点</div>" + "</div>" + "</div>";
+        var html = '<div class="balance-card">' + '<div class="balance-main">' + '<span class="balance-num">' + esc(fmtNum(points)) + "</span>" + '<span class="balance-unit">点' + (vip ? " · VIP" : "") + "</span>" + "</div>" + splitHtml + '<div class="balance-meta">' + '<div><span class="lbl">总点数：</span>' + esc(fmtNum(points)) + " 点（赠送 + 购买）</div>" + '<div><span class="lbl">最低可开始要求：</span>' + esc(fmtNum(minRequired)) + " 点</div>" + '<div><span class="lbl">兑换比例：</span>1 元 = ' + esc(fmtNum(pointsPerUnit)) + " 点</div>" + '<div><span class="lbl">扣减顺序：</span>先扣赠送点数，不足再扣购买点数</div>' + "</div>" + '<div class="crit-hint ' + (enough ? "ok" : "bad") + '">' + (enough ? "余额充足，可以开始人机验证。" : "余额不足，无法开始人机验证，请先充值。") + "</div>" + "</div>";
         balanceArea.innerHTML = html;
     }
     function loadBalance() {
@@ -514,6 +517,15 @@
             if (e.orderNo) sub += " · 订单 " + esc(e.orderNo);
             if (e.challengeId) sub += " · 验证 " + esc(e.challengeId);
             if (e.note) sub += " · " + esc(e.note);
+            // 双账户拆分（v0.4.0）：一条流水可能同时动到赠送 / 购买两个账户
+            var gd = Number(e.giftDelta || 0);
+            var pd = Number(e.purchasedDelta || 0);
+            if (gd || pd) {
+                var parts = [];
+                if (gd) parts.push("赠送 " + (gd > 0 ? "+" : "") + fmtNum(gd));
+                if (pd) parts.push("购买 " + (pd > 0 ? "+" : "") + fmtNum(pd));
+                sub += " · " + esc(parts.join(" / "));
+            }
             return '<div class="ledger-item">' + '<div class="ledger-left">' + '<div class="ledger-reason">' + esc(e.scene || reasonText(e.reason)) + "</div>" + '<div class="ledger-sub">' + sub + "</div>" + "</div>" + '<div class="ledger-right">' + '<div class="ledger-delta ' + (plus ? "plus" : "minus") + '">' + (plus ? "+" : "") + esc(fmtNum(delta)) + "</div>" + '<div class="ledger-after">余额 ' + esc(fmtNum(e.balanceAfter)) + "</div>" + "</div>" + "</div>";
         }).join("") + archivedHtml;
         var from = ledgerTotal === 0 ? 0 : ledgerOffset + 1;

@@ -6958,3 +6958,197 @@ function initSidebarGroups() {
 document.addEventListener("DOMContentLoaded", function() {
     initSidebarGroups();
 });
+
+// ==================== 点数赠送配置 / 站长赠送（v0.4.0） ====================
+function giftEsc(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function giftNum(n) {
+    var v = Number(n);
+    if (isNaN(v)) return "-";
+    return Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : String(Math.round(v * 100) / 100);
+}
+function loadPointsSettings() {
+    var meta = document.getElementById("points-settings-meta");
+    if (meta) meta.textContent = "加载中…";
+    ZIYIT_API.adminPointsSettings().then(function(res) {
+        var s = (res && res.settings) || {};
+        var d = (res && res.defaults) || {};
+        var regEl = document.getElementById("points-register-gift-enabled");
+        var regAmt = document.getElementById("points-register-gift-amount");
+        var vipEl = document.getElementById("points-vip-gift-enabled");
+        var vipAmt = document.getElementById("points-vip-gift-amount");
+        if (regEl) regEl.checked = !!s.registerGiftEnabled;
+        if (regAmt) regAmt.value = s.registerGiftAmount != null ? s.registerGiftAmount : d.registerGiftAmount;
+        if (vipEl) vipEl.checked = !!s.vipGiftEnabled;
+        if (vipAmt) vipAmt.value = s.vipGiftAmount != null ? s.vipGiftAmount : d.vipGiftAmount;
+        if (meta) {
+            var at = res && res.updatedAt ? new Date(Number(res.updatedAt)) : null;
+            meta.textContent = "最后修改：" + (at && !isNaN(at.getTime()) ? at.toLocaleString() : "从未")
+                + (res && res.updatedBy ? "（操作人 ID " + res.updatedBy + "）" : "")
+                + "；默认值：注册赠送 " + giftNum(d.registerGiftAmount) + " 点 / VIP 赠送 " + giftNum(d.vipGiftAmount) + " 点";
+        }
+    }).catch(function(err) {
+        if (meta) meta.textContent = "加载失败：" + (err && err.message || err);
+    });
+}
+function savePointsSettings() {
+    var payload = {
+        registerGiftEnabled: !!document.getElementById("points-register-gift-enabled").checked,
+        registerGiftAmount: parseFloat(document.getElementById("points-register-gift-amount").value || "0"),
+        vipGiftEnabled: !!document.getElementById("points-vip-gift-enabled").checked,
+        vipGiftAmount: parseFloat(document.getElementById("points-vip-gift-amount").value || "0")
+    };
+    if (isNaN(payload.registerGiftAmount) || payload.registerGiftAmount < 0
+        || isNaN(payload.vipGiftAmount) || payload.vipGiftAmount < 0) {
+        showToast("赠送额度必须是不小于 0 的数字", "error");
+        return;
+    }
+    ZIYIT_API.adminSavePointsSettings(payload).then(function() {
+        showToast("赠送配置已保存，立即生效", "success");
+        loadPointsSettings();
+    }).catch(function(err) {
+        showToast(err && err.data && err.data.detail || err && err.message || "保存失败", "error");
+    });
+}
+function renderGiftUserList(keyword) {
+    var box = document.getElementById("gift-user-list");
+    if (!box) return;
+    var key = String(keyword || "").trim().toLowerCase();
+    var list = (Array.isArray(userList) ? userList : []).filter(function(u) {
+        if (!key) return true;
+        return String(u.userId).indexOf(key) >= 0
+            || String(u.username || "").toLowerCase().indexOf(key) >= 0;
+    });
+    if (!list.length) {
+        box.innerHTML = '<div style="color: var(--ziyit-text-secondary); font-size: 13px;">没有匹配的用户（可先到「用户管理」页刷新用户列表）</div>';
+        return;
+    }
+    box.innerHTML = list.map(function(u) {
+        return '<label style="display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 2;">'
+            + '<input type="checkbox" class="gift-user-check" value="' + giftEsc(u.userId) + '"> '
+            + giftEsc(u.username) + '（ID ' + giftEsc(u.userId) + '）</label>';
+    }).join("");
+}
+function giftMode() {
+    var el = document.querySelector('input[name="gift-mode"]:checked');
+    return el ? el.value : "fixed";
+}
+function syncGiftModeBoxes() {
+    var mode = giftMode();
+    var fixedBox = document.getElementById("gift-fixed-box");
+    var periodBox = document.getElementById("gift-period-box");
+    if (fixedBox) fixedBox.style.display = mode === "fixed" ? "" : "none";
+    if (periodBox) periodBox.style.display = mode === "period_consumption" ? "" : "none";
+}
+function openGiftModal() {
+    renderGiftUserList("");
+    var search = document.getElementById("gift-user-search");
+    if (search) search.value = "";
+    var all = document.getElementById("gift-select-all");
+    if (all) all.checked = false;
+    var res = document.getElementById("gift-result");
+    if (res) res.innerHTML = "";
+    syncGiftModeBoxes();
+    var modal = document.getElementById("gift-modal");
+    if (modal) modal.classList.add("active");
+}
+function submitGift() {
+    var ids = Array.prototype.map.call(
+        document.querySelectorAll("#gift-user-list .gift-user-check:checked"),
+        function(el) { return parseInt(el.value, 10); }
+    ).filter(function(v) { return !isNaN(v); });
+    if (!ids.length) {
+        showToast("请至少选择一个用户", "error");
+        return;
+    }
+    var mode = giftMode();
+    var payload = {
+        userIds: ids,
+        mode: mode,
+        note: (document.getElementById("gift-note") || {}).value || ""
+    };
+    if (mode === "fixed") {
+        var amount = parseFloat((document.getElementById("gift-amount") || {}).value || "");
+        if (isNaN(amount) || amount <= 0) {
+            showToast("请填写大于 0 的赠送点数", "error");
+            return;
+        }
+        payload.amount = amount;
+    } else if (mode === "period_consumption") {
+        payload.startAt = (document.getElementById("gift-start") || {}).value || "";
+        payload.endAt = (document.getElementById("gift-end") || {}).value || "";
+        if (!payload.startAt || !payload.endAt) {
+            showToast("请选择完整的统计时间段", "error");
+            return;
+        }
+    }
+    var btn = document.getElementById("gift-submit");
+    if (btn) btn.disabled = true;
+    ZIYIT_API.adminGiftPoints(payload).then(function(res) {
+        var rows = (res && res.results) || [];
+        var html = '<div style="margin-bottom:8px;font-weight:600;">成功 ' + giftNum(res && res.success)
+            + " 人 / 失败 " + giftNum(res && res.failed) + " 人，共赠送 "
+            + giftNum(res && res.totalGranted) + " 点</div>";
+        html += rows.map(function(r) {
+            var ok = !!r.ok;
+            return '<div style="color:' + (ok ? "var(--ziyit-success)" : "var(--ziyit-danger)") + ';">'
+                + (ok ? "✔ " : "✘ ") + giftEsc(r.username || "") + "（ID " + giftEsc(r.userId) + "）"
+                + (ok ? " 赠送 " + giftNum(r.amount) + " 点" : "：" + giftEsc(r.reason || "失败")) + "</div>";
+        }).join("");
+        var box = document.getElementById("gift-result");
+        if (box) box.innerHTML = html;
+        showToast("赠送操作已完成", "success");
+    }).catch(function(err) {
+        showToast(err && err.data && err.data.detail || err && err.message || "赠送失败", "error");
+    }).then(function() {
+        if (btn) btn.disabled = false;
+    });
+}
+function showGiftRecords() {
+    var box = document.getElementById("gift-result");
+    if (box) box.innerHTML = "加载中…";
+    ZIYIT_API.adminGiftRecords(50).then(function(res) {
+        var rows = (res && res.records) || [];
+        if (box) {
+            box.innerHTML = rows.length
+                ? '<div style="margin-bottom:6px;font-weight:600;">最近 ' + rows.length + " 条赠送记录</div>"
+                    + rows.map(function(line) { return '<div style="white-space:pre-wrap;">' + giftEsc(line) + "</div>"; }).join("")
+                : '<div style="color:var(--ziyit-text-secondary);">暂无赠送记录</div>';
+        }
+    }).catch(function(err) {
+        if (box) box.innerHTML = "读取失败：" + giftEsc(err && err.message || err);
+    });
+}
+(function bindPointsAdmin() {
+    var menu = document.querySelector('[data-section="system-settings"]');
+    if (menu) menu.addEventListener("click", function() {
+        switchSection("system-settings");
+        loadPointsSettings();
+    });
+    var refresh = document.getElementById("points-settings-refresh");
+    if (refresh) refresh.addEventListener("click", loadPointsSettings);
+    var save = document.getElementById("points-settings-save");
+    if (save) save.addEventListener("click", savePointsSettings);
+
+    var giftBtn = document.getElementById("gift-points-btn");
+    if (giftBtn) giftBtn.addEventListener("click", openGiftModal);
+    var giftCancel = document.getElementById("gift-cancel");
+    if (giftCancel) giftCancel.addEventListener("click", function() {
+        document.getElementById("gift-modal").classList.remove("active");
+    });
+    var giftSubmit = document.getElementById("gift-submit");
+    if (giftSubmit) giftSubmit.addEventListener("click", submitGift);
+    var giftRecords = document.getElementById("gift-records-btn");
+    if (giftRecords) giftRecords.addEventListener("click", showGiftRecords);
+    var giftSearch = document.getElementById("gift-user-search");
+    if (giftSearch) giftSearch.addEventListener("input", function() { renderGiftUserList(this.value); });
+    var selectAll = document.getElementById("gift-select-all");
+    if (selectAll) selectAll.addEventListener("change", function() {
+        var on = this.checked;
+        Array.prototype.forEach.call(document.querySelectorAll("#gift-user-list .gift-user-check"),
+            function(el) { el.checked = on; });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="gift-mode"]'),
+        function(el) { el.addEventListener("change", syncGiftModeBoxes); });
+})();
