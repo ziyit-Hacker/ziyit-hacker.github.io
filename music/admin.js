@@ -10,6 +10,12 @@ function switchSection(sectionId) {
     const menuItem = document.querySelector(`[data-section="${sectionId}"]`);
     if (menuItem) menuItem.classList.add("active");
     syncSidebarActive();
+    // 当前标签页写入 URL hash，刷新/重新打开/分享链接时可自动定位到该标签页
+    if (target && window.history && history.replaceState) {
+        try {
+            history.replaceState(null, "", location.pathname + location.search + "#" + sectionId);
+        } catch (e) {}
+    }
 }
 function syncSidebarActive() {
     const menu = document.querySelector(".sidebar-menu");
@@ -27,19 +33,20 @@ document.addEventListener("DOMContentLoaded", function() {
             if (e.target && e.target.closest && e.target.closest(".menu-item[data-section]")) adminSectionLocked = true;
         }, true);
     }
+    // 手动修改 hash 或前进/后退时，同步切换标签页（内部 switchSection 用 replaceState，不会造成循环）
+    window.addEventListener("hashchange", function() {
+        const sec = String(location.hash || "").replace("#", "");
+        if (!sec || !document.getElementById(sec)) return;
+        const mi = document.querySelector('.sidebar-menu .menu-item[data-section="' + sec + '"]');
+        // 被等级隐藏的标签页不通过 URL 进入
+        if (!mi || mi.style.display !== "none") switchSection(sec);
+    });
     document.querySelector('[data-section="music-management"]').addEventListener("click", function() {
         switchSection("music-management");
         updateSystemInfo("切换到音乐管理");
     });
     document.querySelector('[data-section="user-management"]').addEventListener("click", function() {
-        document.querySelectorAll(".content-section").forEach(section => {
-            section.classList.remove("active");
-        });
-        document.getElementById("user-management").classList.add("active");
-        document.querySelectorAll(".menu-item").forEach(item => {
-            item.classList.remove("active");
-        });
-        this.classList.add("active");
+        switchSection("user-management");
         loadUsers();
         loadIpBans();
     });
@@ -338,7 +345,12 @@ function checkUserPermission() {
                 const firstVisible = document.querySelector('.sidebar-menu .menu-item[data-level]:not([style*="display: none"])');
                 if (firstVisible) target = firstVisible.getAttribute("data-section") || "";
             }
-            if (target) switchSection(target);
+            if (target) {
+                // 优先触发菜单项点击，复用其加载逻辑；被等级隐藏的标签页不自动进入
+                const mi = document.querySelector('.sidebar-menu .menu-item[data-section="' + target + '"]');
+                if (mi && mi.style.display !== "none") mi.click();
+                else if (!mi) switchSection(target);
+            }
         }
         enforceAdminEmailVerification();
     }).catch(function(err) {
