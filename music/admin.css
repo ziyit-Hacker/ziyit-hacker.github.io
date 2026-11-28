@@ -375,6 +375,10 @@ body {
 .user-list {
     max-height: 400px;
     overflow-y: auto;
+    /* overflow-y 为 auto 时另一轴会隐式变成 auto，hover 的 translateX 会触发底部横向滚动条并导致布局抽搐 */
+    overflow-x: hidden;
+    /* 预留 5px 位移空间，避免 hover 右移被裁切 */
+    padding: 0 6px;
 }
 
 .user-item {
@@ -752,6 +756,9 @@ body {
 .music-items {
     max-height: 400px;
     overflow-y: auto;
+    /* 同 .user-list：防止 hover 位移触发横向滚动条造成抖动 */
+    overflow-x: hidden;
+    padding: 0 6px;
 }
 
 .music-item {

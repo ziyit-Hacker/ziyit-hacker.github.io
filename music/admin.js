@@ -247,7 +247,6 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("promote-type").addEventListener("change", syncPromoteFields);
     document.getElementById("cancel-ban-adjust").addEventListener("click", closeBanAdjustModal);
     document.getElementById("confirm-ban-adjust").addEventListener("click", confirmBanAdjust);
-    document.getElementById("ba-mode").addEventListener("change", syncBanAdjustFields);
 });
 function loadingHTML() {
     var rows = "";
@@ -1007,16 +1006,8 @@ function banUser(userId, username) {
         alert("封禁失败: " + (err.message || err));
     });
 }
-// ---------- 调整封禁（含解封；Lv3+，带操作日志与二次确认） ----------
+// ---------- 调整封禁（解封为“减少至到期”的自然结果；Lv3+，带操作日志与二次确认） ----------
 let banAdjustTarget = null;
-function syncBanAdjustFields() {
-    const mode = document.getElementById("ba-mode").value;
-    const group = document.getElementById("ba-duration-group");
-    const btn = document.getElementById("confirm-ban-adjust");
-    // 解除封禁不需要填写时长，隐藏并同步按钮文案
-    if (group) group.style.display = mode === "unban" ? "none" : "";
-    if (btn && !btn.disabled) btn.textContent = mode === "unban" ? "确认解封" : "确认调整";
-}
 function openBanAdjustModal(user) {
     if (!canAccess(3)) {
         alert("仅 3 级及以上管理员可调整封禁时长");
@@ -1034,7 +1025,6 @@ function openBanAdjustModal(user) {
     document.getElementById("ba-amount").value = "1";
     document.getElementById("ba-unit").value = "hour";
     document.getElementById("ba-reason").value = "";
-    syncBanAdjustFields();
     document.getElementById("ban-adjust-modal").classList.add("active");
 }
 function closeBanAdjustModal() {
@@ -1049,36 +1039,6 @@ function banAdjustDeltaMs() {
     const ms = Math.round(n * factor);
     return ms > 0 ? ms : null;
 }
-function confirmUnban(user, userId, username) {
-    const until = bannedUntilOf(user);
-    const oldText = until && !isNaN(until.getTime()) ? formatCstDateTime(until) : "永久封禁";
-    const remark = document.getElementById("ba-reason").value.trim();
-    const oldReason = user.banReason || user.ban_reason || user.bannedReason || "";
-    const opName = currentAdminInfo && currentAdminInfo.username || "未知管理员";
-    // 操作日志：解封同样记录操作人与原因，便于审计追溯
-    const logText = "[解除封禁] 原截止：" + oldText +
-        "；操作人：" + opName + "（Lv." + (currentAdminLevel || 0) + "）" +
-        (oldReason ? "；原原因：" + oldReason : "") +
-        (remark ? "；原因：" + remark : "");
-    if (!confirm("确认解除 " + username + " 的封禁吗？\n\n操作日志：" + logText)) return;
-    const btn = document.getElementById("confirm-ban-adjust");
-    const resetBtn = function() {
-        btn.disabled = false;
-        syncBanAdjustFields();
-    };
-    btn.disabled = true;
-    btn.textContent = "提交中…";
-    ZIYIT_API.request("/admin/users/" + userId + "/unban", { method: "POST" }).then(function() {
-        resetBtn();
-        closeBanAdjustModal();
-        updateSystemInfo(logText);
-        loadUsers();
-        if (typeof showToast === "function") showToast("已解除封禁", "success");
-    }).catch(function(err) {
-        resetBtn();
-        alert("解封失败: " + (err && err.data && err.data.detail || err && err.message || err));
-    });
-}
 function confirmBanAdjust() {
     if (!banAdjustTarget) return;
     const user = banAdjustTarget;
@@ -1087,17 +1047,9 @@ function confirmBanAdjust() {
     const until = bannedUntilOf(user);
     const hasUntil = !!(until && !isNaN(until.getTime()));
     const mode = document.getElementById("ba-mode").value;
-    if (mode === "unban") {
-        confirmUnban(user, userId, username);
-        return;
-    }
     const delta = banAdjustDeltaMs();
     if (!delta) {
         alert("请输入大于 0 的调整时长");
-        return;
-    }
-    if (!hasUntil && mode === "sub") {
-        alert("该账号为永久封禁，没有截止时间，无法减少；请选择「解除封禁（立即解封）」");
         return;
     }
     const rawAmount = document.getElementById("ba-amount").value.trim();
@@ -1106,18 +1058,20 @@ function confirmBanAdjust() {
     const nowMs = Date.now();
     const baseMs = hasUntil ? until.getTime() : nowMs;
     const targetMs = mode === "add" ? baseMs + delta : baseMs - delta;
+    const isUnban = targetMs <= nowMs;
     const oldText = hasUntil ? formatCstDateTime(until) : "永久封禁";
-    const newText = targetMs <= nowMs ? "立即到期（等同于解封）" : formatCstDateTime(new Date(targetMs));
+    const newText = isUnban ? "立即到期（等同于解封）" : formatCstDateTime(new Date(targetMs));
     const remark = document.getElementById("ba-reason").value.trim();
     const oldReason = user.banReason || user.ban_reason || user.bannedReason || "";
     const opName = currentAdminInfo && currentAdminInfo.username || "未知管理员";
     // 操作日志：随封禁原因一并提交，便于后台审计追溯（Lv3+ 才可执行）
-    const logText = "[封禁时长调整] " + (mode === "add" ? "增加 " : "减少 ") + amountText +
+    const logText = (isUnban ? "[解封（减少封禁至到期）] " : "[封禁时长调整] ") +
+        (mode === "add" ? "增加 " : "减少 ") + amountText +
         "；原截止：" + oldText + "；新截止：" + newText +
         "；操作人：" + opName + "（Lv." + (currentAdminLevel || 0) + "）" +
         (oldReason ? "；原原因：" + oldReason : "") +
         (remark ? "；原因：" + remark : "");
-    const tip = targetMs <= nowMs
+    const tip = isUnban
         ? "调整后封禁将立即到期（等同于解封）。"
         : "调整后截止：" + newText + "（东八区），剩余 " + formatRemaining(new Date(targetMs)) + "。";
     if (!confirm("确认调整 " + username + " 的封禁时长吗？\n" + tip + "\n\n操作日志：" + logText)) return;
@@ -1136,13 +1090,13 @@ function confirmBanAdjust() {
         closeBanAdjustModal();
         updateSystemInfo(logText);
         loadUsers();
-        if (typeof showToast === "function") showToast("封禁时长已更新", "success");
+        if (typeof showToast === "function") showToast(isUnban ? "已解除封禁" : "封禁时长已更新", "success");
     };
     const fail = function(err) {
         resetBtn();
         alert("调整失败: " + (err && err.data && err.data.detail || err && err.message || err));
     };
-    if (targetMs <= nowMs) {
+    if (isUnban) {
         ZIYIT_API.request("/admin/users/" + userId + "/unban", { method: "POST" }).then(done).catch(fail);
         return;
     }

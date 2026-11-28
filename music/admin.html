@@ -1773,10 +1773,9 @@
                 <select class="form-select" id="ba-mode">
                     <option value="add">增加封禁时间</option>
                     <option value="sub">减少封禁时间</option>
-                    <option value="unban">解除封禁（立即解封）</option>
                 </select>
             </div>
-            <div class="form-group" id="ba-duration-group">
+            <div class="form-group">
                 <label class="form-label">调整时长</label>
                 <div style="display:flex;gap:8px;">
                     <input type="number" class="form-input" id="ba-amount" min="1" step="1" value="1" style="flex:1;">
@@ -1786,7 +1785,7 @@
                         <option value="day">天</option>
                     </select>
                 </div>
-                <div style="color:var(--ziyit-text-secondary);font-size:12px;margin-top:4px;">永久封禁无截止时间，只能增加（将转为限时封禁）；减少到已过期等同于解封。</div>
+                <div style="color:var(--ziyit-text-secondary);font-size:12px;margin-top:4px;">减少到封禁到期即自动解封；永久封禁无剩余时长，选择「减少」即视为解除封禁，选择「增加」则转为限时封禁。</div>
             </div>
             <div class="form-group">
                 <label class="form-label">操作原因（写入操作日志）</label>
