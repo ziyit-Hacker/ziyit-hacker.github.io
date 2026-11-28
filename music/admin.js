@@ -7041,17 +7041,20 @@ function syncGiftModeBoxes() {
     if (fixedBox) fixedBox.style.display = mode === "fixed" ? "" : "none";
     if (periodBox) periodBox.style.display = mode === "period_consumption" ? "" : "none";
 }
-function openGiftModal() {
-    renderGiftUserList("");
-    var search = document.getElementById("gift-user-search");
-    if (search) search.value = "";
-    var all = document.getElementById("gift-select-all");
-    if (all) all.checked = false;
+function openGiftPage() {
+    switchSection("points-gift");
     var res = document.getElementById("gift-result");
     if (res) res.innerHTML = "";
+    var all = document.getElementById("gift-select-all");
+    if (all) all.checked = false;
+    var search = document.getElementById("gift-user-search");
+    if (search) search.value = "";
     syncGiftModeBoxes();
-    var modal = document.getElementById("gift-modal");
-    if (modal) modal.classList.add("active");
+    if (!Array.isArray(userList) || !userList.length) {
+        loadUsers().then(function() { renderGiftUserList(""); });
+    } else {
+        renderGiftUserList("");
+    }
 }
 function submitGift() {
     var ids = Array.prototype.map.call(
@@ -7132,11 +7135,9 @@ function showGiftRecords() {
     if (save) save.addEventListener("click", savePointsSettings);
 
     var giftBtn = document.getElementById("gift-points-btn");
-    if (giftBtn) giftBtn.addEventListener("click", openGiftModal);
-    var giftCancel = document.getElementById("gift-cancel");
-    if (giftCancel) giftCancel.addEventListener("click", function() {
-        document.getElementById("gift-modal").classList.remove("active");
-    });
+    if (giftBtn) giftBtn.addEventListener("click", openGiftPage);
+    var giftMenu = document.querySelector('[data-section="points-gift"]');
+    if (giftMenu) giftMenu.addEventListener("click", openGiftPage);
     var giftSubmit = document.getElementById("gift-submit");
     if (giftSubmit) giftSubmit.addEventListener("click", submitGift);
     var giftRecords = document.getElementById("gift-records-btn");

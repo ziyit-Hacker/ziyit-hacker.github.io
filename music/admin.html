@@ -73,6 +73,7 @@
                         <ul class="menu-sub">
                             <li class="menu-item" data-section="user-management" data-level="4">用户管理</li>
                             <li class="menu-item" data-section="points-usage" data-level="3">点数用量</li>
+                            <li class="menu-item" data-section="points-gift" data-level="4">点数赠送</li>
                             <li class="menu-item" data-section="backrooms-members" data-level="2">后室成员管理</li>
                             <li class="menu-item" data-section="report-management" data-level="1">举报审核</li>
                             <li class="menu-item" data-section="email-broadcast" data-level="3">邮件群发</li>
@@ -102,6 +103,7 @@
                     <li class="menu-group collapsed">
                         <button type="button" class="menu-group-title"><span class="menu-group-text">系统与安全</span><span class="menu-caret" aria-hidden="true"></span></button>
                         <ul class="menu-sub">
+                            <li class="menu-item" data-section="system-settings" data-level="3">系统设置</li>
                             <li class="menu-item" data-section="admin-management" data-level="1">管理员管理</li>
                             <li class="menu-item" data-section="pentest-management" data-level="1">渗透测试</li>
                             <li class="menu-item menu-item-muted" data-level="1" onclick="window.history.back()">返回上一页</li>
@@ -746,6 +748,48 @@
                         配置保存后立即生效（无需重启）；所有赠送点数进入用户的「赠送点数余额」，扣减顺序恒为「先赠送、后购买」。每次修改都会写入审计日志。
                     </p>
                 </section>
+                <section id="points-gift" class="content-section">
+                    <div class="section-header">
+                        <h2>点数赠送</h2>
+                        <span class="user-del-date" style="margin: 0;">仅站长（Lv.4）可操作，赠送点数计入用户「赠送点数余额」</span>
+                    </div>
+                    <div style="max-width: 760px;">
+                        <div class="form-group">
+                            <label class="form-label">选择用户（可多选）</label>
+                            <input type="text" class="form-input" id="gift-user-search" placeholder="搜索用户名 / ID">
+                            <label style="display: flex; align-items: center; gap: 6px; margin: 8px 0; font-size: 13px;">
+                                <input type="checkbox" id="gift-select-all"> 全选当前列表
+                            </label>
+                            <div id="gift-user-list" style="max-height: 220px; overflow: auto; border: 1px solid var(--ziyit-border); border-radius: 8px; padding: 8px;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">赠送计算方式</label>
+                            <label style="display: block; font-size: 13px; line-height: 2;"><input type="radio" name="gift-mode" value="fixed" checked> 按指定固定数值赠送</label>
+                            <label style="display: block; font-size: 13px; line-height: 2;"><input type="radio" name="gift-mode" value="match_purchased"> 与用户当前购买点数余额等额赠送</label>
+                            <label style="display: block; font-size: 13px; line-height: 2;"><input type="radio" name="gift-mode" value="period_consumption"> 按指定时间段内累计消耗总额赠送</label>
+                        </div>
+                        <div class="form-group" id="gift-fixed-box">
+                            <label class="form-label">赠送点数</label>
+                            <input type="number" class="form-input" id="gift-amount" min="0.1" step="0.1" placeholder="如 100">
+                        </div>
+                        <div class="form-group" id="gift-period-box" style="display: none;">
+                            <label class="form-label">统计时间段（按该用户在区间内的累计消耗点数赠送）</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="date" class="form-input" id="gift-start">
+                                <input type="date" class="form-input" id="gift-end">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">备注（可选，会展示在用户通知里）</label>
+                            <input type="text" class="form-input" id="gift-note" maxlength="200" placeholder="如：活动赠送">
+                        </div>
+                        <div id="gift-result" style="font-size: 13px; line-height: 1.8;"></div>
+                        <div class="modal-actions" style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
+                            <button type="button" class="user-btn" id="gift-records-btn">查看赠送记录</button>
+                            <button type="button" class="user-btn success" id="gift-submit">确认赠送</button>
+                        </div>
+                    </div>
+                </section>
                 <section id="permission-management" class="content-section">
                     <div class="section-header">
                         <h2>权限管理</h2>
@@ -1350,46 +1394,6 @@
             </form>
         </div>
     </div>
-    <div class="modal" id="gift-modal">
-        <div class="modal-content" style="max-width: 720px;">
-            <div class="modal-header">站长赠送点数</div>
-            <div class="form-group">
-                <label class="form-label">选择用户（可多选）</label>
-                <input type="text" class="form-input" id="gift-user-search" placeholder="搜索用户名 / ID">
-                <label style="display: flex; align-items: center; gap: 6px; margin: 8px 0; font-size: 13px;">
-                    <input type="checkbox" id="gift-select-all"> 全选当前列表
-                </label>
-                <div id="gift-user-list" style="max-height: 200px; overflow: auto; border: 1px solid var(--ziyit-border); border-radius: 8px; padding: 8px;"></div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">赠送计算方式</label>
-                <label style="display: block; font-size: 13px; line-height: 2;"><input type="radio" name="gift-mode" value="fixed" checked> 按指定固定数值赠送</label>
-                <label style="display: block; font-size: 13px; line-height: 2;"><input type="radio" name="gift-mode" value="match_purchased"> 与用户当前购买点数余额等额赠送</label>
-                <label style="display: block; font-size: 13px; line-height: 2;"><input type="radio" name="gift-mode" value="period_consumption"> 按指定时间段内累计消耗总额赠送</label>
-            </div>
-            <div class="form-group" id="gift-fixed-box">
-                <label class="form-label">赠送点数</label>
-                <input type="number" class="form-input" id="gift-amount" min="0.1" step="0.1" placeholder="如 100">
-            </div>
-            <div class="form-group" id="gift-period-box" style="display: none;">
-                <label class="form-label">统计时间段（按该用户在区间内的累计消耗点数赠送）</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="date" class="form-input" id="gift-start">
-                    <input type="date" class="form-input" id="gift-end">
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">备注（可选，会展示在用户通知里）</label>
-                <input type="text" class="form-input" id="gift-note" maxlength="200" placeholder="如：活动赠送">
-            </div>
-            <div id="gift-result" style="font-size: 13px; line-height: 1.8;"></div>
-            <div class="modal-actions">
-                <button type="button" class="user-btn" id="gift-records-btn">查看赠送记录</button>
-                <button type="button" class="user-btn danger" id="gift-cancel">取消</button>
-                <button type="button" class="user-btn success" id="gift-submit">确认赠送</button>
-            </div>
-        </div>
-    </div>
     <div class="modal" id="add-user-modal">
         <div class="modal-content">
             <div class="modal-header">添加用户</div>
@@ -1846,7 +1850,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-    <script src="./admin.js?v=20261128a"></script>
+    <script src="./admin.js?v=20261128b"></script>
 <script src="../assets/ziyit-theme.js"></script>
     <script src="../assets/button-loading.js?v=1"></script>
 </body>
