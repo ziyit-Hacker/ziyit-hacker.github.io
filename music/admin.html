@@ -1757,6 +1757,46 @@
             </div>
         </div>
     </div>
+    <div class="modal" id="ban-adjust-modal">
+        <div class="modal-content">
+            <div class="modal-header">调整封禁时长</div>
+            <div class="form-group">
+                <label class="form-label">用户名</label>
+                <input type="text" class="form-input" id="ba-username" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">当前封禁截止（东八区 UTC+8）</label>
+                <div id="ba-current" style="font-size:14px;color:var(--ziyit-text-secondary);padding:8px 0;"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">调整方式</label>
+                <select class="form-select" id="ba-mode">
+                    <option value="add">增加封禁时间</option>
+                    <option value="sub">减少封禁时间</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">调整时长</label>
+                <div style="display:flex;gap:8px;">
+                    <input type="number" class="form-input" id="ba-amount" min="1" step="1" value="1" style="flex:1;">
+                    <select class="form-select" id="ba-unit" style="max-width:120px;">
+                        <option value="minute">分钟</option>
+                        <option value="hour" selected>小时</option>
+                        <option value="day">天</option>
+                    </select>
+                </div>
+                <div style="color:var(--ziyit-text-secondary);font-size:12px;margin-top:4px;">永久封禁无截止时间，只能增加（将转为限时封禁）；减少到已过期等同于解封。</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">操作原因（写入操作日志）</label>
+                <input type="text" class="form-input" id="ba-reason" placeholder="选填，例如：申诉复核后延长封禁">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="user-btn danger" id="cancel-ban-adjust">取消</button>
+                <button type="button" class="user-btn success" id="confirm-ban-adjust">确认调整</button>
+            </div>
+        </div>
+    </div>
     <div class="modal" id="admin-chat-modal">
         <div class="modal-content chat-modal-content">
             <div class="modal-header chat-modal-header">

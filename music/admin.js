@@ -245,6 +245,8 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("cancel-promote-user").addEventListener("click", closePromoteModal);
     document.getElementById("confirm-promote-user").addEventListener("click", confirmPromoteUser);
     document.getElementById("promote-type").addEventListener("change", syncPromoteFields);
+    document.getElementById("cancel-ban-adjust").addEventListener("click", closeBanAdjustModal);
+    document.getElementById("confirm-ban-adjust").addEventListener("click", confirmBanAdjust);
 });
 function loadingHTML() {
     var rows = "";
@@ -866,18 +868,96 @@ function loadUsers() {
         updateSystemInfo("用户数据加载失败");
     });
 }
+const CST_OFFSET_MS = 8 * 60 * 60 * 1e3;
 function parseDate(v) {
     if (!v) return null;
     if (typeof v === "number") return new Date(v < 1e12 ? v * 1e3 : v);
-    return new Date(v);
+    let s = String(v).trim();
+    // 后端返回的无时区时间一律按东八区解释，避免管理员浏览器时区不同导致时间偏移
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s += "T00:00:00+08:00";
+    else if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?(\.\d+)?$/.test(s)) s = s.replace(" ", "T") + "+08:00";
+    return new Date(s);
 }
+function pad2(n) {
+    return n < 10 ? "0" + n : "" + n;
+}
+// 取出东八区下的年月日时分，所有展示统一走这里，避免浏览器本地时区干扰
+function cstParts(d) {
+    const t = new Date(d.getTime() + CST_OFFSET_MS);
+    return {
+        y: t.getUTCFullYear(),
+        M: t.getUTCMonth() + 1,
+        D: t.getUTCDate(),
+        h: t.getUTCHours(),
+        m: t.getUTCMinutes()
+    };
+}
+// 统一东八区展示：YYYY-MM-DD HH:mm
 function formatDateTime(d) {
     if (!d || isNaN(d.getTime())) return "-";
-    const p = function(n) {
-        return n < 10 ? "0" + n : "" + n;
-    };
-    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+    const p = cstParts(d);
+    return p.y + "-" + pad2(p.M) + "-" + pad2(p.D) + " " + pad2(p.h) + ":" + pad2(p.m);
 }
+// 中文完整日期时间（东八区）：2026年11月28日 14:30
+function formatCstDateTime(d) {
+    if (!d || isNaN(d.getTime())) return "-";
+    const p = cstParts(d);
+    return p.y + "年" + p.M + "月" + p.D + "日 " + pad2(p.h) + ":" + pad2(p.m);
+}
+// 东八区时间（时分秒）
+function formatCstClock(d, withSec) {
+    if (!d || isNaN(d.getTime())) return "-";
+    const t = new Date(d.getTime() + CST_OFFSET_MS);
+    return pad2(t.getUTCHours()) + ":" + pad2(t.getUTCMinutes()) + (withSec ? ":" + pad2(t.getUTCSeconds()) : "");
+}
+// 时间戳（秒或毫秒）→ Date
+function cstFromMs(v) {
+    const n = Number(v);
+    if (!isFinite(n) || n <= 0) return null;
+    return new Date(n < 1e12 ? n * 1e3 : n);
+}
+// 剩余时长：X 天 Y 小时 Z 分
+function formatRemaining(until, nowMs) {
+    if (!until || isNaN(until.getTime())) return "";
+    const diff = until.getTime() - (nowMs == null ? Date.now() : nowMs);
+    if (diff <= 0) return "已到期";
+    const totalMin = Math.floor(diff / 6e4);
+    if (totalMin <= 0) return "不足 1 分钟";
+    const d = Math.floor(totalMin / 1440);
+    const h = Math.floor(totalMin % 1440 / 60);
+    const m = totalMin % 60;
+    const out = [];
+    if (d) out.push(d + " 天");
+    if (h) out.push(h + " 小时");
+    out.push(m + " 分");
+    return out.join(" ");
+}
+function bannedUntilOf(user) {
+    if (!user) return null;
+    // 只用封禁语义字段，避免把 VIP/账号到期时间（expiresAt）误当作封禁截止
+    const direct = parseDate(user.bannedUntil || user.banned_until || user.banExpiresAt ||
+        user.banUntil || user.unbanAt || user.unbanTime || user.lockedUntil);
+    if (direct && !isNaN(direct.getTime())) return direct;
+    const s = user.status;
+    if (s && typeof s === "object") {
+        const inner = parseDate(s.lockedUntil || s.bannedUntil || s.unbanAt);
+        if (inner && !isNaN(inner.getTime())) return inner;
+    }
+    // 后端只回传剩余天数时按当前时间折算，保证仍能展示与倒计时
+    const days = Number(user.remainingDays);
+    if (isFinite(days) && days > 0) return new Date(Date.now() + days * 864e5);
+    return direct;
+}
+// 每分钟刷新一次列表里的“剩余时长”，无需重新拉取数据
+function tickBanRemainders() {
+    document.querySelectorAll("#user-list [data-ban-until]").forEach(function(el) {
+        const until = new Date(Number(el.getAttribute("data-ban-until")));
+        if (isNaN(until.getTime())) return;
+        const txt = formatRemaining(until);
+        el.textContent = txt === "已到期" ? "已到期（请刷新列表）" : "剩余 " + txt;
+    });
+}
+setInterval(tickBanRemainders, 6e4);
 function isBanned(user) {
     if (!user) return false;
     var s = user.status;
@@ -937,6 +1017,109 @@ function unbanUser(userId, username) {
         alert("解封失败: " + (err.message || err));
     });
 }
+// ---------- 调整封禁时长（Lv3+，带操作日志与二次确认） ----------
+let banAdjustTarget = null;
+function openBanAdjustModal(user) {
+    if (!canAccess(3)) {
+        alert("仅 3 级及以上管理员可调整封禁时长");
+        return;
+    }
+    banAdjustTarget = user;
+    const until = bannedUntilOf(user);
+    const hasUntil = !!(until && !isNaN(until.getTime()));
+    const remain = hasUntil ? formatRemaining(until) : "";
+    document.getElementById("ba-username").value = user.username || "-";
+    document.getElementById("ba-current").textContent = hasUntil
+        ? formatCstDateTime(until) + "（东八区，" + (remain === "已到期" ? "已到期" : "剩余 " + remain) + "）"
+        : "永久封禁（无截止时间）";
+    document.getElementById("ba-mode").value = "add";
+    document.getElementById("ba-amount").value = "1";
+    document.getElementById("ba-unit").value = "hour";
+    document.getElementById("ba-reason").value = "";
+    document.getElementById("ban-adjust-modal").classList.add("active");
+}
+function closeBanAdjustModal() {
+    document.getElementById("ban-adjust-modal").classList.remove("active");
+    banAdjustTarget = null;
+}
+function banAdjustDeltaMs() {
+    const n = Number(document.getElementById("ba-amount").value.trim());
+    if (!isFinite(n) || n <= 0) return null;
+    const unit = document.getElementById("ba-unit").value;
+    const factor = unit === "day" ? 864e5 : unit === "hour" ? 36e5 : 6e4;
+    const ms = Math.round(n * factor);
+    return ms > 0 ? ms : null;
+}
+function confirmBanAdjust() {
+    if (!banAdjustTarget) return;
+    const user = banAdjustTarget;
+    const userId = user.userId;
+    const username = user.username || "-";
+    const until = bannedUntilOf(user);
+    const hasUntil = !!(until && !isNaN(until.getTime()));
+    const mode = document.getElementById("ba-mode").value;
+    const delta = banAdjustDeltaMs();
+    if (!delta) {
+        alert("请输入大于 0 的调整时长");
+        return;
+    }
+    if (!hasUntil && mode === "sub") {
+        alert("该账号为永久封禁，没有截止时间，无法减少；如需解除请使用「解封」");
+        return;
+    }
+    const rawAmount = document.getElementById("ba-amount").value.trim();
+    const unitLabel = { minute: " 分钟", hour: " 小时", day: " 天" }[document.getElementById("ba-unit").value] || " 分钟";
+    const amountText = rawAmount + unitLabel;
+    const nowMs = Date.now();
+    const baseMs = hasUntil ? until.getTime() : nowMs;
+    const targetMs = mode === "add" ? baseMs + delta : baseMs - delta;
+    const oldText = hasUntil ? formatCstDateTime(until) : "永久封禁";
+    const newText = targetMs <= nowMs ? "立即到期（等同于解封）" : formatCstDateTime(new Date(targetMs));
+    const remark = document.getElementById("ba-reason").value.trim();
+    const oldReason = user.banReason || user.ban_reason || user.bannedReason || "";
+    const opName = currentAdminInfo && currentAdminInfo.username || "未知管理员";
+    // 操作日志：随封禁原因一并提交，便于后台审计追溯（Lv3+ 才可执行）
+    const logText = "[封禁时长调整] " + (mode === "add" ? "增加 " : "减少 ") + amountText +
+        "；原截止：" + oldText + "；新截止：" + newText +
+        "；操作人：" + opName + "（Lv." + (currentAdminLevel || 0) + "）" +
+        (oldReason ? "；原原因：" + oldReason : "") +
+        (remark ? "；原因：" + remark : "");
+    const tip = targetMs <= nowMs
+        ? "调整后封禁将立即到期（等同于解封）。"
+        : "调整后截止：" + newText + "（东八区），剩余 " + formatRemaining(new Date(targetMs)) + "。";
+    if (!confirm("确认调整 " + username + " 的封禁时长吗？\n" + tip + "\n\n操作日志：" + logText)) return;
+    // 二次确认，避免误触导致封禁时间被改动
+    if (!confirm("再次确认：" + (mode === "add" ? "增加 " : "减少 ") + amountText + "，确定执行？")) return;
+
+    const btn = document.getElementById("confirm-ban-adjust");
+    const resetBtn = function() {
+        btn.disabled = false;
+        btn.textContent = "确认调整";
+    };
+    btn.disabled = true;
+    btn.textContent = "提交中…";
+    const done = function() {
+        resetBtn();
+        closeBanAdjustModal();
+        updateSystemInfo(logText);
+        loadUsers();
+        if (typeof showToast === "function") showToast("封禁时长已更新", "success");
+    };
+    const fail = function(err) {
+        resetBtn();
+        alert("调整失败: " + (err && err.data && err.data.detail || err && err.message || err));
+    };
+    if (targetMs <= nowMs) {
+        ZIYIT_API.request("/admin/users/" + userId + "/unban", { method: "POST" }).then(done).catch(fail);
+        return;
+    }
+    const durationMinutes = Math.max(1, Math.ceil((targetMs - nowMs) / 6e4));
+    ZIYIT_API.request("/admin/users/" + userId + "/ban", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: logText, durationMinutes: durationMinutes })
+    }).then(done).catch(fail);
+}
 function renderUserList(list) {
     const items = Array.isArray(list) ? list : userList;
     const userListElement = document.getElementById("user-list");
@@ -964,14 +1147,25 @@ function renderUserList(list) {
         const details = document.createElement("div");
         details.className = "user-details";
         const typeCls = banned ? "banned" : pendingDel ? "pending" : "normal";
-        details.innerHTML = `<div class="user-name">${username}</div><div class="user-type ${typeCls}">${roleLabel(user)}</div>` + (pendingDel ? `<div class="user-del-date">删除于 ${formatDateTime(pendingDel)}</div>` : "");
+        let banHtml = "";
+        if (banned) {
+            const until = bannedUntilOf(user);
+            if (until && !isNaN(until.getTime())) {
+                const remain = formatRemaining(until);
+                banHtml = '<div class="user-ban-info">封禁至 ' + formatCstDateTime(until) + "（东八区）</div>" +
+                    '<div class="user-ban-remain" data-ban-until="' + until.getTime() + '">' +
+                    (remain === "已到期" ? "已到期（等待服务端解除）" : "剩余 " + remain) + "</div>";
+            } else {
+                banHtml = '<div class="user-ban-info">永久封禁（无截止时间）</div>';
+            }
+        }
+        details.innerHTML = `<div class="user-name">${username}</div><div class="user-type ${typeCls}">${roleLabel(user)}</div>` + banHtml + (pendingDel ? `<div class="user-del-date">删除于 ${formatDateTime(pendingDel)}</div>` : "");
         const statusId = document.createElement("div");
         statusId.className = "user-status";
         statusId.textContent = "ID: " + userId;
         const statusBan = document.createElement("div");
         statusBan.className = "user-status " + (banned ? "blacklisted" : pendingDel ? "pending" : "safe");
-        const banUntil = banned && parseDate(user.bannedUntil || user.banned_until || user.banExpiresAt || user.expiresAt || user.expires_at);
-        statusBan.textContent = banned ? "已封禁" + (banUntil && !isNaN(banUntil.getTime()) ? " ·至 " + formatDateTime(banUntil) : "") : pendingDel ? "注销中" : "正常";
+        statusBan.textContent = banned ? "已封禁" : pendingDel ? "注销中" : "正常";
         const actions = document.createElement("div");
         actions.className = "user-actions";
         const isSuper = String(userId) === "1" || user.userId === 1;
@@ -997,6 +1191,11 @@ function renderUserList(list) {
         if (canAccess(4) && !isSuper) {
             actions.appendChild(mkBtn("action-btn edit", "升级", function() {
                 openPromoteModal(user);
+            }, false));
+        }
+        if (banned && canAccess(3) && !isSuper) {
+            actions.appendChild(mkBtn("action-btn edit", "调整封禁", function() {
+                openBanAdjustModal(user);
             }, false));
         }
         actions.appendChild(mkBtn(banned ? "action-btn edit" : "action-btn delete", banned ? "解封" : "封禁", function() {
@@ -1061,13 +1260,8 @@ function updateUserStats() {
 let ipBans = [];
 function formatBanTime(t) {
     if (!t) return "-";
-    let d;
-    if (typeof t === "number") d = new Date(t < 1e12 ? t * 1e3 : t); else d = new Date(t);
-    if (isNaN(d.getTime())) return String(t);
-    const p = function(n) {
-        return n < 10 ? "0" + n : "" + n;
-    };
-    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+    const d = parseDate(t);
+    return d && !isNaN(d.getTime()) ? formatDateTime(d) : String(t);
 }
 function loadIpBans() {
     if (!canAccess(4)) {
@@ -1690,7 +1884,8 @@ function renderPricingForm(cfg) {
     }
     document.getElementById("pricing-panel").innerHTML = '<div class="form-group"><label class="form-label">收费模式</label>' + radio("per_verification", "按单次验证（一次验证只收一档固定价）") + radio("per_request", "按请求（逐个请求计费）") + "</div>" + '<div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">' + '<h3 style="margin:0 0 12px;color:var(--primary-color);">按单次验证 · 三档价（点）' + (isPV ? activeTag : "") + "</h3>" + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">' + pricingField("pv-phantom", "纯 Phantom", pv.phantom) + pricingField("pv-pow", "纯 PoW", pv.pow) + pricingField("pv-both", "Phantom + PoW", pv.both) + "</div></div>" + '<div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:16px;">' + '<h3 style="margin:0 0 12px;color:var(--primary-color);">按请求' + (isPV ? "" : activeTag) + "</h3>" + '<div class="form-group"><label style="display:inline-flex;align-items:center;gap:6px;">' + '<input type="checkbox" id="pr-all"' + (pr.all_requests ? " checked" : "") + "> 所有请求统一价（含验证类请求；启用后下方逐端点与验证段不参与）</label></div>" + '<div style="max-width:220px;"><label class="form-label">统一单价（点 / 次）</label>' + '<input type="number" class="form-input" id="pr-all-price" step="0.01" min="0" value="' + escAdmin(pr.all_price != null ? pr.all_price : "") + '"></div>' + '<h4 style="margin:16px 0 10px;">逐端点（勾选 = 收费）</h4>' + (rows || '<p style="color:var(--ziyit-text-secondary);">后端未返回端点清单</p>') + '<h4 style="margin:16px 0 10px;">验证类请求（' + escAdmin(vlabels["/verify"] || "/verify") + " / " + escAdmin(vlabels["/pow/verify"] || "/pow/verify") + "）</h4>" + '<div class="form-group" style="max-width:260px;"><label class="form-label">计费方式</label>' + '<select class="form-input" id="pr-verify-mode">' + opt("complexity", "按复杂度分档（增量补差）", vr.mode) + opt("flat", "固定一个价", vr.mode) + "</select></div>" + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">' + pricingField("pr-verify-flat", "固定价（点）", vr.flat) + pricingField("vc-phantom", "分档 · 纯 Phantom", vrCplx.phantom) + pricingField("vc-pow", "分档 · 纯 PoW", vrCplx.pow) + pricingField("vc-both", "分档 · Phantom + PoW", vrCplx.both) + "</div></div>" + '<div style="border:1px solid var(--border-color);border-radius:8px;padding:16px;">' + '<h3 style="margin:0 0 12px;color:var(--primary-color);">VIP 分档</h3>' + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">' + '<div><label class="form-label">模式</label><select class="form-input" id="vip-mode">' + opt("off", "不分档", vip.mode) + opt("discount", "按折扣率", vip.mode) + opt("free", "VIP 免费", vip.mode) + "</select></div>" + pricingField("vip-discount", "折扣率（0~1）", vip.discount) + "</div></div>";
     const meta = document.getElementById("pricing-meta");
-    const when = pricingCache.updatedAt ? new Date(Number(pricingCache.updatedAt)).toLocaleString() : "从未修改";
+    const _whenD = cstFromMs(pricingCache.updatedAt);
+    const when = _whenD ? formatCstDateTime(_whenD) : "从未修改";
     const who = pricingCache.updatedBy != null && pricingCache.updatedBy !== "" ? pricingCache.updatedBy : "—";
     meta.textContent = "当前生效口径：" + pricingModeName(pricingCache.mode) + " ｜ 最近修改：" + when + " ｜ 修改人：" + who;
 }
@@ -1836,7 +2031,8 @@ function renderAiPricingForm(cfg) {
 }
 function renderAiPricingMeta(ai) {
     const meta = document.getElementById("ai-pricing-meta");
-    const when = ai && ai.updatedAt ? new Date(Number(ai.updatedAt)).toLocaleString() : "从未修改";
+    const _aiWhen = cstFromMs(ai && ai.updatedAt);
+    const when = _aiWhen ? formatCstDateTime(_aiWhen) : "从未修改";
     const who = ai && ai.updatedBy != null && ai.updatedBy !== "" ? ai.updatedBy : "—";
     meta.textContent = "最后修改：" + when + "（" + who + "）";
 }
@@ -2042,7 +2238,8 @@ function loadInjectionPricing() {
         tppEl.value = cfg.tokensPerPoint != null ? cfg.tokensPerPoint : "";
         ppkEl.value = cfg.pointsPerKeyword != null ? cfg.pointsPerKeyword : "";
         let line = "";
-        if (cfg.updatedAt) line += "最近修改：" + new Date(Number(cfg.updatedAt)).toLocaleString() + " ｜ ";
+        const _cfgWhen = cstFromMs(cfg.updatedAt);
+        if (_cfgWhen) line += "最近修改：" + formatCstDateTime(_cfgWhen) + " ｜ ";
         if (cfg.updatedBy != null && cfg.updatedBy !== "") line += "修改人：" + cfg.updatedBy + " ｜ ";
         line += "可只改其中一项，保存后即刻生效。";
         meta.textContent = line;
@@ -3603,7 +3800,7 @@ document.addEventListener("DOMContentLoaded", function() {
 function updateSystemInfo(message) {
     const lastUpdate = document.getElementById("last-update");
     const now = new Date;
-    if (lastUpdate) lastUpdate.textContent = now.toLocaleTimeString();
+    if (lastUpdate) lastUpdate.textContent = formatCstClock(now, true) + "（UTC+8）";
     console.log(`[系统] ${message}`);
 }
 function fmtBytes(bytes, digits) {
@@ -3617,11 +3814,16 @@ function fmtBytes(bytes, digits) {
 function fmtServerTime(st) {
     if (st == null || st === "") return "";
     if (typeof st === "number") {
-        const ms = st < 1e12 ? st * 1e3 : st;
-        const d = new Date(ms);
-        return isNaN(d.getTime()) ? String(st) : d.toLocaleString();
+        const d = cstFromMs(st);
+        return d ? formatCstDateTime(d) : String(st);
     }
     if (typeof st === "string") {
+        // 带时区标记（Z / ±hh:mm）的时间先按绝对时刻解析再转东八区，避免直接截取 UTC 数字
+        if (/(Z|[+-]\d{2}:?\d{2})\s*$/i.test(st.trim())) {
+            const abs = new Date(st);
+            if (!isNaN(abs.getTime())) return formatCstDateTime(abs);
+        }
+        // 无时区信息的时间视为东八区，按字面值展示
         const m = st.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[T ](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
         if (m) {
             const p = function(n) {
@@ -3641,7 +3843,7 @@ function loadServerStats() {
         if (!data) return;
         // 每次轮询成功都要打点，否则「最后更新」只在切页/刷新列表时才动
         const lastUpdateEl = document.getElementById("last-update");
-        if (lastUpdateEl) lastUpdateEl.textContent = new Date().toLocaleTimeString();
+        if (lastUpdateEl) lastUpdateEl.textContent = formatCstClock(new Date(), true) + "（UTC+8）";
         const serverTimeEl = document.getElementById("server-time");
         if (serverTimeEl) {
             const st = data.server_time || data.serverTime || data.timestamp || data.time || data.current_time || data.datetime || data.date;
@@ -3649,7 +3851,7 @@ function loadServerStats() {
                 serverTimeEl.textContent = fmtServerTime(st);
             } else if (res && res.date) {
                 const d = new Date(res.date);
-                if (!isNaN(d.getTime())) serverTimeEl.textContent = d.toUTCString().replace("GMT", "UTC");
+                if (!isNaN(d.getTime())) serverTimeEl.textContent = formatCstDateTime(d) + "（UTC+8）";
             }
         }
         const mem = data.memory || {};
@@ -4166,12 +4368,10 @@ function chatErrText(err, fallback) {
 }
 function chatTime(iso) {
     if (!iso) return "";
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "";
-    const p = function(n) {
-        return (n < 10 ? "0" : "") + n;
-    };
-    return p(d.getHours()) + ":" + p(d.getMinutes());
+    const d = parseDate(iso);
+    if (!d || isNaN(d.getTime())) return "";
+    // 聊天时间统一按东八区展示
+    return formatCstClock(d);
 }
 function openChatWith(admin) {
     const f = adminFields(admin);
@@ -4809,12 +5009,10 @@ function guideRenderAgents(list) {
 }
 function fmtChatTime(t) {
     if (!t) return "";
-    const d = new Date(t);
-    if (isNaN(d.getTime())) return "";
-    const p = function(n) {
-        return (n < 10 ? "0" : "") + n;
-    };
-    return p(d.getHours()) + ":" + p(d.getMinutes());
+    const d = parseDate(t);
+    if (!d || isNaN(d.getTime())) return "";
+    // 统一东八区
+    return formatCstClock(d);
 }
 function guideResolveCheck() {
     var params = new URLSearchParams(location.search);
@@ -5466,12 +5664,9 @@ function kbLevelClass(n) {
 }
 function kbFmtTime(s) {
     if (!s) return "-";
-    var d = new Date(s);
-    if (isNaN(d.getTime())) return String(s);
-    function p(n) {
-        return (n < 10 ? "0" : "") + n;
-    }
-    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+    var d = parseDate(s);
+    if (!d || isNaN(d.getTime())) return String(s);
+    return formatCstDateTime(d);
 }
 function kbErrText(err, fallback) {
     if (!err) return fallback || "未知错误";
@@ -6983,8 +7178,8 @@ function loadPointsSettings() {
         if (vipEl) vipEl.checked = !!s.vipGiftEnabled;
         if (vipAmt) vipAmt.value = s.vipGiftAmount != null ? s.vipGiftAmount : d.vipGiftAmount;
         if (meta) {
-            var at = res && res.updatedAt ? new Date(Number(res.updatedAt)) : null;
-            meta.textContent = "最后修改：" + (at && !isNaN(at.getTime()) ? at.toLocaleString() : "从未")
+            var at = cstFromMs(res && res.updatedAt);
+            meta.textContent = "最后修改：" + (at && !isNaN(at.getTime()) ? formatCstDateTime(at) : "从未")
                 + (res && res.updatedBy ? "（操作人 ID " + res.updatedBy + "）" : "")
                 + "；默认值：注册赠送 " + giftNum(d.registerGiftAmount) + " 点 / VIP 赠送 " + giftNum(d.vipGiftAmount) + " 点";
         }
