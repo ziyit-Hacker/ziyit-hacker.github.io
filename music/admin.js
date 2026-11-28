@@ -32,6 +32,14 @@ document.addEventListener("DOMContentLoaded", function() {
         sidebarMenu.addEventListener("click", function(e) {
             if (e.target && e.target.closest && e.target.closest(".menu-item[data-section]")) adminSectionLocked = true;
         }, true);
+        // 兜底：点击任意标签页入口都确保切换 DOM 并同步 URL，不依赖各入口自身是否调用 switchSection
+        sidebarMenu.addEventListener("click", function(e) {
+            const item = e.target && e.target.closest ? e.target.closest(".menu-item[data-section]") : null;
+            if (!item) return;
+            const sec = item.getAttribute("data-section");
+            const target = document.getElementById(sec);
+            if (target && !target.classList.contains("active")) switchSection(sec);
+        });
     }
     // 手动修改 hash 或前进/后退时，同步切换标签页（内部 switchSection 用 replaceState，不会造成循环）
     window.addEventListener("hashchange", function() {
